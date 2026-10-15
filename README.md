@@ -32,7 +32,7 @@ Keep CLI parsing in `src/cli`, worker lifecycle in [src/sessions](./src/sessions
 
 JSDA-Kit is pinned to 1.6.3 because the server adapter passes Node's `{ host, port }` listen options through its `port` setting. Page assets and WebSocket connections share a loopback server on a free port; authenticated CLI control uses a separate loopback port.
 
-For the browser tests, set `AGUI_TEST_BROWSER_PATH` to an installed Chrome/Chromium executable and run `npm run test:browser`, or `npm test` for both suites. Tests open ordinary session URLs in headless Chrome, with temporary state and profiles. Browser files run sequentially and skip when the executable path is absent. Chrome is needed only for these tests.
+For the browser tests, set `AGUI_TEST_BROWSER_PATH` to an installed Chrome/Chromium executable and run `npm run test:browser`, or `npm test` for both suites. Tests open ordinary session URLs in headless Chrome, with temporary state and profiles. WebMCP tests explicitly enable and disable the native API; the enabled case requires Chrome with `WebMCPTesting` support. Browser files run sequentially and skip when the executable path is absent. Chrome is needed only for these tests.
 
 ## Agent usage
 
@@ -69,7 +69,7 @@ node "$AGUI_ROOT/bin/symbiote-agui.js" stop demo
 - `update` reads a JSON state command from file or stdin with the same size limit. It requires at least one connected page and waits for acknowledgements. It does not replace markup.
 - `events` returns and clears buffered UI events. The worker retains the most recent 100 events, each limited to 16 KiB; `dropped` reports overflow since the previous read. Events are temporary, not a durable log.
 - `status` returns `waiting` when the worker is running without connected pages, `ready` when pages are connected, and `stopped` when the worker is absent. Running results include `url` and `clients`.
-- `stop` is idempotent. It notifies pages, closes connections and servers, and removes session metadata. It does not close tabs or terminate the user's browser.
+- `stop` is idempotent. It clears generated content and its WebMCP tools, notifies pages, closes connections and servers, and removes session metadata. It does not close tabs or terminate the user's browser.
 
 Session commands write one JSON object to stdout. Success includes `{ "ok": true, "sessionId": "demo", "state": "waiting", "url": "http://127.0.0.1:PORT/#TOKEN", "clients": 0 }`. Failures include `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text; diagnostics go to stderr or the worker log.
 
@@ -93,7 +93,7 @@ Use standard HTML and complete Tailwind classes such as `p-4`, `md:grid-cols-2`,
 - `element.set$({ count: 10 })` updates existing local fields. A second argument of `true` forces unchanged primitive notifications.
 - `element.add$({ newField: value })` adds fields. Pass `true` as the second argument to also overwrite existing ones.
 
-Executable scripts inserted as ordinary markup remain inert. Explicitly opt into inline modules with `<script type="module" data-agui>`. Place these modules outside templates. Module-scope code runs before mounting so it can register component classes; a default exported function receives `(root, { emit })` after mounting and may return a cleanup function, including an async function, for replacement or graceful stop. Modules execute from generated Blob URLs. Resolve imports to full URLs, for example `await import(new URL('/client/index.js', location.href).href)`; root-relative imports alone do not resolve from a Blob URL. That entry exports `AguiComponent`, `ContextProvider`, `Symbiote`, `PubSub`, `html`, `css`, and `emit`.
+Executable scripts inserted as ordinary markup remain inert. Explicitly opt into inline modules with `<script type="module" data-agui>`. Place these modules outside templates. Module-scope code runs before mounting so it can register component classes; a default exported function receives `(root, { emit })` after mounting and may return a cleanup function, including an async function, for replacement or graceful stop. Modules execute from generated Blob URLs. Resolve imports to full URLs, for example `await import(new URL('/client/index.js', location.href).href)`; root-relative imports alone do not resolve from a Blob URL. That entry exports `AguiComponent`, `ContextProvider`, `Symbiote`, `PubSub`, `html`, `css`, `emit`, `ToolDescriptor`, `getActiveWebMCPTools`, and `webMCPRegistry`.
 
 ### Interactive counter
 
@@ -143,7 +143,7 @@ An anonymous provider exposes local fields to descendants through `^` bindings. 
 <agui-component><output>{{map/lat}}</output></agui-component>
 ```
 
-Use templates in the same insertion for reusable markup. Unknown custom tags with `use-template` are registered as generic components. For custom behavior, register a subclass of `AguiComponent` in a marked module; registrations persist for the page lifetime. Replacement resets provider-owned contexts and removes old subscriptions.
+Use templates in the same insertion for reusable markup. Unknown custom tags with `use-template` are registered as generic components. For custom behavior, register a subclass of `AguiComponent` with `YourComponent.reg('your-component')` in a marked module; registrations persist for the page lifetime. Symbiote's `reg()` also supplies the tag identity used by WebMCP. Replacement resets provider-owned contexts and removes old subscriptions.
 
 ```html
 <template id="user_card_template">
@@ -154,6 +154,52 @@ Use templates in the same insertion for reusable markup. Unknown custom tags wit
   <script type="application/json">{"userName":"Alex","userAge":42}</script>
 </user-card>
 ```
+
+### WebMCP
+
+The browser entry imports Symbiote's [WebMCP extension](./node_modules/@symbiotejs/symbiote/docs/webmcp.md) before rendering and enables `Symbiote.mcpToolMode`. Bound handlers become native browser tools automatically; the counter above exposes `increment_in_agui-component`. Popup bindings such as `^increment` retain their ancestor owner and source component identity. The CLI and normal UI also work when the browser has no WebMCP API.
+
+For explicit descriptions, input schemas, and visibility, initialize native `ToolDescriptor` values in a component's `init$`. For example, insert:
+
+```html
+<tool-counter><output>Count: {{count}}</output></tool-counter>
+<script type="module" data-agui>
+let { AguiComponent, ToolDescriptor } = await import(new URL('/client/index.js', location.href).href);
+if (!customElements.get('tool-counter')) {
+  class ToolCounter extends AguiComponent {
+    componentDescription = 'The visible counter.';
+    init$ = {
+      count: 0,
+      canSet: true,
+      set_count: new ToolDescriptor({
+        description: 'Set the counter value.',
+        deps: ['canSet'],
+        when: () => this.$.canSet,
+        inputSchema: {
+          type: 'object',
+          properties: { count: { type: 'integer' } },
+          required: ['count'],
+          additionalProperties: false,
+        },
+        execute: ({ count }) => { this.$.count = count; return { count }; },
+      }),
+    };
+  }
+  ToolCounter.reg('tool-counter');
+}
+</script>
+```
+
+This exposes `set_count_in_tool-counter`. Include every state key read by `when()` in `deps`; visibility is not tracked automatically. Descriptors in named `PubSub` contexts register once per context; delete module-owned contexts in the module cleanup. Symbiote removes component tools on replacement and stop. Define descriptors before first render: immediately adding and syncing them after mount can abort a pending native registration in Symbiote 3.8.2.
+
+For manual native testing, enable `chrome://flags/#enable-webmcp-testing` and restart a compatible Chrome, following the [Chrome WebMCP setup](https://developer.chrome.com/docs/ai/webmcp). Start a session and insert the example above. In that page's DevTools console, run:
+
+```js
+let tools = await document.modelContext.getTools();
+await document.modelContext.executeTool(tools.find((tool) => tool.name === 'set_count_in_tool-counter'), { count: 12 });
+```
+
+The output should become `Count: 12`. For diagnostics, import `/client/index.js` and call `getActiveWebMCPTools()`; entries report `nativeActive`. The registry also works without browser API support, but does not provide a replacement native tool API. WebMCP remains experimental; no browser flags are set by the AGUI runtime.
 
 ## Worker lifecycle
 

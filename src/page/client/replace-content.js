@@ -10,7 +10,8 @@ export function replaceContent(root, fragment) {
   let { tags, providers } = analyzeFragment(fragment);
   for (let tag of tags) {
     if (!customElements.get(tag)) {
-      customElements.define(tag, class extends AguiComponent {});
+      class GeneratedComponent extends AguiComponent {}
+      GeneratedComponent.reg(tag);
     }
   }
   resetContexts();

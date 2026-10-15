@@ -26,7 +26,7 @@ Session commands return one JSON object on stdout. Check `ok`; errors include `e
 
 A running session is `waiting` without pages and `ready` with connected pages; results include `url` and `clients`. `start` returns as soon as the worker is listening. Insertion without pages returns `delivery: "queued"`; connected pages acknowledge application with `delivery: "applied"`. Queued success cannot verify browser-specific rendering or module execution.
 
-Keep the session available while the user interacts. Stop it when the user is finished or requests cleanup. `stop` is idempotent and ends the session without closing browser tabs. Open pages display `Session ended.`
+Keep the session available while the user interacts. Stop it when the user is finished or requests cleanup. `stop` is idempotent, clears generated content and WebMCP tools, and ends the session without closing browser tabs. Open pages display `Session ended.`
 
 ## Markup and handlers
 
@@ -81,7 +81,15 @@ Inside modules, use Symbiote's native `$`, `set$()`, `add$()`, and `sub()` APIs.
 
 An anonymous `<context-provider>` exposes local fields to descendants through `^prop`. A provider with `ctx="map"` also mirrors fields into a named context. Consumers use `ctx="map"` with `*prop`, or explicit `map/prop` bindings. Use one provider per named context. Provider synchronization is bidirectional, including fields added through `add$()`.
 
-For reusable markup, include `<template id="card-template">...</template>` and a custom tag with `use-template="template#card-template"` in the same insertion. Unknown tags using `use-template` become generic components. Custom behavior can register a subclass of `AguiComponent`; registrations persist until page reload. No ready-made widget catalog is provided.
+For reusable markup, include `<template id="card-template">...</template>` and a custom tag with `use-template="template#card-template"` in the same insertion. Unknown tags using `use-template` become generic components. Register custom subclasses through `YourComponent.reg('your-component')` to preserve Symbiote's WebMCP tag identity; registrations persist until page reload. No ready-made widget catalog is provided.
+
+## WebMCP
+
+AGUI already imports Symbiote's native WebMCP extension and enables `Symbiote.mcpToolMode`. Event bindings automatically expose tools, such as `increment_in_agui-component` for the counter above. Native discovery and invocation require browser support; the regular CLI and user interface work without it.
+
+Import `ToolDescriptor` from the fully resolved `/client/index.js` URL for explicit tools. Define descriptors in a subclass's `init$` before first render, with `description`, `inputSchema`, and `execute`. Use `componentDescription` for extra component context. Conditional tools need both `when` and `deps` listing every state key read by the condition. Immediately adding and syncing descriptors after mount can abort pending native registrations in Symbiote 3.8.2.
+
+Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete module-owned contexts in the module cleanup; component tools follow Symbiote's DOM lifecycle automatically. Use the exported `getActiveWebMCPTools()` and entries' `nativeActive` field for diagnostics. Read `$AGUI_ROOT/README.md`, WebMCP section, for browser setup and a complete explicit tool example. Use these native APIs when a WebMCP-capable client is available; continue using CLI events and state commands for ordinary sessions.
 
 ## Reconnection and recovery
 

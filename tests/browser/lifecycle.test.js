@@ -110,7 +110,7 @@ test('inline modules, state commands, events, reload, and reconnect work in ordi
     '<module-counter id="counter" use-template="#counter-template"><script type="application/json">{"count":0,"increment":null}</script></module-counter>',
     '<script type="module" data-agui>',
     'let { AguiComponent } = await import(new URL("/client/index.js", location.href).href);',
-    'if (!customElements.get("module-counter")) { customElements.define("module-counter", class extends AguiComponent { moduleRegistered = true; }); }',
+    'if (!customElements.get("module-counter")) { class ModuleCounter extends AguiComponent { moduleRegistered = true; } ModuleCounter.reg("module-counter"); }',
     'export default (root, { emit }) => {',
     '  let counter = root.querySelector("#counter");',
     '  counter.set$({ increment: () => { counter.$.count += 1; emit("count", { count: counter.$.count }); } });',

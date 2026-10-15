@@ -2,6 +2,8 @@ import { CONNECTION_STATUS_ID, MAX_EVENT_BYTES, RECONNECT_MIN_MS, RECONNECT_MAX_
 import { renderMarkup, updateState } from './render.js';
 import { setEventSender } from './events.js';
 import { disposeModules } from './modules.js';
+import { CONTENT_ROOT_ID } from '../../markup/constants.js';
+import { replaceContent } from './replace-content.js';
 
 export function connectSession() {
   let token = location.hash.slice(1);
@@ -49,7 +51,12 @@ export function connectSession() {
           ended = true;
           clearTimeout(timer);
           showStatus('Session ended.');
-          await disposeModules();
+          try {
+            await disposeModules();
+          } finally {
+            let root = document.getElementById(CONTENT_ROOT_ID);
+            if (root) { replaceContent(root, document.createDocumentFragment()); }
+          }
           return;
         }
         try {

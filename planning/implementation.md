@@ -1,6 +1,6 @@
 # AGUI implementation plan
 
-Status: Completed. Type checking, 16 Node tests, 3 Puppeteer tests, and a default-browser WebSocket walkthrough passed.
+Status: Completed. Type checking, 16 Node tests, 5 Puppeteer tests including native WebMCP, and a default-browser WebSocket walkthrough passed.
 
 Goal: An agent starts a local UI session, inserts generated markup, and updates interactive content in a regular browser page independently of its harness or vendor.
 

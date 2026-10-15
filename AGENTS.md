@@ -1,0 +1,40 @@
+- Use modern JavaScript syntax + JSDoc type definition format + `./types/*.d.ts` files for global/complex types connection, TS-utils, ets. + `"checkJs": true, "noEmit": true`
+- Split JSDoc blocks into separate lines for multi-parameter definitions
+- Centralize types where it makes sense, try not to spread them over the code and not duplicate it in separate modules
+- Centralize data models definitions and their type definitions
+- Check for existing entities before create new ones
+- Split modules and large code blocks onto separate files by functional responsibility and hierarchy
+- Keep files and classes compact and readable, do not create super-all-in-one modules, functions or classes with 500+ LOC
+- Extract important ENUMs and dictionaries into separate files, reuse them instead of duplicate
+- Use ESM standard, do not use CJS
+- Use `*.js` file extensions for ESM
+- Use single quotes
+- Use `;`
+- Prefer `let` for variables. Use `const` when override error handling explicitly expected and this kind of marking is needed for better logic understanding.
+- Prefer `Object` lookup instead of `switch`-`case`. Use `switch`-`case` for noticeable performance optimization only.
+- Use logical line breaks, keep it for better readability, for example, "array item per line"
+- Do not use build phase for Node.js runtime code
+- Prefer clear entity names and function signatures over the excess/verbose code comments
+- Use modern standard Node test runner for tests, do not add external libs for what we already have
+- Use Puppeteer project dependency for in-browser tests
+- Keep plans as `*.md` files in `planning` folder
+- Try not to use tables in markdown because it's difficult for human to review and edit them in source files.
+- Try not to use special symbols that doesn't persist on standard keyboard, such as arrows, long tire, dot markers, etc. in project markdown.
+- Keep git (commit/review/add/push) as user responsibility
+- Try to keep review phase simpler to human developer, split big tasks for smaller stages
+- Do not add project dependencies without user confirmation
+- Add README.md files for project nested folders IF they contain a bunch of files and requires additional explanation for better project navigation and source understanding
+- Use those README files to collect really significant information only: clear step-by-step instructions, important settings, major decisions made. Do not mention any regular update. Do not just list folder content.
+- Create brief descriptions in project docs, try not to be too verbose
+- Try to keep the whole project context compact for less token consumption and better focusing for AI-agents
+- Update the root README and shared instructions in place. Do not create per-stage documentation or planning delivery files.
+- Keep tests in `tests/node` and `tests/browser` folders
+- Keep project supportable for human-developer
+- Do not start plan implementation without explicit user approvement
+- After each task finish, ask for review and suggest corresponding commit message
+- Prefer user's manual testing instead run tests by yourself, to save tokens and to efficiently check cases that difficult to reproduce without access to exact environment: mobile phone, external browser with active session, dynamic/animated UI, etc.
+- Add dedicated automated tests AFTER and IF the implementation issue was found by yourself or reported by user. Do not write the test for every regular single task. Write tests for critical system parts or where it's really make sense only. Do not follow TDD by default.
+- If user ask a question - just answer. Do not implement anything, do not perform a deep investigation without a direct permission or request.
+- Follow KISS and DRY
+
+Go to `./README.md` for the project description root

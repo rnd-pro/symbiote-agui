@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer-core';
-import { STARTUP_TIMEOUT_MS, CONTROL_TIMEOUT_MS } from '../sessions/constants.js';
+import { STARTUP_TIMEOUT_MS, CONTROL_TIMEOUT_MS, PROTOCOL_TIMEOUT_MS } from '../sessions/constants.js';
 import { resolveBrowserOptions } from './options.js';
 
 /**
@@ -24,7 +24,7 @@ export async function connectBrowser(options, profileDirectory, signal) {
       handleSIGTERM: false,
       handleSIGHUP: false,
       timeout: STARTUP_TIMEOUT_MS,
-      protocolTimeout: CONTROL_TIMEOUT_MS,
+      protocolTimeout: PROTOCOL_TIMEOUT_MS,
       signal,
     });
   }
@@ -47,7 +47,7 @@ export async function connectBrowser(options, profileDirectory, signal) {
   let browser = await puppeteer.connect({
     browserWSEndpoint: endpoint,
     protocol: 'cdp',
-    protocolTimeout: CONTROL_TIMEOUT_MS,
+    protocolTimeout: PROTOCOL_TIMEOUT_MS,
     defaultViewport: null,
     wsOptions: { keepAlive: true, keepAliveIntervalMs: CONTROL_TIMEOUT_MS },
   });

@@ -26,5 +26,5 @@ export let HELP = [
   '  --version, -v  Show version',
   '',
   'insert reads UTF-8 HTML from stdin when --file is absent.',
-  'start, status, and stop are available. insert is not implemented yet.',
+  'insert replaces the session content; input is limited to 1 MiB.',
 ].join('\n');

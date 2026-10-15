@@ -1,6 +1,6 @@
 # AGUI implementation plan
 
-Status: Steps 1-3 completed. Steps 4-7 await approval.
+Status: Steps 1-4 completed. Steps 5-7 await approval.
 
 Goal: An agent starts a local UI session, inserts generated markup, and updates interactive content independently of its harness or vendor.
 
@@ -20,7 +20,7 @@ Goal: An agent starts a local UI session, inserts generated markup, and updates 
    - Connect Puppeteer Core through CDP and open the session page.
    - Track session connection details; handle duplicate IDs, startup failures, status, and cleanup of owned resources on stop.
 
-4. Implement markup delivery.
+4. Implement markup delivery. Completed; see [Markup generation](../README.md#markup-generation).
    - Route `insert` input to the selected session and define whether insertion replaces or appends content.
    - Render standard HTML with Tailwind styling through the JSDA asset workflow.
    - Return clear success or error results to the calling agent.

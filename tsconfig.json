@@ -12,6 +12,11 @@
     ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "paths": {
+      "@tailwindcss/node": [
+        "./types/tailwindcss-node.d.ts"
+      ]
+    },
     "types": [
       "node"
     ],

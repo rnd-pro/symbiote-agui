@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { startSession } from '../sessions/start.js';
 import { statusSession, stopSession } from '../sessions/lifecycle.js';
+import { insertMarkup } from '../sessions/insert.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { HELP } from './commands.js';
@@ -29,9 +30,7 @@ export async function run(args) {
       start: () => startSession(request.sessionId, request.browser),
       status: () => statusSession(request.sessionId),
       stop: () => stopSession(request.sessionId),
-      insert: () => {
-        throw new CommandError('insert is not implemented yet.', ERROR_CODE.NOT_IMPLEMENTED, EXIT_CODE.RUNTIME_ERROR);
-      },
+      insert: () => insertMarkup(request.sessionId, request.file),
     };
     let status = await handlers[request.command]();
     process.stdout.write(`${JSON.stringify({ ok: true, ...status })}\n`);

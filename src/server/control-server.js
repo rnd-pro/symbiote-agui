@@ -2,13 +2,17 @@ import { timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
 import { waitForServer } from '../shared/server.js';
 import { SESSION_STATE } from '../sessions/constants.js';
+import { readUtf8Markup } from '../markup/read-input.js';
+import { CommandError } from '../shared/command-error.js';
+import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 
 /**
  * @param {import('../../types/session.js').SessionRecord} record
  * @param {() => import('../../types/session.js').SessionStatus} getStatus
  * @param {() => Promise<void>} stop
+ * @param {(html: string) => Promise<import('../../types/session.js').SessionStatus>} [insert]
  */
-export async function startControlServer(record, getStatus, stop) {
+export async function startControlServer(record, getStatus, stop, insert) {
   let server = createServer(async (request, response) => {
     let provided = Buffer.from(request.headers.authorization || '');
     let expected = Buffer.from(`Bearer ${record.controlToken}`);
@@ -20,32 +24,50 @@ export async function startControlServer(record, getStatus, stop) {
 
     let action = `${request.method} ${request.url}`;
 
-    if (!['GET /status', 'POST /stop'].includes(action)) {
+    if (!['GET /status', 'POST /stop', 'POST /insert'].includes(action)) {
       response.writeHead(404).end();
       return;
     }
 
+    let identity = { instanceId: record.instanceId, pid: process.pid };
+    response.setHeader('Content-Type', 'application/json');
+    response.setHeader('Cache-Control', 'no-store');
+
     try {
+      let result = getStatus();
+
       if (action === 'POST /stop') {
         await stop();
+        result = { sessionId: record.sessionId, state: SESSION_STATE.STOPPED };
       }
 
-      response.setHeader('Content-Type', 'application/json');
-      response.setHeader('Cache-Control', 'no-store');
-      response.end(JSON.stringify({
-        instanceId: record.instanceId,
-        pid: process.pid,
-        result: action === 'POST /stop'
-          ? { sessionId: record.sessionId, state: SESSION_STATE.STOPPED }
-          : getStatus(),
-      }));
+      if (action === 'POST /insert') {
+        if (!insert) {
+          throw new CommandError('Markup delivery is unavailable in this worker.', ERROR_CODE.INSERT_FAILED, EXIT_CODE.RUNTIME_ERROR);
+        }
+        result = await insert(await readUtf8Markup(request));
+      }
+
+      response.end(JSON.stringify({ ...identity, result }));
 
       if (action === 'POST /stop') {
         server.close();
       }
     } catch (error) {
-      console.error(error);
-      response.writeHead(500).end();
+      if (!(error instanceof CommandError)) {
+        console.error(error);
+      }
+      request.resume();
+      let failure = error instanceof CommandError
+        ? error
+        : new CommandError('The worker could not complete the command.', ERROR_CODE.INTERNAL_ERROR, EXIT_CODE.RUNTIME_ERROR);
+      response.statusCode = failure.code === ERROR_CODE.INPUT_TOO_LARGE ? 413
+        : failure.exitCode === EXIT_CODE.INVALID_INPUT ? 400 : 500;
+      response.end(JSON.stringify({
+        ...identity,
+        error: { code: failure.code, message: failure.message },
+        exitCode: failure.exitCode,
+      }));
     }
   });
 

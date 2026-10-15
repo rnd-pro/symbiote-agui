@@ -8,7 +8,7 @@ Runtime integrations:
 
 - Symbiote.js - for RAT (planned)
 - JSDA_kit - for Asset generation and live JSDA server
-- Tailwind - for default styling (planned)
+- Tailwind - for locally generated default styling
 - Puppeteer Core - for browser control
 - Node.js built-in process management - one detached worker per session
 
@@ -23,11 +23,11 @@ npm start -- --version
 npm run types
 ```
 
-`bin/symbiote-agui.js` runs JavaScript ESM directly, with no build step. Help, version, `start`, `status`, and `stop` are available. `insert` returns a JSON `NOT_IMPLEMENTED` error until markup delivery is implemented. The package is private during development; use `node bin/symbiote-agui.js` in place of `npx symbiote-agui` in the examples below.
+`bin/symbiote-agui.js` runs JavaScript ESM directly, with no build step. Help, version, `start`, `insert`, `status`, and `stop` are available. The package is private during development; use `node bin/symbiote-agui.js` in place of `npx symbiote-agui` in the examples below.
 
 Keep CLI parsing and output in `src/cli`, session identity and lifecycle in [src/sessions](./src/sessions/README.md), browser control in `src/browser`, HTTP servers in `src/server`, and the page shell and future components in `src/page`. Shared errors and dictionaries live in `src/shared`. Define shared data shapes in `types/*.d.ts` and reference them from JSDoc using `.js` import paths. `npm run types` uses `checkJs`, `strict`, and `noEmit`; DOM declarations are included for Puppeteer's Node API. It generates no runtime files.
 
-JSDA-Kit is pinned to 1.6.3 because the server adapter passes Node's `{ host, port }` listen options through its `port` setting. This binds directly to loopback on a free port. The public page server currently exposes only `/`; the authenticated control API uses a separate port.
+JSDA-Kit is pinned to 1.6.3 because the server adapter passes Node's `{ host, port }` listen options through its `port` setting. This binds directly to loopback on a free port. The public page server exposes `/` and `/styles.css.js`; the authenticated control API uses a separate port. Tailwind compiles styles in the worker, and JSDA serves the generated CSS without a CDN or a project build. The type-checking configuration maps `@tailwindcss/node` to the consumed compiler API in `types/tailwindcss-node.d.ts` because version 4.3.3 references unpublished declaration files.
 
 Add Node tests under `tests/node` and Puppeteer tests under `tests/browser` when meaningful coverage is needed. Runtime dependencies will be confirmed before their integrations are added.
 
@@ -37,8 +37,13 @@ For a manual check with visible Chrome:
 
 1. Run `node bin/symbiote-agui.js start demo` and confirm the waiting page opens. Use `--browser-path <PATH>` if needed.
 2. Run `node bin/symbiote-agui.js status demo` and confirm `ready`. Starting `demo` again should report `SESSION_EXISTS`.
-3. Start a second ID, then stop `demo`. Confirm only the first session's browser closes.
-4. Close the second session's page manually, check for `disconnected`, then stop that ID. Repeating `stop` should return `stopped`.
+3. Pipe the sample below into `insert demo`, then insert a different HTML fragment from a file with `node bin/symbiote-agui.js insert demo --file ./view.html`. Confirm the previous content is replaced and the browser tab stays open.
+4. Start a second ID and insert different content. Confirm updates affect only the chosen session, then stop `demo`. Only the first session's browser should close.
+5. Close the second session's page manually, check for `disconnected`, then stop that ID. Repeating `stop` should return `stopped`.
+
+```sh
+printf '%s\n' '<section class="p-8"><h1 class="text-2xl font-bold">Hello from AGUI</h1><details class="mt-4"><summary class="cursor-pointer text-blue-600">Open</summary><p>Native HTML interaction works.</p></details></section>' | node bin/symbiote-agui.js insert demo
+```
 
 Focused lifecycle checks are available with `npm run test:node`. To run the Puppeteer checks with a separate headless Chrome, set `AGUI_TEST_BROWSER_PATH` to its executable and run `npm run test:browser`. The browser checks skip when that path is absent and use temporary profiles and state directories.
 
@@ -57,7 +62,7 @@ Focused lifecycle checks are available with `npm run test:node`. To run the Pupp
 
 ## Runtime contract
 
-This contract defines the initial implementation. Session lifecycle commands are implemented; markup insertion is the next step.
+This contract defines the initial implementation. Session lifecycle and markup delivery are implemented; Symbiote interactivity is the next step.
 
 ### Package and commands
 
@@ -75,11 +80,11 @@ npx symbiote-agui stop demo
 
 - Session IDs are caller-supplied, case-sensitive names matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`. They identify UI sessions, independently of operating system process IDs, and are unique for the current OS user across working directories.
 - `start` returns after the server, CDP connection, and session page are ready. Starting an existing live ID fails without changing that session. Startup has a 30-second timeout and rolls back resources created by the failed attempt.
-- `insert` reads UTF-8 HTML from exactly one source: `--file <PATH>` or stdin when `--file` is absent. An interactive terminal without a file fails with usage instructions. Relative paths resolve from the caller's working directory.
+- `insert` reads UTF-8 HTML from exactly one source: `--file <PATH>` or stdin when `--file` is absent. An interactive terminal without a file fails with usage instructions. Relative paths resolve from the caller's working directory. Input is limited to 1 MiB; empty input clears the content root.
 - Each insertion replaces the generated content inside the page's dedicated content root. The runtime shell remains mounted; replacing content resets the removed components' local state. Success means the page applied the replacement, not that asynchronous widgets have finished loading.
 - `status` checks the worker and browser connection and returns `ready`, `disconnected`, or `stopped`. A missing session is `stopped`; a live worker with a missing page or CDP connection is `disconnected`.
 - `stop` is idempotent. It closes the session page, shuts down the worker and server, and removes session metadata and temporary browser data. A later `start` with the same ID creates a fresh session.
-- Commands write one JSON result to stdout: `{ "ok": true, "sessionId": "demo", "state": "ready" }`, with `url` and `cdpUrl` on successful `start` and `status` while ready. Failures return `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Diagnostics go to stderr. Exit codes are `0` for success, `1` for runtime failure, and `2` for invalid arguments or input.
+- Commands write one JSON result to stdout: `{ "ok": true, "sessionId": "demo", "state": "ready" }`, with `url` and `cdpUrl` on successful `start`, `insert`, and `status` while ready. Failures return `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Diagnostics go to stderr. Exit codes are `0` for success, `1` for runtime failure, and `2` for invalid arguments or input.
 
 ### Browser and CDP
 
@@ -103,6 +108,14 @@ An unresponsive live worker or a session still starting returns `SESSION_UNREACH
 ## Markup generation
 
 Agent can generate regular markup using standard elements with Tailwind styling. If ready-made components are described in skill - it can use those interactive elements and widgets.
+
+Insert HTML fragments such as `<section>...</section>`. Each update replaces the content root's children and resets their local state while keeping the shell and tab mounted. Updates are serialized per session. Reloading the page restores the initial waiting view.
+
+Tailwind classes are collected from the fragment, including nested `<template>` contents, and compiled locally. Use complete class names such as `p-4`, `md:grid-cols-2`, and `w-[123px]`; new class names computed later by scripts are not detected. Compiled utilities accumulate for the lifetime of the session. See [Tailwind class detection](https://tailwindcss.com/docs/detecting-classes-in-source-files).
+
+The worker publishes CSS through JSDA and waits for the replacement stylesheet to load before changing the content. A rendering or stylesheet failure leaves the previous content in place and returns `INSERT_FAILED`; stopped or disconnected sessions return the corresponding `SESSION_STOPPED` or `SESSION_DISCONNECTED` error. Success acknowledges DOM replacement and stylesheet loading, without waiting for external images or asynchronous widgets.
+
+Native HTML controls work immediately. Inserted `<script>` elements remain inert, as with HTML template parsing. Registered Symbiote components and reactive context support belong to the next implementation step.
 
 ## RAT
 

@@ -61,7 +61,7 @@ process.once('message', async (message) => {
   try {
     await starting;
     controller.signal.throwIfAborted();
-    let endpoint = await startControlServer(record, () => runtime.status(), stopResources);
+    let endpoint = await startControlServer(record, () => runtime.status(), stopResources, (html) => runtime.insert(html));
     control = endpoint.server;
     record.controlUrl = endpoint.url;
     await writeSession(record);

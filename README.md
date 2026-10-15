@@ -47,6 +47,18 @@ printf '%s\n' '<section class="p-8"><h1 class="text-2xl font-bold">Hello from AG
 
 Focused lifecycle checks are available with `npm run test:node`. To run the Puppeteer checks with a separate headless Chrome, set `AGUI_TEST_BROWSER_PATH` to its executable and run `npm run test:browser`. The browser files run sequentially with bounded browser startup times, skip when that path is absent, and use temporary profiles and state directories.
 
+## Agent usage
+
+The portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) describes the implemented workflow, component APIs, and error recovery. Point your harness at that file, or copy its `symbiote-agui` folder into the harness's skill directory. This repository does not install the skill into a harness automatically.
+
+Complete the development setup above, then give the agent the absolute checkout path as `AGUI_ROOT`. The skill uses `node "$AGUI_ROOT/bin/symbiote-agui.js"` while the package is private; it needs shell access and a local Chrome/Chromium. Interactive handlers and live state updates also need CDP access, through an available browser tool or the installed `puppeteer-core` dependency.
+
+1. Start a session with a task-specific ID and read its JSON result.
+2. Insert an HTML fragment from a file or stdin. The [counter example](#rat) below includes handler attachment through CDP.
+3. Let the user interact. Update existing state with Symbiote's APIs; use another `insert` for a full replacement, then reattach handlers.
+4. Use `status` to check the connection. Follow the skill's error recovery instructions if a command fails.
+5. Stop the session when the user is finished. Use separate IDs for independent interfaces.
+
 ## How it works
 
 1. AI-Agent/harness reads skill
@@ -188,6 +200,33 @@ let counter = document.querySelector('#counter');
 counter.set$({
   increment: () => { counter.$.count += 1; },
 });
+```
+
+For a complete CDP example, run this from the checkout root after inserting the counter into `demo`. It reads the session's current connection details and leaves the browser open:
+
+```sh
+node --input-type=module <<'JS'
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import puppeteer from 'puppeteer-core';
+
+let execute = promisify(execFile);
+let { stdout } = await execute(process.execPath, ['bin/symbiote-agui.js', 'status', 'demo']);
+let session = JSON.parse(stdout);
+if (!session.ok || session.state !== 'ready') {
+  throw new Error('Session demo must be ready.');
+}
+let browser = await puppeteer.connect({ browserWSEndpoint: session.cdpUrl });
+try {
+  let page = (await browser.pages()).find((candidate) => candidate.url() === session.url);
+  if (!page) { throw new Error('Session page is missing.'); }
+  await page.$eval('#counter', (counter) => {
+    counter.set$({ increment: () => { counter.$.count += 1; } });
+  });
+} finally {
+  await browser.disconnect();
+}
+JS
 ```
 
 Insert the fragment again and confirm the count resets and the new button needs its handler attached again. Invalid JSON data or a missing template returns `INSERT_FAILED` while preserving the existing content.

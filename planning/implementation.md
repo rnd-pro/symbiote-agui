@@ -1,6 +1,6 @@
 # AGUI implementation plan
 
-Status: Steps 1-5 completed. Steps 6-7 await approval.
+Status: Steps 1-6 completed. Step 7 awaits approval.
 
 Goal: An agent starts a local UI session, inserts generated markup, and updates interactive content independently of its harness or vendor.
 
@@ -30,7 +30,7 @@ Goal: An agent starts a local UI session, inserts generated markup, and updates 
    - Provide context through direct component updates and a context-provider supporting inherited and named contexts.
    - Verify bindings and user interaction after repeated markup updates.
 
-6. Write the agent skill and usage instructions.
+6. Write the agent skill and usage instructions. Completed; see [Agent usage](../README.md#agent-usage) and the [skill](../skills/symbiote-agui/SKILL.md).
    - Describe session commands, markup input, RAT, context updates, and error recovery.
    - Include one small interactive example; describe reusable widgets only when implemented.
    - Update the root README in place with setup and usage.

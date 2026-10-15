@@ -1,0 +1,101 @@
+import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
+import { access, mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { delimiter, join } from 'node:path';
+import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+
+let execute = promisify(execFile);
+let root = fileURLToPath(new URL('../../', import.meta.url));
+
+test('the production tarball runs through npm exec outside the checkout', { timeout: 180_000 }, async (t) => {
+  let npm = process.env.npm_execpath || '';
+  assert.ok(npm, 'Run this smoke test with npm run test:package.');
+  let directory = await mkdtemp(join(tmpdir(), 'agui package '));
+  let caller = join(directory, 'caller');
+  let cache = join(directory, 'cache');
+  let started = false;
+  let environment = {
+    ...process.env,
+    PATH: process.env.PATH?.split(delimiter).filter((entry) => !entry.startsWith(root)).join(delimiter),
+    AGUI_STATE_DIR: join(directory, 'state'),
+    npm_config_cache: cache,
+    npm_config_omit: 'dev',
+    npm_config_audit: 'false',
+    npm_config_fund: 'false',
+    npm_config_fetch_retries: '0',
+    npm_config_fetch_timeout: '30000',
+  };
+  await mkdir(caller);
+  t.after(async () => {
+    try {
+      if (started) { await cli('stop', 'package-smoke'); }
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  /**
+   * @param {string[]} args
+   * @param {string} cwd
+   */
+  async function runNpm(args, cwd) {
+    let { stdout } = await execute(process.execPath, [npm, ...args], {
+      cwd,
+      env: environment,
+      timeout: 120_000,
+      maxBuffer: 2 * 1024 * 1024,
+    });
+    return stdout;
+  }
+
+  let packed = JSON.parse(await runNpm(['pack', '--json', '--pack-destination', directory], root))[0];
+  let files = packed.files.map((/** @type {{path: string}} */ file) => file.path);
+  for (let path of ['bin/symbiote-agui.js', 'src/page/shell.html', 'src/page/theme.css', 'src/page/client/index.js', 'skills/symbiote-agui/SKILL.md']) {
+    assert.ok(files.includes(path), `${path} must be included in the tarball.`);
+  }
+  assert.equal(files.some((/** @type {string} */ path) => /^(tests|planning|node_modules)\//.test(path) || path === 'AGENTS.md'), false);
+  let archive = join(directory, packed.filename);
+
+  /**
+   * @param {string[]} args
+   * @param {boolean} [offline]
+   */
+  function npx(args, offline = true) {
+    return runNpm(['exec', '--yes', ...(offline ? ['--offline'] : []), '--package', archive, '--', 'symbiote-agui', ...args], caller);
+  }
+
+  /** @param {string[]} args */
+  async function cli(...args) {
+    return JSON.parse(await npx(args));
+  }
+
+  assert.match(await npx(['--help'], false), /Usage: symbiote-agui/);
+  assert.equal((await npx(['--version'])).trim(), packed.version);
+  let installs = await readdir(join(cache, '_npx'));
+  assert.equal(installs.length, 1);
+  let modules = join(cache, '_npx', installs[0], 'node_modules');
+  await assert.rejects(access(join(modules, 'puppeteer-core')));
+  let manifest = JSON.parse(await readFile(join(modules, 'symbiote-agui', 'package.json'), 'utf8'));
+  assert.equal(manifest.private, undefined);
+
+  let session = await cli('start', 'package-smoke', '--no-open');
+  started = true;
+  assert.equal(session.state, 'waiting');
+  assert.equal((await cli('status', 'package-smoke')).url, session.url);
+  await writeFile(join(caller, 'view with spaces.html'), '<h1 class="w-[123px]">Packaged AGUI</h1>');
+  assert.equal((await cli('insert', 'package-smoke', '--file', 'view with spaces.html')).delivery, 'queued');
+  for (let path of ['/', '/client/index.js', '/styles.css.js']) {
+    let response = await fetch(new URL(path, session.url));
+    assert.equal(response.status, 200, path);
+    let content = await response.text();
+    assert.ok(content.length > 0, path);
+    if (path === '/styles.css.js') { assert.match(content, /123px/); }
+  }
+  assert.deepEqual((await cli('events', 'package-smoke')).events, []);
+  assert.equal((await cli('stop', 'package-smoke')).state, 'stopped');
+  started = false;
+  assert.equal((await cli('status', 'package-smoke')).state, 'stopped');
+});

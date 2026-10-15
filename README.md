@@ -4,6 +4,19 @@
 
 AGUI serves generated interfaces as regular local web pages. A small page runtime receives updates over WebSocket and sends interaction events back. Users open the session URL in their normal browser; browser debugging, isolated profiles, and browser process management are unnecessary.
 
+## Usage with npx
+
+Use Node.js 24 or newer. After version `0.1.0` is published to npm, run from any directory:
+
+```sh
+npx --yes symbiote-agui@0.1.0 start demo
+npx --yes symbiote-agui@0.1.0 insert demo --file ./view.html
+npx --yes symbiote-agui@0.1.0 status demo
+npx --yes symbiote-agui@0.1.0 stop demo
+```
+
+No checkout, global installation, or browser automation setup is required. Keep the same package version for all commands in a session. File paths resolve from your current directory; session state lives separately under `~/.symbiote-agui`. Use `--no-open` on `start` when you want to open the returned URL yourself. For a local package before publication, use the tarball workflow below.
+
 ## Main dependencies
 
 - Symbiote.js for RAT templates and reactive contexts.
@@ -34,17 +47,30 @@ JSDA-Kit is pinned to 1.6.3 because the server adapter passes Node's `{ host, po
 
 For the browser tests, set `AGUI_TEST_BROWSER_PATH` to an installed Chrome/Chromium executable and run `npm run test:browser`, or `npm test` for both suites. Tests open ordinary session URLs in headless Chrome, with temporary state and profiles. WebMCP tests explicitly enable and disable the native API; the enabled case requires Chrome with `WebMCPTesting` support. Browser files run sequentially and skip when the executable path is absent. Chrome is needed only for these tests.
 
-## Agent usage
-
-Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the agent's harness, or copy its folder into the harness's skill directory. Set `AGUI_ROOT` to the absolute checkout path. The package remains private during development; use the local CLI rather than downloading `symbiote-agui` from npm.
+### Package checks and release
 
 ```sh
-node "$AGUI_ROOT/bin/symbiote-agui.js" start demo
-node "$AGUI_ROOT/bin/symbiote-agui.js" insert demo --file ./view.html
-node "$AGUI_ROOT/bin/symbiote-agui.js" update demo --file ./state.json
-node "$AGUI_ROOT/bin/symbiote-agui.js" events demo
-node "$AGUI_ROOT/bin/symbiote-agui.js" status demo
-node "$AGUI_ROOT/bin/symbiote-agui.js" stop demo
+npm run test:package
+npm pack --dry-run
+npm pack
+npx --yes --package ./symbiote-agui-0.1.0.tgz symbiote-agui --help
+```
+
+The package smoke test packs the checkout and runs it through `npm exec` (the implementation behind `npx`) from an unrelated directory with a fresh npm cache and production dependencies only. It checks the CLI, detached worker, relative file input, page assets, compiled styles, and shutdown. It needs registry access but no browser. The tarball includes executable source, page assets, shared types, and the portable agent skill; tests and planning files stay in the checkout. No runtime build is required.
+
+Publication is a separate maintainer action: review the package and run `npm publish` when ready. Its `prepublishOnly` hook runs type checking and Node tests. The registry examples require that publication to succeed; creating a tarball does not publish it.
+
+## Agent usage
+
+Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the agent's harness, or copy its folder from the installed package into the harness's skill directory. The skill uses the versioned `npx` CLI:
+
+```sh
+npx --yes symbiote-agui@0.1.0 start demo
+npx --yes symbiote-agui@0.1.0 insert demo --file ./view.html
+npx --yes symbiote-agui@0.1.0 update demo --file ./state.json
+npx --yes symbiote-agui@0.1.0 events demo
+npx --yes symbiote-agui@0.1.0 status demo
+npx --yes symbiote-agui@0.1.0 stop demo
 ```
 
 `start` opens the session in the OS default browser. Use `start demo --no-open` to obtain the URL without opening a tab. If opening fails, the server remains available and the result includes `opened: false` and a warning; open the returned URL manually. The old `--browser-path` and `--cdp-url` options have been removed.
@@ -100,7 +126,7 @@ Executable scripts inserted as ordinary markup remain inert. Explicitly opt into
 After starting `demo`, insert this fragment:
 
 ```sh
-node "$AGUI_ROOT/bin/symbiote-agui.js" insert demo <<'HTML'
+npx --yes symbiote-agui@0.1.0 insert demo <<'HTML'
 <agui-component id="counter" class="block p-8">
   <script type="application/json">{"count":0,"increment":null}</script>
   <button type="button" class="rounded bg-blue-600 p-4 text-white" bind="onclick: increment">
@@ -124,8 +150,8 @@ HTML
 Clicking increments the count and queues a `count` event. Read events and update state from the agent's shell:
 
 ```sh
-node "$AGUI_ROOT/bin/symbiote-agui.js" events demo
-printf '%s\n' '{"selector":"#counter","values":{"count":10}}' | node "$AGUI_ROOT/bin/symbiote-agui.js" update demo
+npx --yes symbiote-agui@0.1.0 events demo
+printf '%s\n' '{"selector":"#counter","values":{"count":10}}' | npx --yes symbiote-agui@0.1.0 update demo
 ```
 
 An update selects components inside the content root and calls their native `set$()` method. Use `"method":"add$"` to add fields and `"rewrite":true` to overwrite existing ones. Functions belong in modules; state commands contain JSON values. `emit()` returns `false` when the connection is unavailable and does not buffer events in the page.
@@ -157,7 +183,7 @@ Use templates in the same insertion for reusable markup. Unknown custom tags wit
 
 ### WebMCP
 
-The browser entry imports Symbiote's [WebMCP extension](./node_modules/@symbiotejs/symbiote/docs/webmcp.md) before rendering and enables `Symbiote.mcpToolMode`. Bound handlers become native browser tools automatically; the counter above exposes `increment_in_agui-component`. Popup bindings such as `^increment` retain their ancestor owner and source component identity. The CLI and normal UI also work when the browser has no WebMCP API.
+The browser entry imports Symbiote's [WebMCP extension](https://github.com/symbiotejs/symbiote.js/blob/main/docs/webmcp.md) before rendering and enables `Symbiote.mcpToolMode`. Bound handlers become native browser tools automatically; the counter above exposes `increment_in_agui-component`. Popup bindings such as `^increment` retain their ancestor owner and source component identity. The CLI and normal UI also work when the browser has no WebMCP API.
 
 For explicit descriptions, input schemas, and visibility, initialize native `ToolDescriptor` values in a component's `init$`. For example, insert:
 

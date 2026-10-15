@@ -1,11 +1,23 @@
 {
   "name": "symbiote-agui",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "Local interactive interfaces for AI agents, built with Symbiote.js.",
   "type": "module",
   "bin": {
     "symbiote-agui": "./bin/symbiote-agui.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "types/",
+    "skills/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rnd-pro/symbiote-agui.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=24"
@@ -14,8 +26,10 @@
     "start": "node ./bin/symbiote-agui.js",
     "types": "tsc --project tsconfig.json && tsc --project tsconfig.browser.json",
     "test:node": "node --test tests/node/*.test.js",
+    "test:package": "node --test tests/node/package-smoke.js",
     "test:browser": "node --test --test-concurrency=1 tests/browser/*.test.js",
-    "test": "npm run test:node && npm run test:browser"
+    "test": "npm run test:node && npm run test:browser",
+    "prepublishOnly": "npm run types && npm run test:node"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

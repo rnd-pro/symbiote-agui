@@ -5,19 +5,19 @@ description: Create and update local interactive interfaces in regular browser p
 
 # Symbiote AGUI
 
-Use AGUI to show an interface in the user's normal browser and receive its interaction events. It requires Node.js 24 or newer and a checkout with `npm ci` completed. Set `AGUI_ROOT` to the absolute checkout path; this skill's installation directory may be elsewhere. The package is private during development, so use the checkout's CLI rather than downloading it with `npx`.
+Use AGUI to show an interface in the user's normal browser and receive its interaction events. It requires Node.js 24 or newer. Run the published package through `npx`; no checkout or global installation is required. Keep the same package version for every command in a session. These examples target `0.1.0` and require that version to be published. For unpublished development, use `node /absolute/checkout/bin/symbiote-agui.js` in place of the `npx` command.
 
 ## Session workflow
 
 Choose an ID matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`. Reuse it for the same interface, and choose distinct IDs for independent interfaces. IDs are case-sensitive and shared across working directories for the current OS user.
 
 ```sh
-node "$AGUI_ROOT/bin/symbiote-agui.js" start demo
-node "$AGUI_ROOT/bin/symbiote-agui.js" insert demo --file /absolute/path/view.html
-node "$AGUI_ROOT/bin/symbiote-agui.js" update demo --file /absolute/path/state.json
-node "$AGUI_ROOT/bin/symbiote-agui.js" events demo
-node "$AGUI_ROOT/bin/symbiote-agui.js" status demo
-node "$AGUI_ROOT/bin/symbiote-agui.js" stop demo
+npx --yes symbiote-agui@0.1.0 start demo
+npx --yes symbiote-agui@0.1.0 insert demo --file /absolute/path/view.html
+npx --yes symbiote-agui@0.1.0 update demo --file /absolute/path/state.json
+npx --yes symbiote-agui@0.1.0 events demo
+npx --yes symbiote-agui@0.1.0 status demo
+npx --yes symbiote-agui@0.1.0 stop demo
 ```
 
 `start` opens a regular page in the OS default browser. Use `--no-open` to return the URL without opening a tab. Keep the entire returned URL, including its token fragment. A failed browser opener returns `opened: false` and a warning while leaving the server available; give the user the URL to open manually. Chrome, CDP, debugging flags, and browser automation tools are unnecessary for the runtime.
@@ -43,7 +43,7 @@ Ordinary inserted executable scripts remain inert. Opt into inline handler modul
 After starting `demo`, insert:
 
 ```sh
-node "$AGUI_ROOT/bin/symbiote-agui.js" insert demo <<'HTML'
+npx --yes symbiote-agui@0.1.0 insert demo <<'HTML'
 <agui-component id="counter" class="block p-8">
   <script type="application/json">{"count":0,"increment":null}</script>
   <button type="button" class="rounded bg-blue-600 p-4 text-white" bind="onclick: increment">
@@ -67,8 +67,8 @@ HTML
 Clicking increments the count and sends a `count` event. Retrieve events or update the component through the CLI:
 
 ```sh
-node "$AGUI_ROOT/bin/symbiote-agui.js" events demo
-printf '%s\n' '{"selector":"#counter","values":{"count":10}}' | node "$AGUI_ROOT/bin/symbiote-agui.js" update demo
+npx --yes symbiote-agui@0.1.0 events demo
+printf '%s\n' '{"selector":"#counter","values":{"count":10}}' | npx --yes symbiote-agui@0.1.0 update demo
 ```
 
 ## State, events, and contexts
@@ -89,7 +89,7 @@ AGUI already imports Symbiote's native WebMCP extension and enables `Symbiote.mc
 
 Import `ToolDescriptor` from the fully resolved `/client/index.js` URL for explicit tools. Define descriptors in a subclass's `init$` before first render, with `description`, `inputSchema`, and `execute`. Use `componentDescription` for extra component context. Conditional tools need both `when` and `deps` listing every state key read by the condition. Immediately adding and syncing descriptors after mount can abort pending native registrations in Symbiote 3.8.2.
 
-Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete module-owned contexts in the module cleanup; component tools follow Symbiote's DOM lifecycle automatically. Use the exported `getActiveWebMCPTools()` and entries' `nativeActive` field for diagnostics. Read `$AGUI_ROOT/README.md`, WebMCP section, for browser setup and a complete explicit tool example. Use these native APIs when a WebMCP-capable client is available; continue using CLI events and state commands for ordinary sessions.
+Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete module-owned contexts in the module cleanup; component tools follow Symbiote's DOM lifecycle automatically. Use the exported `getActiveWebMCPTools()` and entries' `nativeActive` field for diagnostics. See the [project README](https://github.com/rnd-pro/symbiote-agui#webmcp) for browser setup and a complete explicit tool example. Use these native APIs when a WebMCP-capable client is available; continue using CLI events and state commands for ordinary sessions.
 
 ## Reconnection and recovery
 

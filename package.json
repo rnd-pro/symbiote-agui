@@ -17,5 +17,10 @@
   "devDependencies": {
     "@types/node": "^24.19.2",
     "typescript": "^7.0.2"
+  },
+  "author": {
+    "email": "team@rnd-pro.com",
+    "name": "RND-PRO.com",
+    "url": "https://rnd-pro.com/"
   }
 }

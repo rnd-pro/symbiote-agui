@@ -1,5 +1,5 @@
 import { Symbiote } from '@symbiotejs/symbiote';
-import { readInitialData } from './data.js';
+import { readInitialData } from '../../markup/data.js';
 
 /** @extends {Symbiote<import('../../../types/components.js').ComponentState>} */
 export class AguiComponent extends Symbiote {

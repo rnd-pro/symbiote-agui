@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { startSession } from '../sessions/start.js';
-import { statusSession, stopSession } from '../sessions/lifecycle.js';
-import { insertMarkup } from '../sessions/insert.js';
+import { statusSession, stopSession, readEvents } from '../sessions/lifecycle.js';
+import { insertMarkup, updateState } from '../sessions/insert.js';
+import { openPage } from '../browser/open.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { HELP } from './commands.js';
@@ -27,12 +28,22 @@ export async function run(args) {
     }
 
     let handlers = {
-      start: () => startSession(request.sessionId, request.browser),
+      start: () => startSession(request.sessionId),
       status: () => statusSession(request.sessionId),
       stop: () => stopSession(request.sessionId),
       insert: () => insertMarkup(request.sessionId, request.file),
+      update: () => updateState(request.sessionId, request.file),
+      events: () => readEvents(request.sessionId),
     };
     let status = await handlers[request.command]();
+    if (request.command === 'start' && request.open && status.url) {
+      try {
+        await openPage(status.url);
+        status = { ...status, opened: true };
+      } catch {
+        status = { ...status, opened: false, warning: 'Could not open the default browser. Open the session URL manually.' };
+      }
+    }
     process.stdout.write(`${JSON.stringify({ ok: true, ...status })}\n`);
     return EXIT_CODE.SUCCESS;
   } catch (error) {

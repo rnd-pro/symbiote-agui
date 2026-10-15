@@ -13,6 +13,9 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "paths": {
+      "linkedom": [
+        "./types/linkedom.d.ts"
+      ],
       "@tailwindcss/node": [
         "./types/tailwindcss-node.d.ts"
       ]

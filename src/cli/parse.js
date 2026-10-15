@@ -1,5 +1,4 @@
 import { parseArgs } from 'node:util';
-import { resolveBrowserOptions } from '../browser/options.js';
 import { assertSessionId } from '../sessions/identity.js';
 import { CommandError } from '../shared/command-error.js';
 import { COMMANDS } from './commands.js';
@@ -19,8 +18,7 @@ export function parseCommand(args) {
       options: {
         help: { type: 'boolean', short: 'h' },
         version: { type: 'boolean', short: 'v' },
-        'browser-path': { type: 'string' },
-        'cdp-url': { type: 'string' },
+        'no-open': { type: 'boolean' },
         file: { type: 'string' },
       },
     });
@@ -65,7 +63,7 @@ export function parseCommand(args) {
     kind: 'command',
     command,
     sessionId,
-    browser: resolveBrowserOptions(values['browser-path'], values['cdp-url']),
+    open: !values['no-open'],
     file: values.file,
   };
 }

@@ -1,5 +1,4 @@
 import type { SESSION_STATE } from '../src/sessions/constants.js';
-import type { BrowserOptions } from './browser.js';
 import type { CommandFailure } from './cli.js';
 
 export type SessionState = typeof SESSION_STATE[keyof typeof SESSION_STATE];
@@ -8,7 +7,12 @@ export interface SessionStatus {
   sessionId: string;
   state: SessionState;
   url?: string;
-  cdpUrl?: string;
+  clients?: number;
+  delivery?: string;
+  opened?: boolean;
+  warning?: string;
+  events?: import('./transport.js').SessionEvent[];
+  dropped?: number;
 }
 
 export interface SessionRecord {
@@ -17,12 +21,9 @@ export interface SessionRecord {
   controlToken: string;
   pid: number;
   launcherPid: number;
-  browser: BrowserOptions;
+  pageToken: string;
   controlUrl?: string;
   url?: string;
-  cdpUrl?: string;
-  targetId?: string;
-  browserPid?: number;
 }
 
 export type WorkerReply =
@@ -38,3 +39,16 @@ export type ControlReply = ControlIdentity & (
   | { result: SessionStatus }
   | { error: CommandFailure['error']; exitCode: number }
 );
+
+export interface ControlActions {
+  insert?(html: string): Promise<SessionStatus>;
+  update?(input: unknown): Promise<SessionStatus>;
+  events?(): SessionStatus;
+}
+
+export interface PendingPageRequest {
+  socket: import('ws').WebSocket;
+  resolve(): void;
+  reject(error: Error): void;
+  timer: ReturnType<typeof setTimeout>;
+}

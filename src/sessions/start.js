@@ -13,11 +13,10 @@ import { getStateRoot, isProcessAlive, readSession, recordDirectory, releaseSess
 
 /**
  * @param {string} sessionId
- * @param {import('../../types/browser.js').BrowserOptions} browser
  */
-async function reserveAvailableSession(sessionId, browser) {
+async function reserveAvailableSession(sessionId) {
   try {
-    return await reserveSession(sessionId, browser);
+    return await reserveSession(sessionId);
   } catch (error) {
     if (!['EEXIST', 'ENOTEMPTY', 'EPERM'].some((code) => hasErrorCode(error, code))) {
       throw error;
@@ -48,7 +47,7 @@ async function reserveAvailableSession(sessionId, browser) {
   }
 
   try {
-    return await reserveSession(sessionId, browser);
+    return await reserveSession(sessionId);
   } catch (error) {
     if (['EEXIST', 'ENOTEMPTY', 'EPERM'].some((code) => hasErrorCode(error, code))) {
       throw new CommandError(`Another start reserved session ${sessionId}.`, ERROR_CODE.SESSION_EXISTS, EXIT_CODE.RUNTIME_ERROR);
@@ -98,10 +97,9 @@ function waitForStartup(child) {
 
 /**
  * @param {string} sessionId
- * @param {import('../../types/browser.js').BrowserOptions} browser
  */
-export async function startSession(sessionId, browser) {
-  let record = await reserveAvailableSession(sessionId, browser);
+export async function startSession(sessionId) {
+  let record = await reserveAvailableSession(sessionId);
   /** @type {import('node:child_process').ChildProcess | undefined} */
   let child;
   /** @type {import('node:fs/promises').FileHandle | undefined} */
@@ -149,7 +147,7 @@ export async function startSession(sessionId, browser) {
     if (error instanceof CommandError) {
       throw error;
     }
-    throw new CommandError(`Could not start session ${sessionId}: ${error instanceof Error ? error.message : error}. Provide --browser-path or --cdp-url if Chrome is unavailable.`, ERROR_CODE.START_FAILED, EXIT_CODE.RUNTIME_ERROR);
+    throw new CommandError(`Could not start session ${sessionId}: ${error instanceof Error ? error.message : error}.`, ERROR_CODE.START_FAILED, EXIT_CODE.RUNTIME_ERROR);
   } finally {
     await log?.close();
   }

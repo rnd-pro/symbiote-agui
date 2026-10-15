@@ -5,3 +5,6 @@ export let STYLESHEET_PATH = '/styles.css.js';
 export let CLIENT_SCRIPT_PATH = '/client/index.js';
 export let CONTENT_ROOT_ID = 'agui-content';
 export let STYLESHEET_ID = 'agui-styles';
+export let COMPONENT_TAG = 'agui-component';
+export let PROVIDER_TAG = 'context-provider';
+export let DATA_SELECTOR = ':scope > script[type="text/json"], :scope > script[type="application/json"]';

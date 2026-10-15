@@ -10,9 +10,9 @@ import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
  * @param {import('../../types/session.js').SessionRecord} record
  * @param {() => import('../../types/session.js').SessionStatus} getStatus
  * @param {() => Promise<void>} stop
- * @param {(html: string) => Promise<import('../../types/session.js').SessionStatus>} [insert]
+ * @param {import('../../types/session.js').ControlActions} [actions]
  */
-export async function startControlServer(record, getStatus, stop, insert) {
+export async function startControlServer(record, getStatus, stop, actions = {}) {
   let server = createServer(async (request, response) => {
     let provided = Buffer.from(request.headers.authorization || '');
     let expected = Buffer.from(`Bearer ${record.controlToken}`);
@@ -24,7 +24,7 @@ export async function startControlServer(record, getStatus, stop, insert) {
 
     let action = `${request.method} ${request.url}`;
 
-    if (!['GET /status', 'POST /stop', 'POST /insert'].includes(action)) {
+    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update'].includes(action)) {
       response.writeHead(404).end();
       return;
     }
@@ -35,6 +35,9 @@ export async function startControlServer(record, getStatus, stop, insert) {
 
     try {
       let result = getStatus();
+      if (action === 'GET /events') {
+        result = actions.events ? actions.events() : { ...result, events: [], dropped: 0 };
+      }
 
       if (action === 'POST /stop') {
         await stop();
@@ -42,10 +45,20 @@ export async function startControlServer(record, getStatus, stop, insert) {
       }
 
       if (action === 'POST /insert') {
-        if (!insert) {
+        if (!actions.insert) {
           throw new CommandError('Markup delivery is unavailable in this worker.', ERROR_CODE.INSERT_FAILED, EXIT_CODE.RUNTIME_ERROR);
         }
-        result = await insert(await readUtf8Markup(request));
+        result = await actions.insert(await readUtf8Markup(request));
+      }
+      if (action === 'POST /update') {
+        if (!actions.update) { throw new CommandError('State updates are unavailable.'); }
+        let input;
+        try { input = JSON.parse(await readUtf8Markup(request)); }
+        catch (error) {
+          if (error instanceof CommandError) { throw error; }
+          throw new CommandError('State input must be valid JSON.');
+        }
+        result = await actions.update(input);
       }
 
       response.end(JSON.stringify({ ...identity, result }));

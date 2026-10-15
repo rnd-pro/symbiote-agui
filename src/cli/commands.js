@@ -1,11 +1,19 @@
 export let COMMANDS = Object.freeze({
   start: {
-    usage: 'start <SESSION_ID> [--browser-path <PATH> | --cdp-url <URL>]',
-    options: ['browser-path', 'cdp-url'],
+    usage: 'start <SESSION_ID> [--no-open]',
+    options: ['no-open'],
   },
   insert: {
     usage: 'insert <SESSION_ID> [--file <PATH>]',
     options: ['file'],
+  },
+  update: {
+    usage: 'update <SESSION_ID> [--file <PATH>]',
+    options: ['file'],
+  },
+  events: {
+    usage: 'events <SESSION_ID>',
+    options: [],
   },
   status: {
     usage: 'status <SESSION_ID>',
@@ -27,4 +35,6 @@ export let HELP = [
   '',
   'insert reads UTF-8 HTML from stdin when --file is absent.',
   'insert replaces the session content; input is limited to 1 MiB.',
+  'update reads JSON { selector, values, method?, rewrite? } from file or stdin.',
+  'events returns and clears buffered interface events.',
 ].join('\n');

@@ -31,15 +31,15 @@ test('JSDA serves the page on loopback without exposing source files', async (t)
 test('markup control errors retain worker identity and reject oversized bodies', async (t) => {
   let state = await temporaryState();
   t.after(() => state.close());
-  let record = await reserveSession('markup', { mode: 'managed', channel: 'chrome' });
+  let record = await reserveSession('markup');
   let received = '';
   let control = await startControlServer(record,
     () => ({ sessionId: record.sessionId, state: 'ready' }),
     async () => {},
-    async (html) => {
+    { insert: async (html) => {
       received = html;
       return { sessionId: record.sessionId, state: 'ready' };
-    });
+    } });
   t.after(() => closeServer(control.server));
   record.controlUrl = control.url;
   assert.equal((await requestSession(record, 'insert', 2_000, '<p>hello</p>')).state, 'ready');
@@ -51,17 +51,17 @@ test('markup control errors retain worker identity and reject oversized bodies',
 test('control requires authentication, verifies identity, and acknowledges cleanup', async (t) => {
   let state = await temporaryState();
   t.after(() => state.close());
-  let record = await reserveSession('control', { mode: 'managed', channel: 'chrome' });
+  let record = await reserveSession('control');
   let stopped = false;
   let control = await startControlServer(record,
-    () => ({ sessionId: record.sessionId, state: 'disconnected' }),
+    () => ({ sessionId: record.sessionId, state: 'waiting' }),
     async () => { stopped = true; });
   t.after(() => closeServer(control.server));
   record.controlUrl = control.url;
   let unauthorized = await fetch(`${control.url}/status`);
   assert.equal(unauthorized.status, 401);
   assert.equal(await unauthorized.text(), '');
-  assert.deepEqual(await requestSession(record, 'status'), { sessionId: 'control', state: 'disconnected' });
+  assert.deepEqual(await requestSession(record, 'status'), { sessionId: 'control', state: 'waiting' });
   await assert.rejects(requestSession({ ...record, pid: record.pid + 1 }, 'status'), { code: 'SESSION_UNREACHABLE' });
   assert.equal((await requestSession(record, 'stop')).state, 'stopped');
   assert.equal(stopped, true);

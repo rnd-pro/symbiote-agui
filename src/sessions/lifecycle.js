@@ -28,3 +28,12 @@ export async function stopSession(sessionId) {
 
   return requestSession(record, 'stop', SHUTDOWN_TIMEOUT_MS * 3);
 }
+
+/** @param {string} sessionId */
+export async function readEvents(sessionId) {
+  let record = await readSession(sessionId);
+  if (!record || !isProcessAlive(record.pid)) {
+    return { sessionId, state: SESSION_STATE.STOPPED, events: [], dropped: 0 };
+  }
+  return requestSession(record, 'events');
+}

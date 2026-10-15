@@ -1,49 +1,37 @@
 import assert from 'node:assert/strict';
-import { writeFile } from 'node:fs/promises';
+import { readdir, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import test from 'node:test';
 import puppeteer from 'puppeteer-core';
-import { closeBrowser } from '../../src/browser/cleanup.js';
+import { isProcessAlive, readSession } from '../../src/sessions/store.js';
 import { temporaryState } from '../node/state-fixture.js';
-import { cli, hasCliError, insertStdin } from './helpers.js';
+import { cli, hasCliError, insertStdin, sendStdin, waitForSession } from './helpers.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
-test('CLI sessions survive launcher exit and preserve an attached browser', {
+test('regular pages receive markup independently and remain open after stop', {
   skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
-  timeout: 90_000,
+  timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
-  let browser = await puppeteer.launch({
-    executablePath,
-    headless: true,
-    userDataDir: join(state.directory, 'external-browser'),
-    timeout: 10_000,
-    protocolTimeout: 10_000,
-  });
+  /** @type {import('puppeteer-core').Browser | undefined} */
+  let browser;
   t.after(async () => {
-    for (let id of ['demo', 'Demo']) {
-      await cli('stop', id).catch(() => {});
-    }
-    await browser.close();
+    for (let id of ['demo', 'Demo']) { await cli('stop', id).catch(() => {}); }
+    await browser?.close();
     await state.close();
   });
-  let unrelated = await browser.newPage();
-  let endpoint = browser.wsEndpoint();
-  let [first, second] = await Promise.all([
-    cli('start', 'demo', '--cdp-url', endpoint),
-    cli('start', 'Demo', '--cdp-url', endpoint),
-  ]);
-  assert.equal(first.state, 'ready');
-  assert.equal(second.state, 'ready');
+  browser = await puppeteer.launch({ executablePath, headless: true, timeout: 10_000, protocolTimeout: 10_000 });
+  let first = await cli('start', 'demo', '--no-open');
+  let second = await cli('start', 'Demo', '--no-open');
+  assert.equal(first.state, 'waiting');
+  assert.equal(second.state, 'waiting');
+  assert.equal(first.clients, 0);
+  assert.equal(first.cdpUrl, undefined);
   assert.notEqual(first.url, second.url);
-  assert.equal((await cli('status', 'demo')).cdpUrl, endpoint);
-  await assert.rejects(cli('start', 'demo', '--cdp-url', endpoint), (error) => hasCliError(error, 'SESSION_EXISTS'));
-  let firstPage = (await browser.pages()).find((page) => page.url() === first.url);
-  let secondPage = (await browser.pages()).find((page) => page.url() === second.url);
-  assert.ok(firstPage);
-  assert.ok(secondPage);
-  assert.ok(await firstPage.$('#agui-content'));
+  await assert.rejects(cli('start', 'demo', '--no-open'), (error) => hasCliError(error, 'SESSION_EXISTS'));
+  let record = await readSession('demo');
+  assert.ok(record);
   let file = join(state.directory, 'view with spaces.html');
   await writeFile(file, [
     '<section class="grid grid-cols-1 md:grid-cols-2 p-4">',
@@ -53,10 +41,19 @@ test('CLI sessions survive launcher exit and preserve an attached browser', {
     '<script>window.insertedScriptRan = true;</script>',
     '</section>',
   ].join('\n'));
+  let queued = await cli('insert', 'demo', '--file', relative(process.cwd(), file));
+  assert.equal(queued.delivery, 'queued');
+  await insertStdin('Demo', '<h1>Independent session</h1>');
+  let firstPage = await browser.newPage();
+  let secondPage = await browser.newPage();
   await firstPage.setViewport({ width: 900, height: 700 });
-  await firstPage.evaluate(() => Reflect.set(window, 'originalRoot', document.getElementById('agui-content')));
-  assert.equal((await cli('insert', 'demo', '--file', relative(process.cwd(), file))).state, 'ready');
-  assert.equal(await firstPage.$eval('h1', (element) => element.textContent), 'First café $&');
+  await firstPage.goto(first.url);
+  await secondPage.goto(second.url);
+  await firstPage.waitForSelector('h1');
+  await firstPage.waitForFunction(() => document.querySelector('h1')?.textContent === 'First café $&');
+  await secondPage.waitForFunction(() => document.querySelector('h1')?.textContent === 'Independent session');
+  assert.equal((await waitForSession('demo', 'ready')).clients, 1);
+  await firstPage.bringToFront();
   assert.equal(await firstPage.$eval('button', (element) => getComputedStyle(element).width), '123px');
   assert.equal(await firstPage.$eval('section', (element) => getComputedStyle(element).padding), '16px');
   assert.equal(await firstPage.$eval('section', (element) => getComputedStyle(element).gridTemplateColumns.split(' ').length), 2);
@@ -65,47 +62,111 @@ test('CLI sessions survive launcher exit and preserve an attached browser', {
   let background = await firstPage.$eval('button', (element) => getComputedStyle(element).backgroundColor);
   await firstPage.hover('button');
   assert.notEqual(await firstPage.$eval('button', (element) => getComputedStyle(element).backgroundColor), background);
-  assert.match(await secondPage.$eval('main', (element) => element.textContent || ''), /Waiting/);
-  assert.equal((await insertStdin('demo', '<details open class="p-8"><summary>Next</summary><p>Replacement</p></details>')).state, 'ready');
-  assert.equal(await firstPage.$('h1'), null);
-  assert.equal(await firstPage.$eval('details', (element) => getComputedStyle(element).padding), '32px');
-  assert.equal(await firstPage.evaluate(() => document.getElementById('agui-content') === Reflect.get(window, 'originalRoot')), true);
+  let replacement = '<details open class="p-8"><summary>Next</summary><p>Replacement</p></details>';
+  assert.equal((await insertStdin('demo', replacement)).delivery, 'applied');
   await firstPage.click('summary');
   assert.equal(await firstPage.$eval('details', (element) => element.open), false);
-  await assert.rejects(cli('insert', 'demo', '--file', `${file}.missing`), (error) => hasCliError(error, 'INVALID_INPUT'));
-  await firstPage.setOfflineMode(true);
-  await assert.rejects(insertStdin('demo', '<p>Failed replacement</p>'), (error) => hasCliError(error, 'INSERT_FAILED'));
-  assert.ok(await firstPage.$('details'));
-  await firstPage.setOfflineMode(false);
-  assert.equal((await insertStdin('demo', '')).state, 'ready');
+  await assert.rejects(insertStdin('demo', '<agui-component><script type="text/json">{broken}</script></agui-component>'), (error) => hasCliError(error, 'INSERT_FAILED'));
+  assert.equal(await firstPage.$eval('details', (element) => element.open), false);
+  await firstPage.reload();
+  await firstPage.waitForSelector('details');
+  assert.equal(await firstPage.$eval('details', (element) => element.open), true);
+  assert.equal(await secondPage.$eval('h1', (element) => element.textContent), 'Independent session');
+  await insertStdin('demo', '');
   assert.equal(await firstPage.$eval('main', (element) => element.childElementCount), 0);
   assert.equal((await cli('stop', 'demo')).state, 'stopped');
-  assert.equal(firstPage.isClosed(), true);
+  assert.equal(firstPage.isClosed(), false);
+  await firstPage.waitForFunction(() => document.getElementById('agui-connection')?.textContent === 'Session ended.');
   assert.equal((await cli('status', 'Demo')).state, 'ready');
-  assert.equal(unrelated.isClosed(), false);
   await secondPage.close();
-  assert.equal((await cli('status', 'Demo')).state, 'disconnected');
-  await assert.rejects(cli('insert', 'Demo', '--file', file), (error) => hasCliError(error, 'SESSION_DISCONNECTED'));
+  await waitForSession('Demo', 'waiting');
+  await assert.rejects(sendStdin('update', 'Demo', '{"selector":"#missing","values":{}}'), (error) => hasCliError(error, 'PAGE_UNAVAILABLE'));
   assert.equal((await cli('stop', 'Demo')).state, 'stopped');
-  await assert.rejects(cli('insert', 'Demo', '--file', file), (error) => hasCliError(error, 'SESSION_STOPPED'));
   assert.equal((await cli('stop', 'demo')).state, 'stopped');
-  assert.equal((await cli('start', 'demo', '--cdp-url', endpoint)).state, 'ready');
+  for (let attempt = 0; attempt < 100 && isProcessAlive(record.pid); attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  assert.equal(isProcessAlive(record.pid), false);
+  assert.deepEqual(await readdir(state.directory), ['view with spaces.html']);
   assert.equal(browser.connected, true);
-  assert.equal(unrelated.isClosed(), false);
-  await browser.close();
-  assert.equal((await cli('status', 'demo')).state, 'disconnected');
-  assert.equal((await cli('stop', 'demo')).state, 'stopped');
 });
 
-test('managed browser cleanup waits for its own Chrome process to exit', {
+test('inline modules, state commands, events, reload, and reconnect work in ordinary tabs', {
   skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
-  timeout: 30_000,
+  timeout: 60_000,
 }, async (t) => {
-  let browser = await puppeteer.launch({ executablePath, headless: true, timeout: 10_000, protocolTimeout: 10_000 });
-  t.after(() => browser.close());
-  let child = browser.process();
-  assert.ok(child);
-  await closeBrowser(browser, await browser.newPage(), true);
-  assert.equal(browser.connected, false);
-  assert.ok(child.exitCode !== null || child.signalCode !== null);
+  let state = await temporaryState();
+  /** @type {import('puppeteer-core').Browser | undefined} */
+  let browser;
+  t.after(async () => {
+    await cli('stop', 'interactive').catch(() => {});
+    await browser?.close();
+    await state.close();
+  });
+  browser = await puppeteer.launch({ executablePath, headless: true, timeout: 10_000, protocolTimeout: 10_000 });
+  let session = await cli('start', 'interactive', '--no-open');
+  let markup = [
+    '<template id="counter-template"><button bind="onclick: increment">Count: {{count}}</button></template>',
+    '<module-counter id="counter" use-template="#counter-template"><script type="application/json">{"count":0,"increment":null}</script></module-counter>',
+    '<script type="module" data-agui>',
+    'let { AguiComponent } = await import(new URL("/client/index.js", location.href).href);',
+    'if (!customElements.get("module-counter")) { customElements.define("module-counter", class extends AguiComponent { moduleRegistered = true; }); }',
+    'export default (root, { emit }) => {',
+    '  let counter = root.querySelector("#counter");',
+    '  counter.set$({ increment: () => { counter.$.count += 1; emit("count", { count: counter.$.count }); } });',
+    '  return () => { window.moduleDisposed = true; };',
+    '};',
+    '</script>',
+  ].join('\n');
+  await insertStdin('interactive', markup);
+  let page = await browser.newPage();
+  await page.goto(session.url);
+  await page.waitForSelector('button');
+  assert.equal(await page.$eval('#counter', (element) => Reflect.get(element, 'moduleRegistered')), true);
+  await page.waitForFunction(() => {
+    let counter = document.querySelector('#counter');
+    return counter && typeof Reflect.get(counter, '$')?.increment === 'function';
+  });
+  await page.click('button');
+  assert.match(await page.$eval('button', (element) => element.textContent || ''), /Count: 1/);
+  let events = await cli('events', 'interactive');
+  assert.equal(events.events.length, 1);
+  assert.equal(events.events[0].name, 'count');
+  assert.deepEqual(events.events[0].data, { count: 1 });
+  assert.deepEqual((await cli('events', 'interactive')).events, []);
+  await sendStdin('update', 'interactive', '{"selector":"#counter","values":{"count":10}}');
+  assert.match(await page.$eval('button', (element) => element.textContent || ''), /Count: 10/);
+  await sendStdin('update', 'interactive', '{"selector":"#counter","values":{"newField":42},"method":"add$"}');
+  assert.equal(await page.$eval('#counter', (element) => Reflect.get(element, '$').newField), 42);
+  await assert.rejects(sendStdin('update', 'interactive', '{"selector":"#missing","values":{}}'), (error) => hasCliError(error, 'UPDATE_FAILED'));
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pagehide')));
+  await waitForSession('interactive', 'waiting');
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow')));
+  await page.waitForFunction(() => document.querySelector('button')?.textContent === 'Count: 0');
+  await waitForSession('interactive', 'ready');
+  await page.goto('about:blank');
+  await waitForSession('interactive', 'waiting');
+  await insertStdin('interactive', '<script type="module" data-agui>throw new Error("Broken module");</script>');
+  await page.goto(session.url);
+  await page.waitForFunction(() => document.getElementById('agui-connection')?.textContent?.includes('Broken module'));
+  let failures = /** @type {import('../../types/transport.js').EventBatch} */ (await cli('events', 'interactive'));
+  assert.equal(failures.events[0]?.name, 'agui:error');
+  assert.deepEqual(failures.events[0]?.data, { message: 'Broken module' });
+  await insertStdin('interactive', markup);
+  let another = await browser.newPage();
+  await another.goto(session.url);
+  await another.waitForSelector('button');
+  assert.equal((await cli('status', 'interactive')).clients, 2);
+  await sendStdin('update', 'interactive', '{"selector":"#counter","values":{"count":7}}');
+  for (let tab of [page, another]) {
+    assert.equal(await tab.$eval('button', (element) => element.textContent), 'Count: 7');
+  }
+  await page.bringToFront();
+  await page.reload();
+  await page.waitForFunction(() => document.querySelector('button')?.textContent === 'Count: 0');
+  await insertStdin('interactive', '<p>Replacement</p>');
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'moduleDisposed')), true);
+  await cli('stop', 'interactive');
+  assert.equal(page.isClosed(), false);
+  assert.equal(another.isClosed(), false);
 });

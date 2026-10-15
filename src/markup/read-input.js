@@ -18,7 +18,7 @@ export async function readUtf8Markup(stream) {
     length += bytes.length;
 
     if (length > MAX_HTML_BYTES) {
-      throw new CommandError(`HTML input exceeds ${MAX_HTML_BYTES} bytes.`, ERROR_CODE.INPUT_TOO_LARGE, EXIT_CODE.INVALID_INPUT);
+      throw new CommandError(`Input exceeds ${MAX_HTML_BYTES} bytes.`, ERROR_CODE.INPUT_TOO_LARGE, EXIT_CODE.INVALID_INPUT);
     }
     chunks.push(bytes);
   }
@@ -26,7 +26,7 @@ export async function readUtf8Markup(stream) {
   try {
     return new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks));
   } catch {
-    throw new CommandError('HTML input must be valid UTF-8.');
+    throw new CommandError('Input must be valid UTF-8.');
   }
 }
 
@@ -36,7 +36,7 @@ export async function readUtf8Markup(stream) {
  */
 export async function readMarkup(file, stdin = process.stdin) {
   if (file === undefined && stdin.isTTY) {
-    throw new CommandError('Provide HTML with --file <PATH> or pipe UTF-8 HTML to stdin.');
+    throw new CommandError('Provide input with --file <PATH> or pipe UTF-8 input to stdin.');
   }
 
   let stream = file === undefined ? stdin : createReadStream(file);
@@ -47,7 +47,7 @@ export async function readMarkup(file, stdin = process.stdin) {
     if (error instanceof CommandError) {
       throw error;
     }
-    throw new CommandError(`Cannot read HTML input: ${errorMessage(error)}`);
+    throw new CommandError(`Cannot read input: ${errorMessage(error)}`);
   } finally {
     stream.destroy();
   }

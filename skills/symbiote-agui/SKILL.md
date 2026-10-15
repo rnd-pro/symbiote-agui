@@ -1,59 +1,46 @@
 ---
 name: symbiote-agui
-description: Create and update local interactive interfaces in Symbiote AGUI browser sessions using generated HTML, Tailwind, RAT templates, and reactive state. Use when an agent needs to display a UI for the user through AGUI.
+description: Create and update local interactive interfaces in regular browser pages through Symbiote AGUI sessions. Use for generated HTML, Tailwind styling, RAT templates, reactive state updates, and retrieving user interaction events through the AGUI CLI.
 ---
 
 # Symbiote AGUI
 
-Use AGUI to show generated interfaces in a persistent browser tab. It requires Node.js 24 or newer, an installed Chrome/Chromium, and a checkout with `npm ci` completed. The package is private during development: use the checkout's CLI rather than downloading `symbiote-agui` with `npx`.
-
-Set `AGUI_ROOT` to the absolute checkout path. This skill can be copied separately; its installation directory is not necessarily the project root.
+Use AGUI to show an interface in the user's normal browser and receive its interaction events. It requires Node.js 24 or newer and a checkout with `npm ci` completed. Set `AGUI_ROOT` to the absolute checkout path; this skill's installation directory may be elsewhere. The package is private during development, so use the checkout's CLI rather than downloading it with `npx`.
 
 ## Session workflow
 
-Choose a session ID matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`. Reuse that ID for updates to the same interface; use distinct IDs for independent interfaces. IDs are case-sensitive and shared across working directories for the current OS user.
+Choose an ID matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`. Reuse it for the same interface, and choose distinct IDs for independent interfaces. IDs are case-sensitive and shared across working directories for the current OS user.
 
 ```sh
 node "$AGUI_ROOT/bin/symbiote-agui.js" start demo
 node "$AGUI_ROOT/bin/symbiote-agui.js" insert demo --file /absolute/path/view.html
+node "$AGUI_ROOT/bin/symbiote-agui.js" update demo --file /absolute/path/state.json
+node "$AGUI_ROOT/bin/symbiote-agui.js" events demo
 node "$AGUI_ROOT/bin/symbiote-agui.js" status demo
 node "$AGUI_ROOT/bin/symbiote-agui.js" stop demo
 ```
 
-`start` launches visible Chrome with an isolated profile. If needed, add `--browser-path /path/to/chrome`, or attach to an already debugging-enabled browser with `--cdp-url http://127.0.0.1:9222` or a loopback `ws://` endpoint. These options are mutually exclusive. An attached session owns only its new tab.
+`start` opens a regular page in the OS default browser. Use `--no-open` to return the URL without opening a tab. Keep the entire returned URL, including its token fragment. A failed browser opener returns `opened: false` and a warning while leaving the server available; give the user the URL to open manually. Chrome, CDP, debugging flags, and browser automation tools are unnecessary for the runtime.
 
-Session commands return one JSON object on stdout. Check `ok` and `state`; successful ready results include `url` and `cdpUrl`. Errors have `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Logs go to stderr or the worker log. Help and version return plain text.
+Session commands return one JSON object on stdout. Check `ok`; errors include `error.code` and `error.message`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text.
 
-Keep the session open while the user interacts. Stop it when the user is finished or requests cleanup. `stop` is idempotent; it closes managed Chrome, or only the AGUI tab in an attached browser.
+A running session is `waiting` without pages and `ready` with connected pages; results include `url` and `clients`. `start` returns as soon as the worker is listening. Insertion without pages returns `delivery: "queued"`; connected pages acknowledge application with `delivery: "applied"`. Queued success cannot verify browser-specific rendering or module execution.
 
-## Markup and templates
+Keep the session available while the user interacts. Stop it when the user is finished or requests cleanup. `stop` is idempotent and ends the session without closing browser tabs. Open pages display `Session ended.`
 
-Pass a UTF-8 HTML fragment through `--file` or stdin. Input is limited to 1 MiB. Each successful `insert` replaces all generated content and resets its components' state and handlers. Empty input clears it. For small state changes, update the existing components through CDP instead of reinserting markup.
+## Markup and handlers
 
-Use standard HTML controls and complete Tailwind class names such as `p-4` and `md:grid-cols-2`. Classes are compiled locally from inserted markup, including templates. Class names added later by JavaScript are not collected. Insertion success acknowledges DOM replacement and stylesheet loading; wait separately for asynchronous content when needed.
+Pass a UTF-8 HTML fragment through `--file` or stdin, limited to 1 MiB. An empty fragment clears content. Each insertion replaces the generated content and resets its state and handlers. For small state changes, use `update` instead.
 
-Use `<agui-component>` for inline reactive markup. Initialize it with one direct child `<script type="application/json">` or `<script type="text/json">` containing an object with plain state keys. Use `{{property}}` for text and `bind="onclick: handler"` for events. Executable scripts inserted as markup remain inert; attach functions through CDP or registered component classes.
+Use standard HTML and complete Tailwind class names, including responsive and arbitrary-value utilities. Classes are compiled from markup, including nested templates; classes added later by JavaScript are not collected. Wait separately for external images or asynchronous widgets when necessary.
 
-For reusable markup, include `<template id="card-template">...</template>` and a custom element with `use-template="template#card-template"`. Unknown custom tags using `use-template` are registered as generic components. Include referenced templates in the same insertion. For custom behavior, import `AguiComponent` from `/client/index.js` inside the session page and register a subclass. No ready-made widget catalog is provided.
+Use `<agui-component>` for inline RAT markup. One direct child `<script type="application/json">` or `<script type="text/json">` initializes an object with plain state keys. Use `{{prop}}` for text and `bind="onclick: handler"` for events.
 
-## CDP and state updates
+Ordinary inserted executable scripts remain inert. Opt into inline handler modules using `<script type="module" data-agui>`. Place modules outside templates. Module-scope code runs before mounting for class registration; its default export receives `(root, { emit })` after mounting and may return a cleanup function for timers or global listeners. Modules execute from Blob URLs. Use fully resolved imports such as `await import(new URL('/client/index.js', location.href).href)`; root-relative imports alone cannot resolve against Blob URLs. That entry exports `AguiComponent`, `ContextProvider`, Symbiote's APIs, and `emit`.
 
-Connect with an available CDP tool, or use the checkout's `puppeteer-core` dependency. With Puppeteer, pass the returned `cdpUrl` as `browserWSEndpoint`, then select the page matching the returned `url`; do not assume the first tab is the session. Evaluate component updates inside that page. Disconnect the temporary client when done; `browser.close()` would close the browser used by the session.
+## Interactive example
 
-Use Symbiote's existing APIs:
-
-- `element.$.prop = value` updates one existing field.
-- `element.set$({ prop1: value1, prop2: value2 })` updates existing local fields. Unchanged primitive values skip notification unless the second argument is `true`.
-- `element.add$({ newProp: value })` adds fields, keeping existing values. Pass `true` as the second argument to overwrite existing fields too.
-- `element.sub('prop', handler)` observes a field and immediately calls the handler with its value; pass `false` as the third argument to skip that initial call.
-
-An anonymous `<context-provider>` exposes its local fields to descendants through `^prop`. A provider with `ctx="map"` also mirrors its local fields into the named context, including fields added through `add$()`. Consumers use `ctx="map"` with `*prop`, or explicit `map/prop` bindings. Keep one provider per named context. JSON initialization uses plain local keys; context prefixes belong in bindings or JavaScript access.
-
-Update scoped fields through the `$` proxy, such as `consumer.$['*lat'] = 77` or `element.$['map/lat'] = 77`. Named provider synchronization works in both directions. Replacement resets provider-owned contexts and releases removed components' subscriptions.
-
-## Small interactive example
-
-Insert a counter using stdin:
+After starting `demo`, insert:
 
 ```sh
 node "$AGUI_ROOT/bin/symbiote-agui.js" insert demo <<'HTML'
@@ -63,28 +50,49 @@ node "$AGUI_ROOT/bin/symbiote-agui.js" insert demo <<'HTML'
     Count: {{count}}
   </button>
 </agui-component>
+<script type="module" data-agui>
+export default (root, { emit }) => {
+  let counter = root.querySelector('#counter');
+  counter.set$({
+    increment: () => {
+      counter.$.count += 1;
+      emit('count', { count: counter.$.count });
+    },
+  });
+};
+</script>
 HTML
 ```
 
-Run this JavaScript in the session page through CDP or its browser console:
+Clicking increments the count and sends a `count` event. Retrieve events or update the component through the CLI:
 
-```js
-let counter = document.querySelector('#counter');
-counter.set$({
-  increment: () => { counter.$.count += 1; },
-});
+```sh
+node "$AGUI_ROOT/bin/symbiote-agui.js" events demo
+printf '%s\n' '{"selector":"#counter","values":{"count":10}}' | node "$AGUI_ROOT/bin/symbiote-agui.js" update demo
 ```
 
-Clicking the button increments the visible count. Update it without replacing the interface with `counter.set$({ count: 10 })`. Reinserted markup needs its handlers attached again.
+## State, events, and contexts
 
-## Error recovery
+`update` reads JSON `{ "selector": "#counter", "values": { "count": 10 } }` from file or stdin. It selects components inside the content root and calls native Symbiote `set$()`. To add fields, use `"method":"add$"`; set `"rewrite":true` to overwrite existing fields too. State input has the same 1 MiB limit as markup. Functions belong in modules, not JSON state input.
 
-- `SESSION_EXISTS`: check `status` and reuse the existing session when it belongs to this task; otherwise choose another ID. Do not stop it merely to resolve a name collision.
-- `SESSION_STOPPED`: start the intended session, then insert the markup.
-- `SESSION_DISCONNECTED` or a `disconnected` status: stop and start the session, then reinsert markup and reattach handlers. The runtime does not reconnect automatically.
-- `START_FAILED` or `START_TIMEOUT`: read the message, correct the browser path or CDP endpoint, then retry. Do not keep retrying the same configuration.
-- `INVALID_INPUT` or `INPUT_TOO_LARGE`: correct the arguments, encoding, or fragment size before retrying.
-- `INSERT_FAILED`: inspect the message and fix invalid JSON, missing templates, duplicate named providers, or stylesheet failures. Validation and stylesheet failures preserve previous content; inspect the page before retrying after other rendering errors.
-- `SESSION_UNREACHABLE` or `STOP_FAILED`: check status once more after startup or shutdown has had time to finish. If it persists, inspect `worker.log` under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`, or the configured `AGUI_STATE_DIR`. Report the blocker rather than looping or killing a PID from stored metadata.
+Inside modules, use Symbiote's native `$`, `set$()`, `add$()`, and `sub()` APIs. Access scoped properties through the `$` proxy, such as `element.$['map/lat']` or `consumer.$['*lat']`; bulk `set$()` updates local keys. Avoid implementing replacement state APIs.
 
-After an uncertain insertion outcome, inspect the page before sending the replacement again: the client can lose its response after the page has applied it. Use the same absolute `AGUI_STATE_DIR` for all commands when overriding storage. Treat session metadata and CDP endpoints as private local connection details.
+`emit(name, data)` sends a named JSON event, limited to 16 KiB. It returns `false` while disconnected and does not buffer in the page. `events` returns and clears the worker's most recent 100 events, with IDs, names, data, and timestamps; `dropped` reports overflow. Read events when awaiting user input, process the relevant events, and update the interface as the task requires. This is a temporary queue, not a durable event log.
+
+An anonymous `<context-provider>` exposes local fields to descendants through `^prop`. A provider with `ctx="map"` also mirrors fields into a named context. Consumers use `ctx="map"` with `*prop`, or explicit `map/prop` bindings. Use one provider per named context. Provider synchronization is bidirectional, including fields added through `add$()`.
+
+For reusable markup, include `<template id="card-template">...</template>` and a custom tag with `use-template="template#card-template"` in the same insertion. Unknown tags using `use-template` become generic components. Custom behavior can register a subclass of `AguiComponent`; registrations persist until page reload. No ready-made widget catalog is provided.
+
+## Reconnection and recovery
+
+Pages reconnect automatically and restore the latest accepted markup. Reload or reconnect resets live state to the markup's initial values and reruns its marked modules; state commands are not replayed. Multiple tabs receive the same insertions and state commands. Local interactions are independent until the agent sends a shared update. Stopping discards retained markup and events.
+
+- `SESSION_EXISTS`: check `status`; reuse a session belonging to this task or choose another ID. Do not stop an unrelated session to resolve a name collision.
+- `SESSION_STOPPED`: start the intended session before inserting.
+- `PAGE_UNAVAILABLE`: open the full session URL before sending state updates.
+- `INVALID_INPUT` or `INPUT_TOO_LARGE`: correct arguments, encoding, JSON, or input size before retrying.
+- `INSERT_FAILED`: fix the reported JSON, template, stylesheet, or module error. Validation and stylesheet failures preserve prior content. Read `agui:error` events for failures while restoring queued markup. Modules may already have run or changed content; reload the session URL to restore the last accepted markup when needed.
+- `UPDATE_FAILED`: check the selector and component fields. Commands and multi-tab delivery are not transactions; inspect affected pages before retrying after partial failure or timeout.
+- `START_FAILED`, `START_TIMEOUT`, or persistent `SESSION_UNREACHABLE`: inspect the message and private `worker.log`; report a persistent blocker rather than repeatedly retrying or killing a stored PID.
+
+Metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Use the same absolute `AGUI_STATE_DIR` for all commands when overriding storage. Treat the full session URL and tokens as private local connection details.

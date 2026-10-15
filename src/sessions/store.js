@@ -26,10 +26,9 @@ export function recordDirectory(record) {
 
 /**
  * @param {string} sessionId
- * @param {import('../../types/browser.js').BrowserOptions} browser
  * @returns {Promise<import('../../types/session.js').SessionRecord>}
  */
-export async function reserveSession(sessionId, browser) {
+export async function reserveSession(sessionId) {
   let root = getStateRoot();
   await mkdir(root, { recursive: true, mode: 0o700 });
   let candidate = await mkdtemp(join(root, '.pending-'));
@@ -39,7 +38,7 @@ export async function reserveSession(sessionId, browser) {
     controlToken: randomBytes(32).toString('hex'),
     pid: process.pid,
     launcherPid: process.pid,
-    browser,
+    pageToken: randomBytes(32).toString('hex'),
   };
 
   try {

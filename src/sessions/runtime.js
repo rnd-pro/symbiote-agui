@@ -1,27 +1,27 @@
-import { join } from 'node:path';
-import { connectBrowser } from '../browser/connection.js';
-import { closeBrowser } from '../browser/cleanup.js';
-import { applyMarkup, collectClassNames } from '../browser/markup.js';
-import { CLIENT_SCRIPT_PATH, CONTENT_ROOT_ID, STYLESHEET_ID, STYLESHEET_PATH, STYLESHEET_TIMEOUT_MS } from '../markup/constants.js';
+import { analyzeMarkup } from '../markup/analyze.js';
+import { STYLESHEET_PATH } from '../markup/constants.js';
 import { getStyles, publishStyles } from '../markup/styles.js';
 import { startPageServer } from '../server/page-server.js';
+import { PageConnection } from '../server/page-connection.js';
 import { closeServer } from '../shared/server.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { errorMessage } from '../shared/system-error.js';
-import { SESSION_STATE, STARTUP_TIMEOUT_MS } from './constants.js';
-import { recordDirectory } from './store.js';
+import { validateStateUpdate } from '../transport/state-update.js';
+import { SESSION_STATE } from './constants.js';
+import { SessionEvents } from './events.js';
 
 export class SessionRuntime {
-  /** @type {import('puppeteer-core').Browser | undefined} */
-  browser;
-  /** @type {import('puppeteer-core').Page | undefined} */
-  page;
   /** @type {import('node:http').Server | undefined} */
   server;
+  /** @type {PageConnection | undefined} */
+  pages;
   /** @type {import('../../types/markup.js').StyleCompiler | undefined} */
   styles;
+  /** @type {import('../../types/transport.js').RenderUpdate | undefined} */
+  latest;
   updates = Promise.resolve();
+  events = new SessionEvents();
   revision = 0;
   closing = false;
 
@@ -35,92 +35,95 @@ export class SessionRuntime {
     let { server, url, styles } = await startPageServer();
     this.server = server;
     this.styles = styles;
-    this.record.url = url;
+    this.record.url = `${url}#${this.record.pageToken}`;
+    this.latest = {
+      html: '<h1>AGUI</h1><p>Waiting for generated content.</p>',
+      revision: 0,
+      stylesheetUrl: new URL(STYLESHEET_PATH, url).href,
+    };
     signal.throwIfAborted();
-    this.browser = await connectBrowser(this.record.browser, join(recordDirectory(this.record), 'browser-profile'), signal);
-    signal.throwIfAborted();
-    this.page = await this.browser.newPage();
-    signal.throwIfAborted();
-    let response = await this.page.goto(url, { waitUntil: 'domcontentloaded', timeout: STARTUP_TIMEOUT_MS });
-
-    if (!response?.ok()) {
-      throw new Error('The session page failed to load.');
-    }
-
-    await this.page.evaluate(async (url) => {
-      let runtime = await import(url);
-      if (typeof runtime.replaceContent !== 'function') {
-        throw new Error('The AGUI component runtime did not initialize.');
-      }
-    }, new URL(CLIENT_SCRIPT_PATH, url).href);
-
-    let cdp = await this.page.createCDPSession();
-
-    try {
-      let { targetInfo } = await cdp.send('Target.getTargetInfo');
-      this.record.targetId = targetInfo.targetId;
-    } finally {
-      await cdp.detach();
-    }
-
-    this.record.cdpUrl = this.browser.wsEndpoint();
-    this.record.browserPid = this.browser.process()?.pid;
-    signal.throwIfAborted();
+    this.pages = new PageConnection(server, new URL(url).origin, this.record.pageToken,
+      (socket) => this.enqueue(async () => {
+        if (this.latest && this.pages && !this.closing) {
+          await this.pages.request(socket, { type: 'render', ...this.latest });
+        }
+      }),
+      (message) => this.events.add(message));
   }
 
   /** @returns {import('../../types/session.js').SessionStatus} */
   status() {
-    let ready = !this.closing && this.server?.listening && this.browser?.connected && this.page && !this.page.isClosed()
-      && this.page.url().split('#')[0] === this.record.url;
+    let clients = this.pages?.clients.size || 0;
+    return {
+      sessionId: this.record.sessionId,
+      state: this.closing ? SESSION_STATE.STOPPED : clients ? SESSION_STATE.READY : SESSION_STATE.WAITING,
+      url: this.record.url,
+      clients,
+    };
+  }
 
-    return ready
-      ? { sessionId: this.record.sessionId, state: SESSION_STATE.READY, url: this.record.url, cdpUrl: this.record.cdpUrl }
-      : { sessionId: this.record.sessionId, state: SESSION_STATE.DISCONNECTED };
+  /**
+   * @template T
+   * @param {() => Promise<T>} task
+   * @returns {Promise<T>}
+   */
+  enqueue(task) {
+    let result = this.updates.then(task);
+    this.updates = result.then(() => {}, () => {});
+    return result;
   }
 
   /** @param {string} html */
   insert(html) {
-    let update = this.updates.then(() => this.replaceMarkup(html));
-    this.updates = update.then(() => {}, () => {});
-    return update;
+    return this.enqueue(async () => {
+      if (this.closing || !this.styles || !this.pages || !this.latest) {
+        throw new CommandError('The session is stopped.', ERROR_CODE.SESSION_STOPPED, EXIT_CODE.RUNTIME_ERROR);
+      }
+      let previous = getStyles();
+      try {
+        let { classes } = analyzeMarkup(html);
+        publishStyles(this.styles.build(classes));
+        this.revision += 1;
+        let update = {
+          html,
+          revision: this.revision,
+          stylesheetUrl: new URL(`${STYLESHEET_PATH}?revision=${this.revision}`, this.record.url).href,
+        };
+        let applied = await this.pages.broadcast({ type: 'render', ...update });
+        this.latest = update;
+        return { ...this.status(), delivery: applied ? 'applied' : 'queued' };
+      } catch (error) {
+        publishStyles(previous);
+        throw new CommandError(`Could not insert markup: ${errorMessage(error)}`, ERROR_CODE.INSERT_FAILED, EXIT_CODE.RUNTIME_ERROR);
+      }
+    });
   }
 
-  /** @param {string} html */
-  async replaceMarkup(html) {
-    if (this.status().state !== SESSION_STATE.READY || !this.page || !this.styles) {
-      throw new CommandError('The session page is disconnected. Stop and start it before inserting markup.', ERROR_CODE.SESSION_DISCONNECTED, EXIT_CODE.RUNTIME_ERROR);
-    }
-
-    let previous = getStyles();
-
-    try {
-      let candidates = await this.page.evaluate(collectClassNames, html);
-      publishStyles(this.styles.build(candidates));
-      this.revision += 1;
-      await this.page.evaluate(applyMarkup, {
-        html,
-        stylesheetUrl: new URL(`${STYLESHEET_PATH}?revision=${this.revision}`, this.record.url).href,
-        pageUrl: this.record.url || '',
-        contentRootId: CONTENT_ROOT_ID,
-        stylesheetId: STYLESHEET_ID,
-        stylesheetTimeout: STYLESHEET_TIMEOUT_MS,
-        clientScriptUrl: new URL(CLIENT_SCRIPT_PATH, this.record.url).href,
-      });
-      return this.status();
-    } catch (error) {
-      publishStyles(previous);
-      let code = this.status().state === SESSION_STATE.READY ? ERROR_CODE.INSERT_FAILED : ERROR_CODE.SESSION_DISCONNECTED;
-      throw new CommandError(`Could not insert markup: ${errorMessage(error)}`, code, EXIT_CODE.RUNTIME_ERROR);
-    }
+  /** @param {unknown} input */
+  update(input) {
+    return this.enqueue(async () => {
+      let update;
+      try {
+        update = validateStateUpdate(input);
+      } catch (error) {
+        throw new CommandError(errorMessage(error));
+      }
+      if (this.closing || !this.pages?.clients.size) {
+        throw new CommandError('Open the session URL before updating component state.', ERROR_CODE.PAGE_UNAVAILABLE, EXIT_CODE.RUNTIME_ERROR);
+      }
+      try {
+        await this.pages.broadcast({ type: 'update', ...update });
+        return { ...this.status(), delivery: 'applied' };
+      } catch (error) {
+        throw new CommandError(`Could not update state: ${errorMessage(error)}`, ERROR_CODE.UPDATE_FAILED, EXIT_CODE.RUNTIME_ERROR);
+      }
+    });
   }
 
   async close() {
     this.closing = true;
+    await this.pages?.close();
     await this.updates;
-    try {
-      await closeBrowser(this.browser, this.page, this.record.browser.mode === 'managed');
-    } finally {
-      await closeServer(this.server);
-    }
+    await closeServer(this.server);
   }
 }

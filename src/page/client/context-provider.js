@@ -1,7 +1,7 @@
 import { AguiComponent } from './component.js';
 import { initializeContext, releaseContext } from './contexts.js';
 import { DICT } from '@symbiotejs/symbiote';
-import { readInitialData } from './data.js';
+import { readInitialData } from '../../markup/data.js';
 
 export class ContextProvider extends AguiComponent {
   /** @type {import('@symbiotejs/symbiote').PubSub<import('../../../types/components.js').ComponentState> | undefined} */

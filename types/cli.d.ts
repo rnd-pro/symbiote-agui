@@ -1,6 +1,5 @@
 import type { COMMANDS } from '../src/cli/commands.js';
 import type { ERROR_CODE, EXIT_CODE } from '../src/shared/constants.js';
-import type { BrowserOptions } from './browser.js';
 import type { SessionStatus } from './session.js';
 
 export type SessionCommand = keyof typeof COMMANDS;
@@ -14,7 +13,7 @@ export type CliRequest =
     kind: 'command';
     command: SessionCommand;
     sessionId: string;
-    browser: BrowserOptions;
+    open: boolean;
     file?: string;
   };
 

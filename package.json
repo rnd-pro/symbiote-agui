@@ -19,6 +19,8 @@
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "@types/ws": "^8.18.2",
+    "puppeteer-core": "^25.14.0",
     "typescript": "^7.0.2"
   },
   "author": {
@@ -30,7 +32,8 @@
     "@symbiotejs/symbiote": "^3.8.2",
     "@tailwindcss/node": "^4.3.3",
     "jsda-kit": "1.6.3",
-    "puppeteer-core": "^25.14.0",
-    "tailwindcss": "^4.3.3"
+    "linkedom": "^0.18.13",
+    "tailwindcss": "^4.3.3",
+    "ws": "^8.22.0"
   }
 }

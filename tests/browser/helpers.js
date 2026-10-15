@@ -16,13 +16,35 @@ export async function cli(...args) {
  * @param {string} html
  */
 export async function insertStdin(sessionId, html) {
+  return sendStdin('insert', sessionId, html);
+}
+
+/**
+ * @param {'insert' | 'update'} command
+ * @param {string} sessionId
+ * @param {string} input
+ */
+export async function sendStdin(command, sessionId, input) {
   let stdout = await new Promise((resolve, reject) => {
-    let child = execFile(process.execPath, [cliPath, 'insert', sessionId], { timeout: 45_000 }, (error, output) => {
+    let child = execFile(process.execPath, [cliPath, command, sessionId], { timeout: 45_000 }, (error, output) => {
       error ? reject(Object.assign(error, { stdout: output })) : resolve(output);
     });
-    child.stdin?.end(html);
+    child.stdin?.end(input);
   });
   return JSON.parse(stdout);
+}
+
+/**
+ * @param {string} sessionId
+ * @param {'waiting' | 'ready' | 'stopped'} state
+ */
+export async function waitForSession(sessionId, state) {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    let result = await cli('status', sessionId);
+    if (result.state === state) { return result; }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`Session ${sessionId} did not reach ${state}.`);
 }
 
 /**

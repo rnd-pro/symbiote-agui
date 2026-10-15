@@ -10,6 +10,23 @@ import { isProcessAlive, readSession } from './store.js';
  * @param {string | undefined} file
  */
 export async function insertMarkup(sessionId, file) {
+  return sendInput(sessionId, file, 'insert');
+}
+
+/**
+ * @param {string} sessionId
+ * @param {string | undefined} file
+ */
+export async function updateState(sessionId, file) {
+  return sendInput(sessionId, file, 'update');
+}
+
+/**
+ * @param {string} sessionId
+ * @param {string | undefined} file
+ * @param {'insert' | 'update'} action
+ */
+async function sendInput(sessionId, file, action) {
   let record = await readSession(sessionId);
 
   if (!record || !isProcessAlive(record.pid)) {
@@ -17,5 +34,5 @@ export async function insertMarkup(sessionId, file) {
   }
 
   let html = await readMarkup(file);
-  return requestSession(record, 'insert', INSERT_TIMEOUT_MS, html);
+  return requestSession(record, action, INSERT_TIMEOUT_MS, html);
 }

@@ -4,7 +4,7 @@ import { CONTROL_TIMEOUT_MS, SESSION_STATE } from './constants.js';
 
 /**
  * @param {import('../../types/session.js').SessionRecord} record
- * @param {'status' | 'stop' | 'insert'} action
+ * @param {'status' | 'stop' | 'insert' | 'update' | 'events'} action
  * @param {number} timeout
  * @param {string} [html]
  * @returns {Promise<import('../../types/session.js').SessionStatus>}
@@ -16,10 +16,11 @@ export async function requestSession(record, action, timeout = CONTROL_TIMEOUT_M
     }
 
     let response = await fetch(`${record.controlUrl}/${action}`, {
-      method: action === 'status' ? 'GET' : 'POST',
+      method: ['status', 'events'].includes(action) ? 'GET' : 'POST',
       headers: {
         authorization: `Bearer ${record.controlToken}`,
         ...(action === 'insert' ? { 'content-type': 'text/html; charset=utf-8' } : {}),
+        ...(action === 'update' ? { 'content-type': 'application/json' } : {}),
       },
       body: html,
       signal: AbortSignal.timeout(timeout),

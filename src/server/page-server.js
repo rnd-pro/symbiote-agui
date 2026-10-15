@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { closeServer, waitForServer } from '../shared/server.js';
 import { createStyles } from '../markup/styles.js';
-import { STYLESHEET_PATH } from '../markup/constants.js';
+import { STYLESHEET_PATH, CLIENT_SCRIPT_PATH } from '../markup/constants.js';
 
 export async function startPageServer() {
   let styles = await createStyles();
@@ -12,6 +12,7 @@ export async function startPageServer() {
   config.dynamic.cache.inMemory = false;
   config.minify.html = false;
   config.minify.css = false;
+  config.minify.js = false;
   config.log = false;
 
   let server = createServer({ port: { host: '127.0.0.1', port: 0 } });
@@ -19,7 +20,7 @@ export async function startPageServer() {
   server.removeAllListeners('request');
   server.on('request', (request, response) => {
     let pathname = request.url?.split('?')[0];
-    if (request.method !== 'GET' || !['/', STYLESHEET_PATH].includes(pathname || '')) {
+    if (request.method !== 'GET' || !['/', STYLESHEET_PATH, CLIENT_SCRIPT_PATH].includes(pathname || '')) {
       response.writeHead(404).end();
       return;
     }

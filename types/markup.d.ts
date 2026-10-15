@@ -13,4 +13,5 @@ export interface MarkupUpdate {
   contentRootId: string;
   stylesheetId: string;
   stylesheetTimeout: number;
+  clientScriptUrl: string;
 }

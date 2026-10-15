@@ -68,7 +68,8 @@ export async function applyMarkup(update) {
       throw new Error('The AGUI page shell changed during insertion.');
     }
 
-    root.replaceChildren(template.content);
+    let { replaceContent } = await import(update.clientScriptUrl);
+    replaceContent(root, template.content);
     previous.remove();
     next.id = update.stylesheetId;
   } catch (error) {

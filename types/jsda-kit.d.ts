@@ -10,7 +10,7 @@ declare module 'jsda-kit/cfg' {
       routes: string;
       cache: { inMemory: boolean; exclude: string[] };
     };
-    minify: { html: boolean; css: boolean };
+    minify: { html: boolean; css: boolean; js: boolean };
     log: boolean;
   };
   export default config;

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { connectBrowser } from '../browser/connection.js';
 import { closeBrowser } from '../browser/cleanup.js';
 import { applyMarkup, collectClassNames } from '../browser/markup.js';
-import { CONTENT_ROOT_ID, STYLESHEET_ID, STYLESHEET_PATH, STYLESHEET_TIMEOUT_MS } from '../markup/constants.js';
+import { CLIENT_SCRIPT_PATH, CONTENT_ROOT_ID, STYLESHEET_ID, STYLESHEET_PATH, STYLESHEET_TIMEOUT_MS } from '../markup/constants.js';
 import { getStyles, publishStyles } from '../markup/styles.js';
 import { startPageServer } from '../server/page-server.js';
 import { closeServer } from '../shared/server.js';
@@ -46,6 +46,13 @@ export class SessionRuntime {
     if (!response?.ok()) {
       throw new Error('The session page failed to load.');
     }
+
+    await this.page.evaluate(async (url) => {
+      let runtime = await import(url);
+      if (typeof runtime.replaceContent !== 'function') {
+        throw new Error('The AGUI component runtime did not initialize.');
+      }
+    }, new URL(CLIENT_SCRIPT_PATH, url).href);
 
     let cdp = await this.page.createCDPSession();
 
@@ -97,6 +104,7 @@ export class SessionRuntime {
         contentRootId: CONTENT_ROOT_ID,
         stylesheetId: STYLESHEET_ID,
         stylesheetTimeout: STYLESHEET_TIMEOUT_MS,
+        clientScriptUrl: new URL(CLIENT_SCRIPT_PATH, this.record.url).href,
       });
       return this.status();
     } catch (error) {

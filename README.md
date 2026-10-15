@@ -6,7 +6,7 @@
 
 Runtime integrations:
 
-- Symbiote.js - for RAT (planned)
+- Symbiote.js - for RAT templates and reactive contexts
 - JSDA_kit - for Asset generation and live JSDA server
 - Tailwind - for locally generated default styling
 - Puppeteer Core - for browser control
@@ -25,9 +25,9 @@ npm run types
 
 `bin/symbiote-agui.js` runs JavaScript ESM directly, with no build step. Help, version, `start`, `insert`, `status`, and `stop` are available. The package is private during development; use `node bin/symbiote-agui.js` in place of `npx symbiote-agui` in the examples below.
 
-Keep CLI parsing and output in `src/cli`, session identity and lifecycle in [src/sessions](./src/sessions/README.md), browser control in `src/browser`, HTTP servers in `src/server`, and the page shell and future components in `src/page`. Shared errors and dictionaries live in `src/shared`. Define shared data shapes in `types/*.d.ts` and reference them from JSDoc using `.js` import paths. `npm run types` uses `checkJs`, `strict`, and `noEmit`; DOM declarations are included for Puppeteer's Node API. It generates no runtime files.
+Keep CLI parsing and output in `src/cli`, session identity and lifecycle in [src/sessions](./src/sessions/README.md), browser control in `src/browser`, HTTP servers in `src/server`, and browser components in [src/page/client](./src/page/client/README.md). Shared errors and dictionaries live in `src/shared`. Define shared data shapes in `types/*.d.ts` and reference them from JSDoc using `.js` import paths. `npm run types` uses `checkJs`, `strict`, and `noEmit`; DOM declarations are included for Puppeteer's Node API, and browser modules are also checked separately without Node globals. It generates no runtime files.
 
-JSDA-Kit is pinned to 1.6.3 because the server adapter passes Node's `{ host, port }` listen options through its `port` setting. This binds directly to loopback on a free port. The public page server exposes `/` and `/styles.css.js`; the authenticated control API uses a separate port. Tailwind compiles styles in the worker, and JSDA serves the generated CSS without a CDN or a project build. The type-checking configuration maps `@tailwindcss/node` to the consumed compiler API in `types/tailwindcss-node.d.ts` because version 4.3.3 references unpublished declaration files.
+JSDA-Kit is pinned to 1.6.3 because the server adapter passes Node's `{ host, port }` listen options through its `port` setting. This binds directly to loopback on a free port. The public page server exposes `/`, `/styles.css.js`, and the bundled browser entry `/client/index.js`; the authenticated control API uses a separate port. Tailwind compiles styles in the worker, and JSDA serves CSS and bundles the browser modules on demand. Node runtime code runs directly. The type-checking configuration maps `@tailwindcss/node` to the consumed compiler API in `types/tailwindcss-node.d.ts` because version 4.3.3 references unpublished declaration files.
 
 Add Node tests under `tests/node` and Puppeteer tests under `tests/browser` when meaningful coverage is needed. Runtime dependencies will be confirmed before their integrations are added.
 
@@ -45,7 +45,7 @@ For a manual check with visible Chrome:
 printf '%s\n' '<section class="p-8"><h1 class="text-2xl font-bold">Hello from AGUI</h1><details class="mt-4"><summary class="cursor-pointer text-blue-600">Open</summary><p>Native HTML interaction works.</p></details></section>' | node bin/symbiote-agui.js insert demo
 ```
 
-Focused lifecycle checks are available with `npm run test:node`. To run the Puppeteer checks with a separate headless Chrome, set `AGUI_TEST_BROWSER_PATH` to its executable and run `npm run test:browser`. The browser checks skip when that path is absent and use temporary profiles and state directories.
+Focused lifecycle checks are available with `npm run test:node`. To run the Puppeteer checks with a separate headless Chrome, set `AGUI_TEST_BROWSER_PATH` to its executable and run `npm run test:browser`. The browser files run sequentially with bounded browser startup times, skip when that path is absent, and use temporary profiles and state directories.
 
 ## How it works
 
@@ -62,7 +62,7 @@ Focused lifecycle checks are available with `npm run test:node`. To run the Pupp
 
 ## Runtime contract
 
-This contract defines the initial implementation. Session lifecycle and markup delivery are implemented; Symbiote interactivity is the next step.
+This contract defines the initial implementation. Session lifecycle, markup delivery, and Symbiote interactivity are implemented.
 
 ### Package and commands
 
@@ -115,19 +115,29 @@ Tailwind classes are collected from the fragment, including nested `<template>` 
 
 The worker publishes CSS through JSDA and waits for the replacement stylesheet to load before changing the content. A rendering or stylesheet failure leaves the previous content in place and returns `INSERT_FAILED`; stopped or disconnected sessions return the corresponding `SESSION_STOPPED` or `SESSION_DISCONNECTED` error. Success acknowledges DOM replacement and stylesheet loading, without waiting for external images or asynchronous widgets.
 
-Native HTML controls work immediately. Inserted `<script>` elements remain inert, as with HTML template parsing. Registered Symbiote components and reactive context support belong to the next implementation step.
+Native HTML controls and Symbiote bindings work after insertion. Inserted executable `<script>` elements remain inert; direct JSON data scripts initialize AGUI components. Provide event handlers through direct DOM/CDP updates or registered component classes.
 
 ## RAT
 
-Agent can use Symbiote RAT format for interactive component's template generation and reactive data bindings. Data context can be provided by direct DOM API interaction: `document.querySelector('my-component').$.prop = 'value'` or `document.querySelector('my-component').multiPub({prop1: 'value1', prop2: 'value2'})`. Or, by dedicated context-provider component:
+Use `<agui-component>` for inline RAT markup. Custom tags with `use-template`, such as `<user-card>`, are automatically registered as generic Symbiote components when the tag is not already defined. Templates are resolved from the current insertion, so a later update can reuse the same tag with a different template. For custom widget behavior, register a class through CDP using `AguiComponent` exported from `/client/index.js`.
+
+Initialize state with one direct child `<script type="text/json">` or `<script type="application/json">` containing an object with plain state keys. Update existing fields with `element.$.prop = value` or Symbiote's `element.set$({ prop1: value1, prop2: value2 })`. Use `element.add$({ newProp: value })` to add fields, or pass `true` as its second argument to also overwrite existing fields. These operations run in the session page through CDP or its browser console.
+
+An anonymous provider exposes local state to descendants through `^` bindings:
+
 ```html
-<context-provider>
-  <map-wgt bind="lat: ^lat; lon: ^lon"></map-wgt>
+<context-provider id="location-data">
+  <script type="application/json">{"lat": 10, "lon": 20}</script>
+  <agui-component>
+    <output>{{^lat}}, {{^lon}}</output>
+  </agui-component>
 </context-provider>
 ```
-OR
+
+A named provider shares state with sibling components through `ctx` and `*` bindings, or explicit `map/lat` namespace bindings:
+
 ```html
-<context-provider ctx="map">
+<context-provider id="map-data" ctx="map">
   <script type="text/json">
     {
       "lat": 12312321,
@@ -135,10 +145,15 @@ OR
     }
   </script>
 </context-provider>
-<map-wgt bind="lat: *lat; lon: *lon" ctx="map"></map-wgt>
+<agui-component ctx="map">
+  <output>{{*lat}}, {{*lon}}</output>
+</agui-component>
 ```
 
-Component template can be set in common markdown directly:
+Provider updates such as `document.querySelector('#map-data').set$({lat: 55, lon: 66})` refresh consumers. Fields added with `add$()` are also shared. Shared updates such as `document.querySelector('agui-component[ctx="map"]').$['*lat'] = 77` also refresh the provider's local state. Use one provider per named context. Replacement resets provider-owned contexts, including providers rendered inside templates; removed components release their subscriptions.
+
+Define reusable component templates directly in the inserted HTML:
+
 ```html
 <template id="user_card_template">
   <div>{{userName}}</div>
@@ -149,5 +164,30 @@ Component template can be set in common markdown directly:
 <user-card
   ctx="user-ctx"
   use-template="template#user_card_template">
+  <script type="application/json">
+    {"userName": "Alex", "userAge": 42, "userRole": "Developer"}
+  </script>
 </user-card>
 ```
+
+For a manual interaction check, insert this fragment:
+
+```html
+<agui-component id="counter" class="block p-8">
+  <script type="application/json">{"count": 0, "increment": null}</script>
+  <button class="rounded bg-blue-600 p-4 text-white" bind="onclick: increment">
+    Count: {{count}}
+  </button>
+</agui-component>
+```
+
+Attach its handler in the session page's browser console or through CDP, then click the button:
+
+```js
+let counter = document.querySelector('#counter');
+counter.set$({
+  increment: () => { counter.$.count += 1; },
+});
+```
+
+Insert the fragment again and confirm the count resets and the new button needs its handler attached again. Invalid JSON data or a missing template returns `INSERT_FAILED` while preserving the existing content.

@@ -28,5 +28,8 @@
     "types/**/*.d.ts",
     "tests/node/**/*.js",
     "tests/browser/**/*.js"
+  ],
+  "exclude": [
+    "src/page/client/**/*.js"
   ]
 }

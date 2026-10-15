@@ -21,6 +21,11 @@ test('JSDA serves the page on loopback without exposing source files', async (t)
   assert.match(stylesheet.headers.get('content-type') || '', /text\/css/);
   assert.match(await stylesheet.text(), /@layer/);
   assert.equal(stylesheet.headers.get('cache-control'), 'no-store');
+  let client = await fetch(new URL('/client/index.js', page.url));
+  assert.equal(client.status, 200);
+  assert.match(client.headers.get('content-type') || '', /javascript/);
+  assert.match(await client.text(), /replaceContent/);
+  assert.equal((await fetch(new URL('/client/component.js', page.url))).status, 404);
 });
 
 test('markup control errors retain worker identity and reject oversized bodies', async (t) => {

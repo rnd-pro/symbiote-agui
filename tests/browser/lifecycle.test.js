@@ -1,46 +1,13 @@
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
 import puppeteer from 'puppeteer-core';
 import { closeBrowser } from '../../src/browser/cleanup.js';
 import { temporaryState } from '../node/state-fixture.js';
+import { cli, hasCliError, insertStdin } from './helpers.js';
 
-let execute = promisify(execFile);
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
-let cliPath = fileURLToPath(new URL('../../bin/symbiote-agui.js', import.meta.url));
-
-/** @param {string[]} args */
-async function cli(...args) {
-  let { stdout } = await execute(process.execPath, [cliPath, ...args], { timeout: 45_000 });
-  return JSON.parse(stdout);
-}
-
-/**
- * @param {string} sessionId
- * @param {string} html
- */
-async function insertStdin(sessionId, html) {
-  let stdout = await new Promise((resolve, reject) => {
-    let child = execFile(process.execPath, [cliPath, 'insert', sessionId], { timeout: 45_000 }, (error, output) => {
-      error ? reject(Object.assign(error, { stdout: output })) : resolve(output);
-    });
-    child.stdin?.end(html);
-  });
-  return JSON.parse(stdout);
-}
-
-/**
- * @param {unknown} error
- * @param {string} code
- */
-function hasCliError(error, code) {
-  let failure = /** @type {Error & { stdout: string }} */ (error);
-  return JSON.parse(failure.stdout).error.code === code;
-}
 
 test('CLI sessions survive launcher exit and preserve an attached browser', {
   skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
@@ -51,6 +18,8 @@ test('CLI sessions survive launcher exit and preserve an attached browser', {
     executablePath,
     headless: true,
     userDataDir: join(state.directory, 'external-browser'),
+    timeout: 10_000,
+    protocolTimeout: 10_000,
   });
   t.after(async () => {
     for (let id of ['demo', 'Demo']) {
@@ -132,7 +101,7 @@ test('managed browser cleanup waits for its own Chrome process to exit', {
   skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 30_000,
 }, async (t) => {
-  let browser = await puppeteer.launch({ executablePath, headless: true });
+  let browser = await puppeteer.launch({ executablePath, headless: true, timeout: 10_000, protocolTimeout: 10_000 });
   t.after(() => browser.close());
   let child = browser.process();
   assert.ok(child);

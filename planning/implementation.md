@@ -1,6 +1,6 @@
 # AGUI implementation plan
 
-Status: Steps 1-4 completed. Steps 5-7 await approval.
+Status: Steps 1-5 completed. Steps 6-7 await approval.
 
 Goal: An agent starts a local UI session, inserts generated markup, and updates interactive content independently of its harness or vendor.
 
@@ -25,7 +25,7 @@ Goal: An agent starts a local UI session, inserts generated markup, and updates 
    - Render standard HTML with Tailwind styling through the JSDA asset workflow.
    - Return clear success or error results to the calling agent.
 
-5. Add Symbiote interactivity.
+5. Add Symbiote interactivity. Completed; see [RAT](../README.md#rat).
    - Support RAT templates, reactive bindings, and the README's `use-template` pattern.
    - Provide context through direct component updates and a context-provider supporting inherited and named contexts.
    - Verify bindings and user interaction after repeated markup updates.

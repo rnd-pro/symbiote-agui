@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "include": [
+    "src/page/client/**/*.js",
+    "types/components.d.ts"
+  ],
+  "exclude": []
+}

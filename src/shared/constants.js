@@ -1,0 +1,11 @@
+export let EXIT_CODE = Object.freeze({
+  SUCCESS: 0,
+  RUNTIME_ERROR: 1,
+  INVALID_INPUT: 2,
+});
+
+export let ERROR_CODE = Object.freeze({
+  INVALID_INPUT: 'INVALID_INPUT',
+  NOT_IMPLEMENTED: 'NOT_IMPLEMENTED',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+});

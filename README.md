@@ -4,11 +4,30 @@
 
 ## Main Dependencies
 
+Runtime integrations planned for the following implementation steps:
+
 - Symbiote.js - for RAT
 - JSDA_kit - for Asset generation and live JSDA server
 - Tailwind - for default styling
 - Puppeteer Core - for browser control
 - Node.js built-in process management - one detached worker per session
+
+## Development
+
+Use Node.js 24 or newer. Install the development tools and check the foundation:
+
+```sh
+npm ci
+npm start -- --help
+npm start -- --version
+npm run types
+```
+
+`bin/symbiote-agui.js` runs JavaScript ESM directly, with no build step. Help and version are available; session commands validate arguments and return a JSON `NOT_IMPLEMENTED` error until their runtime steps are implemented. The package is private during development.
+
+Keep CLI parsing and output in `src/cli`, session identity and lifecycle in `src/sessions`, browser control in `src/browser`, and the page shell and future components in `src/page`. Shared errors and dictionaries live in `src/shared`. Define shared data shapes in `types/*.d.ts` and reference them from JSDoc using `.js` import paths. `npm run types` checks the Node code with `checkJs`, `strict`, and `noEmit`; it generates no runtime files. Future browser JavaScript should use a separate DOM type-checking configuration.
+
+Add Node tests under `tests/node` and Puppeteer tests under `tests/browser` when meaningful coverage is needed. Runtime dependencies will be confirmed before their integrations are added.
 
 ## How it works
 
@@ -65,8 +84,6 @@ Use Node's built-in [`child_process.spawn()` with `detached` and `unref()`](http
 Store private session metadata and logs under `~/.symbiote-agui/sessions/<SESSION_ID>/`. Record the worker PID, page URL, browser target ID, CDP endpoint, resource ownership, and a random control token. CLI commands reach the worker through an authenticated loopback control endpoint. Keep the control token out of stdout and served page assets.
 
 Reserve each session ID atomically before startup. Verify worker identity through the control endpoint before reusing records or stopping resources; never terminate a process based only on a stored PID. Stale records can be removed on the next `start`, while unverified processes remain untouched. A failed startup or graceful shutdown releases resources owned by that session.
-
-Step 1 adds no dependencies. Confirm exact packages before installing them during project setup.
 
 ## Markup generation
 

@@ -1,0 +1,21 @@
+{
+  "name": "symbiote-agui",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local interactive interfaces for AI agents, built with Symbiote.js.",
+  "type": "module",
+  "bin": {
+    "symbiote-agui": "./bin/symbiote-agui.js"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node ./bin/symbiote-agui.js",
+    "types": "tsc --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2"
+  }
+}

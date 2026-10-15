@@ -1,6 +1,6 @@
 # AGUI implementation plan
 
-Status: Step 1 completed in the root README. Steps 2-7 await approval.
+Status: Steps 1 and 2 completed. Steps 3-7 await approval.
 
 Goal: An agent starts a local UI session, inserts generated markup, and updates interactive content independently of its harness or vendor.
 
@@ -10,7 +10,7 @@ Goal: An agent starts a local UI session, inserts generated markup, and updates 
    - Launch managed Chrome or attach through an explicit CDP endpoint.
    - Use one detached Node worker per session. Confirm dependencies before adding them.
 
-2. Set up the project foundation.
+2. Set up the project foundation. Completed; see [Development](../README.md#development).
    - Use JavaScript ESM, JSDoc, shared `types/*.d.ts`, and `checkJs` with `noEmit`.
    - Separate CLI, session management, browser control, and page components by responsibility.
    - Keep Node runtime code directly executable without a build phase.

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "target": "ES2024",
+    "lib": [
+      "ES2024"
+    ],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": [
+      "node"
+    ],
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "bin/**/*.js",
+    "src/**/*.js",
+    "types/**/*.d.ts",
+    "tests/node/**/*.js"
+  ]
+}

@@ -1,6 +1,6 @@
 # AGUI implementation plan
 
-Status: Steps 1 and 2 completed. Steps 3-7 await approval.
+Status: Steps 1-3 completed. Steps 4-7 await approval.
 
 Goal: An agent starts a local UI session, inserts generated markup, and updates interactive content independently of its harness or vendor.
 
@@ -15,7 +15,7 @@ Goal: An agent starts a local UI session, inserts generated markup, and updates 
    - Separate CLI, session management, browser control, and page components by responsibility.
    - Keep Node runtime code directly executable without a build phase.
 
-3. Implement session lifecycle.
+3. Implement session lifecycle. Completed; see [Session checks](../README.md#session-checks).
    - Start the local JSDA server and a page ready for generated content.
    - Connect Puppeteer Core through CDP and open the session page.
    - Track session connection details; handle duplicate IDs, startup failures, status, and cleanup of owned resources on stop.

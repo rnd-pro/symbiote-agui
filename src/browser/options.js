@@ -1,4 +1,5 @@
 import { CommandError } from '../shared/command-error.js';
+import { resolve } from 'node:path';
 
 /**
  * @param {string | undefined} executablePath
@@ -33,5 +34,5 @@ export function resolveBrowserOptions(executablePath, cdpUrl) {
 
   return executablePath === undefined
     ? { mode: 'managed', channel: 'chrome' }
-    : { mode: 'managed', executablePath };
+    : { mode: 'managed', executablePath: resolve(executablePath) };
 }

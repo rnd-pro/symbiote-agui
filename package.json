@@ -12,7 +12,9 @@
   },
   "scripts": {
     "start": "node ./bin/symbiote-agui.js",
-    "types": "tsc --project tsconfig.json"
+    "types": "tsc --project tsconfig.json",
+    "test:node": "node --test tests/node/*.test.js",
+    "test:browser": "node --test tests/browser/*.test.js"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
@@ -22,5 +24,9 @@
     "email": "team@rnd-pro.com",
     "name": "RND-PRO.com",
     "url": "https://rnd-pro.com/"
+  },
+  "dependencies": {
+    "jsda-kit": "1.6.3",
+    "puppeteer-core": "^25.14.0"
   }
 }

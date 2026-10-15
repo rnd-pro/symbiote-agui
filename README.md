@@ -4,17 +4,17 @@
 
 ## Main Dependencies
 
-Runtime integrations planned for the following implementation steps:
+Runtime integrations:
 
-- Symbiote.js - for RAT
+- Symbiote.js - for RAT (planned)
 - JSDA_kit - for Asset generation and live JSDA server
-- Tailwind - for default styling
+- Tailwind - for default styling (planned)
 - Puppeteer Core - for browser control
 - Node.js built-in process management - one detached worker per session
 
 ## Development
 
-Use Node.js 24 or newer. Install the development tools and check the foundation:
+Use Node.js 24 or newer and an installed Chrome/Chromium browser. Install dependencies and check the project:
 
 ```sh
 npm ci
@@ -23,11 +23,24 @@ npm start -- --version
 npm run types
 ```
 
-`bin/symbiote-agui.js` runs JavaScript ESM directly, with no build step. Help and version are available; session commands validate arguments and return a JSON `NOT_IMPLEMENTED` error until their runtime steps are implemented. The package is private during development.
+`bin/symbiote-agui.js` runs JavaScript ESM directly, with no build step. Help, version, `start`, `status`, and `stop` are available. `insert` returns a JSON `NOT_IMPLEMENTED` error until markup delivery is implemented. The package is private during development; use `node bin/symbiote-agui.js` in place of `npx symbiote-agui` in the examples below.
 
-Keep CLI parsing and output in `src/cli`, session identity and lifecycle in `src/sessions`, browser control in `src/browser`, and the page shell and future components in `src/page`. Shared errors and dictionaries live in `src/shared`. Define shared data shapes in `types/*.d.ts` and reference them from JSDoc using `.js` import paths. `npm run types` checks the Node code with `checkJs`, `strict`, and `noEmit`; it generates no runtime files. Future browser JavaScript should use a separate DOM type-checking configuration.
+Keep CLI parsing and output in `src/cli`, session identity and lifecycle in [src/sessions](./src/sessions/README.md), browser control in `src/browser`, HTTP servers in `src/server`, and the page shell and future components in `src/page`. Shared errors and dictionaries live in `src/shared`. Define shared data shapes in `types/*.d.ts` and reference them from JSDoc using `.js` import paths. `npm run types` uses `checkJs`, `strict`, and `noEmit`; DOM declarations are included for Puppeteer's Node API. It generates no runtime files.
+
+JSDA-Kit is pinned to 1.6.3 because the server adapter passes Node's `{ host, port }` listen options through its `port` setting. This binds directly to loopback on a free port. The public page server currently exposes only `/`; the authenticated control API uses a separate port.
 
 Add Node tests under `tests/node` and Puppeteer tests under `tests/browser` when meaningful coverage is needed. Runtime dependencies will be confirmed before their integrations are added.
+
+### Session checks
+
+For a manual check with visible Chrome:
+
+1. Run `node bin/symbiote-agui.js start demo` and confirm the waiting page opens. Use `--browser-path <PATH>` if needed.
+2. Run `node bin/symbiote-agui.js status demo` and confirm `ready`. Starting `demo` again should report `SESSION_EXISTS`.
+3. Start a second ID, then stop `demo`. Confirm only the first session's browser closes.
+4. Close the second session's page manually, check for `disconnected`, then stop that ID. Repeating `stop` should return `stopped`.
+
+Focused lifecycle checks are available with `npm run test:node`. To run the Puppeteer checks with a separate headless Chrome, set `AGUI_TEST_BROWSER_PATH` to its executable and run `npm run test:browser`. The browser checks skip when that path is absent and use temporary profiles and state directories.
 
 ## How it works
 
@@ -44,7 +57,7 @@ Add Node tests under `tests/node` and Puppeteer tests under `tests/browser` when
 
 ## Runtime contract
 
-This contract defines the initial implementation. The commands below are not implemented yet.
+This contract defines the initial implementation. Session lifecycle commands are implemented; markup insertion is the next step.
 
 ### Package and commands
 
@@ -81,9 +94,11 @@ npx symbiote-agui stop demo
 
 Use Node's built-in [`child_process.spawn()` with `detached` and `unref()`](https://nodejs.org/api/child_process.html#optionsdetached). Each worker owns its JSDA server, Puppeteer connection, and session page. Redirect worker output to session log files so the worker can outlive the invoking CLI. PM2 is unnecessary for this lifecycle; automatic restart and OS startup integration are outside the initial scope.
 
-Store private session metadata and logs under `~/.symbiote-agui/sessions/<SESSION_ID>/`. Record the worker PID, page URL, browser target ID, CDP endpoint, resource ownership, and a random control token. CLI commands reach the worker through an authenticated loopback control endpoint. Keep the control token out of stdout and served page assets.
+Store private session metadata and logs under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Hex encoding preserves case-sensitive session IDs on case-insensitive filesystems. Set `AGUI_STATE_DIR` to override the sessions root; use an absolute path when calling from different working directories. Record the worker PID, page URL, browser target ID, CDP endpoint, resource ownership, and a random control token. CLI commands reach the worker through an authenticated loopback control endpoint. Keep the control token out of stdout and served page assets.
 
 Reserve each session ID atomically before startup. Verify worker identity through the control endpoint before reusing records or stopping resources; never terminate a process based only on a stored PID. Stale records can be removed on the next `start`, while unverified processes remain untouched. A failed startup or graceful shutdown releases resources owned by that session.
+
+An unresponsive live worker or a session still starting returns `SESSION_UNREACHABLE` to `status` or `stop`; retry after startup completes or inspect its private `worker.log`. The 30-second startup limit allows additional time for cleanup. Abruptly force-killing a worker can leave its browser running; close that browser manually. Stale-session recovery does not kill processes from stored PIDs.
 
 ## Markup generation
 

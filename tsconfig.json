@@ -6,7 +6,9 @@
     "strict": true,
     "target": "ES2024",
     "lib": [
-      "ES2024"
+      "ES2024",
+      "DOM",
+      "DOM.Iterable"
     ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -19,6 +21,7 @@
     "bin/**/*.js",
     "src/**/*.js",
     "types/**/*.d.ts",
-    "tests/node/**/*.js"
+    "tests/node/**/*.js",
+    "tests/browser/**/*.js"
   ]
 }

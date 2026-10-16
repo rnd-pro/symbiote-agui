@@ -16,6 +16,17 @@ export async function run(args) {
   try {
     let request = parseCommand(args);
 
+    if (request.kind === 'mcp') {
+      try {
+        let { startMcpServer } = await import('../mcp/server.js');
+        await startMcpServer();
+        return EXIT_CODE.SUCCESS;
+      } catch (error) {
+        console.error(error instanceof Error ? error.message : String(error));
+        return EXIT_CODE.RUNTIME_ERROR;
+      }
+    }
+
     if (request.kind === 'help') {
       process.stdout.write(`${HELP}\n`);
       return EXIT_CODE.SUCCESS;

@@ -11,6 +11,9 @@ import { validateStateUpdate } from '../transport/state-update.js';
 import { SESSION_STATE } from './constants.js';
 import { SessionEvents } from './events.js';
 import { createPageAccess } from '../server/page-access.js';
+import { handleToolRequest } from '../tools/service.js';
+import { TOOL_OPERATION_TIMEOUT_MS } from '../transport/constants.js';
+import { withTimeout } from '../shared/timeout.js';
 
 export class SessionRuntime {
   /** @type {import('node:http').Server | undefined} */
@@ -127,5 +130,23 @@ export class SessionRuntime {
     await this.pages?.close();
     await this.updates;
     await closeServer(this.server);
+  }
+
+  /** @param {unknown} input */
+  async tools(input) {
+    let deadline = Date.now() + TOOL_OPERATION_TIMEOUT_MS;
+    try {
+      return await withTimeout(this.enqueue(async () => {
+        if (this.closing || !this.pages || !this.record.url) {
+          throw new CommandError('The session is stopped.', ERROR_CODE.SESSION_STOPPED, EXIT_CODE.RUNTIME_ERROR);
+        }
+        if (Date.now() >= deadline) { throw new Error('Tool request expired before execution. It was not started.'); }
+        let toolResponse = await handleToolRequest(this.pages, this.record.url, input, deadline);
+        return { ...this.status(), toolResponse };
+      }), TOOL_OPERATION_TIMEOUT_MS, 'Tool request timed out. Its outcome may be unknown; do not retry automatically.');
+    } catch (error) {
+      if (error instanceof CommandError) { throw error; }
+      throw new CommandError(errorMessage(error), ERROR_CODE.TOOL_FAILED, EXIT_CODE.RUNTIME_ERROR);
+    }
   }
 }

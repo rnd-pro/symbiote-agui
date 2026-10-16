@@ -9,20 +9,11 @@ Goal: Make AGUI MCP over the existing authenticated WebSocket the primary path f
 - Page loading, assets, reload, reconnection, and restart authorization are verified. README and SKILL describe the current URL and authorization behavior.
 - Chrome MCP is configured in Codex with `--autoConnect` and `--categoryExperimentalWebmcp`; its tool catalog is verified and setup instructions are documented. The actual browser connection remains unverified, as noted under optional work below.
 - Step 1: Symbiote's published public invocation API is integrated through `listPageTools()` and `executePageTool()`. The adapter forwards discovery metadata, arguments, results, and errors. Browser checks cover native WebMCP disabled and enabled, visibility, async results, failures, replacement, and stop. The completed external prerequisite is described in the [standalone specification](./symbiote-tool-invocation.md).
+- Step 2: `npx symbiote-agui mcp` serves `list_pages`, `list_tools`, and `call_tool` over standard MCP stdio. The authenticated worker and WebSocket route requests to one page, validate arguments, reject stale targets/catalogs, and bound requests without automatic retries. README and SKILL document setup and tool use. Real MCP client tests cover ordinary browsers without native WebMCP, two tabs, idempotent desk completion, results/events, errors, replacement, and reconnection.
 
 ## Remaining implementation
 
 The numbered steps below contain only pending work. Each requires explicit approval before implementation.
-
-### 2. Add the AGUI MCP bridge and page targeting
-
-- Add `npx symbiote-agui mcp` as a standard MCP server over stdio, configured once in the agent harness. Keep stdout dedicated to MCP messages and send diagnostics to stderr.
-- Route MCP discovery and invocation through the existing authenticated worker control channel and browser WebSocket. Preserve markup, state, and event delivery on that connection. Use Symbiote's supported discovery and invocation APIs; do not add another action registry or emulate browser APIs.
-- Target the named session and one connected page explicitly. Reuse its connection identity, report stale or disconnected targets, and never broadcast an action to every tab. With one connected page, selection can be automatic; with several, expose enough information to select one.
-- Coordinate restoration, module mounting, and tool discovery with bounded waits. Forward tool schemas, arguments, results, and errors through MCP, validate inputs, and enforce request correlation and timeouts.
-- Give generated actions meaningful descriptions and results. For the desk, expose an idempotent completion action that sets checkbox state explicitly instead of requiring blind toggles.
-- Rediscover tools after content replacement or page restart. Report missing tools and execution failures clearly; do not automatically retry a call whose outcome is unknown.
-- Keep CLI commands for session lifecycle, markup, state updates, and events. Tool discovery and execution belong to the MCP server; separate CLI `tools`/`call` commands are unnecessary.
 
 ### 3. Cache interfaces by session ID
 
@@ -34,11 +25,10 @@ The numbered steps below contain only pending work. Each requires explicit appro
 
 ### 4. Document the primary MCP workflow
 
-- Update the root README and bundled SKILL in place. Describe one-time AGUI MCP setup using `npx symbiote-agui mcp`, then routine use: CLI for starting/restoring, inserting, updating, events, and stopping; AGUI MCP for Symbiote tool discovery and execution.
-- Describe the short workflow: start or restore a session, select its connected page once, list its tools, execute the requested action, and use its result as confirmation.
-- Use CLI events when awaiting user interaction. Avoid repeated status checks, DOM inspections, screenshots, or unrelated commands when tool results answer the task.
-- Present Chrome MCP as optional. Keep its remote debugging, native WebMCP, and browser permission requirements out of the primary setup path.
-- Document current behavior and actual prerequisites only after implementation. If the AGUI MCP server or authenticated page connection is unavailable, report the specific setup issue rather than attempting unrelated browser-control mechanisms.
+- Extend the root README and bundled SKILL in place with cache restoration and explicit clearing after step 3 is implemented.
+- Review the complete short workflow: start or restore a session, select its connected page once, list its tools, execute the requested action, and use its result as confirmation.
+- Verify that waiting for user input uses CLI events without repeated status checks, DOM inspections, screenshots, or unrelated commands when tool results answer the task.
+- Keep public instructions limited to current behavior, with Chrome MCP optional and specific setup errors reported directly. Do not add unrelated browser-control fallbacks.
 
 ### 5. Verify the complete primary workflow
 

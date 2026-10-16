@@ -9,6 +9,7 @@ export type ExitCode = typeof EXIT_CODE[keyof typeof EXIT_CODE];
 export type CliRequest =
   | { kind: 'help' }
   | { kind: 'version' }
+  | { kind: 'mcp' }
   | {
     kind: 'command';
     command: SessionCommand;

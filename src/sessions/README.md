@@ -6,7 +6,7 @@ Use `--no-open` to receive a private `authorizationUrl` without opening a tab. O
 
 `start` returns when the session server is available. Use `npx symbiote-agui status <SESSION_ID>` when you need its connection state: `waiting` means no page is connected, `ready` means at least one page is connected, and `stopped` means the session is not running.
 
-Insertions without a connected page return `delivery: "queued"`. Open the session URL to receive the latest markup. Connected pages acknowledge applied insertions and state updates. Multiple tabs receive the same commands; local interactions remain local until the agent sends an update.
+Insertions without a connected page return `delivery: "queued"`. Open the session URL to receive the latest markup. Connected pages acknowledge applied insertions and state updates. CLI insertions and state updates reach every connected tab; local interactions remain local until the agent sends an update. AGUI MCP tool calls target one selected page.
 
 Reloading or reconnecting restores the latest accepted markup and reruns its marked modules. Component state resets to the markup's initial values; state commands are not replayed. Retrieve interaction events with `npx symbiote-agui events <SESSION_ID>`. Reading events clears the session's event queue.
 

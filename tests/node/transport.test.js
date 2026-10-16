@@ -9,7 +9,7 @@ import { closeServer, waitForServer } from '../../src/shared/server.js';
 import { SessionEvents } from '../../src/sessions/events.js';
 import { analyzeMarkup } from '../../src/markup/analyze.js';
 import { validateStateUpdate } from '../../src/transport/state-update.js';
-import { MAX_EVENTS } from '../../src/transport/constants.js';
+import { MAX_EVENTS, PAGE_REQUEST_TIMEOUT_MS } from '../../src/transport/constants.js';
 import { createPageAccess } from '../../src/server/page-access.js';
 
 function pageAccess() {
@@ -93,6 +93,41 @@ test('server parsing validates fragments and collects classes from nested templa
   }
   assert.throws(() => validateStateUpdate({ selector: '#counter', values: {}, method: 'remove' }));
   assert.throws(() => validateStateUpdate(JSON.parse('{"selector":"#counter","values":{"__proto__":{}}}')));
+});
+
+test('tool results are scoped to their socket and timed out requests cannot be completed by late replies', async (t) => {
+  let server = createServer();
+  server.listen(0, '127.0.0.1');
+  let origin = await waitForServer(server);
+  let access = pageAccess();
+  let pages = new PageConnection(server, origin, access, async () => {}, () => {});
+  t.after(async () => { await pages.close(); await closeServer(server); });
+  let options = { origin, headers: { Cookie: `${access.cookieName}=${access.token}` } };
+  let first = new WebSocket(`${origin.replace('http:', 'ws:')}${access.socketPath}`, options);
+  await once(first, 'open');
+  let second = new WebSocket(`${origin.replace('http:', 'ws:')}${access.socketPath}`, options);
+  await once(second, 'open');
+  let [peer] = pages.clients;
+  assert.ok(peer);
+  let incoming = once(first, 'message');
+  let pending = pages.request(peer, { type: 'tools' });
+  let [data] = await incoming;
+  let command = JSON.parse(data.toString());
+  second.send(JSON.stringify({ type: 'result', id: command.id, result: 'wrong page' }));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(pages.pending.size, 1);
+  first.send(JSON.stringify({ type: 'result', id: command.id, result: { discoveryId: 'correct', tools: [] } }));
+  assert.deepEqual(await pending, { discoveryId: 'correct', tools: [] });
+
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let timed = pages.request(peer, { type: 'tools' });
+  let [id] = pages.pending.keys();
+  let rejected = assert.rejects(timed, /outcome may be unknown; do not retry automatically/);
+  t.mock.timers.tick(PAGE_REQUEST_TIMEOUT_MS);
+  await rejected;
+  t.mock.timers.reset();
+  first.send(JSON.stringify({ type: 'result', id, result: 'late' }));
+  assert.equal(pages.pending.size, 0);
 });
 
 test('event buffering reports overflow and drains without duplicates', () => {

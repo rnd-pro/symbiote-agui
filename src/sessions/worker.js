@@ -65,6 +65,7 @@ process.once('message', async (message) => {
       insert: (html) => runtime.insert(html),
       update: (input) => runtime.update(input),
       events: () => ({ ...runtime.status(), ...runtime.events.drain() }),
+      tools: (input) => runtime.tools(input),
     });
     control = endpoint.server;
     record.controlUrl = endpoint.url;

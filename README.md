@@ -25,9 +25,23 @@ Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the 
 
 `start` opens and authorizes the session in the OS default browser. With `start demo --no-open`, open the returned `authorizationUrl` manually. If opening fails, the server remains available and the result includes `opened: false`, a warning, and `authorizationUrl`.
 
-### Connect Chrome DevTools MCP
+### Connect AGUI MCP
 
-To let an agent invoke the page's WebMCP tools, connect Chrome DevTools MCP to the same Chrome profile that contains the session page.
+Run `npx symbiote-agui --help` once and accept npm's installation prompt if shown. Configure an MCP server in your agent harness with command `npx` and arguments `symbiote-agui`, `mcp`, then reconnect the harness to load its tools. The server communicates over stdio; diagnostics go to stderr. Use the same `AGUI_STATE_DIR` as your CLI commands when overriding session storage.
+
+The server exposes three tools:
+
+- `list_pages({ sessionId })` returns connected pages with their `pageId`, URL, title, and readiness.
+- `list_tools({ sessionId, pageId? })` returns Symbiote tool names, descriptions, schemas, and a `discoveryId`. With one connected page, `pageId` is selected automatically. With several, choose one from `list_pages`.
+- `call_tool({ sessionId, pageId, discoveryId, name, input })` validates arguments against the discovered schema and invokes that tool on the selected page. Results are returned as text JSON and structured content; Symbiote errors also set MCP's `isError` flag.
+
+Start the session and insert markup through the CLI, discover its tools once, then reuse `pageId` and `discoveryId` for calls. Calls affect one page. Reload and reconnection create a new page ID. Rediscover after replacement or tool visibility changes. Discovery waits for queued rendering and bounded catalog stabilization; if an expected async tool is still absent, discover again after its initialization finishes.
+
+The primary path uses the existing authenticated worker and WebSocket connection and works without native browser WebMCP or remote debugging. Page requests have a 10-second timeout and worker tool operations a 25-second limit. A timeout, disconnection, or unserializable result can leave the action's outcome unknown; do not retry automatically. Browser results are limited to 1 MiB; `undefined` results are represented as `null`.
+
+### Optional: Connect Chrome DevTools MCP
+
+For native browser WebMCP access or browser inspection, connect Chrome DevTools MCP to the same Chrome profile that contains the session page.
 
 1. Use Chrome with WebMCP enabled, following the [Chrome WebMCP setup](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging).
 2. Open `chrome://inspect/#remote-debugging` in Chrome and enable remote debugging.
@@ -63,6 +77,7 @@ See the [Chrome connection instructions](https://github.com/ChromeDevTools/chrom
 - `update` reads a JSON state command from file or stdin with the same size limit. It requires at least one connected page and waits for acknowledgements. It does not replace markup.
 - `events` returns and clears buffered UI events. The worker retains the most recent 100 events, each limited to 16 KiB; `dropped` reports overflow since the previous read. Events are temporary, not a durable log.
 - `status` returns `waiting` when the worker is running without connected pages, `ready` when pages are connected, and `stopped` when the worker is absent. Running results include `url` and `clients`.
+- `mcp` runs the MCP server over stdio until its client disconnects. Session lifecycle remains available through the CLI commands above.
 - `stop` is idempotent. It clears generated content and its WebMCP tools, notifies pages, closes connections and servers, and removes session metadata. It does not close tabs or terminate the user's browser.
 
 Session commands write one JSON object to stdout. Success includes `{ "ok": true, "sessionId": "demo", "state": "waiting", "url": "http://127.0.0.1:PORT/demo/", "clients": 0 }`. Failures include `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text; diagnostics go to stderr or the worker log.
@@ -194,7 +209,7 @@ if (!customElements.get('tool-counter')) {
 
 This exposes `set_count_in_tool-counter`. Include every state key read by `when()` in `deps`; visibility is not tracked automatically. Descriptors in named `PubSub` contexts register once per context; delete module-owned contexts in the module cleanup. Symbiote removes component tools on replacement and stop. Define descriptors before first render: immediately adding and syncing them after mount can abort a pending native registration.
 
-To let an agent operate these tools, use a browser with WebMCP enabled and connect a WebMCP consumer to the agent. With [Chrome DevTools MCP](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging), enable its WebMCP category and connect it to the Chrome profile containing your session page. Follow its [connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance).
+Use AGUI MCP's `list_tools` and `call_tool` to operate these tools in an ordinary browser. Native WebMCP is optional. With [Chrome DevTools MCP](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging), enable its WebMCP category and connect it to the Chrome profile containing your session page. Follow its [connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance).
 
 Select the page matching the session URL, use `list_webmcp_tools` to discover its tools, and use `execute_webmcp_tool` to invoke an action. Calling `set_count_in_tool-counter` with `{ "count": 12 }` updates the example to `Count: 12`. These agent calls require a connected Chrome MCP consumer; the CLI handles sessions, markup, state updates, and events.
 

@@ -32,6 +32,7 @@
     "prepublishOnly": "npm run types && npm run test:node"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "^2.3.1",
     "@types/node": "^24.19.2",
     "@types/ws": "^8.18.2",
     "puppeteer-core": "^25.14.0",
@@ -43,6 +44,7 @@
     "url": "https://rnd-pro.com/"
   },
   "dependencies": {
+    "@modelcontextprotocol/server": "^2.3.1",
     "@symbiotejs/symbiote": "^3.8.3",
     "@tailwindcss/node": "^4.3.3",
     "jsda-kit": "1.6.4",

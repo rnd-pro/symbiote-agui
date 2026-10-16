@@ -24,7 +24,7 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
 
     let action = `${request.method} ${request.url}`;
 
-    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update'].includes(action)) {
+    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update', 'POST /tools'].includes(action)) {
       response.writeHead(404).end();
       return;
     }
@@ -50,15 +50,16 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
         }
         result = await actions.insert(await readUtf8Markup(request));
       }
-      if (action === 'POST /update') {
-        if (!actions.update) { throw new CommandError('State updates are unavailable.'); }
+      if (action === 'POST /update' || action === 'POST /tools') {
+        let handler = action === 'POST /tools' ? actions.tools : actions.update;
+        if (!handler) { throw new CommandError('This operation is unavailable in the worker.'); }
         let input;
         try { input = JSON.parse(await readUtf8Markup(request)); }
         catch (error) {
           if (error instanceof CommandError) { throw error; }
-          throw new CommandError('State input must be valid JSON.');
+          throw new CommandError('Command input must be valid JSON.');
         }
-        result = await actions.update(input);
+        result = await handler(input);
       }
 
       response.end(JSON.stringify({ ...identity, result }));

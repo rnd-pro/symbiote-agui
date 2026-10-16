@@ -15,12 +15,15 @@ export interface RenderUpdate {
 
 export type PageCommand =
   | ({ type: 'render' } & RenderUpdate)
-  | ({ type: 'update' } & StateUpdate);
+  | ({ type: 'update' } & StateUpdate)
+  | { type: 'tools' }
+  | { type: 'call'; discoveryId: string; name: string; input: Record<string, unknown>; deadline: number };
 
 export type ServerMessage = (PageCommand & { id: string }) | { type: 'stop' };
 
 export type PageMessage =
-  | { type: 'result'; id: string; error?: string }
+  | { type: 'result'; id: string; result?: unknown; error?: string }
+  | { type: 'hello'; title: string }
   | { type: 'event'; name: string; data: unknown };
 
 export interface SessionEvent {

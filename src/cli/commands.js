@@ -29,6 +29,7 @@ export let HELP = [
   'Usage: symbiote-agui <command>',
   '',
   ...Object.values(COMMANDS).map(({ usage }) => `  ${usage}`),
+  '  mcp                         Run the MCP server over stdio',
   '',
   '  --help, -h     Show help',
   '  --version, -v  Show version',

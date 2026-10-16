@@ -14,6 +14,7 @@ export interface SessionStatus {
   warning?: string;
   events?: import('./transport.js').SessionEvent[];
   dropped?: number;
+  toolResponse?: import('./tools.js').ToolResponse;
 }
 
 export interface SessionRecord {
@@ -45,11 +46,12 @@ export interface ControlActions {
   insert?(html: string): Promise<SessionStatus>;
   update?(input: unknown): Promise<SessionStatus>;
   events?(): SessionStatus;
+  tools?(input: unknown): Promise<SessionStatus>;
 }
 
 export interface PendingPageRequest {
   socket: import('ws').WebSocket;
-  resolve(): void;
+  resolve(result?: unknown): void;
   reject(error: Error): void;
   timer: ReturnType<typeof setTimeout>;
 }

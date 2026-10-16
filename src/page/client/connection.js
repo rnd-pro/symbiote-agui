@@ -1,5 +1,5 @@
 import { CONNECTION_STATUS_ID, MAX_EVENT_BYTES, RECONNECT_MIN_MS, RECONNECT_MAX_MS, SOCKET_PATH, PAGE_TOKEN_PATTERN } from '../../transport/constants.js';
-import { renderMarkup, updateState } from './render.js';
+import { executePageCommand, sendPageResult } from './commands.js';
 import { setEventSender } from './events.js';
 import { disposeModules } from './modules.js';
 import { CONTENT_ROOT_ID } from '../../markup/constants.js';
@@ -58,7 +58,11 @@ export function connectSession() {
     let current = new WebSocket(url);
     socket = current;
     showStatus('Connecting...');
-    current.onopen = () => { delay = RECONNECT_MIN_MS; showStatus(''); };
+    current.onopen = () => {
+      delay = RECONNECT_MIN_MS;
+      current.send(JSON.stringify({ type: 'hello', title: document.title }));
+      showStatus('');
+    };
     current.onmessage = (event) => {
       updates = updates.then(async () => {
         let message = /** @type {import('../../../types/transport.js').ServerMessage} */ (JSON.parse(event.data));
@@ -75,21 +79,13 @@ export function connectSession() {
           return;
         }
         try {
-          if (message.type === 'render') {
-            await renderMarkup(message);
-          } else {
-            updateState(message);
-          }
-          if (current.readyState === WebSocket.OPEN) {
-            current.send(JSON.stringify({ type: 'result', id: message.id }));
-          }
+          let result = await executePageCommand(message);
+          sendPageResult(current, message.id, result);
           showStatus('');
         } catch (error) {
           let detail = error instanceof Error ? error.message : String(error);
           showStatus(`Could not update interface: ${detail}`);
-          if (current.readyState === WebSocket.OPEN) {
-            current.send(JSON.stringify({ type: 'result', id: message.id, error: detail }));
-          }
+          sendPageResult(current, message.id, undefined, detail);
         }
       }).catch((error) => showStatus(`Connection error: ${error.message}`));
     };

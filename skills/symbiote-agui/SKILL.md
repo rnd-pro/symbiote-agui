@@ -87,19 +87,27 @@ For reusable markup, include `<template id="card-template">...</template>` and a
 
 ## WebMCP
 
-AGUI imports Symbiote's native WebMCP extension and enables `Symbiote.mcpToolMode`. Event bindings automatically expose tools, such as `increment_in_agui-component` for the counter above. Native discovery and invocation require browser support; the regular CLI and user interface work without it.
+AGUI imports Symbiote's WebMCP extension and enables `Symbiote.mcpToolMode`. Event bindings automatically expose tools, such as `increment_in_agui-component` for the counter above. The primary control route is AGUI MCP over the existing authenticated WebSocket; it works without native browser WebMCP.
 
-For agent-driven tool invocation, configure Chrome DevTools MCP in the harness with `--autoConnect` and `--categoryExperimentalWebmcp`. Chrome must have WebMCP and remote debugging enabled; approve its connection prompt. Follow the [existing-browser connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance).
+Run `npx symbiote-agui --help` once to finish any npm installation prompt before connecting stdio. Configure the MCP server in the harness with command `npx` and arguments `symbiote-agui`, `mcp`, then reconnect the harness. Use the same `AGUI_STATE_DIR` as the CLI when overriding storage. The harness must expose `list_pages`, `list_tools`, and `call_tool` from this server; starting a process in a shell alone does not attach its tools to the conversation.
 
-The harness must expose `list_pages`, `list_webmcp_tools`, and `execute_webmcp_tool` to the agent. After adding the server, reconnect or restart the harness if those tools are absent. Starting the MCP server through a shell does not attach its tools to the conversation. If the connection is unavailable, report the missing prerequisite without attempting Apple Events or unrelated browser-control scripts.
+After CLI insertion, call `list_tools({ sessionId })`. With one page it selects that page automatically; with several, call `list_pages({ sessionId })` and choose one `pageId`. Discovery returns names, descriptions, schemas, `pageId`, and `discoveryId`. Invoke `call_tool({ sessionId, pageId, discoveryId, name, input })` and use its result as confirmation. Calls target one page and validate input against the schema. Preserve explicit state-setting actions: a desk completion tool should set all checkboxes to checked and return checked/total counts so repeated calls remain safe.
+
+Reuse the selected IDs for subsequent calls. Rediscover after replacement or visibility changes; reload and reconnection require a new page ID. Discovery waits for queued rendering and bounded registration settling; an absent async tool may require later discovery. Missing or stale targets produce errors. A timeout, disconnection, or result serialization failure may leave the outcome unknown; do not retry automatically. MCP errors set `isError`; browser results are limited to 1 MiB.
+
+Chrome DevTools MCP is an optional alternative for native WebMCP and browser inspection. Keep the chosen control route for a task and do not repeat an uncertain action through another route.
+
+For the optional Chrome route, configure Chrome DevTools MCP in the harness with `--autoConnect` and `--categoryExperimentalWebmcp`. Chrome must have WebMCP and remote debugging enabled; approve its connection prompt. Follow the [existing-browser connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance).
+
+The Chrome MCP server must expose `list_pages`, `list_webmcp_tools`, and `execute_webmcp_tool` to the agent. After adding it, reconnect or restart the harness if those tools are absent. Starting the MCP server through a shell does not attach its tools to the conversation. If this route is unavailable, report the missing prerequisite without attempting Apple Events or unrelated browser-control scripts.
 
 On macOS, if remote debugging is enabled but Chrome MCP reports a missing `DevToolsActivePort`, the host app may lack Google Chrome access under System Settings > Privacy & Security > Files & Folders. Report that permission requirement; do not assume Chrome is stopped or repeatedly try different endpoints.
 
-Use `list_pages` to match the CLI's session URL to the Chrome MCP page, then use `list_webmcp_tools` and `execute_webmcp_tool`. Use the action result as confirmation and keep the selected page and MCP connection for subsequent calls. The CLI handles session lifecycle, markup, state updates, and events.
+For the optional Chrome route, use its `list_pages` to match the CLI's session URL to a Chrome MCP page, then use `list_webmcp_tools` and `execute_webmcp_tool`. Use the action result as confirmation and keep the selected page and MCP connection for subsequent calls. The CLI handles session lifecycle, markup, state updates, and events.
 
 Import `ToolDescriptor` from the fully resolved `/client/index.js` URL for explicit tools. Define descriptors in a subclass's `init$` before first render, with `description`, `inputSchema`, and `execute`. Use `componentDescription` for extra component context. Conditional tools need both `when` and `deps` listing every state key read by the condition. Immediately adding and syncing descriptors after mount can abort pending native registrations.
 
-Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete module-owned contexts in the module cleanup; component tools follow Symbiote's DOM lifecycle automatically. Use the exported `getActiveWebMCPTools()` and entries' `nativeActive` field for diagnostics. See the [project README](https://github.com/rnd-pro/symbiote-agui#webmcp) for browser setup and a complete explicit tool example. Use these native APIs when a WebMCP-capable client is available; continue using CLI events and state commands for ordinary sessions.
+Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete module-owned contexts in the module cleanup; component tools follow Symbiote's DOM lifecycle automatically. Use the exported `getActiveWebMCPTools()` and entries' `nativeActive` field for diagnostics. See the [project README](https://github.com/rnd-pro/symbiote-agui#webmcp) for a complete explicit tool example. Define tools with Symbiote's APIs and invoke them through AGUI MCP or the optional native browser consumer. Use CLI events when awaiting user input.
 
 ## Reconnection and recovery
 
@@ -107,7 +115,9 @@ Pages reconnect automatically and restore the latest accepted markup. Reload or 
 
 - `SESSION_EXISTS`: check `status`; reuse a session belonging to this task or choose another ID. Do not stop an unrelated session to resolve a name collision.
 - `SESSION_STOPPED`: start the intended session before inserting.
-- `PAGE_UNAVAILABLE`: open the session URL in its authorized browser before sending state updates. If authorization is required, use `status <SESSION_ID> --authorize` and open `authorizationUrl`.
+- `PAGE_UNAVAILABLE`: open the session URL in its authorized browser and select its current MCP page ID. If authorization is required, use `status <SESSION_ID> --authorize` and open `authorizationUrl`.
+- `PAGE_AMBIGUOUS`: use AGUI MCP's `list_pages` and pass the intended `pageId` to `list_tools`.
+- `TOOL_FAILED`: follow the reported error; rediscover stale tools. If the outcome is unknown, inspect the result before attempting another invocation.
 - `INVALID_INPUT` or `INPUT_TOO_LARGE`: correct arguments, encoding, JSON, or input size before retrying.
 - `INSERT_FAILED`: fix the reported JSON, template, stylesheet, or module error. Validation and stylesheet failures preserve prior content. Read `agui:error` events for failures while restoring queued markup. Modules may already have run or changed content; reload the session URL to restore the last accepted markup when needed.
 - `UPDATE_FAILED`: check the selector and component fields. Commands and multi-tab delivery are not transactions; inspect affected pages before retrying after partial failure or timeout.

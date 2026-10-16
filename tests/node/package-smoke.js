@@ -6,6 +6,8 @@ import { delimiter, join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { Client } from '@modelcontextprotocol/client';
+import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 
 let execute = promisify(execFile);
 let root = fileURLToPath(new URL('../../', import.meta.url));
@@ -51,9 +53,10 @@ test('the production tarball runs through npm exec outside the checkout', { time
     return stdout;
   }
 
-  let packed = JSON.parse(await runNpm(['pack', '--json', '--pack-destination', directory], root))[0];
+  let packages = JSON.parse(await runNpm(['pack', '--json', '--pack-destination', directory], root));
+  let packed = Array.isArray(packages) ? packages[0] : Object.values(packages)[0];
   let files = packed.files.map((/** @type {{path: string}} */ file) => file.path);
-  for (let path of ['bin/symbiote-agui.js', 'src/page/shell.html', 'src/page/theme.css', 'src/page/client/index.js', 'skills/symbiote-agui/SKILL.md']) {
+  for (let path of ['bin/symbiote-agui.js', 'src/page/shell.html', 'src/page/theme.css', 'src/page/client/index.js', 'src/page/client/tool-bridge.js', 'src/mcp/server.js', 'skills/symbiote-agui/SKILL.md']) {
     assert.ok(files.includes(path), `${path} must be included in the tarball.`);
   }
   assert.equal(files.some((/** @type {string} */ path) => /^(tests|planning|node_modules)\//.test(path) || path === 'AGENTS.md'), false);
@@ -85,6 +88,22 @@ test('the production tarball runs through npm exec outside the checkout', { time
   started = true;
   assert.equal(session.state, 'waiting');
   assert.equal((await cli('status', 'package-smoke')).url, session.url);
+  let transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [npm, 'exec', '--yes', '--offline', '--package', archive, '--', 'symbiote-agui', 'mcp'],
+    cwd: caller,
+    env: /** @type {Record<string, string>} */ (environment),
+    stderr: 'pipe',
+  });
+  let mcp = new Client({ name: 'package-smoke', version: '1.0.0' });
+  try {
+    await mcp.connect(transport);
+    assert.deepEqual((await mcp.listTools()).tools.map((tool) => tool.name).sort(), ['call_tool', 'list_pages', 'list_tools']);
+    let result = await mcp.callTool({ name: 'list_pages', arguments: { sessionId: 'package-smoke' } });
+    assert.partialDeepStrictEqual(result, { structuredContent: { sessionId: 'package-smoke', pages: [] }, isError: false });
+  } finally {
+    await mcp.close();
+  }
   await writeFile(join(caller, 'view with spaces.html'), '<h1 class="w-[123px]">Packaged AGUI</h1>');
   assert.equal((await cli('insert', 'package-smoke', '--file', 'view with spaces.html')).delivery, 'queued');
   for (let path of [new URL(session.url).pathname, '/client/index.js', '/styles.css.js']) {

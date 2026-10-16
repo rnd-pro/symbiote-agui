@@ -39,6 +39,11 @@ export function parseCommand(args) {
 
   let [name, sessionId] = positionals;
 
+  if (name === 'mcp') {
+    if (positionals.length !== 1 || Object.keys(values).length) { throw new CommandError('Usage: symbiote-agui mcp'); }
+    return { kind: 'mcp' };
+  }
+
   if (!name || !Object.hasOwn(COMMANDS, name)) {
     throw new CommandError('Unknown command. Use --help for usage.');
   }

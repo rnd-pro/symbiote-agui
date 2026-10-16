@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { WebSocket, WebSocketServer } from 'ws';
-import { HEARTBEAT_MS, MAX_EVENT_BYTES, PAGE_REQUEST_TIMEOUT_MS } from '../transport/constants.js';
+import { HEARTBEAT_MS, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, PAGE_REQUEST_TIMEOUT_MS } from '../transport/constants.js';
 import { hasPageAccess } from './page-access.js';
 
 export class PageConnection {
@@ -8,6 +8,8 @@ export class PageConnection {
   clients = new Set();
   /** @type {Map<string, import('../../types/session.js').PendingPageRequest>} */
   pending = new Map();
+  /** @type {Map<string, import('../../types/tools.js').PagePeer>} */
+  pages = new Map();
 
   /**
    * @param {import('node:http').Server} server
@@ -17,7 +19,7 @@ export class PageConnection {
    * @param {(message: Extract<import('../../types/transport.js').PageMessage, { type: 'event' }>) => void} onEvent
    */
   constructor(server, origin, access, initialize, onEvent) {
-    this.server = new WebSocketServer({ noServer: true, maxPayload: MAX_EVENT_BYTES + 1024 });
+    this.server = new WebSocketServer({ noServer: true, maxPayload: MAX_PAGE_MESSAGE_BYTES });
     server.on('upgrade', (request, socket, head) => {
       let endpoint;
       try { endpoint = new URL(request.url || '/', origin); }
@@ -33,15 +35,19 @@ export class PageConnection {
     let alive = new Set();
     this.server.on('connection', (socket) => {
       this.clients.add(socket);
+      let pageId = randomUUID();
+      let page = { socket, title: 'AGUI', ready: false, error: '' };
+      this.pages.set(pageId, page);
       alive.add(socket);
       socket.on('pong', () => alive.add(socket));
       socket.on('error', () => socket.terminate());
       socket.on('close', () => {
         this.clients.delete(socket);
+        this.pages.delete(pageId);
         alive.delete(socket);
         for (let [id, pending] of this.pending) {
           if (pending.socket === socket) {
-            this.finish(id, new Error('The page disconnected during the update.'));
+            this.finish(id, new Error('The page disconnected during the request. Its outcome may be unknown; do not retry automatically.'));
           }
         }
       });
@@ -50,7 +56,9 @@ export class PageConnection {
           if (binary) { throw new Error('Expected JSON text.'); }
           let message = /** @type {import('../../types/transport.js').PageMessage} */ (JSON.parse(data.toString()));
           if (message.type === 'result' && typeof message.id === 'string' && this.pending.get(message.id)?.socket === socket) {
-            this.finish(message.id, message.error ? new Error(String(message.error).slice(0, 2000)) : undefined);
+            this.finish(message.id, message.error ? new Error(String(message.error).slice(0, 2000)) : undefined, message.result);
+          } else if (message.type === 'hello' && typeof message.title === 'string') {
+            page.title = message.title.slice(0, 200);
           } else if (message.type === 'event' && typeof message.name === 'string' && message.name.length > 0 && message.name.length <= 128 && Buffer.byteLength(data.toString()) <= MAX_EVENT_BYTES) {
             onEvent(message);
           }
@@ -58,7 +66,8 @@ export class PageConnection {
           socket.close(1008, 'Invalid page message.');
         }
       });
-      void initialize(socket).catch((error) => {
+      void initialize(socket).then(() => { page.ready = true; }).catch((error) => {
+        page.error = String(error.message);
         onEvent({ type: 'event', name: 'agui:error', data: { message: String(error.message).slice(0, 2000) } });
         console.error('Could not restore page:', error.message);
       });
@@ -78,24 +87,25 @@ export class PageConnection {
   /**
    * @param {string} id
    * @param {Error} [error]
+   * @param {unknown} [result]
    */
-  finish(id, error) {
+  finish(id, error, result) {
     let pending = this.pending.get(id);
     if (!pending) { return; }
     this.pending.delete(id);
     clearTimeout(pending.timer);
-    error ? pending.reject(error) : pending.resolve();
+    error ? pending.reject(error) : pending.resolve(result);
   }
 
   /**
    * @param {WebSocket} socket
    * @param {import('../../types/transport.js').PageCommand} command
-   * @returns {Promise<void>}
+   * @returns {Promise<unknown>}
    */
   request(socket, command) {
     return new Promise((resolve, reject) => {
       let id = randomUUID();
-      let timer = setTimeout(() => this.finish(id, new Error('The page did not acknowledge the update in time.')), PAGE_REQUEST_TIMEOUT_MS);
+      let timer = setTimeout(() => this.finish(id, new Error('The page request timed out. Its outcome may be unknown; do not retry automatically.')), PAGE_REQUEST_TIMEOUT_MS);
       this.pending.set(id, { socket, timer, resolve, reject });
       if (socket.readyState !== WebSocket.OPEN) {
         this.finish(id, new Error('The page is disconnected.'));

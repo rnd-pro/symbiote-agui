@@ -198,6 +198,12 @@ Use templates in the same insertion for reusable markup. Unknown custom tags wit
 </user-card>
 ```
 
+### Data-driven lists
+
+Use Symbiote's [Itemize API](https://github.com/symbiotejs/symbiote.js/blob/main/docs/list-rendering.md) for repeating rows: a container such as `<div itemize="tasks" item-tag="task-row">` holds one `<template>`, and component state supplies the collection. Each row is a component with its own data scope. Keyed objects supply `_KEY_` for item identity. Assign a new collection to update the list.
+
+Give interactive rows local handlers through their data descriptors or a registered item class. Reusing one local handler for several controls on a single component produces one automatic tool; Itemize row handlers produce separate tools with item identities. Parent-owned `^handler` bindings retain source item context. Standard DOM listeners are not Symbiote bindings and do not automatically expose tools. See the skill's [runnable Itemize example](./skills/symbiote-agui/SKILL.md#repeating-items-with-itemize).
+
 ### WebMCP
 
 The browser entry imports Symbiote's [WebMCP extension](https://github.com/symbiotejs/symbiote.js/blob/main/docs/webmcp.md) before rendering and enables `Symbiote.mcpToolMode`. Symbiote automatically exposes bound handlers as tools; the counter above exposes `increment_in_agui-component`. The CLI can discover and invoke them without native browser WebMCP. When the native API is available, Symbiote also registers them there. Popup bindings such as `^increment` retain their ancestor owner and source component identity.

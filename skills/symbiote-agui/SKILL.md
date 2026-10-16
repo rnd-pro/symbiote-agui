@@ -86,9 +86,55 @@ An anonymous `<context-provider>` exposes local fields to descendants through `^
 
 For reusable markup, include `<template id="card-template">...</template>` and a custom tag with `use-template="template#card-template"` in the same insertion. Unknown tags using `use-template` become generic components. Register custom subclasses through `YourComponent.reg('your-component')` to preserve Symbiote's WebMCP tag identity; registrations persist until page reload. No ready-made widget catalog is provided.
 
+## Repeating items with Itemize
+
+Generate repeating rows from data with Symbiote's `itemize` API. Put one row template inside the list container; avoid copying rows or building them with DOM loops. Use a keyed object for task IDs: Symbiote supplies `_KEY_` to each item and includes it in automatic tool names. Array items use their current index when no item key is available.
+
+Each item has its own component state. Supply a local handler in each data descriptor, as below, or register a custom component for `item-tag` when rows need their own methods and lifecycle. A plain inline template does not inherit parent handlers: use `^handler` for a parent-owned action. For a registered item class, define its template on the class; the container's inline template supplies markup for automatically created item classes.
+
+```html
+<task-list>
+  <div itemize="tasks" item-tag="task-row">
+    <template>
+      <label class="flex min-h-11 items-center gap-3">
+        <input type="checkbox" bind="checked: checked; onchange: toggle">
+        <span>{{title}}</span>
+      </label>
+    </template>
+  </div>
+</task-list>
+<script type="module" data-agui>
+let { AguiComponent } = await import(new URL('/client/index.js', location.href).href);
+let items = {
+  brief: { title: 'Review the brief', checked: false },
+  preview: { title: 'Share a preview', checked: false },
+};
+if (!customElements.get('task-list')) {
+  class TaskList extends AguiComponent {
+    init$ = {
+      tasks: Object.fromEntries(Object.entries(items).map(([key, item]) => [
+        key, { ...item, toggle: () => this.toggleTask(key) },
+      ])),
+    };
+    toggleTask(key) {
+      let task = this.$.tasks[key];
+      let checked = !task.checked;
+      this.$.tasks = { ...this.$.tasks, [key]: { ...task, checked } };
+      return { key, checked };
+    }
+  }
+  TaskList.reg('task-list');
+}
+</script>
+```
+
+Assign a new collection to the list state to update rows. Keep complete Tailwind classes in the inserted row template so AGUI compiles them. Discover through `npx symbiote-agui tools <SESSION_ID>`; this example exposes separate `toggle_in_task-row_brief` and `toggle_in_task-row_preview` tools. Invoke an individual row tool and check its state/event result to verify targeting. Automatic handlers return Symbiote's text response and state snapshot; explicit `ToolDescriptor` actions can return structured results.
+
 ## Symbiote tools
 
 AGUI imports Symbiote's WebMCP extension and enables `Symbiote.mcpToolMode`. Event bindings automatically expose tools, such as `increment_in_agui-component` for the counter above. The primary control route is the CLI over the existing authenticated WebSocket; it works without native browser WebMCP.
+
+Automatic tools identify a handler and its owning component, not every DOM element. Several controls bound to the same local handler on one owner share a tool. Itemize creates separate item owners and item identities; local row handlers expose individual tools. Parent-owned `^handler` bindings retain their source item identity too. Bind interactive behavior with Symbiote `bind` syntax; raw `addEventListener` callbacks are not automatic Symbiote tools. Always use discovered names, including any collision suffixes.
 
 Calls target one page and validate input against the discovered schema. Prefer actions that set the intended state and return meaningful results: a desk completion tool should set all checkboxes to checked and return checked/total counts so repeated calls remain safe. Discovery waits for queued rendering and bounded registration settling; an absent async tool may require discovery after its initialization finishes. Browser results are limited to 1 MiB.
 

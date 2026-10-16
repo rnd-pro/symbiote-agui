@@ -2,11 +2,11 @@
 
 > Create interactive browser interfaces from an AI agent.
 
-AGUI lets AI agents create and update interactive interfaces in regular browser pages. Use the CLI to deliver markup, update component state, and retrieve user interaction events.
+AGUI lets AI agents create and update interactive interfaces in regular browser pages. Use the CLI to deliver markup, update component state, and retrieve user interaction events. Connect AGUI MCP to discover and invoke Symbiote component tools through the page's existing WebSocket connection. Named sessions save their interface definition for reuse after restart.
 
 ## Usage with npx
 
-Use Node.js 24 or newer. Run from any directory:
+Use Node.js 24 or newer. With an HTML fragment in `view.html` and a JSON state command in `state.json`, run from any directory. See the [interactive counter](#interactive-counter) for a complete example using stdin instead of files.
 
 ```sh
 npx symbiote-agui start demo
@@ -17,7 +17,7 @@ npx symbiote-agui status demo
 npx symbiote-agui stop demo
 ```
 
-File paths resolve from your current directory; session data lives under `~/.symbiote-agui`. Starting the same ID restores its saved interface. Use `npx symbiote-agui clear demo` to forget it. Use `--no-open` on `start` when you want to open the returned URL yourself.
+File paths resolve from your current directory; session data lives under `~/.symbiote-agui`. Starting the same ID restores its saved interface. Use `npx symbiote-agui clear demo` to forget it. Use `--no-open` on `start` to open the returned `authorizationUrl` yourself.
 
 ## Agent setup
 
@@ -35,9 +35,19 @@ The server exposes three tools:
 - `list_tools({ sessionId, pageId? })` returns Symbiote tool names, descriptions, schemas, and a `discoveryId`. With one connected page, `pageId` is selected automatically. With several, choose one from `list_pages`.
 - `call_tool({ sessionId, pageId, discoveryId, name, input })` validates arguments against the discovered schema and invokes that tool on the selected page. Results are returned as text JSON and structured content; Symbiote errors also set MCP's `isError` flag.
 
-Start the session and insert markup through the CLI, discover its tools once, then reuse `pageId` and `discoveryId` for calls. Calls affect one page. Reload and reconnection create a new page ID. Rediscover after replacement or tool visibility changes. Discovery waits for queued rendering and bounded catalog stabilization; if an expected async tool is still absent, discover again after its initialization finishes.
+Calls affect one page. Reload and reconnection create a new page ID. Rediscover after replacement or catalog changes. Discovery waits for queued rendering and bounded catalog stabilization; if an expected async tool is still absent, discover again after its initialization finishes. If the harness lacks AGUI MCP tools, report that setup requirement; the CLI can still create and display interfaces.
 
 The primary path uses the existing authenticated worker and WebSocket connection and works without native browser WebMCP or remote debugging. Page requests have a 10-second timeout and worker tool operations a 25-second limit. A timeout, disconnection, or unserializable result can leave the action's outcome unknown; do not retry automatically. Browser results are limited to 1 MiB; `undefined` results are represented as `null`.
+
+### Routine agent workflow
+
+1. Start a named session with `npx symbiote-agui start demo` and check `ok` and `restored`. For `SESSION_EXISTS`, use `npx symbiote-agui status demo` once to reuse a session belonging to the task or choose another ID.
+2. Reuse an owned running session or restored interface without regenerating or reinserting it. Insert markup for a new or deliberately changed definition; use `update` for small state changes.
+3. Discover tools with `list_tools({ sessionId: "demo" })`. If several pages are connected, use `list_pages` and pass the intended `pageId`. Keep the returned `pageId`, `discoveryId`, names, and schemas.
+4. Invoke `call_tool` with those IDs, the discovered name, and schema-compatible input. Check MCP's `isError` flag and use the returned action result as confirmation. Reuse the selected IDs while current; select again after reload, reconnection, or restart.
+5. For user interaction, read `npx symbiote-agui events demo` and process the relevant data. Events return immediately and clear the queue; an empty batch means no new input. Check again when interaction is expected, without tight polling. Leave the session available while the user interacts; use `stop` when finished and `clear` when the saved definition should be discarded.
+
+Tool results and CLI events usually provide confirmation without repeated status checks, DOM inspection, screenshots, or unrelated commands. A call with an unknown outcome requires checking the result before another invocation, including through a different control route.
 
 ### Optional: Connect Chrome DevTools MCP
 
@@ -81,7 +91,7 @@ See the [Chrome connection instructions](https://github.com/ChromeDevTools/chrom
 - `stop` is idempotent. It clears live content and tools, notifies pages, closes connections and servers, and removes worker metadata and credentials. It retains the cached interface and leaves browser tabs open.
 - `clear` removes the cached definition and live content/tools, returning `cleared: true`. A running session stays available for new insertions. It also works on stopped sessions and is idempotent. An empty `insert` saves a blank definition; use `clear` to remove it entirely.
 
-Session commands write one JSON object to stdout. Success includes `{ "ok": true, "sessionId": "demo", "state": "waiting", "url": "http://127.0.0.1:PORT/demo/", "clients": 0 }`. Failures include `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text; diagnostics go to stderr or the worker log.
+Session commands other than `mcp` write one JSON object to stdout. Success includes `{ "ok": true, "sessionId": "demo", "state": "waiting", "url": "http://127.0.0.1:PORT/demo/", "clients": 0 }`. Failures include `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text; diagnostics go to stderr or the worker log. The `mcp` command reserves stdout for MCP protocol messages.
 
 ### Connection and recovery
 
@@ -97,11 +107,11 @@ Open its `authorizationUrl` in the intended browser. Keep this link private; kno
 
 Pages reconnect automatically with a bounded retry delay. Reload, reconnect, or opening another tab restores the latest accepted markup and reruns its marked modules. Live component state resets to the values in that markup; `update` commands are not replayed. Restarting the same session ID restores its cached definition without the original input file.
 
-Validation and stylesheet loading happen before content replacement, preserving the current interface if either fails. Module code can have side effects; an execution failure can leave changed content. Delivery to several tabs and state updates are not transactions. After a failed or timed-out delivery, inspect the pages or reload the session URL before retrying. A queued insertion cannot verify browser-specific behavior until a page connects. Restoration failures also appear as `agui:error` events for the agent.
+Validation and stylesheet loading happen before content replacement, preserving the current interface if either fails. Module code can have side effects; an execution failure can leave changed content. Delivery to several tabs and state updates are not transactions. After a failed or timed-out delivery, inspect the pages or reload the session URL before retrying. A queued insertion cannot verify browser-specific behavior until a page connects.
 
 Use `status` after `SESSION_EXISTS`; reuse a session belonging to the task or choose another ID. Start a stopped session before inserting. For `PAGE_UNAVAILABLE`, open the session URL. For `INSERT_FAILED` or `UPDATE_FAILED`, correct the reported problem. If the worker stays `SESSION_UNREACHABLE`, inspect its log rather than repeatedly starting it or killing a stored PID.
 
-Cache read and restoration failures stop startup and retain the saved definition. `CACHE_ERROR` reports storage failures; resolve the reported path or permission problem before retrying. Failed insertions preserve the previous accepted cache. If saving fails after browser delivery, the page may already have changed; reloading restores the last accepted interface. Use `clear` only when you intend to discard the saved definition.
+Cache read, markup validation, and style compilation failures stop startup and retain the saved definition. Browser rendering and module execution happen after a page connects; their failures appear as `agui:error` events. `CACHE_ERROR` reports storage failures; resolve the reported path or permission problem before retrying. Failed insertions preserve the previous accepted cache. If saving fails after browser delivery, the page may already have changed; reloading restores the last accepted interface. Use `clear` only when you intend to discard the saved definition.
 
 ## Markup, RAT, and interactivity
 
@@ -177,7 +187,7 @@ Use templates in the same insertion for reusable markup. Unknown custom tags wit
 
 ### WebMCP
 
-The browser entry imports Symbiote's [WebMCP extension](https://github.com/symbiotejs/symbiote.js/blob/main/docs/webmcp.md) before rendering and enables `Symbiote.mcpToolMode`. Bound handlers become native browser tools automatically; the counter above exposes `increment_in_agui-component`. Popup bindings such as `^increment` retain their ancestor owner and source component identity. The CLI and normal UI also work when the browser has no WebMCP API.
+The browser entry imports Symbiote's [WebMCP extension](https://github.com/symbiotejs/symbiote.js/blob/main/docs/webmcp.md) before rendering and enables `Symbiote.mcpToolMode`. Symbiote automatically exposes bound handlers as tools; the counter above exposes `increment_in_agui-component`. AGUI MCP can discover and invoke them without native browser WebMCP. When the native API is available, Symbiote also registers them there. Popup bindings such as `^increment` retain their ancestor owner and source component identity.
 
 For explicit descriptions, input schemas, and visibility, initialize native `ToolDescriptor` values in a component's `init$`. For example, insert:
 
@@ -212,9 +222,21 @@ if (!customElements.get('tool-counter')) {
 
 This exposes `set_count_in_tool-counter`. Include every state key read by `when()` in `deps`; visibility is not tracked automatically. Descriptors in named `PubSub` contexts register once per context; delete module-owned contexts in the module cleanup. Symbiote removes component tools on replacement and stop. Define descriptors before first render: immediately adding and syncing them after mount can abort a pending native registration.
 
-Use AGUI MCP's `list_tools` and `call_tool` to operate these tools in an ordinary browser. Native WebMCP is optional. With [Chrome DevTools MCP](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging), enable its WebMCP category and connect it to the Chrome profile containing your session page. Follow its [connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance).
+Use AGUI MCP's `list_tools` and `call_tool` to operate these tools in an ordinary browser. For native WebMCP access, follow the [optional Chrome DevTools MCP setup](#optional-connect-chrome-devtools-mcp).
 
-Select the page matching the session URL, use `list_webmcp_tools` to discover its tools, and use `execute_webmcp_tool` to invoke an action. Calling `set_count_in_tool-counter` with `{ "count": 12 }` updates the example to `Count: 12`. These agent calls require a connected Chrome MCP consumer; the CLI handles sessions, markup, state updates, and events.
+For the counter above, call AGUI MCP's `list_tools({ sessionId: "demo" })`, then pass its returned IDs to `call_tool` with these arguments:
+
+```json
+{
+  "sessionId": "demo",
+  "pageId": "<pageId from discovery>",
+  "discoveryId": "<discoveryId from discovery>",
+  "name": "set_count_in_tool-counter",
+  "input": { "count": 12 }
+}
+```
+
+The returned `result: { "count": 12 }` confirms the action and the interface displays `Count: 12`. Keep the selected IDs for subsequent calls while the catalog remains current. With optional Chrome MCP, select the page matching the session URL, discover through `list_webmcp_tools`, and invoke through `execute_webmcp_tool`. The CLI handles sessions, markup, state updates, and events.
 
 For browser-side integrations, `/client/index.js` exports `listPageTools()` and async `executePageTool(name, input = {})`. They forward Symbiote's public discovery and invocation APIs and work without native browser WebMCP. Discovery preserves names, descriptions, and schemas; execution preserves results and Symbiote's `isError` responses. Callers validate inputs against the discovered schemas. Replacement and stop remove tools from discovery and invocation.
 
@@ -226,4 +248,4 @@ Worker metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/
 
 `stop` retains cached HTML and discards live state and events. Starting the same ID rebuilds styles, restores the saved HTML and inline modules, and authorizes the browser for the new session. The original source file is not needed. This restores the interface definition with its initial state; user progress, timers, closures, and state updates are not persisted. `clear` removes the saved definition.
 
-For a persistent `SESSION_UNREACHABLE` error, inspect the session's `worker.log` and report the failure. Keep session URLs and tokens private.
+Keep authorization URLs and tokens private.

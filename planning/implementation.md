@@ -11,16 +11,11 @@ Goal: Make AGUI MCP over the existing authenticated WebSocket the primary path f
 - Step 1: Symbiote's published public invocation API is integrated through `listPageTools()` and `executePageTool()`. The adapter forwards discovery metadata, arguments, results, and errors. Browser checks cover native WebMCP disabled and enabled, visibility, async results, failures, replacement, and stop. The completed external prerequisite is described in the [standalone specification](./symbiote-tool-invocation.md).
 - Step 2: `npx symbiote-agui mcp` serves `list_pages`, `list_tools`, and `call_tool` over standard MCP stdio. The authenticated worker and WebSocket route requests to one page, validate arguments, reject stale targets/catalogs, and bound requests without automatic retries. README and SKILL document setup and tool use. Real MCP client tests cover ordinary browsers without native WebMCP, two tabs, idempotent desk completion, results/events, errors, replacement, and reconnection.
 - Step 3: Accepted HTML and inline modules are saved atomically by case-sensitive session ID outside worker directories. `start` restores the definition and rebuilds styles; `stop` retains it; `clear` removes saved and live content. Failed insertions preserve the accepted cache, and storage errors are explicit. README and SKILL describe restoration, clearing, and the initial-state boundary. Node and browser checks cover cache isolation, failed publication, source-file deletion, restored MCP tools, and clearing.
+- Step 4: README and SKILL separate one-time MCP setup from the routine start/restore, discover, call, and events workflow. They describe session reuse, current page selection, result-based confirmation, specific recovery actions, and optional Chrome MCP. The skill links to optional setup details and avoids repeated inspections during ordinary use.
 
 ## Remaining implementation
 
 The numbered steps below contain only pending work. Each requires explicit approval before implementation.
-
-### 4. Document the primary MCP workflow
-
-- Review the complete short workflow: start or restore a session, select its connected page once, list its tools, execute the requested action, and use its result as confirmation.
-- Verify that waiting for user input uses CLI events without repeated status checks, DOM inspections, screenshots, or unrelated commands when tool results answer the task.
-- Keep public instructions limited to current behavior, with Chrome MCP optional and specific setup errors reported directly. Do not add unrelated browser-control fallbacks.
 
 ### 5. Verify the complete primary workflow
 

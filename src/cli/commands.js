@@ -19,6 +19,18 @@ export let COMMANDS = Object.freeze({
     usage: 'status <SESSION_ID> [--authorize]',
     options: ['authorize'],
   },
+  pages: {
+    usage: 'pages <SESSION_ID>',
+    options: [],
+  },
+  tools: {
+    usage: 'tools <SESSION_ID> [--page <PAGE_ID>]',
+    options: ['page'],
+  },
+  call: {
+    usage: 'call <SESSION_ID> [--file <PATH>]',
+    options: ['file'],
+  },
   stop: {
     usage: 'stop <SESSION_ID>',
     options: [],
@@ -42,6 +54,9 @@ export let HELP = [
   'insert replaces the session content; input is limited to 1 MiB.',
   'update reads JSON { selector, values, method?, rewrite? } from file or stdin.',
   'events returns and clears buffered interface events.',
+  'pages lists connected tabs; tools discovers one tab (use --page with several tabs).',
+  'call reads JSON { pageId, discoveryId, name, input } from file or stdin.',
+  'call targets one page, validates tool input, and never retries automatically.',
   'status --authorize returns a private link for authorizing another browser.',
   'stop retains cached markup; clear removes the saved interface and live content.',
 ].join('\n');

@@ -17,6 +17,7 @@ export type CliRequest =
     open: boolean;
     authorize: boolean;
     file?: string;
+    pageId?: string;
   };
 
 export interface CommandFailure {
@@ -27,4 +28,4 @@ export interface CommandFailure {
   };
 }
 
-export type CommandResult = ({ ok: true } & SessionStatus) | CommandFailure;
+export type CommandResult = ({ ok: true } & (SessionStatus | import('./tools.js').SessionToolResponse)) | CommandFailure;

@@ -8,6 +8,8 @@ import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { HELP } from './commands.js';
 import { parseCommand } from './parse.js';
 import { clearSession } from '../sessions/clear.js';
+import { requestTools, isToolError } from '../tools/client.js';
+import { callTool } from './tools.js';
 
 /**
  * @param {string[]} args
@@ -47,9 +49,12 @@ export async function run(args) {
       insert: () => insertMarkup(request.sessionId, request.file),
       update: () => updateState(request.sessionId, request.file),
       events: () => readEvents(request.sessionId),
+      pages: () => requestTools(request.sessionId, { action: 'pages' }),
+      tools: () => requestTools(request.sessionId, { action: 'tools', pageId: request.pageId }),
+      call: () => callTool(request.sessionId, request.file),
     };
     let status = await handlers[request.command]();
-    if (request.command === 'start' && request.open && status.url) {
+    if (request.command === 'start' && request.open && 'url' in status && status.url) {
       try {
         await openPage(status.authorizationUrl || status.url);
         let { authorizationUrl, ...visible } = status;
@@ -57,6 +62,14 @@ export async function run(args) {
       } catch {
         status = { ...status, opened: false, warning: 'Could not open the default browser. Open authorizationUrl manually.' };
       }
+    }
+    if ('action' in status && status.action === 'call' && isToolError(status.result)) {
+      process.stdout.write(`${JSON.stringify({
+        ok: false,
+        ...status,
+        error: { code: ERROR_CODE.TOOL_FAILED, message: 'The page tool reported an error. See result for details.' },
+      })}\n`);
+      return EXIT_CODE.RUNTIME_ERROR;
     }
     process.stdout.write(`${JSON.stringify({ ok: true, ...status })}\n`);
     return EXIT_CODE.SUCCESS;

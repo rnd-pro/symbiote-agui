@@ -1,6 +1,6 @@
 # AGUI implementation plan
 
-Goal: Make AGUI MCP over the existing authenticated WebSocket the primary path for operating Symbiote tools in ordinary browsers, without native WebMCP support or remote debugging. Keep Chrome DevTools MCP optional. Continue using `npx symbiote-agui` for session lifecycle and markup.
+Goal: Use `npx symbiote-agui` for the complete agent workflow: session lifecycle, markup, tool discovery, invocation, and events over the existing authenticated WebSocket. Keep the stdio MCP server and Chrome DevTools MCP optional. Native browser WebMCP and remote debugging are not required for CLI control.
 
 ## Implemented
 
@@ -11,24 +11,18 @@ Goal: Make AGUI MCP over the existing authenticated WebSocket the primary path f
 - Step 1: Symbiote's published public invocation API is integrated through `listPageTools()` and `executePageTool()`. The adapter forwards discovery metadata, arguments, results, and errors. Browser checks cover native WebMCP disabled and enabled, visibility, async results, failures, replacement, and stop. The completed external prerequisite is described in the [standalone specification](./symbiote-tool-invocation.md).
 - Step 2: `npx symbiote-agui mcp` serves `list_pages`, `list_tools`, and `call_tool` over standard MCP stdio. The authenticated worker and WebSocket route requests to one page, validate arguments, reject stale targets/catalogs, and bound requests without automatic retries. README and SKILL document setup and tool use. Real MCP client tests cover ordinary browsers without native WebMCP, two tabs, idempotent desk completion, results/events, errors, replacement, and reconnection.
 - Step 3: Accepted HTML and inline modules are saved atomically by case-sensitive session ID outside worker directories. `start` restores the definition and rebuilds styles; `stop` retains it; `clear` removes saved and live content. Failed insertions preserve the accepted cache, and storage errors are explicit. README and SKILL describe restoration, clearing, and the initial-state boundary. Node and browser checks cover cache isolation, failed publication, source-file deletion, restored MCP tools, and clearing.
-- Step 4: README and SKILL separate one-time MCP setup from the routine start/restore, discover, call, and events workflow. They describe session reuse, current page selection, result-based confirmation, specific recovery actions, and optional Chrome MCP. The skill links to optional setup details and avoids repeated inspections during ordinary use.
+- Step 4: README and SKILL describe the routine start/restore, discover, call, and events workflow, session reuse, current page selection, result-based confirmation, and specific recovery actions. The CLI is the default; MCP setup is optional. Ordinary operations avoid repeated inspections.
+- Step 5: CLI `pages`, `tools [--page PAGE_ID]`, and `call [--file PATH]` expose the existing authenticated tool bridge without a harness MCP connection. Calls accept JSON on stdin or from a file, validate discovered schemas, target one page, reject stale requests, and preserve native results. Native tool errors return `ok: false`, `TOOL_FAILED`, and exit code 1. Optional MCP uses the same bridge.
 
-## Remaining implementation
+## Primary workflow verification
 
-The numbered steps below contain only pending work. Each requires explicit approval before implementation.
-
-### 5. Verify the complete primary workflow
-
-- Run the packed production package from outside the checkout. Use `npx symbiote-agui` for page lifecycle and the AGUI MCP server connected to the agent harness for discovery and actions. Prove the primary flow with native browser WebMCP disabled and without Chrome MCP or remote debugging. Browser fixtures may verify results but must not execute the requested action on the agent's behalf.
-- Create the desk, discover its tools, execute its completion action through MCP, and verify every checkbox is checked, progress is correct, and expected interaction events exist. Calling the completion action again must leave all boxes checked.
-- Stop and restart the same ID after deleting the original HTML file. Confirm the cached interface and its tools return without another insertion.
-- Verify the readable session URL, asset loading, reload/reconnection, session/page targeting, and rejection of unauthorized access. Confirm the named ID remains visible after a worker restart.
-- Cover two tabs with one invocation, tool cleanup and visibility changes, invalid/stale calls, disconnects and uncertain results, cache isolation, and failed insertion recovery. Missing MCP or page connectivity must produce an actionable setup failure.
-- Run type checking and focused Node/browser/package regression checks. Finish with one manual desk walkthrough through the CLI and configured AGUI MCP connection. Do not mark the workflow complete based only on registration tests or in-page JavaScript execution.
+- Type checking, 26 Node tests, 7 browser tests, and the production package smoke test pass. CLI and MCP checks cover native WebMCP disabled, two tabs with one-page invocation, checkbox/progress assertions, repeated completion, results/events, visibility and cleanup, invalid/stale calls, reload/reconnection, disconnections, cache isolation, failed insertion recovery, and rejection of unauthorized access.
+- The production tarball installs outside the checkout without development dependencies. Its commands verify assets, stdio MCP, missing-page and malformed-call errors, restoration, and clearing.
+- An agent walkthrough used `npx symbiote-agui` from a separate tarball installation to open a desk in the regular browser, insert markup, discover tools, and complete all three tasks. Repeating the call returned `{ checked: 3, total: 3 }` and the event queue contained one completion event. After deleting the source HTML and restarting the same ID, `restored: true` confirmed restoration; tools returned and a file-based call completed the desk without reinsertion. The named URL persisted across the port change. No harness MCP, Chrome MCP, or remote debugging connection was used for this walkthrough. Native WebMCP was available in that browser; the automated CLI check separately proves operation with it disabled.
 
 ## Optional pending work: Chrome MCP verification
 
-- Verify the configured Chrome MCP connection after resolving host access restrictions. This does not block the primary AGUI MCP workflow.
+- Verify the configured Chrome MCP connection after resolving host access restrictions. This does not block the primary CLI workflow.
 - Match the CLI's readable URL to a Chrome page ID, reuse that selection, and verify discovery and invocation through `list_webmcp_tools` and `execute_webmcp_tool` against the same Symbiote tools.
 - Native WebMCP, remote debugging, and Chrome connection consent apply only to this route. Follow the official [WebMCP tool documentation](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging) and [existing-browser connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance). Apple Events access is not required.
 - Do not silently switch control routes or repeat an invocation through another route after an uncertain result.

@@ -1,17 +1,15 @@
 ---
 name: symbiote-agui
-description: Create, restore, and operate local interactive interfaces with Symbiote AGUI. Use for generated HTML, Tailwind styling, RAT templates, component state updates, and user interaction through the AGUI CLI and MCP tools.
+description: Create, restore, and operate local interactive interfaces with Symbiote AGUI. Use for generated HTML, Tailwind styling, RAT templates, component state updates, and user interaction through the AGUI CLI, with optional MCP integration.
 ---
 
 # Symbiote AGUI
 
-Use AGUI to show an interface in the user's normal browser, operate its Symbiote tools, and receive user interaction events. It requires Node.js 24 or newer. Run CLI commands through `npx symbiote-agui`; use AGUI MCP for tool discovery and invocation.
+Use AGUI to show an interface in the user's normal browser, operate its Symbiote tools, and receive user interaction events. It requires Node.js 24 or newer. Use `npx symbiote-agui` for sessions, tool discovery, invocation, and events. No MCP harness connection is required.
 
-## One-time setup
+## Setup
 
-Creating pages requires shell access to the CLI. For agent tool invocation, run `npx symbiote-agui --help` once to finish any npm installation prompt, configure an MCP server in the harness with command `npx` and arguments `symbiote-agui`, `mcp`, then reconnect the harness. Confirm that this server exposes `list_pages`, `list_tools`, and `call_tool`. Starting a process through a shell alone does not attach MCP tools to the conversation. Use the same absolute `AGUI_STATE_DIR` for CLI and MCP when overriding storage.
-
-AGUI MCP works over the existing authenticated WebSocket in ordinary browsers. Native WebMCP and remote debugging are optional. If a task needs tool invocation and the AGUI MCP tools are absent, report the missing harness connection. Avoid ad hoc browser scripts or browser API emulation.
+Use a shell with Node.js 24 or newer. Run `npx symbiote-agui --help` once and accept npm's installation prompt if shown. The CLI operates tools through the existing authenticated WebSocket in ordinary browsers. Native WebMCP, remote debugging, and MCP server configuration are optional. Avoid ad hoc browser scripts or browser API emulation.
 
 ## Routine workflow
 
@@ -19,8 +17,8 @@ Choose a case-sensitive session ID matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`. Re
 
 1. Run `npx symbiote-agui start demo`. Check `ok` and `restored`. If `SESSION_EXISTS` is returned, use `npx symbiote-agui status demo` once and reuse a session belonging to this task, or choose another ID.
 2. Reuse an owned running session or a `restored: true` interface without regenerating or reinserting it. For a new or deliberately changed definition, use `npx symbiote-agui insert demo --file /absolute/path/view.html` or stdin. Use `update` for small state changes.
-3. Call AGUI MCP's `list_tools({ sessionId: "demo" })`. It selects a single connected page automatically. With several pages, use `list_pages({ sessionId: "demo" })` and pass the intended `pageId` to `list_tools`. Keep the returned `pageId`, `discoveryId`, tool names, and schemas.
-4. Call `call_tool({ sessionId, pageId, discoveryId, name, input })` with the exact discovered name and schema-compatible arguments. Check MCP's `isError` flag and use the returned action result as confirmation. Reuse the selected page and discovery IDs for further calls while they remain current.
+3. Run `npx symbiote-agui tools demo`. It selects a single connected page automatically. With several pages, run `npx symbiote-agui pages demo`, then `npx symbiote-agui tools demo --page <PAGE_ID>`. Keep the returned `pageId`, `discoveryId`, tool names, and schemas.
+4. Run `npx symbiote-agui call demo` with JSON `{ "pageId": "...", "discoveryId": "...", "name": "...", "input": {} }` on stdin, or use `--file /absolute/path/call.json`. Use the exact discovered name and schema-compatible arguments. Check `ok` and use `result` as confirmation. Native tool errors preserve `result` and return `ok: false` with exit code 1. Reuse the selected page and discovery IDs for further calls while they remain current.
 5. When awaiting user interaction, read `npx symbiote-agui events demo` and process the relevant events. It returns immediately and clears the queue; an empty batch means no new input. Check again when interaction is expected, without tight polling. Keep the session available while the user interacts. Stop it when the user is finished or requests cleanup.
 
 Use tool results or CLI events when they answer the task; avoid repeated status checks, DOM inspection, screenshots, or unrelated commands. After replacement or catalog changes, rediscover tools. After reload, reconnection, or worker restart, select the current page again. Do not retry an invocation automatically when its outcome is unknown.
@@ -90,13 +88,17 @@ For reusable markup, include `<template id="card-template">...</template>` and a
 
 ## Symbiote tools
 
-AGUI imports Symbiote's WebMCP extension and enables `Symbiote.mcpToolMode`. Event bindings automatically expose tools, such as `increment_in_agui-component` for the counter above. The primary control route is AGUI MCP over the existing authenticated WebSocket; it works without native browser WebMCP.
+AGUI imports Symbiote's WebMCP extension and enables `Symbiote.mcpToolMode`. Event bindings automatically expose tools, such as `increment_in_agui-component` for the counter above. The primary control route is the CLI over the existing authenticated WebSocket; it works without native browser WebMCP.
 
 Calls target one page and validate input against the discovered schema. Prefer actions that set the intended state and return meaningful results: a desk completion tool should set all checkboxes to checked and return checked/total counts so repeated calls remain safe. Discovery waits for queued rendering and bounded registration settling; an absent async tool may require discovery after its initialization finishes. Browser results are limited to 1 MiB.
 
 Import `ToolDescriptor` from the fully resolved `/client/index.js` URL for explicit tools. Define descriptors in a subclass's `init$` before first render, with `description`, `inputSchema`, and `execute`. Use `componentDescription` for extra component context. Conditional tools need both `when` and `deps` listing every state key read by the condition. Immediately adding and syncing descriptors after mount can abort pending native registrations.
 
-Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete module-owned contexts in the module cleanup; component tools follow Symbiote's DOM lifecycle automatically. Use the exported `getActiveWebMCPTools()` and entries' `nativeActive` field for diagnostics. See the [project README](https://github.com/rnd-pro/symbiote-agui#webmcp) for a complete explicit tool example. Define tools with Symbiote's APIs and invoke them through AGUI MCP or the optional native browser consumer. Use CLI events when awaiting user input.
+Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete module-owned contexts in the module cleanup; component tools follow Symbiote's DOM lifecycle automatically. Use the exported `getActiveWebMCPTools()` and entries' `nativeActive` field for diagnostics. See the [project README](https://github.com/rnd-pro/symbiote-agui#webmcp) for a complete explicit tool example. Define tools with Symbiote's APIs and invoke them through CLI `tools` and `call`, optional AGUI MCP, or the optional native browser consumer. Use CLI events when awaiting user input.
+
+## Optional AGUI MCP
+
+For harness-native tools, configure command `npx` with arguments `["symbiote-agui", "mcp"]` and reconnect the harness. It exposes `list_pages`, `list_tools`, and `call_tool` with the same page selection, discovery IDs, schema validation, and results as the CLI. Use the same absolute `AGUI_STATE_DIR` for CLI and MCP when overriding storage. Missing MCP tools do not block CLI operations.
 
 ## Optional Chrome MCP
 
@@ -108,8 +110,8 @@ Pages reconnect automatically and restore the latest accepted markup. Reload or 
 
 - `SESSION_EXISTS`: check `status`; reuse a session belonging to this task or choose another ID. Do not stop an unrelated session to resolve a name collision.
 - `SESSION_STOPPED`: start the intended session before inserting.
-- `PAGE_UNAVAILABLE`: open the session URL in its authorized browser and select its current MCP page ID. If authorization is required, use `status <SESSION_ID> --authorize` and open `authorizationUrl`.
-- `PAGE_AMBIGUOUS`: use AGUI MCP's `list_pages` and pass the intended `pageId` to `list_tools`.
+- `PAGE_UNAVAILABLE`: open the session URL in its authorized browser and select its current page ID with `pages` and `tools`. If authorization is required, use `status <SESSION_ID> --authorize` and open `authorizationUrl`.
+- `PAGE_AMBIGUOUS`: run `pages <SESSION_ID>` and pass the intended ID to `tools <SESSION_ID> --page <PAGE_ID>`.
 - `TOOL_FAILED`: follow the reported error; rediscover stale tools. If the outcome is unknown, inspect the result before attempting another invocation.
 - `INVALID_INPUT` or `INPUT_TOO_LARGE`: correct arguments, encoding, JSON, or input size before retrying.
 - `INSERT_FAILED`: fix the reported JSON, template, stylesheet, or module error. Validation and stylesheet failures preserve prior content. Read `agui:error` events for failures while restoring queued markup. Modules may already have run or changed content; reload the session URL to restore the last accepted markup when needed.

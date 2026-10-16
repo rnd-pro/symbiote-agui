@@ -4,6 +4,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { MCP_TOOLS } from './catalog.js';
 import { forwardToolRequest } from './bridge.js';
 import { CommandError } from '../shared/command-error.js';
+import { isToolError } from '../tools/client.js';
 
 export async function startMcpServer() {
   let metadata = JSON.parse(await readFile(new URL('../../package.json', import.meta.url), 'utf8'));
@@ -18,7 +19,7 @@ export async function startMcpServer() {
       try {
         let response = await forwardToolRequest(key, /** @type {import('../../types/tools.js').McpToolArguments} */ (input));
         let result = response.action === 'call' ? response.result : undefined;
-        let isError = !!result && typeof result === 'object' && 'isError' in result && result.isError === true;
+        let isError = isToolError(result);
         return { content: [{ type: 'text', text: JSON.stringify(response) }], structuredContent: response, isError };
       } catch (error) {
         let message = error instanceof Error ? error.message : String(error);

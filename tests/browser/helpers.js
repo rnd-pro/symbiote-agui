@@ -20,7 +20,7 @@ export async function insertStdin(sessionId, html) {
 }
 
 /**
- * @param {'insert' | 'update'} command
+ * @param {'insert' | 'update' | 'call'} command
  * @param {string} sessionId
  * @param {string} input
  */
@@ -32,6 +32,28 @@ export async function sendStdin(command, sessionId, input) {
     child.stdin?.end(input);
   });
   return JSON.parse(stdout);
+}
+
+/**
+ * @param {keyof typeof import('../../src/mcp/catalog.js').MCP_TOOLS} name
+ * @param {import('../../types/tools.js').McpToolArguments} args
+ */
+export async function cliToolCall(name, args) {
+  try {
+    let data = name === 'call_tool'
+      ? await sendStdin('call', args.sessionId, JSON.stringify({
+        pageId: args.pageId,
+        discoveryId: args.discoveryId,
+        name: args.name,
+        input: args.input,
+      }))
+      : await cli(name === 'list_pages' ? 'pages' : 'tools', args.sessionId,
+        ...(name === 'list_tools' && args.pageId ? ['--page', args.pageId] : []));
+    return { data, isError: !data.ok };
+  } catch (error) {
+    let failure = /** @type {Error & { stdout: string }} */ (error);
+    return { data: JSON.parse(failure.stdout), isError: true };
+  }
 }
 
 /**

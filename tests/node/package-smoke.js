@@ -88,6 +88,16 @@ test('the production tarball runs through npm exec outside the checkout', { time
   started = true;
   assert.equal(session.state, 'waiting');
   assert.equal((await cli('status', 'package-smoke')).url, session.url);
+  assert.deepEqual((await cli('pages', 'package-smoke')).pages, []);
+  await assert.rejects(cli('tools', 'package-smoke'), (error) => {
+    let failure = /** @type {Error & { stdout: string }} */ (error);
+    return JSON.parse(failure.stdout).error.code === 'PAGE_UNAVAILABLE';
+  });
+  await writeFile(join(caller, 'invalid call.json'), '{}');
+  await assert.rejects(cli('call', 'package-smoke', '--file', 'invalid call.json'), (error) => {
+    let failure = /** @type {Error & { stdout: string }} */ (error);
+    return JSON.parse(failure.stdout).error.code === 'INVALID_INPUT';
+  });
   let transport = new StdioClientTransport({
     command: process.execPath,
     args: [npm, 'exec', '--yes', '--offline', '--package', archive, '--', 'symbiote-agui', 'mcp'],

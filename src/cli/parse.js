@@ -21,6 +21,7 @@ export function parseCommand(args) {
         'no-open': { type: 'boolean' },
         authorize: { type: 'boolean' },
         file: { type: 'string' },
+        page: { type: 'string' },
       },
     });
   } catch (error) {
@@ -72,5 +73,6 @@ export function parseCommand(args) {
     open: !values['no-open'],
     authorize: !!values.authorize,
     file: values.file,
+    pageId: values.page,
   };
 }

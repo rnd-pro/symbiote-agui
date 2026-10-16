@@ -22,6 +22,8 @@ export type ToolResponse =
   | ({ action: 'tools'; pageId: string } & ToolDiscovery)
   | { action: 'call'; pageId: string; result: unknown };
 
+export type SessionToolResponse = { sessionId: string } & ToolResponse;
+
 export interface PagePeer {
   socket: import('ws').WebSocket;
   title: string;

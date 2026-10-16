@@ -22,7 +22,7 @@ export async function handleToolRequest(connection, url, input, deadline) {
   let pageId = request.pageId;
   if (!pageId) {
     if (connection.pages.size > 1) {
-      throw new CommandError('Several pages are connected. Use list_pages and choose pageId.', ERROR_CODE.PAGE_AMBIGUOUS, EXIT_CODE.RUNTIME_ERROR);
+      throw new CommandError('Several pages are connected. List pages and choose pageId (CLI: pages, then tools --page PAGE_ID).', ERROR_CODE.PAGE_AMBIGUOUS, EXIT_CODE.RUNTIME_ERROR);
     }
     pageId = connection.pages.keys().next().value;
   }

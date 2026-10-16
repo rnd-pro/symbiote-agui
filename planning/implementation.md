@@ -1,33 +1,30 @@
 # AGUI implementation plan
 
-Status: Step 1 is configured in Codex and its MCP tool catalog is verified. The running host still receives EPERM when reading Chrome's endpoint file after the permission change. Reconnect the harness to load the MCP configuration, confirm Chrome access for its host app, and verify the browser connection before marking step 1 complete. Step 2 is implemented and verified. Steps 3-6 are planned and require user approval.
+Goal: Make AGUI MCP over the existing authenticated WebSocket the primary path for operating Symbiote tools in ordinary browsers, without native WebMCP support or remote debugging. Keep Chrome DevTools MCP optional. Continue using `npx symbiote-agui` for session lifecycle and markup.
 
-Goal: An agent creates and restores interfaces through `npx symbiote-agui`, then operates their registered WebMCP tools through Chrome DevTools MCP. Reuse the user's running Chrome and the established MCP connection. Routine tasks use these two interfaces without ad hoc browser scripts or repeated inspections. Browser connection consent and host sandbox authorization remain outside AGUI's control.
+## Implemented
 
-## 1. Connect the existing WebMCP consumer
+- Readable session URLs: `start` and `status` return paths such as `/focus-desk/`. The named ID remains stable across restarts; the port and worker OS PID can change.
+- Browser authorization: private authorization links establish session cookies and remove tokens from the address bar. `status <SESSION_ID> --authorize` supplies a link for another browser. Origin checks and authenticated WebSocket connections remain enforced.
+- Page loading, assets, reload, reconnection, and restart authorization are verified. README and SKILL describe the current URL and authorization behavior.
+- Chrome MCP is configured in Codex with `--autoConnect` and `--categoryExperimentalWebmcp`; its tool catalog is verified and setup instructions are documented. The actual browser connection remains unverified, as noted under optional work below.
+- Step 1: Symbiote's published public invocation API is integrated through `listPageTools()` and `executePageTool()`. The adapter forwards discovery metadata, arguments, results, and errors. Browser checks cover native WebMCP disabled and enabled, visibility, async results, failures, replacement, and stop. The completed external prerequisite is described in the [standalone specification](./symbiote-tool-invocation.md).
 
-- Configure Chrome DevTools MCP in the agent harness with `--autoConnect` and `--categoryExperimentalWebmcp`. Its tools must actually be available to the agent; launching an MCP process alone does not attach it to a conversation.
-- Document the setup prerequisites: a Chrome browser with WebMCP enabled, remote debugging access, and approval of the browser connection. Reuse that connection during the workflow; do not request Apple Events access.
-- Use the existing `list_webmcp_tools` and `execute_webmcp_tool` tools. Symbiote already supplies registration, executors, schemas, visibility, and lifecycle; no Symbiote API changes are planned.
-- This workflow requires a configured Chrome DevTools MCP consumer. Other browsers can still display AGUI pages, but are outside this tool-execution workflow.
-- Follow the official [WebMCP tool documentation](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging) and [existing-browser connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance).
+## Remaining implementation
 
-## 2. Use readable generated page URLs
+The numbered steps below contain only pending work. Each requires explicit approval before implementation.
 
-- Put the named process/session ID supplied to the CLI in the URL path, for example `http://127.0.0.1:57008/focus-desk/`, instead of displaying an opaque token-only fragment. Keep this stable identifier distinct from the worker's numeric OS PID, which changes on restart.
-- Return the readable page URL from `start` and `status`, and use it to identify the session in Chrome MCP. Preserve the identifier across restarts even when the server port changes.
-- Keep authentication separate from the visible identifier. Establish browser authorization without leaving a long token in the displayed URL; preserve authenticated connections and origin checks. A readable ID must not become an access credential.
-- Support page loading, assets, reload, and reconnection at the session path. Include the URL format and any authorization bootstrap behavior in the public usage instructions.
+### 2. Add the AGUI MCP bridge and page targeting
 
-## 3. Make page targeting and actions reliable
-
-- Match the URL returned by the CLI to the corresponding Chrome MCP page ID, then reuse that page ID. Never assume the active tab is the intended session or invoke an action in every matching tab.
-- Coordinate restoration, module mounting, and tool discovery with bounded waits. Discover registered tools and their schemas through MCP, then invoke the requested action directly and return its result.
+- Add `npx symbiote-agui mcp` as a standard MCP server over stdio, configured once in the agent harness. Keep stdout dedicated to MCP messages and send diagnostics to stderr.
+- Route MCP discovery and invocation through the existing authenticated worker control channel and browser WebSocket. Preserve markup, state, and event delivery on that connection. Use Symbiote's supported discovery and invocation APIs; do not add another action registry or emulate browser APIs.
+- Target the named session and one connected page explicitly. Reuse its connection identity, report stale or disconnected targets, and never broadcast an action to every tab. With one connected page, selection can be automatic; with several, expose enough information to select one.
+- Coordinate restoration, module mounting, and tool discovery with bounded waits. Forward tool schemas, arguments, results, and errors through MCP, validate inputs, and enforce request correlation and timeouts.
 - Give generated actions meaningful descriptions and results. For the desk, expose an idempotent completion action that sets checkbox state explicitly instead of requiring blind toggles.
 - Rediscover tools after content replacement or page restart. Report missing tools and execution failures clearly; do not automatically retry a call whose outcome is unknown.
-- Keep AGUI's WebSocket for markup, state commands, and interaction events. Do not add custom CLI `tools`/`call` commands, another action registry, or a browser API emulation layer.
+- Keep CLI commands for session lifecycle, markup, state updates, and events. Tool discovery and execution belong to the MCP server; separate CLI `tools`/`call` commands are unnecessary.
 
-## 4. Cache interfaces by session ID
+### 3. Cache interfaces by session ID
 
 - Persist the last accepted HTML fragment, including inline modules, atomically in a durable cache outside the disposable worker instance directory.
 - `start <SESSION_ID>` restores cached markup and rebuilds its styles automatically. It must not depend on the original input file or ask the agent to generate the interface again.
@@ -35,18 +32,26 @@ Goal: An agent creates and restores interfaces through `npx symbiote-agui`, then
 - Keep case-sensitive session IDs and `AGUI_STATE_DIR` isolation. Failed insertions must preserve the last accepted cache; report cache errors instead of silently replacing saved content.
 - This cache restores the interface definition. Live application state starts from that definition; persisting timers, closures, or user progress is a separate feature.
 
-## 5. Make the skill describe the complete agent workflow
+### 4. Document the primary MCP workflow
 
-- Update the root README and bundled SKILL in place. Distinguish environment setup from routine use: CLI for starting/restoring, inserting, updating, events, and stopping; Chrome MCP for WebMCP discovery and execution.
-- Describe the short workflow: start or restore a session, select its page once, list its WebMCP tools, execute the requested action, and use its result as confirmation.
+- Update the root README and bundled SKILL in place. Describe one-time AGUI MCP setup using `npx symbiote-agui mcp`, then routine use: CLI for starting/restoring, inserting, updating, events, and stopping; AGUI MCP for Symbiote tool discovery and execution.
+- Describe the short workflow: start or restore a session, select its connected page once, list its tools, execute the requested action, and use its result as confirmation.
 - Use CLI events when awaiting user interaction. Avoid repeated status checks, DOM inspections, screenshots, or unrelated commands when tool results answer the task.
-- Document current behavior and actual prerequisites only. If the MCP connection or browser WebMCP support is missing, report the specific setup issue rather than attempting unrelated browser-control mechanisms.
+- Present Chrome MCP as optional. Keep its remote debugging, native WebMCP, and browser permission requirements out of the primary setup path.
+- Document current behavior and actual prerequisites only after implementation. If the AGUI MCP server or authenticated page connection is unavailable, report the specific setup issue rather than attempting unrelated browser-control mechanisms.
 
-## 6. Prove the actual user workflow
+### 5. Verify the complete primary workflow
 
-- Run the packed production package from outside the checkout. Use `npx symbiote-agui` for page lifecycle and the actual Chrome MCP `list_webmcp_tools`/`execute_webmcp_tool` consumer for agent actions. Browser fixtures may verify results but must not execute the requested action on the agent's behalf.
+- Run the packed production package from outside the checkout. Use `npx symbiote-agui` for page lifecycle and the AGUI MCP server connected to the agent harness for discovery and actions. Prove the primary flow with native browser WebMCP disabled and without Chrome MCP or remote debugging. Browser fixtures may verify results but must not execute the requested action on the agent's behalf.
 - Create the desk, discover its tools, execute its completion action through MCP, and verify every checkbox is checked, progress is correct, and expected interaction events exist. Calling the completion action again must leave all boxes checked.
 - Stop and restart the same ID after deleting the original HTML file. Confirm the cached interface and its tools return without another insertion.
-- Verify the readable session URL, asset loading, reload/reconnection, Chrome MCP page matching, and rejection of unauthorized access. Confirm the named ID remains visible after a worker restart.
-- Cover two tabs with one invocation, tool cleanup after replacement, invalid/stale calls, cache isolation, and failed insertion recovery. Missing MCP connectivity or browser support must produce an actionable setup failure.
-- Run type checking and focused Node/browser/package regression checks. Finish with one manual desk walkthrough through the CLI and the configured Chrome MCP connection. Do not mark the workflow complete based only on registration tests or in-page JavaScript execution.
+- Verify the readable session URL, asset loading, reload/reconnection, session/page targeting, and rejection of unauthorized access. Confirm the named ID remains visible after a worker restart.
+- Cover two tabs with one invocation, tool cleanup and visibility changes, invalid/stale calls, disconnects and uncertain results, cache isolation, and failed insertion recovery. Missing MCP or page connectivity must produce an actionable setup failure.
+- Run type checking and focused Node/browser/package regression checks. Finish with one manual desk walkthrough through the CLI and configured AGUI MCP connection. Do not mark the workflow complete based only on registration tests or in-page JavaScript execution.
+
+## Optional pending work: Chrome MCP verification
+
+- Verify the configured Chrome MCP connection after resolving host access restrictions. This does not block the primary AGUI MCP workflow.
+- Match the CLI's readable URL to a Chrome page ID, reuse that selection, and verify discovery and invocation through `list_webmcp_tools` and `execute_webmcp_tool` against the same Symbiote tools.
+- Native WebMCP, remote debugging, and Chrome connection consent apply only to this route. Follow the official [WebMCP tool documentation](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging) and [existing-browser connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance). Apple Events access is not required.
+- Do not silently switch control routes or repeat an invocation through another route after an uncertain result.

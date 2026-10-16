@@ -196,9 +196,11 @@ This exposes `set_count_in_tool-counter`. Include every state key read by `when(
 
 To let an agent operate these tools, use a browser with WebMCP enabled and connect a WebMCP consumer to the agent. With [Chrome DevTools MCP](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging), enable its WebMCP category and connect it to the Chrome profile containing your session page. Follow its [connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance).
 
-Select the page matching the session URL, use `list_webmcp_tools` to discover its tools, and use `execute_webmcp_tool` to invoke an action. Calling `set_count_in_tool-counter` with `{ "count": 12 }` updates the example to `Count: 12`. A connected WebMCP consumer is required for tool invocation; the CLI handles sessions, markup, state updates, and events.
+Select the page matching the session URL, use `list_webmcp_tools` to discover its tools, and use `execute_webmcp_tool` to invoke an action. Calling `set_count_in_tool-counter` with `{ "count": 12 }` updates the example to `Count: 12`. These agent calls require a connected Chrome MCP consumer; the CLI handles sessions, markup, state updates, and events.
 
-For registration diagnostics, import `/client/index.js` and call `getActiveWebMCPTools()`; entries report `nativeActive`. WebMCP remains experimental.
+For browser-side integrations, `/client/index.js` exports `listPageTools()` and async `executePageTool(name, input = {})`. They forward Symbiote's public discovery and invocation APIs and work without native browser WebMCP. Discovery preserves names, descriptions, and schemas; execution preserves results and Symbiote's `isError` responses. Callers validate inputs against the discovered schemas. Replacement and stop remove tools from discovery and invocation.
+
+The entry also exports Symbiote's `executeWebMCPTool()`, `getActiveWebMCPTools()`, and `webMCPRegistry`. Registry entries report `nativeActive` for native browser registration. WebMCP remains experimental.
 
 ## Session storage
 

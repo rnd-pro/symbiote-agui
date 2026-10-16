@@ -14,4 +14,5 @@ export { Symbiote, PubSub, html, css } from '@symbiotejs/symbiote';
 export { AguiComponent, ContextProvider };
 export { replaceContent } from './replace-content.js';
 export { emit } from './events.js';
-export { ToolDescriptor, getActiveWebMCPTools, webMCPRegistry } from '@symbiotejs/symbiote/webmcp';
+export { listPageTools, executePageTool } from './tools.js';
+export { ToolDescriptor, getActiveWebMCPTools, executeWebMCPTool, webMCPRegistry } from '@symbiotejs/symbiote/webmcp';

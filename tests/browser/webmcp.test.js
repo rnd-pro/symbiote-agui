@@ -40,7 +40,9 @@ let markup = [
   '  card.set$({ choose: () => { card.$.selected = true; } });',
   '  PubSub.registerCtx({ read_count: new ToolDescriptor({',
   '    name: "context_read", description: "Read the visible counter through the context.",',
-  '    annotations: { readOnlyHint: true }, execute: () => ({ count: counter.$.count }),',
+  '    annotations: { readOnlyHint: true }, execute: async () => { await Promise.resolve(); return { count: counter.$.count }; },',
+  '  }), fail: new ToolDescriptor({',
+  '    name: "context_fail", execute: async () => { throw new Error("Expected tool failure"); },',
   '  }) }, "WEBMCP_TEST");',
   '  return () => PubSub.deleteCtx("WEBMCP_TEST");',
   '};',
@@ -52,7 +54,21 @@ let markup = [
  * @returns {Promise<import('@symbiotejs/symbiote/webmcp').WebMCPRegistryEntry[]>}
  */
 async function registryTools(page) {
-  return page.evaluate(async (path) => (await import(path)).getActiveWebMCPTools(), CLIENT_SCRIPT_PATH);
+  return page.evaluate(async (path) => (await import(path)).listPageTools(), CLIENT_SCRIPT_PATH);
+}
+
+/**
+ * @param {import('puppeteer-core').Page} page
+ * @param {string} name
+ * @param {Record<string, unknown>} [input]
+ * @returns {Promise<unknown>}
+ */
+async function invokePageTool(page, name, input = {}) {
+  return page.evaluate(async ({ path, name, input }) => (await import(path)).executePageTool(name, input), {
+    path: CLIENT_SCRIPT_PATH,
+    name,
+    input,
+  });
 }
 
 /**
@@ -117,9 +133,9 @@ for (let native of [false, true]) {
       await executeTool(page, 'increment_in_context-provider_agui-component');
       await executeTool(page, 'choose_in_action-card');
     } else {
-      await page.click('#counter button');
-      await page.click('#parent-button');
-      await page.click('#choose');
+      await invokePageTool(page, 'increment_in_webmcp-counter');
+      await invokePageTool(page, 'increment_in_context-provider_agui-component');
+      await invokePageTool(page, 'choose_in_action-card');
     }
     assert.equal(await page.$eval('#counter button', (element) => element.textContent), 'Count: 1');
     assert.equal(await page.$eval('#parent-button', (element) => element.textContent), 'Parent: 1');
@@ -127,21 +143,36 @@ for (let native of [false, true]) {
     let events = await cli('events', 'webmcp');
     assert.deepEqual(events.events.map((/** @type {import('../../types/transport.js').SessionEvent} */ event) => event.data), [{ count: 1 }]);
 
+    let incremented = await invokePageTool(page, 'increment_in_webmcp-counter');
+    assert.match(JSON.stringify(incremented), /Response status - ok: 2/);
+    assert.equal(await page.$eval('#counter button', (element) => element.textContent), 'Count: 2');
+    assert.partialDeepStrictEqual(await invokePageTool(page, 'counter_set', { count: 9 }), { isError: true });
+    assert.partialDeepStrictEqual(await invokePageTool(page, 'missing_tool'), { isError: true });
+    let failure = await invokePageTool(page, 'context_fail');
+    assert.partialDeepStrictEqual(failure, { isError: true });
+    assert.match(JSON.stringify(failure), /Expected tool failure/);
+
     await sendStdin('update', 'webmcp', '{"selector":"#counter","values":{"canSet":true}}');
     let descriptor = (await registryTools(page)).find((tool) => tool.name === 'counter_set');
     assert.ok(descriptor);
     assert.match(descriptor.description, /The visible test counter/);
     assert.deepEqual(descriptor.inputSchema.required, ['count']);
+    assert.deepEqual(descriptor.inputSchema.properties, { count: { type: 'integer', description: 'New count.', minimum: 0 } });
     if (native) {
       assert.deepEqual(JSON.parse(await executeTool(page, 'counter_set', { count: 12 })), { count: 12 });
       assert.deepEqual(JSON.parse(await executeTool(page, 'context_read')), { count: 12 });
       assert.equal(await page.$eval('#counter button', (element) => element.textContent), 'Count: 12');
     }
+    assert.deepEqual(await invokePageTool(page, 'counter_set', { count: 14 }), { count: 14 });
+    assert.deepEqual(await invokePageTool(page, 'context_read'), { count: 14 });
+    assert.equal(await page.$eval('#counter button', (element) => element.textContent), 'Count: 14');
     await sendStdin('update', 'webmcp', '{"selector":"#counter","values":{"canSet":false}}');
     assert.equal((await registryTools(page)).some((tool) => tool.name === 'counter_set'), false);
+    assert.partialDeepStrictEqual(await invokePageTool(page, 'counter_set', { count: 9 }), { isError: true });
 
     await insertStdin('webmcp', '<p>Replacement</p>');
     assert.deepEqual(await registryTools(page), []);
+    assert.partialDeepStrictEqual(await invokePageTool(page, 'context_read'), { isError: true });
     if (native) {
       assert.equal(await page.evaluate(async () => (await Reflect.get(document, 'modelContext').getTools()).length), 0);
     }
@@ -151,6 +182,7 @@ for (let native of [false, true]) {
     await page.waitForFunction(() => document.getElementById('agui-content')?.childElementCount === 0);
     assert.equal(page.isClosed(), false);
     assert.deepEqual(await registryTools(page), []);
+    assert.partialDeepStrictEqual(await invokePageTool(page, 'increment_in_webmcp-counter'), { isError: true });
     if (native) {
       assert.equal(await page.evaluate(async () => (await Reflect.get(document, 'modelContext').getTools()).length), 0);
     }

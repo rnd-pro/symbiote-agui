@@ -10,6 +10,8 @@ Opt into executable code with `<script type="module" data-agui>`. Module-scope c
 
 Event bindings automatically expose WebMCP tools. Import `ToolDescriptor` for explicit actions, or `getActiveWebMCPTools` and `webMCPRegistry` for registration diagnostics. Initialize descriptors in `init$` before rendering and declare `deps` for conditional visibility. Connect a WebMCP consumer to the agent to discover and invoke tools. Replacement and stop remove generated components and their native tools while tabs remain open. See the [WebMCP instructions](../../../README.md#webmcp) for setup and an explicit tool example.
 
+Browser-side integrations can import `listPageTools()` and async `executePageTool(name, input = {})` from `/client/index.js`. These forward Symbiote's public metadata and execution results, including `isError` responses, without requiring native WebMCP. Validate inputs against the discovered schemas before invocation. Tool availability follows Symbiote's visibility and component lifecycle.
+
 One direct JSON script initializes local state before binding setup. Named context-providers mirror local and shared fields in both directions; anonymous providers expose local fields to descendant `^` bindings. Use one provider per named context. Each insertion resets provider-owned contexts and removes subscriptions from the replaced components.
 
 For command examples and markup syntax, see [Markup, RAT, and interactivity](../../../README.md#markup-rat-and-interactivity).

@@ -1,13 +1,13 @@
 # Session lifecycle
 
-The CLI reserves a session before spawning its detached worker. The worker owns a JSDA page server, an authenticated control server, a WebSocket connection manager, and the latest accepted markup. The CLI opens the returned URL through the OS default browser unless `--no-open` is used. Browser processes and tabs belong to the user.
+Run `npx symbiote-agui start <SESSION_ID>` to start a local session and open its page in your default browser. Use `--no-open` to receive the URL without opening a tab. Keep the complete URL, including its private token fragment, when reopening or sharing it with your agent.
 
-Publish reservations by renaming a prepared, nonempty directory into the session's hex-encoded ID path. Keep mutable data inside a random instance directory. Cleanup removes only that instance, then attempts a nonrecursive removal of its parent. Old cleanup must preserve a replacement session.
+`start` returns when the session server is available. Use `npx symbiote-agui status <SESSION_ID>` when you need its connection state: `waiting` means no page is connected, `ready` means at least one page is connected, and `stopped` means the session is not running.
 
-Metadata and logs are private to the OS user. The launcher writes the worker PID before sending the boot message. Startup returns after both servers are listening, then disconnects IPC so the CLI can exit. A separate page token in the URL fragment authorizes same-origin WebSocket connections; never expose the CLI control token to the page.
+Insertions without a connected page return `delivery: "queued"`. Open the session URL to receive the latest markup. Connected pages acknowledge applied insertions and state updates. Multiple tabs receive the same commands; local interactions remain local until the agent sends an update.
 
-Status, input, event retrieval, and stop validate the control token, instance ID, and worker PID. Stored PIDs are used only for liveness checks. An unreachable live worker blocks takeover; dead records can be reclaimed by the next start.
+Reloading or reconnecting restores the latest accepted markup and reruns its marked modules. Component state resets to the markup's initial values; state commands are not replayed. Retrieve interaction events with `npx symbiote-agui events <SESSION_ID>`. Reading events clears the session's event queue.
 
-The worker serializes insertions, state commands, and page restoration. Markup is validated and its classes compiled without a browser. Connected pages acknowledge delivery; without pages, insertion queues the latest markup in memory. A failed delivery retains the previous accepted snapshot. Events use a bounded queue and are drained by the agent's CLI.
+Run `npx symbiote-agui stop <SESSION_ID>` when finished. It clears generated content and WebMCP tools, ends connections, and leaves browser tabs open with `Session ended.` Stopping discards retained markup and events. Starting the same ID creates an empty session.
 
-Stop sends a session-ended notification, closes sockets and servers, and releases metadata. It never closes browser tabs. `AGUI_STATE_DIR` selects a separate state root; the worker receives its resolved absolute path and runs inside its instance directory.
+Session data and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Set the same absolute `AGUI_STATE_DIR` for every command to use another storage location. If a session remains `SESSION_UNREACHABLE`, inspect its `worker.log` and report the failure rather than repeatedly starting it.

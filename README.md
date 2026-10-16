@@ -1,95 +1,36 @@
 # AGUI - Agentic Generative User Interface
 
-> The tool that helps AI-agent to draw real-time interactive interfaces independently of exact harness implementations or vendors.
+> Create interactive browser interfaces from an AI agent.
 
-AGUI serves generated interfaces as regular local web pages. A small page runtime receives updates over WebSocket and sends interaction events back. Users open the session URL in their normal browser; browser debugging, isolated profiles, and browser process management are unnecessary.
+AGUI lets AI agents create and update interactive interfaces in regular browser pages. Use the CLI to deliver markup, update component state, and retrieve user interaction events.
 
 ## Usage with npx
 
-Use Node.js 24 or newer. After version `0.1.0` is published to npm, run from any directory:
+Use Node.js 24 or newer. Run from any directory:
 
 ```sh
-npx --yes symbiote-agui@0.1.0 start demo
-npx --yes symbiote-agui@0.1.0 insert demo --file ./view.html
-npx --yes symbiote-agui@0.1.0 status demo
-npx --yes symbiote-agui@0.1.0 stop demo
+npx symbiote-agui start demo
+npx symbiote-agui insert demo --file ./view.html
+npx symbiote-agui update demo --file ./state.json
+npx symbiote-agui events demo
+npx symbiote-agui status demo
+npx symbiote-agui stop demo
 ```
 
-No checkout, global installation, or browser automation setup is required. Keep the same package version for all commands in a session. File paths resolve from your current directory; session state lives separately under `~/.symbiote-agui`. Use `--no-open` on `start` when you want to open the returned URL yourself. For a local package before publication, use the tarball workflow below.
+File paths resolve from your current directory; session data lives under `~/.symbiote-agui`. Use `--no-open` on `start` when you want to open the returned URL yourself.
 
-## Main dependencies
+## Agent setup
 
-- Symbiote.js for RAT templates and reactive contexts.
-- JSDA-Kit for the local page server and browser module bundle.
-- Tailwind for locally compiled styling.
-- LinkeDOM for server-side markup validation and class collection.
-- `ws` for the WebSocket server; pages use the browser's native WebSocket API.
-- Node.js process management for one detached worker per session.
+Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the agent's harness, or copy its folder from the installed package into the harness's skill directory. The agent needs access to a shell to run the CLI.
 
-Puppeteer Core is a development dependency used only by browser tests.
+`start` opens the session in the OS default browser. Use `start demo --no-open` to obtain the URL without opening a tab. If opening fails, the server remains available and the result includes `opened: false` and a warning; open the returned URL manually.
 
-## Development
-
-Use Node.js 24 or newer. From the checkout root:
-
-```sh
-npm ci
-npm start -- --help
-npm run types
-npm run test:node
-```
-
-The CLI runs JavaScript ESM directly, without a Node runtime build phase. JavaScript uses JSDoc and shared declarations in `types/*.d.ts`; both TypeScript configurations enable `checkJs`, `strict`, and `noEmit`. The narrow Tailwind and LinkeDOM declarations describe the consumed APIs because their published declarations do not work with this project's configuration.
-
-Keep CLI parsing in `src/cli`, worker lifecycle in [src/sessions](./src/sessions/README.md), HTTP and WebSocket servers in `src/server`, and browser code in [src/page/client](./src/page/client/README.md). `src/markup/fragment.js` shares validation between Node and the page. `src/browser/open.js` opens a URL through the operating system and has no browser automation dependency.
-
-JSDA-Kit is pinned to 1.6.3 because the server adapter passes Node's `{ host, port }` listen options through its `port` setting. Page assets and WebSocket connections share a loopback server on a free port; authenticated CLI control uses a separate loopback port.
-
-For the browser tests, set `AGUI_TEST_BROWSER_PATH` to an installed Chrome/Chromium executable and run `npm run test:browser`, or `npm test` for both suites. Tests open ordinary session URLs in headless Chrome, with temporary state and profiles. WebMCP tests explicitly enable and disable the native API; the enabled case requires Chrome with `WebMCPTesting` support. Browser files run sequentially and skip when the executable path is absent. Chrome is needed only for these tests.
-
-### Package checks and release
-
-```sh
-npm run test:package
-npm pack --dry-run
-npm pack
-npx --yes --package ./symbiote-agui-0.1.0.tgz symbiote-agui --help
-```
-
-The package smoke test packs the checkout and runs it through `npm exec` (the implementation behind `npx`) from an unrelated directory with a fresh npm cache and production dependencies only. It checks the CLI, detached worker, relative file input, page assets, compiled styles, and shutdown. It needs registry access but no browser. The tarball includes executable source, page assets, shared types, and the portable agent skill; tests and planning files stay in the checkout. No runtime build is required.
-
-Publication is a separate maintainer action: review the package and run `npm publish` when ready. Its `prepublishOnly` hook runs type checking and Node tests. The registry examples require that publication to succeed; creating a tarball does not publish it.
-
-## Agent usage
-
-Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the agent's harness, or copy its folder from the installed package into the harness's skill directory. The skill uses the versioned `npx` CLI:
-
-```sh
-npx --yes symbiote-agui@0.1.0 start demo
-npx --yes symbiote-agui@0.1.0 insert demo --file ./view.html
-npx --yes symbiote-agui@0.1.0 update demo --file ./state.json
-npx --yes symbiote-agui@0.1.0 events demo
-npx --yes symbiote-agui@0.1.0 status demo
-npx --yes symbiote-agui@0.1.0 stop demo
-```
-
-`start` opens the session in the OS default browser. Use `start demo --no-open` to obtain the URL without opening a tab. If opening fails, the server remains available and the result includes `opened: false` and a warning; open the returned URL manually. The old `--browser-path` and `--cdp-url` options have been removed.
-
-### Session checks
-
-1. Start `demo` and confirm its page opens. `start` returns when the worker is listening; `status` becomes `ready` when a page connects.
-2. Insert the interactive counter below, click its button, then retrieve its events.
-3. Update the counter through `update`. Reload the page and confirm the latest markup and handlers are restored, with their initial state.
-4. Start a second ID and insert different content. Confirm changes remain independent. Multiple tabs of the same session receive the same insertions and state commands; local interactions remain local unless the agent broadcasts an update.
-5. Close all tabs for one session. Its status becomes `waiting`; insert new markup, reopen its complete URL, and confirm it receives that markup.
-6. Stop both sessions. Open tabs remain open and display `Session ended.`; unrelated browser tabs remain usable.
-
-## Runtime contract
+## Sessions and commands
 
 ### Commands and results
 
 - IDs are case-sensitive names matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`, unique for the current OS user across working directories. Duplicate starts return `SESSION_EXISTS`.
-- `start` creates a detached worker, starts its servers, and returns its URL without waiting for a browser. The OS browser opener is independent of the worker. Startup has a 30-second timeout and cleans up resources after failure.
+- `start` starts a session and returns its URL. It does not wait for a browser connection; use the returned state to distinguish a waiting session from one with connected pages. Startup has a 30-second timeout.
 - `insert` reads a UTF-8 HTML fragment from `--file` or stdin, limited to 1 MiB. Relative paths resolve from the caller's working directory. Empty input clears the content root. Interactive stdin requires a file or redirected input.
 - Each insertion replaces generated content and resets local state. With connected pages, success waits for their acknowledgements and returns `delivery: "applied"`. Without a page, it retains the fragment and returns `delivery: "queued"`; rendering and module execution happen on connection.
 - `update` reads a JSON state command from file or stdin with the same size limit. It requires at least one connected page and waits for acknowledgements. It does not replace markup.
@@ -101,7 +42,7 @@ Session commands write one JSON object to stdout. Success includes `{ "ok": true
 
 ### Connection and recovery
 
-The complete session URL includes a page token in its fragment. Keep that fragment when copying or reopening the URL. The token authorizes a same-origin WebSocket connection and is separate from the private CLI control token. Assets are allowlisted; project source and session metadata are not served.
+The complete session URL includes a page token in its fragment. Keep that fragment when copying or reopening the URL. The token authorizes the page connection. Treat the complete URL as private.
 
 Pages reconnect automatically with a bounded retry delay. Reload, reconnect, or opening another tab restores the latest accepted markup and reruns its marked modules. Live component state resets to the values in that markup; `update` commands are not replayed. Retained markup lives in worker memory and is discarded by `stop`.
 
@@ -126,7 +67,7 @@ Executable scripts inserted as ordinary markup remain inert. Explicitly opt into
 After starting `demo`, insert this fragment:
 
 ```sh
-npx --yes symbiote-agui@0.1.0 insert demo <<'HTML'
+npx symbiote-agui insert demo <<'HTML'
 <agui-component id="counter" class="block p-8">
   <script type="application/json">{"count":0,"increment":null}</script>
   <button type="button" class="rounded bg-blue-600 p-4 text-white" bind="onclick: increment">
@@ -150,8 +91,8 @@ HTML
 Clicking increments the count and queues a `count` event. Read events and update state from the agent's shell:
 
 ```sh
-npx --yes symbiote-agui@0.1.0 events demo
-printf '%s\n' '{"selector":"#counter","values":{"count":10}}' | npx --yes symbiote-agui@0.1.0 update demo
+npx symbiote-agui events demo
+printf '%s\n' '{"selector":"#counter","values":{"count":10}}' | npx symbiote-agui update demo
 ```
 
 An update selects components inside the content root and calls their native `set$()` method. Use `"method":"add$"` to add fields and `"rewrite":true` to overwrite existing ones. Functions belong in modules; state commands contain JSON values. `emit()` returns `false` when the connection is unavailable and does not buffer events in the page.
@@ -216,19 +157,18 @@ if (!customElements.get('tool-counter')) {
 </script>
 ```
 
-This exposes `set_count_in_tool-counter`. Include every state key read by `when()` in `deps`; visibility is not tracked automatically. Descriptors in named `PubSub` contexts register once per context; delete module-owned contexts in the module cleanup. Symbiote removes component tools on replacement and stop. Define descriptors before first render: immediately adding and syncing them after mount can abort a pending native registration in Symbiote 3.8.2.
+This exposes `set_count_in_tool-counter`. Include every state key read by `when()` in `deps`; visibility is not tracked automatically. Descriptors in named `PubSub` contexts register once per context; delete module-owned contexts in the module cleanup. Symbiote removes component tools on replacement and stop. Define descriptors before first render: immediately adding and syncing them after mount can abort a pending native registration.
 
-For manual native testing, enable `chrome://flags/#enable-webmcp-testing` and restart a compatible Chrome, following the [Chrome WebMCP setup](https://developer.chrome.com/docs/ai/webmcp). Start a session and insert the example above. In that page's DevTools console, run:
+To let an agent operate these tools, use a browser with WebMCP enabled and connect a WebMCP consumer to the agent. With [Chrome DevTools MCP](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging), enable its WebMCP category and connect it to the Chrome profile containing your session page. Follow its [connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance).
 
-```js
-let tools = await document.modelContext.getTools();
-await document.modelContext.executeTool(tools.find((tool) => tool.name === 'set_count_in_tool-counter'), { count: 12 });
-```
+Select the page matching the session URL, use `list_webmcp_tools` to discover its tools, and use `execute_webmcp_tool` to invoke an action. Calling `set_count_in_tool-counter` with `{ "count": 12 }` updates the example to `Count: 12`. A connected WebMCP consumer is required for tool invocation; the CLI handles sessions, markup, state updates, and events.
 
-The output should become `Count: 12`. For diagnostics, import `/client/index.js` and call `getActiveWebMCPTools()`; entries report `nativeActive`. The registry also works without browser API support, but does not provide a replacement native tool API. WebMCP remains experimental; no browser flags are set by the AGUI runtime.
+For registration diagnostics, import `/client/index.js` and call `getActiveWebMCPTools()`; entries report `nativeActive`. WebMCP remains experimental.
 
-## Worker lifecycle
+## Session storage
 
-Private metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Set the same absolute `AGUI_STATE_DIR` for all commands to use another state root. Hex encoding preserves case-sensitive IDs on case-insensitive filesystems.
+Session data and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Set the same absolute `AGUI_STATE_DIR` for all commands to use another storage location. Session IDs remain case-sensitive.
 
-Reservations publish atomically. Cleanup removes only the matching instance and preserves replacements. CLI requests authenticate and validate worker identity before acting. A stored PID is used only for liveness checks; an unverified live worker blocks takeover. Dead records can be reclaimed by the next start. Keep session tokens private.
+A running session retains its latest markup in memory. Reloading or reopening its complete URL restores that interface with its initial state. Stopping the session discards the markup and events; starting the same ID creates an empty session.
+
+For a persistent `SESSION_UNREACHABLE` error, inspect the session's `worker.log` and report the failure. Keep session URLs and tokens private.

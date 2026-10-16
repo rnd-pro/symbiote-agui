@@ -6,7 +6,7 @@ AGUI lets AI agents create and update interactive interfaces in regular browser 
 
 ## Usage with npx
 
-Use Node.js 24 or newer. With an HTML fragment in `view.html` and a JSON state command in `state.json`, run from any directory. See the [interactive counter](#interactive-counter) for a complete example using stdin instead of files.
+Use Node.js 24 or newer. With an HTML fragment in `view.html` and a JSON state command in `state.json`, run from any directory. See the [interactive counter](#interactive-counter) for complete HTML and state-file examples.
 
 ```sh
 npx symbiote-agui start demo
@@ -21,7 +21,7 @@ File paths resolve from your current directory; session data lives under `~/.sym
 
 ## Agent setup
 
-Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the agent's harness, or copy its folder from the installed package into the harness's skill directory. The agent needs access to a shell to run the CLI.
+Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the agent's harness, or copy its folder from the installed package into the harness's skill directory. The agent needs access to a shell to run the CLI. The agent prepares HTML and JSON input files and passes them with `--file`, using simple `npx symbiote-agui` commands. This lets hosts reuse an approved command prefix; shell redirection, pipelines, and wrappers can require separate approval. Host approval policies remain in effect.
 
 `start` opens and authorizes the session in the OS default browser. With `start demo --no-open`, open the returned `authorizationUrl` manually. If opening fails, the server remains available and the result includes `opened: false`, a warning, and `authorizationUrl`.
 
@@ -43,7 +43,7 @@ Calls target one page and use the same authenticated worker and WebSocket as con
 1. Start a named session with `npx symbiote-agui start demo` and check `ok` and `restored`. For `SESSION_EXISTS`, use `npx symbiote-agui status demo` once to reuse a session belonging to the task or choose another ID.
 2. Reuse an owned running session or restored interface without regenerating or reinserting it. Insert markup for a new or deliberately changed definition; use `update` for small state changes.
 3. Discover tools with `npx symbiote-agui tools demo`. If several pages are connected, run `npx symbiote-agui pages demo` and select one with `tools demo --page <PAGE_ID>`. Keep the returned `pageId`, `discoveryId`, names, and schemas.
-4. Run `npx symbiote-agui call demo` with JSON on stdin or `--file`, containing those IDs, the discovered name, and schema-compatible `input`. Check `ok` and use `result` as confirmation. Reuse the selected IDs while current; select again after reload, reconnection, or restart.
+4. Prepare a JSON file containing those IDs, the discovered name, and schema-compatible `input`, then run `npx symbiote-agui call demo --file ./call.json`. Check `ok` and use `result` as confirmation. Reuse the selected IDs while current; select again after reload, reconnection, or restart.
 5. For user interaction, read `npx symbiote-agui events demo` and process the relevant data. Events return immediately and clear the queue; an empty batch means no new input. Check again when interaction is expected, without tight polling. Leave the session available while the user interacts; use `stop` when finished and `clear` when the saved definition should be discarded.
 
 Tool results and CLI events usually provide confirmation without repeated status checks, DOM inspection, screenshots, or unrelated commands. A call with an unknown outcome requires checking the result before another invocation, including through a different control route.
@@ -103,6 +103,14 @@ See the [Chrome connection instructions](https://github.com/ChromeDevTools/chrom
 - `mcp` runs the optional MCP server over stdio until its client disconnects. Session lifecycle remains available through the CLI commands above.
 - `stop` is idempotent. It clears live content and tools, notifies pages, closes connections and servers, and removes worker metadata and credentials. It retains the cached interface and leaves browser tabs open.
 - `clear` removes the cached definition and live content/tools, returning `cleared: true`. A running session stays available for new insertions. It also works on stopped sessions and is idempotent. An empty `insert` saves a blank definition; use `clear` to remove it entirely.
+- `stop-all` stops every recorded session in the current storage root, retaining cached definitions. Browser tabs remain open. `clear-all` removes all saved definitions, including those of stopped sessions, and clears live content/tools while leaving running workers available. Neither command takes a session ID.
+
+```sh
+npx symbiote-agui stop-all
+npx symbiote-agui clear-all
+```
+
+These commands use the current `AGUI_STATE_DIR`, or the default storage shared across working directories for the current OS user. They process a snapshot of known IDs; new IDs created during the operation are outside the batch. Results include `command`, `total`, and a `sessions` array with each session's `ok` and result or error. A failure does not prevent other sessions from being processed: partial failure returns `ok: false`, a summary `error`, and exit code 1. An empty batch succeeds with `total: 0`.
 
 Session commands other than `mcp` write one JSON object to stdout. Success includes `{ "ok": true, "sessionId": "demo", "state": "waiting", "url": "http://127.0.0.1:PORT/demo/", "clients": 0 }`. Failures include `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text; diagnostics go to stderr or the worker log. The `mcp` command reserves stdout for MCP protocol messages.
 
@@ -140,10 +148,9 @@ Executable scripts inserted as ordinary markup remain inert. Explicitly opt into
 
 ### Interactive counter
 
-After starting `demo`, insert this fragment:
+Save this fragment as `counter.html`:
 
-```sh
-npx symbiote-agui insert demo <<'HTML'
+```html
 <agui-component id="counter" class="block p-8">
   <script type="application/json">{"count":0,"increment":null}</script>
   <button type="button" class="rounded bg-blue-600 p-4 text-white" bind="onclick: increment">
@@ -161,14 +168,23 @@ export default (root, { emit }) => {
   });
 };
 </script>
-HTML
 ```
 
-Clicking increments the count and queues a `count` event. Read events and update state from the agent's shell:
+After starting `demo`, insert the file. Clicking increments the count and queues a `count` event:
 
 ```sh
+npx symbiote-agui insert demo --file ./counter.html
 npx symbiote-agui events demo
-printf '%s\n' '{"selector":"#counter","values":{"count":10}}' | npx symbiote-agui update demo
+```
+
+To update the count, save this command as `state.json`:
+
+```json
+{ "selector": "#counter", "values": { "count": 10 } }
+```
+
+```sh
+npx symbiote-agui update demo --file ./state.json
 ```
 
 An update selects components inside the content root and calls their native `set$()` method. Use `"method":"add$"` to add fields and `"rewrite":true` to overwrite existing ones. Functions belong in modules; state commands contain JSON values. `emit()` returns `false` when the connection is unavailable and does not buffer events in the page.
@@ -243,17 +259,19 @@ This exposes `set_count_in_tool-counter`. Include every state key read by `when(
 
 Use the CLI `tools` and `call` commands to operate these tools in an ordinary browser. For native WebMCP access, follow the [optional Chrome DevTools MCP setup](#optional-connect-chrome-devtools-mcp).
 
-For the counter above, run `npx symbiote-agui tools demo`, then pass its returned IDs and the exact discovered name to `call`:
+For the counter above, run `npx symbiote-agui tools demo`, then save its returned IDs, the exact discovered name, and arguments in `call.json`:
 
-```sh
-npx symbiote-agui call demo <<'JSON'
+```json
 {
   "pageId": "<pageId from discovery>",
   "discoveryId": "<discoveryId from discovery>",
   "name": "set_count_in_tool-counter",
   "input": { "count": 12 }
 }
-JSON
+```
+
+```sh
+npx symbiote-agui call demo --file ./call.json
 ```
 
 The returned `ok: true` and `result: { "count": 12 }` confirm the action and the interface displays `Count: 12`. Keep the selected IDs for subsequent calls while the catalog remains current. With optional Chrome MCP, select the page matching the session URL, discover through `list_webmcp_tools`, and invoke through `execute_webmcp_tool`. The CLI handles sessions, markup, state updates, and events.

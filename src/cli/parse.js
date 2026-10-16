@@ -1,7 +1,7 @@
 import { parseArgs } from 'node:util';
 import { assertSessionId } from '../sessions/identity.js';
 import { CommandError } from '../shared/command-error.js';
-import { COMMANDS } from './commands.js';
+import { COMMANDS, ALL_COMMANDS } from './commands.js';
 
 /**
  * @param {string[]} args
@@ -43,6 +43,13 @@ export function parseCommand(args) {
   if (name === 'mcp') {
     if (positionals.length !== 1 || Object.keys(values).length) { throw new CommandError('Usage: symbiote-agui mcp'); }
     return { kind: 'mcp' };
+  }
+
+  if (name && Object.hasOwn(ALL_COMMANDS, name)) {
+    if (positionals.length !== 1 || Object.keys(values).length) {
+      throw new CommandError(`Usage: symbiote-agui ${name}`);
+    }
+    return { kind: 'all', command: /** @type {import('../../types/cli.js').AllSessionsCommand} */ (name) };
   }
 
   if (!name || !Object.hasOwn(COMMANDS, name)) {

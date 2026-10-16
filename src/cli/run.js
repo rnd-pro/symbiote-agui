@@ -10,6 +10,7 @@ import { parseCommand } from './parse.js';
 import { clearSession } from '../sessions/clear.js';
 import { requestTools, isToolError } from '../tools/client.js';
 import { callTool } from './tools.js';
+import { runAllSessions } from '../sessions/all.js';
 
 /**
  * @param {string[]} args
@@ -39,6 +40,12 @@ export async function run(args) {
       let metadata = JSON.parse(await readFile(new URL('../../package.json', import.meta.url), 'utf8'));
       process.stdout.write(`${metadata.version}\n`);
       return EXIT_CODE.SUCCESS;
+    }
+
+    if (request.kind === 'all') {
+      let result = await runAllSessions(request.command);
+      process.stdout.write(`${JSON.stringify(result)}\n`);
+      return result.ok ? EXIT_CODE.SUCCESS : EXIT_CODE.RUNTIME_ERROR;
     }
 
     let handlers = {

@@ -14,4 +14,6 @@ Run `npx symbiote-agui stop <SESSION_ID>` when finished. It clears live content 
 
 Run `npx symbiote-agui clear <SESSION_ID>` to remove the saved definition and live content/tools. It also works while stopped. A running session stays available for new insertions. An empty insertion instead saves a blank definition.
 
+Use `npx symbiote-agui stop-all` to stop recorded sessions while retaining cached markup. Use `npx symbiote-agui clear-all` to clear live and saved interfaces, including cache-only sessions; running workers remain available. Both operate only in the current storage root and report results for each discovered ID, continuing after per-session failures. A partial failure exits with code 1. Neither command closes browser tabs.
+
 Worker metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`; durable definitions live in `~/.symbiote-agui/sessions/.cache/<HEX_SESSION_ID>.html`. Set the same absolute `AGUI_STATE_DIR` for every command and MCP to use another storage root. Failed insertions preserve the accepted cache. Cache errors report the affected path and stop the operation. If a session remains `SESSION_UNREACHABLE`, inspect its `worker.log` and report the failure rather than repeatedly starting it.

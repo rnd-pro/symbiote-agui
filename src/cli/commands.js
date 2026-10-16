@@ -41,10 +41,16 @@ export let COMMANDS = Object.freeze({
   },
 });
 
+export let ALL_COMMANDS = Object.freeze({
+  'stop-all': { usage: 'stop-all' },
+  'clear-all': { usage: 'clear-all' },
+});
+
 export let HELP = [
   'Usage: symbiote-agui <command>',
   '',
   ...Object.values(COMMANDS).map(({ usage }) => `  ${usage}`),
+  ...Object.values(ALL_COMMANDS).map(({ usage }) => `  ${usage}`),
   '  mcp                         Run the MCP server over stdio',
   '',
   '  --help, -h     Show help',
@@ -59,4 +65,6 @@ export let HELP = [
   'call targets one page, validates tool input, and never retries automatically.',
   'status --authorize returns a private link for authorizing another browser.',
   'stop retains cached markup; clear removes the saved interface and live content.',
+  'stop-all stops recorded sessions; clear-all clears running and cached interfaces.',
+  'Both use the current state directory and report per-session results.',
 ].join('\n');

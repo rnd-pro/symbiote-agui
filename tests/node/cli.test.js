@@ -32,3 +32,18 @@ test('CLI calls reject malformed envelopes before contacting a session', async (
   await writeFile(file, JSON.stringify({ pageId: 'tab', discoveryId: 'catalog', name: 'act', input: {} }));
   await assert.rejects(callTool('desk', file), { code: 'SESSION_STOPPED' });
 });
+
+test('commands for all sessions require no session ID and reject extra arguments or options', () => {
+  for (let command of ['stop-all', 'clear-all']) {
+    assert.deepEqual(parseCommand([command]), { kind: 'all', command });
+    for (let args of [
+      [command, 'desk'],
+      [command, '--file', 'input.json'],
+      [command, '--no-open'],
+      [command, '--authorize'],
+      [command, '--page', 'tab'],
+    ]) {
+      assert.throws(() => parseCommand(args), { code: 'INVALID_INPUT' });
+    }
+  }
+});

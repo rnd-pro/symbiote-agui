@@ -141,6 +141,12 @@ test('the production tarball runs through npm exec outside the checkout', { time
   started = true;
   assert.equal(empty.restored, false);
   assert.doesNotMatch(await (await fetch(new URL('/styles.css.js', empty.url))).text(), /123px/);
-  await cli('stop', 'package-smoke');
+  let cleared = await cli('clear-all');
+  assert.equal(cleared.ok, true);
+  assert.equal(cleared.total, 1);
+  assert.partialDeepStrictEqual(cleared.sessions, [{ ok: true, sessionId: 'package-smoke', cleared: true }]);
+  let stopped = await cli('stop-all');
+  assert.equal(stopped.ok, true);
+  assert.equal(stopped.total, 1);
   started = false;
 });

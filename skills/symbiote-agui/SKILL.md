@@ -11,14 +11,16 @@ Use AGUI to show an interface in the user's normal browser, operate its Symbiote
 
 Use a shell with Node.js 24 or newer. Run `npx symbiote-agui --help` once and accept npm's installation prompt if shown. The CLI operates tools through the existing authenticated WebSocket in ordinary browsers. Native WebMCP, remote debugging, and MCP server configuration are optional. Avoid ad hoc browser scripts or browser API emulation.
 
+For routine use, prepare HTML and JSON files with workspace file tools, then run one simple command beginning with `npx symbiote-agui`, passing input with `--file`. Reuse the host's existing approval for that command prefix. Avoid heredocs, pipes, shell wrappers, and inline environment assignments in these invocations: they can prevent approval reuse. Host permissions still apply; AGUI cannot grant itself access or suppress an enforced prompt.
+
 ## Routine workflow
 
 Choose a case-sensitive session ID matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`. Reuse it for the same interface; IDs are shared across working directories for the current OS user.
 
 1. Run `npx symbiote-agui start demo`. Check `ok` and `restored`. If `SESSION_EXISTS` is returned, use `npx symbiote-agui status demo` once and reuse a session belonging to this task, or choose another ID.
-2. Reuse an owned running session or a `restored: true` interface without regenerating or reinserting it. For a new or deliberately changed definition, use `npx symbiote-agui insert demo --file /absolute/path/view.html` or stdin. Use `update` for small state changes.
+2. Reuse an owned running session or a `restored: true` interface without regenerating or reinserting it. For a new or deliberately changed definition, use `npx symbiote-agui insert demo --file /absolute/path/view.html` using a prepared file. Use `update` for small state changes.
 3. Run `npx symbiote-agui tools demo`. It selects a single connected page automatically. With several pages, run `npx symbiote-agui pages demo`, then `npx symbiote-agui tools demo --page <PAGE_ID>`. Keep the returned `pageId`, `discoveryId`, tool names, and schemas.
-4. Run `npx symbiote-agui call demo` with JSON `{ "pageId": "...", "discoveryId": "...", "name": "...", "input": {} }` on stdin, or use `--file /absolute/path/call.json`. Use the exact discovered name and schema-compatible arguments. Check `ok` and use `result` as confirmation. Native tool errors preserve `result` and return `ok: false` with exit code 1. Reuse the selected page and discovery IDs for further calls while they remain current.
+4. Prepare a JSON file containing `{ "pageId": "...", "discoveryId": "...", "name": "...", "input": {} }`, then run `npx symbiote-agui call demo --file /absolute/path/call.json`. Use the exact discovered name and schema-compatible arguments. Check `ok` and use `result` as confirmation. Native tool errors preserve `result` and return `ok: false` with exit code 1. Reuse the selected page and discovery IDs for further calls while they remain current.
 5. When awaiting user interaction, read `npx symbiote-agui events demo` and process the relevant events. It returns immediately and clears the queue; an empty batch means no new input. Check again when interaction is expected, without tight polling. Keep the session available while the user interacts. Stop it when the user is finished or requests cleanup.
 
 Use tool results or CLI events when they answer the task; avoid repeated status checks, DOM inspection, screenshots, or unrelated commands. After replacement or catalog changes, rediscover tools. After reload, reconnection, or worker restart, select the current page again. Do not retry an invocation automatically when its outcome is unknown.
@@ -31,9 +33,11 @@ Session commands return one JSON object on stdout. Check `ok`; errors include `e
 
 `start` restores accepted HTML and inline modules and rebuilds styles even after the original file is deleted. Live state starts from that definition; user progress, timers, closures, and `update` commands are not persisted. `npx symbiote-agui stop demo` retains this cache, ends the session, and leaves tabs open with `Session ended.` Use `npx symbiote-agui clear demo` when the user intends to discard the saved interface. It clears live content/tools too, keeps a running session available, and also works when stopped.
 
+For cleanup explicitly covering every session in the current storage root, use `npx symbiote-agui stop-all` to stop workers while retaining saved interfaces, or `npx symbiote-agui clear-all` to discard every saved definition and clear live content/tools while leaving workers available. These commands take no session ID and can affect interfaces from other tasks sharing that storage. Use named commands for cleanup limited to one interface. Bulk commands return `command`, `total`, and per-session `sessions` results; process each reported failure. A partial failure sets `ok: false` and exits with code 1 while other sessions are still processed. New IDs created after discovery are outside the batch.
+
 ## Markup and handlers
 
-Pass a UTF-8 HTML fragment through `--file` or stdin, limited to 1 MiB. An empty fragment clears content. Each insertion replaces the generated content and resets its state and handlers. For small state changes, use `update` instead.
+Pass a UTF-8 HTML fragment through `--file`, limited to 1 MiB. The CLI also supports stdin. An empty fragment clears content. Each insertion replaces the generated content and resets its state and handlers. For small state changes, use `update` instead.
 
 Use standard HTML and complete Tailwind class names, including responsive and arbitrary-value utilities. Classes are compiled from markup, including nested templates; classes added later by JavaScript are not collected. Wait separately for external images or asynchronous widgets when necessary.
 
@@ -43,10 +47,9 @@ Ordinary inserted executable scripts remain inert. Opt into inline handler modul
 
 ## Interactive example
 
-After starting `demo`, insert:
+Save this fragment as `counter.html`:
 
-```sh
-npx symbiote-agui insert demo <<'HTML'
+```html
 <agui-component id="counter" class="block p-8">
   <script type="application/json">{"count":0,"increment":null}</script>
   <button type="button" class="rounded bg-blue-600 p-4 text-white" bind="onclick: increment">
@@ -64,14 +67,23 @@ export default (root, { emit }) => {
   });
 };
 </script>
-HTML
 ```
 
-Clicking increments the count and sends a `count` event. Retrieve events or update the component through the CLI:
+After starting `demo`, insert the file. Clicking increments the count and sends a `count` event:
 
 ```sh
+npx symbiote-agui insert demo --file ./counter.html
 npx symbiote-agui events demo
-printf '%s\n' '{"selector":"#counter","values":{"count":10}}' | npx symbiote-agui update demo
+```
+
+To update the count, save this command as `state.json`:
+
+```json
+{ "selector": "#counter", "values": { "count": 10 } }
+```
+
+```sh
+npx symbiote-agui update demo --file ./state.json
 ```
 
 ## State, events, and contexts

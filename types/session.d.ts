@@ -19,6 +19,15 @@ export interface SessionStatus {
   toolResponse?: import('./tools.js').ToolResponse;
 }
 
+export type SessionOperationResult = ({ ok: true } & SessionStatus)
+  | (CommandFailure & { sessionId: string });
+
+export type AllSessionsResult = {
+  command: import('./cli.js').AllSessionsCommand;
+  total: number;
+  sessions: SessionOperationResult[];
+} & ({ ok: true } | CommandFailure);
+
 export interface SessionRecord {
   sessionId: string;
   instanceId: string;

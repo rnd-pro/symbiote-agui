@@ -1,7 +1,7 @@
 export let COMMANDS = Object.freeze({
   start: {
-    usage: 'start <SESSION_ID> [--no-open]',
-    options: ['no-open'],
+    usage: 'start <SESSION_ID> [--no-open] [--tunnel]',
+    options: ['no-open', 'tunnel'],
   },
   insert: {
     usage: 'insert <SESSION_ID> [--file <PATH>]',
@@ -18,6 +18,10 @@ export let COMMANDS = Object.freeze({
   status: {
     usage: 'status <SESSION_ID> [--authorize]',
     options: ['authorize'],
+  },
+  share: {
+    usage: 'share <SESSION_ID>',
+    options: [],
   },
   pages: {
     usage: 'pages <SESSION_ID>',
@@ -67,4 +71,6 @@ export let HELP = [
   'stop retains cached markup; clear removes the saved interface and live content.',
   'stop-all stops recorded sessions; clear-all clears running and cached interfaces.',
   'Both use the current state directory and report per-session results.',
+  'start --tunnel or share creates a public Quick Tunnel and private authorization link.',
+  'cloudflared is used from PATH or downloaded and verified once; stop closes the tunnel.',
 ].join('\n');

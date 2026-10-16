@@ -19,6 +19,30 @@ npx symbiote-agui stop demo
 
 File paths resolve from your current directory; session data lives under `~/.symbiote-agui`. Starting the same ID restores its saved interface. Use `npx symbiote-agui clear demo` to forget it. Use `--no-open` on `start` to open the returned `authorizationUrl` yourself.
 
+## Internet sharing
+
+Start a session with a public Cloudflare Quick Tunnel:
+
+```sh
+npx symbiote-agui start demo --tunnel
+```
+
+For an already running session, use:
+
+```sh
+npx symbiote-agui share demo
+```
+
+`share` returns `publicUrl`, such as `https://random-name.trycloudflare.com/demo/`, and a private `publicAuthorizationUrl`. Open the authorization link on the intended device; it establishes a session cookie and removes the token from the address bar. Keep authorization links private. The readable public URL alone does not authorize a browser. `start --tunnel` opens the authorized public page automatically; `--no-open` returns the links instead. `status demo --authorize` returns current links for the local and public URLs.
+
+AGUI uses `cloudflared` from PATH or downloads a checksum-verified official binary once into `<state-root>/.bin/cloudflared/`. Automatic downloads support macOS/Linux on x64 or arm64 and Windows on x64. Set `AGUI_CLOUDFLARED_PATH` to an absolute executable path before starting a worker to use a specific installation. No Cloudflare account, domain, or separate terminal command is required. Initial provisioning and tunnel connection can take up to 90 seconds in addition to local session startup. [Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
+
+Only the page server is tunneled; the CLI control server stays local. Remote pages use the same `tools`, `call`, `update`, and `events` commands. `pages` reports each connection's local or public URL, so choose a page ID when several devices are connected. HTTPS authorization uses Secure, HttpOnly, SameSite cookies and checks the configured public origin.
+
+Repeated `share` calls reuse a running tunnel. `stop` and `stop-all` close owned tunnels; `clear` and `clear-all` clear interfaces while leaving workers and their tunnels available. Restarting a session restores its markup but requires `--tunnel` or `share` to create a new public hostname and authorize browsers again. Quick Tunnels are temporary, have no uptime guarantee, and require the host machine to remain online. [Cloudflare limitations](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/#limitations).
+
+If tunnel creation fails, `TUNNEL_FAILED` is returned and the local session remains available. Inspect `status` for `tunnel.state` and any error, then correct the reported problem and use `share` again. A connector that exits later is reported as failed, and its public origin is revoked. Existing workers without sharing support must be stopped and restarted.
+
 ## Agent setup
 
 Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the agent's harness, or copy its folder from the installed package into the harness's skill directory. The agent needs access to a shell to run the CLI. The agent prepares HTML and JSON input files and passes them with `--file`, using simple `npx symbiote-agui` commands. This lets hosts reuse an approved command prefix; shell redirection, pipelines, and wrappers can require separate approval. Host approval policies remain in effect.
@@ -98,6 +122,7 @@ See the [Chrome connection instructions](https://github.com/ChromeDevTools/chrom
 - `update` reads a JSON state command from file or stdin with the same size limit. It requires at least one connected page and waits for acknowledgements. It does not replace markup.
 - `events` returns and clears buffered UI events. The worker retains the most recent 100 events, each limited to 16 KiB; `dropped` reports overflow since the previous read. Events are temporary, not a durable log.
 - `status` returns `waiting` when the worker is running without connected pages, `ready` when pages are connected, and `stopped` when the worker is absent. Running results include `url` and `clients`.
+- `share` creates or reuses the session's public Quick Tunnel and returns its authorization link. `start --tunnel` starts a local session and then shares it. Shared status includes `publicUrl` while the tunnel is ready and a `tunnel` object with its state and any error.
 - `pages` lists connected pages, URLs, titles, and readiness. `tools` discovers one page, optionally selected with `--page`.
 - `call` reads JSON `{ pageId, discoveryId, name, input }` from file or stdin and invokes one discovered tool. Invalid or stale requests are rejected; no automatic retries occur. Native tool errors return `ok: false`, `TOOL_FAILED`, and the original `result`, with exit code 1.
 - `mcp` runs the optional MCP server over stdio until its client disconnects. Session lifecycle remains available through the CLI commands above.

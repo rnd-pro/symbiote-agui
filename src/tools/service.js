@@ -16,7 +16,7 @@ export async function handleToolRequest(connection, url, input, deadline) {
   if (request.action === 'pages') {
     return {
       action: 'pages',
-      pages: [...connection.pages].map(([pageId, page]) => ({ pageId, url, title: page.title, ready: page.ready })),
+      pages: [...connection.pages].map(([pageId, page]) => ({ pageId, url: page.url || url, title: page.title, ready: page.ready })),
     };
   }
   let pageId = request.pageId;

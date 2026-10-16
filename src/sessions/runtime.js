@@ -15,6 +15,8 @@ import { handleToolRequest } from '../tools/service.js';
 import { TOOL_OPERATION_TIMEOUT_MS } from '../transport/constants.js';
 import { withTimeout } from '../shared/timeout.js';
 import { readCachedMarkup, prepareCachedMarkup, clearCachedMarkup } from './cache.js';
+import { SessionTunnel } from '../tunnel/session-tunnel.js';
+import { recordDirectory } from './store.js';
 
 export class SessionRuntime {
   /** @type {import('node:http').Server | undefined} */
@@ -23,6 +25,10 @@ export class SessionRuntime {
   pages;
   /** @type {import('../../types/markup.js').StyleCompiler | undefined} */
   styles;
+  /** @type {import('../../types/session.js').PageAccess | undefined} */
+  access;
+  /** @type {SessionTunnel | undefined} */
+  tunnel;
   /** @type {import('../../types/transport.js').RenderUpdate | undefined} */
   latest;
   updates = Promise.resolve();
@@ -42,6 +48,7 @@ export class SessionRuntime {
     let html = cached ?? '<h1>AGUI</h1><p>Waiting for generated content.</p>';
     let { classes } = analyzeMarkup(html);
     let access = createPageAccess(this.record);
+    this.access = access;
     let { server, url, styles } = await startPageServer(access);
     this.server = server;
     this.styles = styles;
@@ -51,7 +58,7 @@ export class SessionRuntime {
     this.latest = {
       html,
       revision: 0,
-      stylesheetUrl: new URL(STYLESHEET_PATH, url).href,
+      stylesheetUrl: STYLESHEET_PATH,
     };
     signal.throwIfAborted();
     this.pages = new PageConnection(server, new URL(url).origin, access,
@@ -71,6 +78,8 @@ export class SessionRuntime {
       state: this.closing ? SESSION_STATE.STOPPED : clients ? SESSION_STATE.READY : SESSION_STATE.WAITING,
       url: this.record.url,
       clients,
+      ...(this.tunnel ? { tunnel: { ...this.tunnel.status } } : {}),
+      ...(this.tunnel?.origin ? { publicUrl: `${this.tunnel.origin}${this.access?.path}` } : {}),
     };
   }
 
@@ -115,7 +124,7 @@ export class SessionRuntime {
         let update = {
           html,
           revision: this.revision,
-          stylesheetUrl: new URL(`${STYLESHEET_PATH}?revision=${this.revision}`, this.record.url).href,
+          stylesheetUrl: `${STYLESHEET_PATH}?revision=${this.revision}`,
         };
         let applied = await this.pages.broadcast({ type: 'render', ...update });
         if (cache) { await cache.commit(); }
@@ -156,9 +165,27 @@ export class SessionRuntime {
 
   async close() {
     this.closing = true;
-    await this.pages?.close();
-    await this.updates;
-    await closeServer(this.server);
+    try { await this.pages?.close(); }
+    finally {
+      await this.tunnel?.close();
+      await this.updates;
+      await closeServer(this.server);
+    }
+  }
+
+  async share() {
+    if (this.closing || !this.record.url || !this.access) {
+      throw new CommandError('The session is stopped.', ERROR_CODE.SESSION_STOPPED, EXIT_CODE.RUNTIME_ERROR);
+    }
+    let access = this.access;
+    this.tunnel ||= new SessionTunnel(this.record.url, (origin) => { access.publicOrigin = origin; }, recordDirectory(this.record));
+    try {
+      await this.tunnel.start();
+      if (this.closing) { throw new Error('The session ended while sharing.'); }
+      return this.status();
+    } catch (error) {
+      throw new CommandError(`Could not share session ${this.record.sessionId}: ${errorMessage(error)}`, ERROR_CODE.TUNNEL_FAILED, EXIT_CODE.RUNTIME_ERROR);
+    }
   }
 
   /** @param {unknown} input */

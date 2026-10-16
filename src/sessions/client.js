@@ -4,7 +4,7 @@ import { CONTROL_TIMEOUT_MS, SESSION_STATE } from './constants.js';
 
 /**
  * @param {import('../../types/session.js').SessionRecord} record
- * @param {'status' | 'stop' | 'insert' | 'update' | 'events' | 'tools' | 'clear'} action
+ * @param {'status' | 'stop' | 'insert' | 'update' | 'events' | 'tools' | 'clear' | 'share'} action
  * @param {number} timeout
  * @param {string} [html]
  * @returns {Promise<import('../../types/session.js').SessionStatus>}

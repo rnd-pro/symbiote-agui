@@ -67,6 +67,7 @@ process.once('message', async (message) => {
       events: () => ({ ...runtime.status(), ...runtime.events.drain() }),
       tools: (input) => runtime.tools(input),
       clear: () => runtime.clear(),
+      share: () => runtime.share(),
     });
     control = endpoint.server;
     record.controlUrl = endpoint.url;

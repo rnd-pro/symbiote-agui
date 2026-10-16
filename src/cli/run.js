@@ -11,6 +11,8 @@ import { clearSession } from '../sessions/clear.js';
 import { requestTools, isToolError } from '../tools/client.js';
 import { callTool } from './tools.js';
 import { runAllSessions } from '../sessions/all.js';
+import { shareSession } from '../sessions/share.js';
+import { errorMessage } from '../shared/system-error.js';
 
 /**
  * @param {string[]} args
@@ -49,10 +51,18 @@ export async function run(args) {
     }
 
     let handlers = {
-      start: () => startSession(request.sessionId),
+      start: async () => {
+        let local = await startSession(request.sessionId);
+        if (!request.tunnel) { return local; }
+        try { return { ...local, ...await shareSession(request.sessionId) }; }
+        catch (error) {
+          throw new CommandError(`${errorMessage(error)} The local session remains running. Use status, share, or stop for ${request.sessionId}.`, ERROR_CODE.TUNNEL_FAILED, EXIT_CODE.RUNTIME_ERROR);
+        }
+      },
       status: () => statusSession(request.sessionId, request.authorize),
       stop: () => stopSession(request.sessionId),
       clear: () => clearSession(request.sessionId),
+      share: () => shareSession(request.sessionId),
       insert: () => insertMarkup(request.sessionId, request.file),
       update: () => updateState(request.sessionId, request.file),
       events: () => readEvents(request.sessionId),
@@ -63,11 +73,11 @@ export async function run(args) {
     let status = await handlers[request.command]();
     if (request.command === 'start' && request.open && 'url' in status && status.url) {
       try {
-        await openPage(status.authorizationUrl || status.url);
-        let { authorizationUrl, ...visible } = status;
+        await openPage(status.publicAuthorizationUrl || status.authorizationUrl || status.url);
+        let { authorizationUrl, publicAuthorizationUrl, ...visible } = status;
         status = { ...visible, opened: true };
       } catch {
-        status = { ...status, opened: false, warning: 'Could not open the default browser. Open authorizationUrl manually.' };
+        status = { ...status, opened: false, warning: 'Could not open the default browser. Open publicAuthorizationUrl or authorizationUrl manually.' };
       }
     }
     if ('action' in status && status.action === 'call' && isToolError(status.result)) {

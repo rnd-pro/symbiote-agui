@@ -26,6 +26,7 @@ export type SessionToolResponse = { sessionId: string } & ToolResponse;
 
 export interface PagePeer {
   socket: import('ws').WebSocket;
+  url?: string;
   title: string;
   ready: boolean;
   error?: string;

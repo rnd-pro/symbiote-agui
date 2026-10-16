@@ -7,5 +7,11 @@ export function withAuthorizationUrl(status, token) {
   if (!status.url) { return status; }
   let authorization = new URL(status.url);
   authorization.hash = token;
-  return { ...status, authorizationUrl: authorization.href };
+  let result = { ...status, authorizationUrl: authorization.href };
+  if (status.publicUrl) {
+    let publicAuthorization = new URL(status.publicUrl);
+    publicAuthorization.hash = token;
+    result.publicAuthorizationUrl = publicAuthorization.href;
+  }
+  return result;
 }

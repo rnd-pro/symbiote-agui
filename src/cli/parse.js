@@ -22,6 +22,7 @@ export function parseCommand(args) {
         authorize: { type: 'boolean' },
         file: { type: 'string' },
         page: { type: 'string' },
+        tunnel: { type: 'boolean' },
       },
     });
   } catch (error) {
@@ -81,5 +82,6 @@ export function parseCommand(args) {
     authorize: !!values.authorize,
     file: values.file,
     pageId: values.page,
+    tunnel: !!values.tunnel,
   };
 }

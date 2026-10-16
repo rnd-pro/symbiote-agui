@@ -37,6 +37,15 @@ export function hasPageAccess(request, access) {
 }
 
 /**
+ * @param {string | undefined} provided
+ * @param {string} localOrigin
+ * @param {import('../../types/session.js').PageAccess} access
+ */
+export function isPageOrigin(provided, localOrigin, access) {
+  return provided === localOrigin || (!!access.publicOrigin && provided === access.publicOrigin);
+}
+
+/**
  * @param {import('node:http').IncomingMessage} request
  * @param {import('node:http').ServerResponse} response
  * @param {string} origin
@@ -51,10 +60,11 @@ export function authorizePage(request, response, origin, access) {
     response.writeHead(405).end();
     return;
   }
-  if (request.headers.origin !== origin || !matchesToken(request.headers.authorization || '', `Bearer ${access.token}`)) {
+  if (!isPageOrigin(request.headers.origin, origin, access) || !matchesToken(request.headers.authorization || '', `Bearer ${access.token}`)) {
     response.writeHead(403).end();
     return;
   }
-  response.setHeader('Set-Cookie', `${access.cookieName}=${access.token}; Path=${access.path}; HttpOnly; SameSite=Strict`);
+  let secure = request.headers.origin === access.publicOrigin ? '; Secure' : '';
+  response.setHeader('Set-Cookie', `${access.cookieName}=${access.token}; Path=${access.path}; HttpOnly; SameSite=Strict${secure}`);
   response.writeHead(204).end();
 }

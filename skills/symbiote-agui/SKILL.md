@@ -1,6 +1,6 @@
 ---
 name: symbiote-agui
-description: Create, restore, and operate local interactive interfaces with Symbiote AGUI. Use for generated HTML, Tailwind styling, RAT templates, component state updates, and user interaction through the AGUI CLI, with optional MCP integration.
+description: Create, restore, share, and operate interactive interfaces with Symbiote AGUI. Use for generated HTML, Tailwind styling, RAT templates, component state updates, and user interaction through the AGUI CLI, with optional MCP integration.
 ---
 
 # Symbiote AGUI
@@ -34,6 +34,14 @@ Session commands return one JSON object on stdout. Check `ok`; errors include `e
 `start` restores accepted HTML and inline modules and rebuilds styles even after the original file is deleted. Live state starts from that definition; user progress, timers, closures, and `update` commands are not persisted. `npx symbiote-agui stop demo` retains this cache, ends the session, and leaves tabs open with `Session ended.` Use `npx symbiote-agui clear demo` when the user intends to discard the saved interface. It clears live content/tools too, keeps a running session available, and also works when stopped.
 
 For cleanup explicitly covering every session in the current storage root, use `npx symbiote-agui stop-all` to stop workers while retaining saved interfaces, or `npx symbiote-agui clear-all` to discard every saved definition and clear live content/tools while leaving workers available. These commands take no session ID and can affect interfaces from other tasks sharing that storage. Use named commands for cleanup limited to one interface. Bulk commands return `command`, `total`, and per-session `sessions` results; process each reported failure. A partial failure sets `ok: false` and exits with code 1 while other sessions are still processed. New IDs created after discovery are outside the batch.
+
+## Internet sharing
+
+When the user requests Internet access, run `npx symbiote-agui start demo --tunnel` for a new session or `npx symbiote-agui share demo` for a running one. AGUI manages one Cloudflare Quick Tunnel per worker, using an installed `cloudflared` or automatically downloading and verifying an official binary. No account, domain, or separate tunnel command is needed. The first connection may take up to 90 seconds after local startup. `AGUI_CLOUDFLARED_PATH` can select an executable when set before the worker starts.
+
+`share` returns a private `publicAuthorizationUrl` for opening on the intended device and a readable `publicUrl` for that browser's later visits. `start --tunnel` opens the authorized public page automatically; `--no-open` returns links. Keep authorization links private. Use `status demo --authorize` to obtain current links for another browser. The token disappears from the address bar after authorization.
+
+Use the same CLI tools and events for remote pages. `pages` distinguishes connections by local or public URL; select the intended page ID when several devices are connected. `stop` and `stop-all` close tunnels. Clearing leaves workers and tunnels running. Quick Tunnel URLs are temporary and change after recreation; the host must remain online. Cached markup survives restart, but sharing must be requested again. `TUNNEL_FAILED` leaves the local session available; inspect the reported problem and `status` before retrying `share`. Tunnel status reports later connector exits instead of silently retrying or retaining a dead public URL.
 
 ## Markup and handlers
 

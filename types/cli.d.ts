@@ -20,6 +20,7 @@ export type CliRequest =
     authorize: boolean;
     file?: string;
     pageId?: string;
+    tunnel: boolean;
   };
 
 export interface CommandFailure {

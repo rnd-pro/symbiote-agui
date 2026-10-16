@@ -24,7 +24,7 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
 
     let action = `${request.method} ${request.url}`;
 
-    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update', 'POST /tools', 'POST /clear'].includes(action)) {
+    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update', 'POST /tools', 'POST /clear', 'POST /share'].includes(action)) {
       response.writeHead(404).end();
       return;
     }
@@ -53,6 +53,10 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
       if (action === 'POST /clear') {
         if (!actions.clear) { throw new CommandError('Clearing is unavailable in this worker.'); }
         result = await actions.clear();
+      }
+      if (action === 'POST /share') {
+        if (!actions.share) { throw new CommandError('Sharing is unavailable in this worker. Stop and restart the session.', ERROR_CODE.TUNNEL_FAILED, EXIT_CODE.RUNTIME_ERROR); }
+        result = await actions.share();
       }
       if (action === 'POST /update' || action === 'POST /tools') {
         let handler = action === 'POST /tools' ? actions.tools : actions.update;

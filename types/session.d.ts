@@ -8,6 +8,9 @@ export interface SessionStatus {
   state: SessionState;
   url?: string;
   authorizationUrl?: string;
+  publicUrl?: string;
+  publicAuthorizationUrl?: string;
+  tunnel?: TunnelStatus;
   clients?: number;
   delivery?: string;
   opened?: boolean;
@@ -17,6 +20,11 @@ export interface SessionStatus {
   events?: import('./transport.js').SessionEvent[];
   dropped?: number;
   toolResponse?: import('./tools.js').ToolResponse;
+}
+
+export interface TunnelStatus {
+  state: 'starting' | 'ready' | 'failed' | 'stopped';
+  error?: string;
 }
 
 export type SessionOperationResult = ({ ok: true } & SessionStatus)
@@ -59,6 +67,7 @@ export interface ControlActions {
   events?(): SessionStatus;
   tools?(input: unknown): Promise<SessionStatus>;
   clear?(): Promise<SessionStatus>;
+  share?(): Promise<SessionStatus>;
 }
 
 export interface PreparedCache {
@@ -79,4 +88,5 @@ export interface PageAccess {
   authorizationPath: string;
   cookieName: string;
   token: string;
+  publicOrigin?: string;
 }

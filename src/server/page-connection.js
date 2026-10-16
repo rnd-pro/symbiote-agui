@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { WebSocket, WebSocketServer } from 'ws';
 import { HEARTBEAT_MS, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, PAGE_REQUEST_TIMEOUT_MS } from '../transport/constants.js';
-import { hasPageAccess } from './page-access.js';
+import { hasPageAccess, isPageOrigin } from './page-access.js';
 
 export class PageConnection {
   /** @type {Set<WebSocket>} */
@@ -24,19 +24,19 @@ export class PageConnection {
       let endpoint;
       try { endpoint = new URL(request.url || '/', origin); }
       catch { socket.destroy(); return; }
-      if (endpoint.pathname !== access.socketPath || endpoint.search || request.headers.origin !== origin || !hasPageAccess(request, access)) {
+      if (endpoint.pathname !== access.socketPath || endpoint.search || !isPageOrigin(request.headers.origin, origin, access) || !hasPageAccess(request, access)) {
         socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
         return;
       }
-      this.server.handleUpgrade(request, socket, head, (client) => this.server.emit('connection', client));
+      this.server.handleUpgrade(request, socket, head, (client) => this.server.emit('connection', client, request));
     });
 
     /** @type {Set<WebSocket>} */
     let alive = new Set();
-    this.server.on('connection', (socket) => {
+    this.server.on('connection', (socket, request) => {
       this.clients.add(socket);
       let pageId = randomUUID();
-      let page = { socket, title: 'AGUI', ready: false, error: '' };
+      let page = { socket, url: new URL(access.path, request.headers.origin).href, title: 'AGUI', ready: false, error: '' };
       this.pages.set(pageId, page);
       alive.add(socket);
       socket.on('pong', () => alive.add(socket));

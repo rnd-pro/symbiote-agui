@@ -1,12 +1,13 @@
-import { CONNECTION_STATUS_ID, MAX_EVENT_BYTES, RECONNECT_MIN_MS, RECONNECT_MAX_MS, SOCKET_PATH } from '../../transport/constants.js';
+import { CONNECTION_STATUS_ID, MAX_EVENT_BYTES, RECONNECT_MIN_MS, RECONNECT_MAX_MS, SOCKET_PATH, PAGE_TOKEN_PATTERN } from '../../transport/constants.js';
 import { renderMarkup, updateState } from './render.js';
 import { setEventSender } from './events.js';
 import { disposeModules } from './modules.js';
 import { CONTENT_ROOT_ID } from '../../markup/constants.js';
 import { replaceContent } from './replace-content.js';
+import { createAuthorization } from './authorization.js';
 
 export function connectSession() {
-  let token = location.hash.slice(1);
+  let authorize = createAuthorization();
   let status = document.getElementById(CONNECTION_STATUS_ID);
   /** @type {WebSocket | undefined} */
   let socket;
@@ -16,6 +17,7 @@ export function connectSession() {
   let paused = false;
   let delay = RECONNECT_MIN_MS;
   let updates = Promise.resolve();
+  let generation = 0;
 
   /** @param {string} message */
   function showStatus(message) {
@@ -31,15 +33,28 @@ export function connectSession() {
     return true;
   });
 
-  function connect() {
+  async function connect() {
     if (ended || paused) { return; }
-    if (!/^[a-f0-9]{64}$/.test(token)) {
-      showStatus('Open the complete session URL supplied by AGUI.');
+    let attempt = ++generation;
+    showStatus('Connecting...');
+    try {
+      let authorized = await authorize();
+      if (ended || paused || attempt !== generation) { return; }
+      if (!authorized) {
+        let sessionId = location.pathname.split('/')[1];
+        showStatus(`Browser authorization required. Run npx symbiote-agui status ${sessionId} --authorize and open authorizationUrl.`);
+        return;
+      }
+    } catch {
+      if (ended || paused || attempt !== generation) { return; }
+      showStatus('Connection lost. Reconnecting...');
+      scheduleReconnect();
       return;
     }
     let url = new URL(SOCKET_PATH, location.href);
     url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    url.searchParams.set('token', token);
+    url.hash = '';
+    url.search = '';
     let current = new WebSocket(url);
     socket = current;
     showStatus('Connecting...');
@@ -81,15 +96,27 @@ export function connectSession() {
     current.onclose = (event) => {
       if (event.code === 1000 && event.reason === 'Session ended') { ended = true; }
       if (ended) { showStatus('Session ended.'); return; }
-      if (paused) { return; }
+      if (paused || attempt !== generation) { return; }
       showStatus('Connection lost. Reconnecting...');
-      timer = window.setTimeout(connect, delay);
-      delay = Math.min(delay * 2, RECONNECT_MAX_MS);
+      scheduleReconnect();
     };
   }
 
+  function scheduleReconnect() {
+    timer = window.setTimeout(connect, delay);
+    delay = Math.min(delay * 2, RECONNECT_MAX_MS);
+  }
+
+  window.addEventListener('hashchange', () => {
+    if (!PAGE_TOKEN_PATTERN.test(location.hash.slice(1))) { return; }
+    clearTimeout(timer);
+    socket?.close(1000, 'Authorizing');
+    connect();
+  });
+
   window.addEventListener('pagehide', () => {
     paused = true;
+    generation += 1;
     clearTimeout(timer);
     socket?.close(1000, 'Page hidden');
   });

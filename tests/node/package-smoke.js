@@ -87,7 +87,7 @@ test('the production tarball runs through npm exec outside the checkout', { time
   assert.equal((await cli('status', 'package-smoke')).url, session.url);
   await writeFile(join(caller, 'view with spaces.html'), '<h1 class="w-[123px]">Packaged AGUI</h1>');
   assert.equal((await cli('insert', 'package-smoke', '--file', 'view with spaces.html')).delivery, 'queued');
-  for (let path of ['/', '/client/index.js', '/styles.css.js']) {
+  for (let path of [new URL(session.url).pathname, '/client/index.js', '/styles.css.js']) {
     let response = await fetch(new URL(path, session.url));
     assert.equal(response.status, 200, path);
     let content = await response.text();

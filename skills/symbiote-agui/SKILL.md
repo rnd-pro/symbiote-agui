@@ -20,7 +20,9 @@ npx symbiote-agui status demo
 npx symbiote-agui stop demo
 ```
 
-`start` opens a regular page in the OS default browser. Use `--no-open` to return the URL without opening a tab. Keep the entire returned URL, including its token fragment. A failed browser opener returns `opened: false` and a warning while leaving the server available; give the user the URL to open manually.
+`start` opens and authorizes a regular page in the OS default browser. Its readable `url` includes the named session ID, for example `http://127.0.0.1:PORT/demo/`. Use this URL to select the page in Chrome MCP. The ID stays the same across restarts; the port can change.
+
+With `--no-open`, open the returned private `authorizationUrl` manually. A failed browser opener also returns this link, `opened: false`, and a warning. Opening the link removes its token fragment from the address bar and establishes an HttpOnly cookie. Reloads, reconnections, and new tabs in that browser use the readable `url`. For another browser or profile, or cleared cookies, run `npx symbiote-agui status demo --authorize` and open its `authorizationUrl`. The readable ID alone does not authorize access.
 
 Session commands return one JSON object on stdout. Check `ok`; errors include `error.code` and `error.message`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text.
 
@@ -105,10 +107,10 @@ Pages reconnect automatically and restore the latest accepted markup. Reload or 
 
 - `SESSION_EXISTS`: check `status`; reuse a session belonging to this task or choose another ID. Do not stop an unrelated session to resolve a name collision.
 - `SESSION_STOPPED`: start the intended session before inserting.
-- `PAGE_UNAVAILABLE`: open the full session URL before sending state updates.
+- `PAGE_UNAVAILABLE`: open the session URL in its authorized browser before sending state updates. If authorization is required, use `status <SESSION_ID> --authorize` and open `authorizationUrl`.
 - `INVALID_INPUT` or `INPUT_TOO_LARGE`: correct arguments, encoding, JSON, or input size before retrying.
 - `INSERT_FAILED`: fix the reported JSON, template, stylesheet, or module error. Validation and stylesheet failures preserve prior content. Read `agui:error` events for failures while restoring queued markup. Modules may already have run or changed content; reload the session URL to restore the last accepted markup when needed.
 - `UPDATE_FAILED`: check the selector and component fields. Commands and multi-tab delivery are not transactions; inspect affected pages before retrying after partial failure or timeout.
 - `START_FAILED`, `START_TIMEOUT`, or persistent `SESSION_UNREACHABLE`: inspect the message and private `worker.log`; report a persistent blocker rather than repeatedly retrying or killing a stored PID.
 
-Metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Use the same absolute `AGUI_STATE_DIR` for all commands when overriding storage. Treat the full session URL and tokens as private local connection details.
+Metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Use the same absolute `AGUI_STATE_DIR` for all commands when overriding storage. Keep authorization links and tokens private.

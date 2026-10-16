@@ -1,6 +1,8 @@
 # Browser interfaces
 
-Open the complete URL returned by `npx symbiote-agui start <SESSION_ID>`, including its token fragment. The page receives markup and state updates while the session runs. Reloading or reconnecting restores the latest accepted markup with its initial component state.
+`npx symbiote-agui start <SESSION_ID>` opens and authorizes the page automatically. With `--no-open`, open the returned private `authorizationUrl`; its token is removed from the address bar after loading. The readable `url` contains the session ID and works for reloads and new tabs in that authorized browser. To authorize another browser, use `npx symbiote-agui status <SESSION_ID> --authorize`.
+
+The page receives markup and state updates while the session runs. Reloading or reconnecting restores the latest accepted markup with its initial component state.
 
 Use `<agui-component>` for inline RAT markup and `use-template` for reusable DOM templates. Unknown custom tags using that attribute receive generic component classes. Register custom subclasses through Symbiote's `reg()` so WebMCP receives their tag identity. Definitions persist for the page lifetime; each insertion supplies fresh instances and templates.
 

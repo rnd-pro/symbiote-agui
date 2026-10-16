@@ -7,6 +7,7 @@ export interface SessionStatus {
   sessionId: string;
   state: SessionState;
   url?: string;
+  authorizationUrl?: string;
   clients?: number;
   delivery?: string;
   opened?: boolean;
@@ -51,4 +52,12 @@ export interface PendingPageRequest {
   resolve(): void;
   reject(error: Error): void;
   timer: ReturnType<typeof setTimeout>;
+}
+
+export interface PageAccess {
+  path: string;
+  socketPath: string;
+  authorizationPath: string;
+  cookieName: string;
+  token: string;
 }

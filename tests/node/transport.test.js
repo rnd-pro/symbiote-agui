@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 import test from 'node:test';
@@ -10,20 +10,40 @@ import { SessionEvents } from '../../src/sessions/events.js';
 import { analyzeMarkup } from '../../src/markup/analyze.js';
 import { validateStateUpdate } from '../../src/transport/state-update.js';
 import { MAX_EVENTS } from '../../src/transport/constants.js';
+import { createPageAccess } from '../../src/server/page-access.js';
 
-test('WebSocket access requires both the page token and matching origin', async (t) => {
+function pageAccess() {
+  return createPageAccess({
+    sessionId: 'socket-test',
+    instanceId: randomUUID(),
+    pageToken: randomBytes(32).toString('hex'),
+    controlToken: '',
+    pid: process.pid,
+    launcherPid: process.pid,
+  });
+}
+
+test('WebSocket access requires a scoped cookie, session path, and matching origin', async (t) => {
   let server = createServer();
   server.listen(0, '127.0.0.1');
   let origin = await waitForServer(server);
-  let token = randomBytes(32).toString('hex');
-  let pages = new PageConnection(server, origin, token, async () => {}, () => {});
+  let access = pageAccess();
+  let cookie = `${access.cookieName}=${access.token}`;
+  let pages = new PageConnection(server, origin, access, async () => {}, () => {});
   t.after(async () => { await pages.close(); await closeServer(server); });
-  for (let [supplied, requestOrigin] of [[token, 'http://example.com'], ['wrong', origin]]) {
-    let socket = new WebSocket(`${origin.replace('http:', 'ws:')}/socket?token=${supplied}`, { origin: requestOrigin });
+  for (let [path, supplied, requestOrigin] of [
+    [access.socketPath, cookie, 'http://example.com'],
+    [access.socketPath, '', origin],
+    [access.socketPath, `${access.cookieName}=wrong`, origin],
+    [access.socketPath, `agui-other=${access.token}`, origin],
+    ['/other/socket', cookie, origin],
+    [`${access.socketPath}?token=${access.token}`, cookie, origin],
+  ]) {
+    let socket = new WebSocket(`${origin.replace('http:', 'ws:')}${path}`, { origin: requestOrigin, headers: { Cookie: supplied } });
     await assert.rejects(once(socket, 'open'), /403/);
   }
   assert.equal(pages.clients.size, 0);
-  let socket = new WebSocket(`${origin.replace('http:', 'ws:')}/socket?token=${token}`, { origin });
+  let socket = new WebSocket(`${origin.replace('http:', 'ws:')}${access.socketPath}`, { origin, headers: { Cookie: cookie } });
   await once(socket, 'open');
   assert.equal(pages.clients.size, 1);
 });
@@ -32,10 +52,13 @@ test('page acknowledgements are correlated and disconnection rejects pending del
   let server = createServer();
   server.listen(0, '127.0.0.1');
   let origin = await waitForServer(server);
-  let token = randomBytes(32).toString('hex');
-  let pages = new PageConnection(server, origin, token, async () => {}, () => {});
+  let access = pageAccess();
+  let pages = new PageConnection(server, origin, access, async () => {}, () => {});
   t.after(async () => { await pages.close(); await closeServer(server); });
-  let socket = new WebSocket(`${origin.replace('http:', 'ws:')}/socket?token=${token}`, { origin });
+  let socket = new WebSocket(`${origin.replace('http:', 'ws:')}${access.socketPath}`, {
+    origin,
+    headers: { Cookie: `${access.cookieName}=${access.token}` },
+  });
   await once(socket, 'open');
   let [peer] = pages.clients;
   assert.ok(peer);

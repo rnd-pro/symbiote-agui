@@ -10,6 +10,7 @@ import { errorMessage } from '../shared/system-error.js';
 import { validateStateUpdate } from '../transport/state-update.js';
 import { SESSION_STATE } from './constants.js';
 import { SessionEvents } from './events.js';
+import { createPageAccess } from '../server/page-access.js';
 
 export class SessionRuntime {
   /** @type {import('node:http').Server | undefined} */
@@ -32,17 +33,18 @@ export class SessionRuntime {
 
   /** @param {AbortSignal} signal */
   async start(signal) {
-    let { server, url, styles } = await startPageServer();
+    let access = createPageAccess(this.record);
+    let { server, url, styles } = await startPageServer(access);
     this.server = server;
     this.styles = styles;
-    this.record.url = `${url}#${this.record.pageToken}`;
+    this.record.url = url;
     this.latest = {
       html: '<h1>AGUI</h1><p>Waiting for generated content.</p>',
       revision: 0,
       stylesheetUrl: new URL(STYLESHEET_PATH, url).href,
     };
     signal.throwIfAborted();
-    this.pages = new PageConnection(server, new URL(url).origin, this.record.pageToken,
+    this.pages = new PageConnection(server, new URL(url).origin, access,
       (socket) => this.enqueue(async () => {
         if (this.latest && this.pages && !this.closing) {
           await this.pages.request(socket, { type: 'render', ...this.latest });

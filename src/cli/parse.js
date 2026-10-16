@@ -19,6 +19,7 @@ export function parseCommand(args) {
         help: { type: 'boolean', short: 'h' },
         version: { type: 'boolean', short: 'v' },
         'no-open': { type: 'boolean' },
+        authorize: { type: 'boolean' },
         file: { type: 'string' },
       },
     });
@@ -64,6 +65,7 @@ export function parseCommand(args) {
     command,
     sessionId,
     open: !values['no-open'],
+    authorize: !!values.authorize,
     file: values.file,
   };
 }

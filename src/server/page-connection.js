@@ -1,6 +1,7 @@
-import { randomUUID, timingSafeEqual } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { WebSocket, WebSocketServer } from 'ws';
-import { HEARTBEAT_MS, MAX_EVENT_BYTES, PAGE_REQUEST_TIMEOUT_MS, SOCKET_PATH } from '../transport/constants.js';
+import { HEARTBEAT_MS, MAX_EVENT_BYTES, PAGE_REQUEST_TIMEOUT_MS } from '../transport/constants.js';
+import { hasPageAccess } from './page-access.js';
 
 export class PageConnection {
   /** @type {Set<WebSocket>} */
@@ -11,20 +12,17 @@ export class PageConnection {
   /**
    * @param {import('node:http').Server} server
    * @param {string} origin
-   * @param {string} token
+   * @param {import('../../types/session.js').PageAccess} access
    * @param {(socket: WebSocket) => Promise<void>} initialize
    * @param {(message: Extract<import('../../types/transport.js').PageMessage, { type: 'event' }>) => void} onEvent
    */
-  constructor(server, origin, token, initialize, onEvent) {
+  constructor(server, origin, access, initialize, onEvent) {
     this.server = new WebSocketServer({ noServer: true, maxPayload: MAX_EVENT_BYTES + 1024 });
     server.on('upgrade', (request, socket, head) => {
       let endpoint;
       try { endpoint = new URL(request.url || '/', origin); }
       catch { socket.destroy(); return; }
-      let supplied = Buffer.from(endpoint.searchParams.get('token') || '');
-      let expected = Buffer.from(token);
-      if (endpoint.pathname !== SOCKET_PATH || request.headers.origin !== origin
-        || supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) {
+      if (endpoint.pathname !== access.socketPath || endpoint.search || request.headers.origin !== origin || !hasPageAccess(request, access)) {
         socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
         return;
       }

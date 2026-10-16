@@ -1,6 +1,6 @@
 # AGUI implementation plan
 
-Status: Step 1 is configured in Codex and its MCP tool catalog is verified. The running host still receives EPERM when reading Chrome's endpoint file after the permission change. Reconnect the harness to load the MCP configuration, confirm Chrome access for its host app, and verify the browser connection before marking step 1 complete. Steps 2-6 are planned and require user approval.
+Status: Step 1 is configured in Codex and its MCP tool catalog is verified. The running host still receives EPERM when reading Chrome's endpoint file after the permission change. Reconnect the harness to load the MCP configuration, confirm Chrome access for its host app, and verify the browser connection before marking step 1 complete. Step 2 is implemented and verified. Steps 3-6 are planned and require user approval.
 
 Goal: An agent creates and restores interfaces through `npx symbiote-agui`, then operates their registered WebMCP tools through Chrome DevTools MCP. Reuse the user's running Chrome and the established MCP connection. Routine tasks use these two interfaces without ad hoc browser scripts or repeated inspections. Browser connection consent and host sandbox authorization remain outside AGUI's control.
 

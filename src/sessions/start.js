@@ -10,6 +10,7 @@ import { withTimeout } from '../shared/timeout.js';
 import { SHUTDOWN_TIMEOUT_MS, STARTUP_TIMEOUT_MS } from './constants.js';
 import { requestSession } from './client.js';
 import { getStateRoot, isProcessAlive, readSession, recordDirectory, releaseSession, reserveSession, writeSession } from './store.js';
+import { withAuthorizationUrl } from './page-url.js';
 
 /**
  * @param {string} sessionId
@@ -129,7 +130,7 @@ export async function startSession(sessionId) {
     });
     let result = await startup;
     child.unref();
-    return result;
+    return withAuthorizationUrl(result, record.pageToken);
   } catch (error) {
     if (child?.pid && child.exitCode === null && child.signalCode === null) {
       let exited = once(child, 'exit');

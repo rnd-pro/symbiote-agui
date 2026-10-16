@@ -2,8 +2,10 @@ import { fileURLToPath } from 'node:url';
 import { closeServer, waitForServer } from '../shared/server.js';
 import { createStyles } from '../markup/styles.js';
 import { STYLESHEET_PATH, CLIENT_SCRIPT_PATH } from '../markup/constants.js';
+import { authorizePage } from './page-access.js';
 
-export async function startPageServer() {
+/** @param {import('../../types/session.js').PageAccess} access */
+export async function startPageServer(access) {
   let styles = await createStyles();
   let { default: config } = await import('jsda-kit/cfg');
   let { createServer } = await import('jsda-kit/server/JSDAServer.js');
@@ -16,16 +18,27 @@ export async function startPageServer() {
   config.log = false;
 
   let server = createServer({ port: { host: '127.0.0.1', port: 0 } });
+  let origin = '';
   let [handler] = server.listeners('request');
   server.removeAllListeners('request');
   server.on('request', (request, response) => {
     let pathname = request.url?.split('?')[0];
-    if (request.method !== 'GET' || !['/', STYLESHEET_PATH, CLIENT_SCRIPT_PATH].includes(pathname || '')) {
+    response.setHeader('Cache-Control', 'no-store');
+    response.setHeader('Referrer-Policy', 'no-referrer');
+    if (pathname === access.authorizationPath) {
+      authorizePage(request, response, origin, access);
+      return;
+    }
+    if (request.method === 'GET' && pathname === access.path.slice(0, -1)) {
+      response.writeHead(308, { location: access.path }).end();
+      return;
+    }
+    if (request.method !== 'GET' || ![access.path, STYLESHEET_PATH, CLIENT_SCRIPT_PATH].includes(pathname || '')) {
       response.writeHead(404).end();
       return;
     }
 
-    response.setHeader('Cache-Control', 'no-store');
+    if (pathname === access.path) { request.url = '/'; }
 
     Promise.resolve(handler?.call(server, request, response)).catch((error) => {
       console.error(error);
@@ -37,8 +50,8 @@ export async function startPageServer() {
   });
 
   try {
-    let url = await waitForServer(server);
-    return { server, url: `${url}/`, styles };
+    origin = await waitForServer(server);
+    return { server, url: `${origin}${access.path}`, styles };
   } catch (error) {
     await closeServer(server);
     throw error;

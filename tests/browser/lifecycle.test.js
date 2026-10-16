@@ -29,6 +29,10 @@ test('regular pages receive markup independently and remain open after stop', {
   assert.equal(first.clients, 0);
   assert.equal(first.cdpUrl, undefined);
   assert.notEqual(first.url, second.url);
+  assert.equal(new URL(first.url).pathname, '/demo/');
+  assert.equal(new URL(first.url).hash, '');
+  assert.equal((await cli('status', 'demo')).authorizationUrl, undefined);
+  assert.equal((await cli('status', 'demo', '--authorize')).authorizationUrl, first.authorizationUrl);
   await assert.rejects(cli('start', 'demo', '--no-open'), (error) => hasCliError(error, 'SESSION_EXISTS'));
   let record = await readSession('demo');
   assert.ok(record);
@@ -47,11 +51,24 @@ test('regular pages receive markup independently and remain open after stop', {
   let firstPage = await browser.newPage();
   let secondPage = await browser.newPage();
   await firstPage.setViewport({ width: 900, height: 700 });
-  await firstPage.goto(first.url);
-  await secondPage.goto(second.url);
+  let isolated = await browser.createBrowserContext();
+  let unauthorized = await isolated.newPage();
+  await unauthorized.goto(first.url);
+  await unauthorized.waitForFunction(() => document.getElementById('agui-connection')?.textContent?.includes('Browser authorization required'));
+  assert.equal(await unauthorized.$eval('h1', (element) => element.textContent), 'AGUI');
+  assert.equal((await cli('status', 'demo')).clients, 0);
+  await firstPage.goto(first.authorizationUrl);
+  await secondPage.goto(second.authorizationUrl);
   await firstPage.waitForSelector('h1');
   await firstPage.waitForFunction(() => document.querySelector('h1')?.textContent === 'First café $&');
   await secondPage.waitForFunction(() => document.querySelector('h1')?.textContent === 'Independent session');
+  assert.equal(firstPage.url(), first.url);
+  assert.equal(secondPage.url(), second.url);
+  assert.equal(await firstPage.evaluate(() => document.cookie), '');
+  await unauthorized.goto((await cli('status', 'demo', '--authorize')).authorizationUrl);
+  await unauthorized.waitForFunction(() => document.querySelector('h1')?.textContent === 'First café $&');
+  assert.equal(unauthorized.url(), first.url);
+  await isolated.close();
   assert.equal((await waitForSession('demo', 'ready')).clients, 1);
   await firstPage.bringToFront();
   assert.equal(await firstPage.$eval('button', (element) => getComputedStyle(element).width), '123px');
@@ -87,6 +104,15 @@ test('regular pages receive markup independently and remain open after stop', {
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   assert.equal(isProcessAlive(record.pid), false);
+  let restarted = await cli('start', 'demo', '--no-open');
+  assert.equal(new URL(restarted.url).pathname, '/demo/');
+  assert.notEqual(restarted.authorizationUrl, first.authorizationUrl);
+  await firstPage.goto(restarted.url);
+  await firstPage.waitForFunction(() => document.getElementById('agui-connection')?.textContent?.includes('Browser authorization required'));
+  await firstPage.goto(restarted.authorizationUrl);
+  await waitForSession('demo', 'ready');
+  assert.equal(firstPage.url(), restarted.url);
+  await cli('stop', 'demo');
   assert.deepEqual(await readdir(state.directory), ['view with spaces.html']);
   assert.equal(browser.connected, true);
 });
@@ -120,7 +146,7 @@ test('inline modules, state commands, events, reload, and reconnect work in ordi
   ].join('\n');
   await insertStdin('interactive', markup);
   let page = await browser.newPage();
-  await page.goto(session.url);
+  await page.goto(session.authorizationUrl);
   await page.waitForSelector('button');
   assert.equal(await page.$eval('#counter', (element) => Reflect.get(element, 'moduleRegistered')), true);
   await page.waitForFunction(() => {

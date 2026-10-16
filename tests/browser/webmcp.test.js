@@ -94,7 +94,7 @@ for (let native of [false, true]) {
     /** @type {string[]} */
     let errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(session.url);
+    await page.goto(session.authorizationUrl);
     assert.equal(await page.evaluate(() => typeof Reflect.get(document, 'modelContext')?.registerTool === 'function'), native,
       'Use Chrome with native WebMCP testing support for the enabled test.');
     await insertStdin('webmcp', markup);

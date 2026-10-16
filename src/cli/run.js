@@ -29,7 +29,7 @@ export async function run(args) {
 
     let handlers = {
       start: () => startSession(request.sessionId),
-      status: () => statusSession(request.sessionId),
+      status: () => statusSession(request.sessionId, request.authorize),
       stop: () => stopSession(request.sessionId),
       insert: () => insertMarkup(request.sessionId, request.file),
       update: () => updateState(request.sessionId, request.file),
@@ -38,10 +38,11 @@ export async function run(args) {
     let status = await handlers[request.command]();
     if (request.command === 'start' && request.open && status.url) {
       try {
-        await openPage(status.url);
-        status = { ...status, opened: true };
+        await openPage(status.authorizationUrl || status.url);
+        let { authorizationUrl, ...visible } = status;
+        status = { ...visible, opened: true };
       } catch {
-        status = { ...status, opened: false, warning: 'Could not open the default browser. Open the session URL manually.' };
+        status = { ...status, opened: false, warning: 'Could not open the default browser. Open authorizationUrl manually.' };
       }
     }
     process.stdout.write(`${JSON.stringify({ ok: true, ...status })}\n`);

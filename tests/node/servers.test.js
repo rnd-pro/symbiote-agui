@@ -7,13 +7,40 @@ import { requestSession } from '../../src/sessions/client.js';
 import { reserveSession } from '../../src/sessions/store.js';
 import { temporaryState } from './state-fixture.js';
 import { MAX_HTML_BYTES } from '../../src/markup/constants.js';
+import { createPageAccess } from '../../src/server/page-access.js';
 
 test('JSDA serves the page on loopback without exposing source files', async (t) => {
-  let page = await startPageServer();
+  let state = await temporaryState();
+  t.after(() => state.close());
+  let access = createPageAccess(await reserveSession('readable-page'));
+  let page = await startPageServer(access);
   t.after(() => closeServer(page.server));
+  assert.equal(new URL(page.url).pathname, '/readable-page/');
   let response = await fetch(page.url);
   assert.equal(response.status, 200);
   assert.match(await response.text(), /<main id="agui-content">/);
+  assert.equal((await fetch(new URL('/', page.url))).status, 404);
+  assert.equal((await fetch(new URL('/other/', page.url))).status, 404);
+  let redirect = await fetch(page.url.slice(0, -1), { redirect: 'manual' });
+  assert.equal(redirect.status, 308);
+  assert.equal(redirect.headers.get('location'), access.path);
+  let endpoint = new URL(access.authorizationPath, page.url);
+  assert.equal((await fetch(endpoint)).status, 401);
+  for (let [origin, token] of [[new URL(page.url).origin, 'wrong'], ['http://example.com', access.token]]) {
+    let denied = await fetch(endpoint, { method: 'POST', headers: { Origin: origin, Authorization: `Bearer ${token}` } });
+    assert.equal(denied.status, 403);
+    assert.equal(denied.headers.get('set-cookie'), null);
+  }
+  let authorized = await fetch(endpoint, {
+    method: 'POST',
+    headers: { Origin: new URL(page.url).origin, Authorization: `Bearer ${access.token}` },
+  });
+  assert.equal(authorized.status, 204);
+  assert.equal(authorized.headers.get('set-cookie'), `${access.cookieName}=${access.token}; Path=${access.path}; HttpOnly; SameSite=Strict`);
+  let cookie = `${access.cookieName}=${access.token}`;
+  assert.equal((await fetch(endpoint, { headers: { Cookie: cookie } })).status, 204);
+  assert.equal((await fetch(endpoint, { headers: { Cookie: `${cookie}; ${cookie}` } })).status, 401);
+  assert.equal((await fetch(endpoint, { headers: { Cookie: `agui-other=${access.token}` } })).status, 401);
   assert.equal((await fetch(new URL('/shell.html', page.url))).status, 404);
   assert.equal((await fetch(new URL('/../../package.json', page.url))).status, 404);
   let stylesheet = await fetch(new URL('/styles.css.js', page.url));

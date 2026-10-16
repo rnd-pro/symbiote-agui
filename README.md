@@ -23,7 +23,7 @@ File paths resolve from your current directory; session data lives under `~/.sym
 
 Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the agent's harness, or copy its folder from the installed package into the harness's skill directory. The agent needs access to a shell to run the CLI.
 
-`start` opens the session in the OS default browser. Use `start demo --no-open` to obtain the URL without opening a tab. If opening fails, the server remains available and the result includes `opened: false` and a warning; open the returned URL manually.
+`start` opens and authorizes the session in the OS default browser. With `start demo --no-open`, open the returned `authorizationUrl` manually. If opening fails, the server remains available and the result includes `opened: false`, a warning, and `authorizationUrl`.
 
 ### Connect Chrome DevTools MCP
 
@@ -65,11 +65,19 @@ See the [Chrome connection instructions](https://github.com/ChromeDevTools/chrom
 - `status` returns `waiting` when the worker is running without connected pages, `ready` when pages are connected, and `stopped` when the worker is absent. Running results include `url` and `clients`.
 - `stop` is idempotent. It clears generated content and its WebMCP tools, notifies pages, closes connections and servers, and removes session metadata. It does not close tabs or terminate the user's browser.
 
-Session commands write one JSON object to stdout. Success includes `{ "ok": true, "sessionId": "demo", "state": "waiting", "url": "http://127.0.0.1:PORT/#TOKEN", "clients": 0 }`. Failures include `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text; diagnostics go to stderr or the worker log.
+Session commands write one JSON object to stdout. Success includes `{ "ok": true, "sessionId": "demo", "state": "waiting", "url": "http://127.0.0.1:PORT/demo/", "clients": 0 }`. Failures include `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text; diagnostics go to stderr or the worker log.
 
 ### Connection and recovery
 
-The complete session URL includes a page token in its fragment. Keep that fragment when copying or reopening the URL. The token authorizes the page connection. Treat the complete URL as private.
+The page address contains your named session ID, for example `http://127.0.0.1:PORT/demo/`. The ID stays the same when restarted; the port can change. It identifies the interface and is separate from the worker's numeric OS process ID.
+
+Browser authorization uses a private `authorizationUrl` containing a token fragment. Opening it removes the token from the address bar and establishes an HttpOnly cookie scoped to that session. Reloads, reconnections, and new tabs in the authorized browser use the readable `url`. Another browser or profile, or cleared cookies, requires authorization again:
+
+```sh
+npx symbiote-agui status demo --authorize
+```
+
+Open its `authorizationUrl` in the intended browser. Keep this link private; knowing the readable session ID does not grant access to generated content.
 
 Pages reconnect automatically with a bounded retry delay. Reload, reconnect, or opening another tab restores the latest accepted markup and reruns its marked modules. Live component state resets to the values in that markup; `update` commands are not replayed. Retained markup lives in worker memory and is discarded by `stop`.
 
@@ -196,6 +204,6 @@ For registration diagnostics, import `/client/index.js` and call `getActiveWebMC
 
 Session data and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Set the same absolute `AGUI_STATE_DIR` for all commands to use another storage location. Session IDs remain case-sensitive.
 
-A running session retains its latest markup in memory. Reloading or reopening its complete URL restores that interface with its initial state. Stopping the session discards the markup and events; starting the same ID creates an empty session.
+A running session retains its latest markup in memory. Reloading or reopening its URL in an authorized browser restores that interface with its initial state. Stopping the session discards the markup and events; starting the same ID creates an empty session and authorizes the browser for that new session.
 
 For a persistent `SESSION_UNREACHABLE` error, inspect the session's `worker.log` and report the failure. Keep session URLs and tokens private.

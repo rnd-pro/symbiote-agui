@@ -16,8 +16,8 @@ export let COMMANDS = Object.freeze({
     options: [],
   },
   status: {
-    usage: 'status <SESSION_ID>',
-    options: [],
+    usage: 'status <SESSION_ID> [--authorize]',
+    options: ['authorize'],
   },
   stop: {
     usage: 'stop <SESSION_ID>',
@@ -37,4 +37,5 @@ export let HELP = [
   'insert replaces the session content; input is limited to 1 MiB.',
   'update reads JSON { selector, values, method?, rewrite? } from file or stdin.',
   'events returns and clears buffered interface events.',
+  'status --authorize returns a private link for authorizing another browser.',
 ].join('\n');

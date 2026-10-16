@@ -1,4 +1,7 @@
-export let SOCKET_PATH = '/socket';
+export let SOCKET_PATH = 'socket';
+export let AUTHORIZATION_PATH = 'authorize';
+export let PAGE_COOKIE_PREFIX = 'agui-';
+export let PAGE_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
 export let PAGE_REQUEST_TIMEOUT_MS = 10_000;
 export let HEARTBEAT_MS = 15_000;
 export let MAX_EVENT_BYTES = 16 * 1024;

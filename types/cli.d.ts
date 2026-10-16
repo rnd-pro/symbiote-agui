@@ -14,6 +14,7 @@ export type CliRequest =
     command: SessionCommand;
     sessionId: string;
     open: boolean;
+    authorize: boolean;
     file?: string;
   };
 

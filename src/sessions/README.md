@@ -1,6 +1,8 @@
 # Session lifecycle
 
-Run `npx symbiote-agui start <SESSION_ID>` to start a local session and open its page in your default browser. Use `--no-open` to receive the URL without opening a tab. Keep the complete URL, including its private token fragment, when reopening or sharing it with your agent.
+Run `npx symbiote-agui start <SESSION_ID>` to start a local session and authorize its page in your default browser. The readable `url` has the form `http://127.0.0.1:PORT/SESSION_ID/`. The named ID stays the same across restarts; the port can change.
+
+Use `--no-open` to receive a private `authorizationUrl` without opening a tab. Opening that link removes its token fragment from the address bar and establishes an HttpOnly cookie. Reloads and new tabs in that browser use the readable `url`. To authorize another browser or profile, run `npx symbiote-agui status <SESSION_ID> --authorize` and open its `authorizationUrl`. Keep authorization links private.
 
 `start` returns when the session server is available. Use `npx symbiote-agui status <SESSION_ID>` when you need its connection state: `waiting` means no page is connected, `ready` means at least one page is connected, and `stopped` means the session is not running.
 

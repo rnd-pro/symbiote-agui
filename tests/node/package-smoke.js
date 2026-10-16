@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { access, mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { access, mkdtemp, mkdir, readFile, readdir, rm, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import test from 'node:test';
@@ -117,4 +117,20 @@ test('the production tarball runs through npm exec outside the checkout', { time
   assert.equal((await cli('stop', 'package-smoke')).state, 'stopped');
   started = false;
   assert.equal((await cli('status', 'package-smoke')).state, 'stopped');
+  await unlink(join(caller, 'view with spaces.html'));
+  let restored = await cli('start', 'package-smoke', '--no-open');
+  started = true;
+  assert.equal(restored.restored, true);
+  assert.equal(new URL(restored.url).pathname, new URL(session.url).pathname);
+  assert.match(await (await fetch(new URL('/styles.css.js', restored.url))).text(), /123px/);
+  assert.equal((await cli('clear', 'package-smoke')).cleared, true);
+  await cli('stop', 'package-smoke');
+  started = false;
+  assert.equal((await cli('clear', 'package-smoke')).cleared, true);
+  let empty = await cli('start', 'package-smoke', '--no-open');
+  started = true;
+  assert.equal(empty.restored, false);
+  assert.doesNotMatch(await (await fetch(new URL('/styles.css.js', empty.url))).text(), /123px/);
+  await cli('stop', 'package-smoke');
+  started = false;
 });

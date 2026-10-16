@@ -23,6 +23,10 @@ export let COMMANDS = Object.freeze({
     usage: 'stop <SESSION_ID>',
     options: [],
   },
+  clear: {
+    usage: 'clear <SESSION_ID>',
+    options: [],
+  },
 });
 
 export let HELP = [
@@ -39,4 +43,5 @@ export let HELP = [
   'update reads JSON { selector, values, method?, rewrite? } from file or stdin.',
   'events returns and clears buffered interface events.',
   'status --authorize returns a private link for authorizing another browser.',
+  'stop retains cached markup; clear removes the saved interface and live content.',
 ].join('\n');

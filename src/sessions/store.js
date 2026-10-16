@@ -5,7 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { hasErrorCode } from '../shared/system-error.js';
-import { assertSessionId } from './identity.js';
+import { sessionKey } from './identity.js';
 
 export function getStateRoot() {
   return process.env.AGUI_STATE_DIR
@@ -15,8 +15,7 @@ export function getStateRoot() {
 
 /** @param {string} sessionId */
 function sessionPath(sessionId) {
-  assertSessionId(sessionId);
-  return join(getStateRoot(), Buffer.from(sessionId).toString('hex'));
+  return join(getStateRoot(), sessionKey(sessionId));
 }
 
 /** @param {import('../../types/session.js').SessionRecord} record */

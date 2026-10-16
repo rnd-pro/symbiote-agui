@@ -113,7 +113,7 @@ test('regular pages receive markup independently and remain open after stop', {
   await waitForSession('demo', 'ready');
   assert.equal(firstPage.url(), restarted.url);
   await cli('stop', 'demo');
-  assert.deepEqual(await readdir(state.directory), ['view with spaces.html']);
+  assert.deepEqual(await readdir(state.directory), ['.cache', 'view with spaces.html']);
   assert.equal(browser.connected, true);
 });
 

@@ -66,6 +66,7 @@ process.once('message', async (message) => {
       update: (input) => runtime.update(input),
       events: () => ({ ...runtime.status(), ...runtime.events.drain() }),
       tools: (input) => runtime.tools(input),
+      clear: () => runtime.clear(),
     });
     control = endpoint.server;
     record.controlUrl = endpoint.url;
@@ -73,7 +74,7 @@ process.once('message', async (message) => {
     controller.signal.throwIfAborted();
     ready = true;
     /** @type {import('../../types/session.js').WorkerReply} */
-    let reply = { kind: 'ready', result: runtime.status() };
+    let reply = { kind: 'ready', result: { ...runtime.status(), restored: runtime.restored } };
     process.send?.(reply, () => process.connected && process.disconnect());
   } catch (error) {
     console.error(error);

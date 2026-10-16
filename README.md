@@ -17,7 +17,7 @@ npx symbiote-agui status demo
 npx symbiote-agui stop demo
 ```
 
-File paths resolve from your current directory; session data lives under `~/.symbiote-agui`. Use `--no-open` on `start` when you want to open the returned URL yourself.
+File paths resolve from your current directory; session data lives under `~/.symbiote-agui`. Starting the same ID restores its saved interface. Use `npx symbiote-agui clear demo` to forget it. Use `--no-open` on `start` when you want to open the returned URL yourself.
 
 ## Agent setup
 
@@ -71,14 +71,15 @@ See the [Chrome connection instructions](https://github.com/ChromeDevTools/chrom
 ### Commands and results
 
 - IDs are case-sensitive names matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`, unique for the current OS user across working directories. Duplicate starts return `SESSION_EXISTS`.
-- `start` starts a session and returns its URL. It does not wait for a browser connection; use the returned state to distinguish a waiting session from one with connected pages. Startup has a 30-second timeout.
+- `start` starts a session and returns its URL, restoring cached markup and rebuilding its styles when available. `restored: true` confirms restoration; `false` means no cached definition was found. It does not wait for a browser connection; use the returned state to distinguish a waiting session from one with connected pages. Startup has a 30-second timeout.
 - `insert` reads a UTF-8 HTML fragment from `--file` or stdin, limited to 1 MiB. Relative paths resolve from the caller's working directory. Empty input clears the content root. Interactive stdin requires a file or redirected input.
-- Each insertion replaces generated content and resets local state. With connected pages, success waits for their acknowledgements and returns `delivery: "applied"`. Without a page, it retains the fragment and returns `delivery: "queued"`; rendering and module execution happen on connection.
+- Each insertion replaces generated content, resets local state, and atomically saves the accepted fragment, including inline modules. With connected pages, success waits for their acknowledgements and returns `delivery: "applied"`. Without a page, it saves the fragment and returns `delivery: "queued"`; rendering and module execution happen on connection.
 - `update` reads a JSON state command from file or stdin with the same size limit. It requires at least one connected page and waits for acknowledgements. It does not replace markup.
 - `events` returns and clears buffered UI events. The worker retains the most recent 100 events, each limited to 16 KiB; `dropped` reports overflow since the previous read. Events are temporary, not a durable log.
 - `status` returns `waiting` when the worker is running without connected pages, `ready` when pages are connected, and `stopped` when the worker is absent. Running results include `url` and `clients`.
 - `mcp` runs the MCP server over stdio until its client disconnects. Session lifecycle remains available through the CLI commands above.
-- `stop` is idempotent. It clears generated content and its WebMCP tools, notifies pages, closes connections and servers, and removes session metadata. It does not close tabs or terminate the user's browser.
+- `stop` is idempotent. It clears live content and tools, notifies pages, closes connections and servers, and removes worker metadata and credentials. It retains the cached interface and leaves browser tabs open.
+- `clear` removes the cached definition and live content/tools, returning `cleared: true`. A running session stays available for new insertions. It also works on stopped sessions and is idempotent. An empty `insert` saves a blank definition; use `clear` to remove it entirely.
 
 Session commands write one JSON object to stdout. Success includes `{ "ok": true, "sessionId": "demo", "state": "waiting", "url": "http://127.0.0.1:PORT/demo/", "clients": 0 }`. Failures include `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text; diagnostics go to stderr or the worker log.
 
@@ -94,11 +95,13 @@ npx symbiote-agui status demo --authorize
 
 Open its `authorizationUrl` in the intended browser. Keep this link private; knowing the readable session ID does not grant access to generated content.
 
-Pages reconnect automatically with a bounded retry delay. Reload, reconnect, or opening another tab restores the latest accepted markup and reruns its marked modules. Live component state resets to the values in that markup; `update` commands are not replayed. Retained markup lives in worker memory and is discarded by `stop`.
+Pages reconnect automatically with a bounded retry delay. Reload, reconnect, or opening another tab restores the latest accepted markup and reruns its marked modules. Live component state resets to the values in that markup; `update` commands are not replayed. Restarting the same session ID restores its cached definition without the original input file.
 
 Validation and stylesheet loading happen before content replacement, preserving the current interface if either fails. Module code can have side effects; an execution failure can leave changed content. Delivery to several tabs and state updates are not transactions. After a failed or timed-out delivery, inspect the pages or reload the session URL before retrying. A queued insertion cannot verify browser-specific behavior until a page connects. Restoration failures also appear as `agui:error` events for the agent.
 
 Use `status` after `SESSION_EXISTS`; reuse a session belonging to the task or choose another ID. Start a stopped session before inserting. For `PAGE_UNAVAILABLE`, open the session URL. For `INSERT_FAILED` or `UPDATE_FAILED`, correct the reported problem. If the worker stays `SESSION_UNREACHABLE`, inspect its log rather than repeatedly starting it or killing a stored PID.
+
+Cache read and restoration failures stop startup and retain the saved definition. `CACHE_ERROR` reports storage failures; resolve the reported path or permission problem before retrying. Failed insertions preserve the previous accepted cache. If saving fails after browser delivery, the page may already have changed; reloading restores the last accepted interface. Use `clear` only when you intend to discard the saved definition.
 
 ## Markup, RAT, and interactivity
 
@@ -219,8 +222,8 @@ The entry also exports Symbiote's `executeWebMCPTool()`, `getActiveWebMCPTools()
 
 ## Session storage
 
-Session data and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Set the same absolute `AGUI_STATE_DIR` for all commands to use another storage location. Session IDs remain case-sensitive.
+Worker metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Cached HTML lives under `~/.symbiote-agui/sessions/.cache/<HEX_SESSION_ID>.html`, outside disposable worker directories. Set the same absolute `AGUI_STATE_DIR` for all commands and MCP to use another storage root; its cache is stored in `.cache/`. Session IDs remain case-sensitive.
 
-A running session retains its latest markup in memory. Reloading or reopening its URL in an authorized browser restores that interface with its initial state. Stopping the session discards the markup and events; starting the same ID creates an empty session and authorizes the browser for that new session.
+`stop` retains cached HTML and discards live state and events. Starting the same ID rebuilds styles, restores the saved HTML and inline modules, and authorizes the browser for the new session. The original source file is not needed. This restores the interface definition with its initial state; user progress, timers, closures, and state updates are not persisted. `clear` removes the saved definition.
 
 For a persistent `SESSION_UNREACHABLE` error, inspect the session's `worker.log` and report the failure. Keep session URLs and tokens private.

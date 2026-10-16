@@ -28,7 +28,9 @@ Session commands return one JSON object on stdout. Check `ok`; errors include `e
 
 A running session is `waiting` without pages and `ready` with connected pages; results include `url` and `clients`. `start` returns as soon as the worker is listening. Insertion without pages returns `delivery: "queued"`; connected pages acknowledge application with `delivery: "applied"`. Queued success cannot verify browser-specific rendering or module execution.
 
-Keep the session available while the user interacts. Stop it when the user is finished or requests cleanup. `stop` is idempotent, clears generated content and WebMCP tools, and ends the session without closing browser tabs. Open pages display `Session ended.`
+Keep the session available while the user interacts. Stop it when the user is finished or requests cleanup. `stop` is idempotent, clears live content and tools, and ends the session without closing browser tabs. Open pages display `Session ended.` The saved interface remains available for restart.
+
+`start` restores the last accepted HTML and inline modules by session ID and rebuilds local styles, even after the original file is deleted. Check `restored` in the start result. Reuse the saved definition instead of generating and inserting the same interface again. Live state starts from that definition; user progress, timers, closures, and `update` commands are not persisted. Use `npx symbiote-agui clear demo` when the user intends to discard the saved interface. It clears live content/tools too, keeps a running session available, and also works when stopped.
 
 ## Markup and handlers
 
@@ -111,7 +113,7 @@ Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete
 
 ## Reconnection and recovery
 
-Pages reconnect automatically and restore the latest accepted markup. Reload or reconnect resets live state to the markup's initial values and reruns its marked modules; state commands are not replayed. Multiple tabs receive the same insertions and state commands. Local interactions are independent until the agent sends a shared update. Stopping discards retained markup and events.
+Pages reconnect automatically and restore the latest accepted markup. Reload or reconnect resets live state to the markup's initial values and reruns its marked modules; state commands are not replayed. Multiple tabs receive the same insertions and state commands. Local interactions are independent until the agent sends a shared update. Stopping discards live state and events while retaining the cached interface. An empty insertion saves a blank definition; `clear` removes it.
 
 - `SESSION_EXISTS`: check `status`; reuse a session belonging to this task or choose another ID. Do not stop an unrelated session to resolve a name collision.
 - `SESSION_STOPPED`: start the intended session before inserting.
@@ -121,6 +123,8 @@ Pages reconnect automatically and restore the latest accepted markup. Reload or 
 - `INVALID_INPUT` or `INPUT_TOO_LARGE`: correct arguments, encoding, JSON, or input size before retrying.
 - `INSERT_FAILED`: fix the reported JSON, template, stylesheet, or module error. Validation and stylesheet failures preserve prior content. Read `agui:error` events for failures while restoring queued markup. Modules may already have run or changed content; reload the session URL to restore the last accepted markup when needed.
 - `UPDATE_FAILED`: check the selector and component fields. Commands and multi-tab delivery are not transactions; inspect affected pages before retrying after partial failure or timeout.
+- `CACHE_ERROR`: resolve the reported storage problem. Failed insertions preserve the previous accepted cache, but browser delivery may already have changed a page. Reload to restore the last accepted interface. Startup cache failures retain the saved definition; discard it with `clear` only when intended.
+- `CLEAR_FAILED`: clearing could not finish on every page. Check the reported error before retrying; the saved definition is retained unless clearing succeeds.
 - `START_FAILED`, `START_TIMEOUT`, or persistent `SESSION_UNREACHABLE`: inspect the message and private `worker.log`; report a persistent blocker rather than repeatedly retrying or killing a stored PID.
 
-Metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Use the same absolute `AGUI_STATE_DIR` for all commands when overriding storage. Keep authorization links and tokens private.
+Metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Saved HTML lives in the separate `.cache/<HEX_SESSION_ID>.html` under the session storage root. Use the same absolute `AGUI_STATE_DIR` for CLI and MCP when overriding storage. Keep authorization links and tokens private.

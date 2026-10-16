@@ -7,6 +7,7 @@ import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { HELP } from './commands.js';
 import { parseCommand } from './parse.js';
+import { clearSession } from '../sessions/clear.js';
 
 /**
  * @param {string[]} args
@@ -42,6 +43,7 @@ export async function run(args) {
       start: () => startSession(request.sessionId),
       status: () => statusSession(request.sessionId, request.authorize),
       stop: () => stopSession(request.sessionId),
+      clear: () => clearSession(request.sessionId),
       insert: () => insertMarkup(request.sessionId, request.file),
       update: () => updateState(request.sessionId, request.file),
       events: () => readEvents(request.sessionId),

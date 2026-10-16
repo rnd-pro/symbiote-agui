@@ -14,6 +14,7 @@ import { createPageAccess } from '../server/page-access.js';
 import { handleToolRequest } from '../tools/service.js';
 import { TOOL_OPERATION_TIMEOUT_MS } from '../transport/constants.js';
 import { withTimeout } from '../shared/timeout.js';
+import { readCachedMarkup, prepareCachedMarkup, clearCachedMarkup } from './cache.js';
 
 export class SessionRuntime {
   /** @type {import('node:http').Server | undefined} */
@@ -28,6 +29,7 @@ export class SessionRuntime {
   events = new SessionEvents();
   revision = 0;
   closing = false;
+  restored = false;
 
   /** @param {import('../../types/session.js').SessionRecord} record */
   constructor(record) {
@@ -36,13 +38,18 @@ export class SessionRuntime {
 
   /** @param {AbortSignal} signal */
   async start(signal) {
+    let cached = await readCachedMarkup(this.record.sessionId);
+    let html = cached ?? '<h1>AGUI</h1><p>Waiting for generated content.</p>';
+    let { classes } = analyzeMarkup(html);
     let access = createPageAccess(this.record);
     let { server, url, styles } = await startPageServer(access);
     this.server = server;
     this.styles = styles;
+    publishStyles(styles.build(classes));
+    this.restored = cached !== undefined;
     this.record.url = url;
     this.latest = {
-      html: '<h1>AGUI</h1><p>Waiting for generated content.</p>',
+      html,
       revision: 0,
       stylesheetUrl: new URL(STYLESHEET_PATH, url).href,
     };
@@ -80,14 +87,30 @@ export class SessionRuntime {
 
   /** @param {string} html */
   insert(html) {
+    return this.replaceMarkup(html, true);
+  }
+
+  clear() {
+    return this.replaceMarkup('', false);
+  }
+
+  /**
+   * @param {string} html
+   * @param {boolean} persist
+   */
+  replaceMarkup(html, persist) {
     return this.enqueue(async () => {
       if (this.closing || !this.styles || !this.pages || !this.latest) {
         throw new CommandError('The session is stopped.', ERROR_CODE.SESSION_STOPPED, EXIT_CODE.RUNTIME_ERROR);
       }
       let previous = getStyles();
+      /** @type {import('../../types/session.js').PreparedCache | undefined} */
+      let cache;
       try {
         let { classes } = analyzeMarkup(html);
-        publishStyles(this.styles.build(classes));
+        let stylesheet = this.styles.build(classes);
+        if (persist) { cache = await prepareCachedMarkup(this.record.sessionId, html); }
+        publishStyles(stylesheet);
         this.revision += 1;
         let update = {
           html,
@@ -95,11 +118,17 @@ export class SessionRuntime {
           stylesheetUrl: new URL(`${STYLESHEET_PATH}?revision=${this.revision}`, this.record.url).href,
         };
         let applied = await this.pages.broadcast({ type: 'render', ...update });
+        if (cache) { await cache.commit(); }
+        else { await clearCachedMarkup(this.record.sessionId); }
         this.latest = update;
-        return { ...this.status(), delivery: applied ? 'applied' : 'queued' };
+        return { ...this.status(), delivery: applied ? 'applied' : 'queued', ...(!persist ? { cleared: true } : {}) };
       } catch (error) {
         publishStyles(previous);
-        throw new CommandError(`Could not insert markup: ${errorMessage(error)}`, ERROR_CODE.INSERT_FAILED, EXIT_CODE.RUNTIME_ERROR);
+        if (error instanceof CommandError && error.code === ERROR_CODE.CACHE_ERROR) { throw error; }
+        let operation = persist ? 'insert markup' : 'clear the interface';
+        throw new CommandError(`Could not ${operation}: ${errorMessage(error)}`, persist ? ERROR_CODE.INSERT_FAILED : ERROR_CODE.CLEAR_FAILED, EXIT_CODE.RUNTIME_ERROR);
+      } finally {
+        await cache?.discard();
       }
     });
   }

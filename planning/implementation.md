@@ -10,22 +10,14 @@ Goal: Make AGUI MCP over the existing authenticated WebSocket the primary path f
 - Chrome MCP is configured in Codex with `--autoConnect` and `--categoryExperimentalWebmcp`; its tool catalog is verified and setup instructions are documented. The actual browser connection remains unverified, as noted under optional work below.
 - Step 1: Symbiote's published public invocation API is integrated through `listPageTools()` and `executePageTool()`. The adapter forwards discovery metadata, arguments, results, and errors. Browser checks cover native WebMCP disabled and enabled, visibility, async results, failures, replacement, and stop. The completed external prerequisite is described in the [standalone specification](./symbiote-tool-invocation.md).
 - Step 2: `npx symbiote-agui mcp` serves `list_pages`, `list_tools`, and `call_tool` over standard MCP stdio. The authenticated worker and WebSocket route requests to one page, validate arguments, reject stale targets/catalogs, and bound requests without automatic retries. README and SKILL document setup and tool use. Real MCP client tests cover ordinary browsers without native WebMCP, two tabs, idempotent desk completion, results/events, errors, replacement, and reconnection.
+- Step 3: Accepted HTML and inline modules are saved atomically by case-sensitive session ID outside worker directories. `start` restores the definition and rebuilds styles; `stop` retains it; `clear` removes saved and live content. Failed insertions preserve the accepted cache, and storage errors are explicit. README and SKILL describe restoration, clearing, and the initial-state boundary. Node and browser checks cover cache isolation, failed publication, source-file deletion, restored MCP tools, and clearing.
 
 ## Remaining implementation
 
 The numbered steps below contain only pending work. Each requires explicit approval before implementation.
 
-### 3. Cache interfaces by session ID
-
-- Persist the last accepted HTML fragment, including inline modules, atomically in a durable cache outside the disposable worker instance directory.
-- `start <SESSION_ID>` restores cached markup and rebuilds its styles automatically. It must not depend on the original input file or ask the agent to generate the interface again.
-- `stop` retains the cache while removing live worker metadata and credentials. Add an explicit `clear <SESSION_ID>` command to clear generated content and its cached definition.
-- Keep case-sensitive session IDs and `AGUI_STATE_DIR` isolation. Failed insertions must preserve the last accepted cache; report cache errors instead of silently replacing saved content.
-- This cache restores the interface definition. Live application state starts from that definition; persisting timers, closures, or user progress is a separate feature.
-
 ### 4. Document the primary MCP workflow
 
-- Extend the root README and bundled SKILL in place with cache restoration and explicit clearing after step 3 is implemented.
 - Review the complete short workflow: start or restore a session, select its connected page once, list its tools, execute the requested action, and use its result as confirmation.
 - Verify that waiting for user input uses CLI events without repeated status checks, DOM inspections, screenshots, or unrelated commands when tool results answer the task.
 - Keep public instructions limited to current behavior, with Chrome MCP optional and specific setup errors reported directly. Do not add unrelated browser-control fallbacks.

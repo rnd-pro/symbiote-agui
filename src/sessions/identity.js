@@ -7,3 +7,9 @@ export function assertSessionId(sessionId) {
     throw new CommandError('SESSION_ID must be 1-64 letters, digits, underscores, or hyphens and start with a letter or digit.');
   }
 }
+
+/** @param {string} sessionId */
+export function sessionKey(sessionId) {
+  assertSessionId(sessionId);
+  return Buffer.from(sessionId).toString('hex');
+}

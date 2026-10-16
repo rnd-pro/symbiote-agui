@@ -12,6 +12,8 @@ export interface SessionStatus {
   delivery?: string;
   opened?: boolean;
   warning?: string;
+  restored?: boolean;
+  cleared?: boolean;
   events?: import('./transport.js').SessionEvent[];
   dropped?: number;
   toolResponse?: import('./tools.js').ToolResponse;
@@ -47,6 +49,12 @@ export interface ControlActions {
   update?(input: unknown): Promise<SessionStatus>;
   events?(): SessionStatus;
   tools?(input: unknown): Promise<SessionStatus>;
+  clear?(): Promise<SessionStatus>;
+}
+
+export interface PreparedCache {
+  commit(): Promise<void>;
+  discard(): Promise<void>;
 }
 
 export interface PendingPageRequest {

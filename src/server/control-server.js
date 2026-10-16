@@ -24,7 +24,7 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
 
     let action = `${request.method} ${request.url}`;
 
-    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update', 'POST /tools'].includes(action)) {
+    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update', 'POST /tools', 'POST /clear'].includes(action)) {
       response.writeHead(404).end();
       return;
     }
@@ -49,6 +49,10 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
           throw new CommandError('Markup delivery is unavailable in this worker.', ERROR_CODE.INSERT_FAILED, EXIT_CODE.RUNTIME_ERROR);
         }
         result = await actions.insert(await readUtf8Markup(request));
+      }
+      if (action === 'POST /clear') {
+        if (!actions.clear) { throw new CommandError('Clearing is unavailable in this worker.'); }
+        result = await actions.clear();
       }
       if (action === 'POST /update' || action === 'POST /tools') {
         let handler = action === 'POST /tools' ? actions.tools : actions.update;

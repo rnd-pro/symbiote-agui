@@ -25,6 +25,33 @@ Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the 
 
 `start` opens the session in the OS default browser. Use `start demo --no-open` to obtain the URL without opening a tab. If opening fails, the server remains available and the result includes `opened: false` and a warning; open the returned URL manually.
 
+### Connect Chrome DevTools MCP
+
+To let an agent invoke the page's WebMCP tools, connect Chrome DevTools MCP to the same Chrome profile that contains the session page.
+
+1. Use Chrome with WebMCP enabled, following the [Chrome WebMCP setup](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging).
+2. Open `chrome://inspect/#remote-debugging` in Chrome and enable remote debugging.
+3. Run `npx chrome-devtools-mcp --help` once to install the MCP runner; accept npm's installation prompt if shown.
+4. Add the MCP server to your agent harness with command `npx` and arguments `chrome-devtools-mcp`, `--autoConnect`, and `--categoryExperimentalWebmcp`.
+5. Reconnect or restart the harness to load its MCP configuration. Approve Chrome's connection prompt when the agent first accesses the browser.
+
+For Codex, add this server to your MCP settings in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.chrome-devtools]
+command = "npx"
+args = ["chrome-devtools-mcp", "--autoConnect", "--categoryExperimentalWebmcp"]
+enabled_tools = ["list_pages", "list_webmcp_tools", "execute_webmcp_tool"]
+startup_timeout_sec = 60
+tool_timeout_sec = 60
+```
+
+The agent needs `list_pages` to select the session URL, `list_webmcp_tools` to discover actions, and `execute_webmcp_tool` to invoke them. Confirm these tools are available in the agent's tool list. Keep the MCP connection for subsequent actions. Apple Events access is not required.
+
+On macOS, a missing `DevToolsActivePort` error can mean the system has blocked access to Chrome's data. In System Settings, open Privacy & Security > Files & Folders and allow Google Chrome access for the app running the MCP server, such as Codex. Retry the connection after granting that permission. See the [Chrome MCP access issue](https://github.com/ChromeDevTools/chrome-devtools-mcp/issues/3089).
+
+See the [Chrome connection instructions](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance) and [Codex MCP settings](https://developers.openai.com/codex/mcp) for your harness's connection controls.
+
 ## Sessions and commands
 
 ### Commands and results

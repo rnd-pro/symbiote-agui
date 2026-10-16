@@ -87,7 +87,13 @@ For reusable markup, include `<template id="card-template">...</template>` and a
 
 AGUI imports Symbiote's native WebMCP extension and enables `Symbiote.mcpToolMode`. Event bindings automatically expose tools, such as `increment_in_agui-component` for the counter above. Native discovery and invocation require browser support; the regular CLI and user interface work without it.
 
-For agent-driven tool invocation, connect a WebMCP consumer to the agent. With Chrome DevTools MCP, enable its WebMCP category and follow the [existing-browser connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance). Match the CLI's session URL to the Chrome MCP page, then use `list_webmcp_tools` and `execute_webmcp_tool`. Use the action result as confirmation and keep the selected page for subsequent calls. The CLI handles session lifecycle, markup, state updates, and events.
+For agent-driven tool invocation, configure Chrome DevTools MCP in the harness with `--autoConnect` and `--categoryExperimentalWebmcp`. Chrome must have WebMCP and remote debugging enabled; approve its connection prompt. Follow the [existing-browser connection setup](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance).
+
+The harness must expose `list_pages`, `list_webmcp_tools`, and `execute_webmcp_tool` to the agent. After adding the server, reconnect or restart the harness if those tools are absent. Starting the MCP server through a shell does not attach its tools to the conversation. If the connection is unavailable, report the missing prerequisite without attempting Apple Events or unrelated browser-control scripts.
+
+On macOS, if remote debugging is enabled but Chrome MCP reports a missing `DevToolsActivePort`, the host app may lack Google Chrome access under System Settings > Privacy & Security > Files & Folders. Report that permission requirement; do not assume Chrome is stopped or repeatedly try different endpoints.
+
+Use `list_pages` to match the CLI's session URL to the Chrome MCP page, then use `list_webmcp_tools` and `execute_webmcp_tool`. Use the action result as confirmation and keep the selected page and MCP connection for subsequent calls. The CLI handles session lifecycle, markup, state updates, and events.
 
 Import `ToolDescriptor` from the fully resolved `/client/index.js` URL for explicit tools. Define descriptors in a subclass's `init$` before first render, with `description`, `inputSchema`, and `execute`. Use `componentDescription` for extra component context. Conditional tools need both `when` and `deps` listing every state key read by the condition. Immediately adding and syncing descriptors after mount can abort pending native registrations.
 

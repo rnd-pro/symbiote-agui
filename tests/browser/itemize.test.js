@@ -34,7 +34,7 @@ for (let native of [false, true]) {
     /** @type {string[]} */
     let errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
-    await page.goto(session.authorizationUrl);
+    await page.goto(session.url);
     await insertStdin(sessionId, example[1]);
     await page.waitForSelector('task-row input');
     assert.equal(await page.evaluate(() => typeof Reflect.get(document, 'modelContext')?.registerTool === 'function'), native);

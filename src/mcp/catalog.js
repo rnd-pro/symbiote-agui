@@ -3,11 +3,11 @@ let pageId = { type: 'string', minLength: 1, description: 'Connection ID returne
 
 export let MCP_TOOLS = Object.freeze({
   list_pages: {
-    description: 'List connected pages for an AGUI session. Use their page IDs to select one tab.',
+    description: 'List connected pages for an AGUI session, including user/viewer roles when shared. Use page IDs to select an interactive tab.',
     inputSchema: { type: 'object', properties: { sessionId }, required: ['sessionId'], additionalProperties: false },
   },
   list_tools: {
-    description: 'Discover current Symbiote tools and input schemas on one AGUI page. If pageId is omitted, exactly one page must be connected. Reuse the returned pageId and discoveryId for calls.',
+    description: 'Discover current Symbiote tools and input schemas on one AGUI page. If pageId is omitted, exactly one interactive page must be connected; shared-session viewers are ignored. Reuse the returned pageId and discoveryId for calls.',
     inputSchema: { type: 'object', properties: { sessionId, pageId }, required: ['sessionId'], additionalProperties: false },
   },
   call_tool: {

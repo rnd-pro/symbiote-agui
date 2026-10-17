@@ -1,6 +1,6 @@
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
-import { PAGE_REQUEST_TIMEOUT_MS } from '../transport/constants.js';
+import { PAGE_REQUEST_TIMEOUT_MS, PAGE_ROLE } from '../transport/constants.js';
 import { validateToolRequest } from './request.js';
 import { validateToolInput } from './validation.js';
 
@@ -16,17 +16,21 @@ export async function handleToolRequest(connection, url, input, deadline) {
   if (request.action === 'pages') {
     return {
       action: 'pages',
-      pages: [...connection.pages].map(([pageId, page]) => ({ pageId, url: page.url || url, title: page.title, ready: page.ready })),
+      pages: [...connection.pages].map(([pageId, page]) => ({ pageId, url: page.url || url, title: page.title, ready: page.ready, ...(page.role ? { role: page.role } : {}) })),
     };
   }
   let pageId = request.pageId;
   if (!pageId) {
-    if (connection.pages.size > 1) {
+    let candidates = [...connection.pages].filter(([, page]) => page.role !== PAGE_ROLE.VIEWER);
+    if (candidates.length > 1) {
       throw new CommandError('Several pages are connected. List pages and choose pageId (CLI: pages, then tools --page PAGE_ID).', ERROR_CODE.PAGE_AMBIGUOUS, EXIT_CODE.RUNTIME_ERROR);
     }
-    pageId = connection.pages.keys().next().value;
+    pageId = candidates[0]?.[0];
   }
   let page = pageId ? connection.pages.get(pageId) : undefined;
+  if (page?.role === PAGE_ROLE.VIEWER) {
+    throw new CommandError('The selected page is a read-only viewer. Select the user page to operate tools.', ERROR_CODE.PAGE_UNAVAILABLE, EXIT_CODE.RUNTIME_ERROR);
+  }
   if (!pageId || !page || !page.ready) {
     throw new CommandError(page?.error || 'The selected page is disconnected or not ready. Open the session URL, then list pages again.', ERROR_CODE.PAGE_UNAVAILABLE, EXIT_CODE.RUNTIME_ERROR);
   }

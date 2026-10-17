@@ -1,7 +1,4 @@
 export let SOCKET_PATH = 'socket';
-export let AUTHORIZATION_PATH = 'authorize';
-export let PAGE_COOKIE_PREFIX = 'agui-';
-export let PAGE_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
 export let PAGE_REQUEST_TIMEOUT_MS = 10_000;
 export let TOOL_OPERATION_TIMEOUT_MS = 25_000;
 export let TOOL_DISCOVERY_TIMEOUT_MS = 2_000;
@@ -14,3 +11,6 @@ export let RECONNECT_MIN_MS = 500;
 export let RECONNECT_MAX_MS = 5_000;
 export let CONNECTION_STATUS_ID = 'agui-connection';
 export let MODULE_SELECTOR = 'script[type="module"][data-agui]';
+export let MIRROR_INTERVAL_MS = 100;
+export let MIRROR_REFRESH_MS = 1_000;
+export let PAGE_ROLE = Object.freeze({ USER: 'user', VIEWER: 'viewer' });

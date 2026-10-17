@@ -7,9 +7,9 @@ export interface SessionStatus {
   sessionId: string;
   state: SessionState;
   url?: string;
-  authorizationUrl?: string;
   publicUrl?: string;
-  publicAuthorizationUrl?: string;
+  publicUserUrl?: string;
+  publicViewerUrl?: string;
   tunnel?: TunnelStatus;
   clients?: number;
   delivery?: string;
@@ -42,7 +42,6 @@ export interface SessionRecord {
   controlToken: string;
   pid: number;
   launcherPid: number;
-  pageToken: string;
   controlUrl?: string;
   url?: string;
 }
@@ -85,8 +84,6 @@ export interface PendingPageRequest {
 export interface PageAccess {
   path: string;
   socketPath: string;
-  authorizationPath: string;
-  cookieName: string;
-  token: string;
   publicOrigin?: string;
+  sharing?: boolean;
 }

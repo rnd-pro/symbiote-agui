@@ -76,7 +76,7 @@ for (let route of ['MCP', 'CLI']) {
     await cli('insert', sessionId, '--file', file);
     await unlink(file);
     let first = await browser.newPage();
-    await first.goto(session.authorizationUrl);
+    await first.goto(session.url);
     await waitForSession(sessionId, 'ready');
     let discovery = await invoke('list_tools', { sessionId });
     assert.equal(discovery.isError, false);
@@ -133,7 +133,7 @@ for (let route of ['MCP', 'CLI']) {
     let restored = await cli('start', sessionId, '--no-open');
     assert.equal(restored.restored, true);
     let restoredPage = await browser.newPage();
-    await restoredPage.goto(restored.authorizationUrl);
+    await restoredPage.goto(restored.url);
     await restoredPage.waitForSelector('task-desk output');
     assert.equal(await restoredPage.$eval('output', (output) => output.textContent), '0 / 3');
     assert.equal(await restoredPage.$$eval('input', (inputs) => inputs.some((input) => input.checked)), false);
@@ -144,7 +144,7 @@ for (let route of ['MCP', 'CLI']) {
     await assert.rejects(insertStdin(sessionId, '<script type="module" data-agui>throw new Error("Rejected module");</script>'), (error) => hasCliError(error, 'INSERT_FAILED'));
     await cli('stop', sessionId);
     restored = await cli('start', sessionId, '--no-open');
-    await restoredPage.goto(restored.authorizationUrl);
+    await restoredPage.goto(restored.url);
     await restoredPage.waitForSelector('task-desk output');
     assert.equal(await restoredPage.$eval('output', (output) => output.textContent), '0 / 3');
     assert.equal((await cli('clear', sessionId)).cleared, true);

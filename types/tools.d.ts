@@ -5,6 +5,7 @@ export interface ConnectedPage {
   url: string;
   title: string;
   ready: boolean;
+  role?: import('./transport.js').PageRole;
 }
 
 export type ToolRequest =
@@ -30,6 +31,8 @@ export interface PagePeer {
   title: string;
   ready: boolean;
   error?: string;
+  role?: import('./transport.js').PageRole;
+  viewerRequested?: boolean;
 }
 
 export type McpToolArguments = {

@@ -1,8 +1,8 @@
 # Browser interfaces
 
-`npx symbiote-agui start <SESSION_ID>` opens and authorizes the page automatically. With `--no-open`, open the returned private `authorizationUrl`; its token is removed from the address bar after loading. The readable `url` contains the session ID and works for reloads and new tabs in that authorized browser. To authorize another browser, use `npx symbiote-agui status <SESSION_ID> --authorize`.
+`npx symbiote-agui start <SESSION_ID>` opens the page automatically. With `--no-open`, open the returned `url` directly. The browser connects by WebSocket without an authorization request, cookie, or token link.
 
-The page receives markup and state updates while the session runs. Reloading or reconnecting restores the latest accepted markup with its initial component state.
+In shared sessions, the first eligible connection is the user and other pages are viewers. After the user disconnects, the next eligible connection or reconnection can take the role. Explicit viewer links remain read-only. Viewer pages display a sandboxed, inert snapshot of the user's light DOM and form values. They run no generated modules and expose no tools. Snapshots are coalesced, bounded to 1 MiB, and retain each viewer's scroll position. Local-only pages receive markup and state updates independently while the session runs. Local-only tabs and shared user pages restore the latest accepted markup with its initial component state on reload or reconnect; viewers reconnect to the current mirrored view.
 
 Use `<agui-component>` for inline RAT markup and `use-template` for reusable DOM templates. Unknown custom tags using that attribute receive generic component classes. Register custom subclasses through Symbiote's `reg()` so WebMCP receives their tag identity. Definitions persist for the page lifetime; each insertion supplies fresh instances and templates.
 

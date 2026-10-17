@@ -17,7 +17,7 @@ npx symbiote-agui status demo
 npx symbiote-agui stop demo
 ```
 
-File paths resolve from your current directory; session data lives under `~/.symbiote-agui`. Starting the same ID restores its saved interface. Use `npx symbiote-agui clear demo` to forget it. Use `--no-open` on `start` to open the returned `authorizationUrl` yourself.
+File paths resolve from your current directory; session data lives under `~/.symbiote-agui`. Starting the same ID restores its saved interface. Use `npx symbiote-agui clear demo` to forget it. Use `--no-open` on `start` to open the returned `url` yourself.
 
 ## Internet sharing
 
@@ -33,21 +33,30 @@ For an already running session, use:
 npx symbiote-agui share demo
 ```
 
-`share` returns `publicUrl`, such as `https://random-name.trycloudflare.com/demo/`, and a private `publicAuthorizationUrl`. Open the authorization link on the intended device; it establishes a session cookie and removes the token from the address bar. Keep authorization links private. The readable public URL alone does not authorize a browser. `start --tunnel` opens the authorized public page automatically; `--no-open` returns the links instead. `status demo --authorize` returns current links for the local and public URLs.
+`share` returns a shareable `publicUrl`, such as `https://random-name.trycloudflare.com/demo/`. Anyone with this link can open the shared interface directly. `start --tunnel` opens it automatically; `--no-open` returns the links instead.
+
+- `publicUrl` and `publicUserUrl` (`?mode=user`): the first eligible visitor becomes the interactive user. Later visitors become viewers, even if they request user mode.
+- `publicViewerUrl` (`?mode=viewer`): always read-only, even before the user arrives. Publish this link for an audience.
+
+The first eligible WebSocket connection gets the user role. While it is connected, later connections are viewers. Once it disconnects, the next eligible connection or reconnection gets the role, regardless of browser. Existing viewer connections stay read-only until they reconnect; explicit viewer links always remain read-only. When sharing starts with local tabs already connected, the first connected tab becomes the user. Local-only sessions retain independent interactive tabs.
+
+Viewers receive the user's rendered content and form values, including changes made through CLI tools and state updates. They do not execute generated modules or expose tools; the server rejects viewer actions, events, and state submissions. `pages` reports each connection's `role`; `tools` selects the user automatically. Late viewers receive the current view. If the user disconnects, viewers retain the last view. An insertion without a user waits for the user to render it; clearing removes the old view immediately.
+
+Mirroring covers light DOM and ordinary form values, with a 1 MiB snapshot limit. Password values are omitted. Canvas, video frames, embedded pages, and shadow-root contents are not streamed. Viewers can scroll independently. These links publish the interface to anyone who has them.
 
 AGUI uses `cloudflared` from PATH or downloads a checksum-verified official binary once into `<state-root>/.bin/cloudflared/`. Automatic downloads support macOS/Linux on x64 or arm64 and Windows on x64. Set `AGUI_CLOUDFLARED_PATH` to an absolute executable path before starting a worker to use a specific installation. No Cloudflare account, domain, or separate terminal command is required. Initial provisioning and tunnel connection can take up to 90 seconds in addition to local session startup. [Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
 
-Only the page server is tunneled; the CLI control server stays local. Remote pages use the same `tools`, `call`, `update`, and `events` commands. `pages` reports each connection's local or public URL, so choose a page ID when several devices are connected. HTTPS authorization uses Secure, HttpOnly, SameSite cookies and checks the configured public origin.
+Only the page server is tunneled; the CLI control server stays local. Use the same `tools`, `call`, `update`, and `events` commands to operate the user interface. Pages connect directly by WebSocket, with session-path and origin checks. The local CLI control server still requires its own authentication.
 
-Repeated `share` calls reuse a running tunnel. `stop` and `stop-all` close owned tunnels; `clear` and `clear-all` clear interfaces while leaving workers and their tunnels available. Restarting a session restores its markup but requires `--tunnel` or `share` to create a new public hostname and authorize browsers again. Quick Tunnels are temporary, have no uptime guarantee, and require the host machine to remain online. [Cloudflare limitations](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/#limitations).
+Repeated `share` calls reuse a running tunnel. `stop` and `stop-all` close owned tunnels; `clear` and `clear-all` clear interfaces while leaving workers and their tunnels available. Restarting a session restores its markup but requires `--tunnel` or `share` to create a new public hostname. Quick Tunnels are temporary, have no uptime guarantee, and require the host machine to remain online. [Cloudflare limitations](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/#limitations).
 
-If tunnel creation fails, `TUNNEL_FAILED` is returned and the local session remains available. Inspect `status` for `tunnel.state` and any error, then correct the reported problem and use `share` again. A connector that exits later is reported as failed, and its public origin is revoked. Existing workers without sharing support must be stopped and restarted.
+If tunnel creation fails, `TUNNEL_FAILED` is returned and the local session remains available. Inspect `status` for `tunnel.state` and any error, then correct the reported problem and use `share` again. A connector that exits later is reported as failed, and its public origin is revoked.
 
 ## Agent setup
 
 Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the agent's harness, or copy its folder from the installed package into the harness's skill directory. The agent needs access to a shell to run the CLI. The agent prepares HTML and JSON input files and passes them with `--file`, using simple `npx symbiote-agui` commands. This lets hosts reuse an approved command prefix; shell redirection, pipelines, and wrappers can require separate approval. Host approval policies remain in effect.
 
-`start` opens and authorizes the session in the OS default browser. With `start demo --no-open`, open the returned `authorizationUrl` manually. If opening fails, the server remains available and the result includes `opened: false`, a warning, and `authorizationUrl`.
+`start` opens the session in the OS default browser. With `start demo --no-open`, open the returned `url` manually. If opening fails, the server remains available and the result includes `opened: false`, a warning, and its readable URLs.
 
 ### Operate page tools with npx
 
@@ -58,7 +67,7 @@ npx symbiote-agui tools demo --page <PAGE_ID>
 npx symbiote-agui call demo --file ./call.json
 ```
 
-`tools` selects the only connected page automatically. With several pages, choose a `pageId` from `pages` and pass `--page`. Discovery returns tool names, descriptions, input schemas, `pageId`, and `discoveryId`. The call JSON contains `{ "pageId": "...", "discoveryId": "...", "name": "...", "input": {} }`; use the returned IDs, exact tool name, and schema-compatible input. `call` also accepts JSON on stdin, limited to 1 MiB. See the [WebMCP example](#webmcp) for a complete call.
+`tools` selects the only interactive page automatically, ignoring viewers. With several interactive local-only pages, choose a `pageId` from `pages` and pass `--page`. Discovery returns tool names, descriptions, input schemas, `pageId`, and `discoveryId`. The call JSON contains `{ "pageId": "...", "discoveryId": "...", "name": "...", "input": {} }`; use the returned IDs, exact tool name, and schema-compatible input. `call` also accepts JSON on stdin, limited to 1 MiB. See the [WebMCP example](#webmcp) for a complete call.
 
 Calls target one page and use the same authenticated worker and WebSocket as content delivery. Native browser WebMCP, remote debugging, and a configured MCP server are optional. Reuse the IDs until the catalog changes; rediscover after replacement or visibility changes and select the current page after reload, reconnection, or restart. Discovery waits for queued rendering and bounded catalog stabilization; discover again after initialization if an expected async tool is still absent. Page requests have a 10-second timeout and worker tool operations a 25-second limit. A timeout, disconnection, or unserializable result can leave the outcome unknown; do not retry automatically. Browser results are limited to 1 MiB; `undefined` results become `null`.
 
@@ -122,8 +131,8 @@ See the [Chrome connection instructions](https://github.com/ChromeDevTools/chrom
 - `update` reads a JSON state command from file or stdin with the same size limit. It requires at least one connected page and waits for acknowledgements. It does not replace markup.
 - `events` returns and clears buffered UI events. The worker retains the most recent 100 events, each limited to 16 KiB; `dropped` reports overflow since the previous read. Events are temporary, not a durable log.
 - `status` returns `waiting` when the worker is running without connected pages, `ready` when pages are connected, and `stopped` when the worker is absent. Running results include `url` and `clients`.
-- `share` creates or reuses the session's public Quick Tunnel and returns its authorization link. `start --tunnel` starts a local session and then shares it. Shared status includes `publicUrl` while the tunnel is ready and a `tunnel` object with its state and any error.
-- `pages` lists connected pages, URLs, titles, and readiness. `tools` discovers one page, optionally selected with `--page`.
+- `share` creates or reuses the session's public Quick Tunnel and returns public user and viewer links. `start --tunnel` starts a local session and then shares it. Shared status includes `publicUrl` while the tunnel is ready and a `tunnel` object with its state and any error.
+- `pages` lists connected pages, URLs, titles, readiness, and shared-session roles. `tools` discovers one interactive page, optionally selected with `--page`; it ignores viewers.
 - `call` reads JSON `{ pageId, discoveryId, name, input }` from file or stdin and invokes one discovered tool. Invalid or stale requests are rejected; no automatic retries occur. Native tool errors return `ok: false`, `TOOL_FAILED`, and the original `result`, with exit code 1.
 - `mcp` runs the optional MCP server over stdio until its client disconnects. Session lifecycle remains available through the CLI commands above.
 - `stop` is idempotent. It clears live content and tools, notifies pages, closes connections and servers, and removes worker metadata and credentials. It retains the cached interface and leaves browser tabs open.
@@ -143,15 +152,9 @@ Session commands other than `mcp` write one JSON object to stdout. Success inclu
 
 The page address contains your named session ID, for example `http://127.0.0.1:PORT/demo/`. The ID stays the same when restarted; the port can change. It identifies the interface and is separate from the worker's numeric OS process ID.
 
-Browser authorization uses a private `authorizationUrl` containing a token fragment. Opening it removes the token from the address bar and establishes an HttpOnly cookie scoped to that session. Reloads, reconnections, and new tabs in the authorized browser use the readable `url`. Another browser or profile, or cleared cookies, requires authorization again:
+Open the readable session URL directly in any browser. Browser connections require no authorization request, cookie, or token link. WebSocket admission checks the session path and allowed origin. In shared sessions, the first eligible connection is the user; later connections are viewers until the user disconnects and the next eligible connection takes the slot. Explicit viewer links never claim it.
 
-```sh
-npx symbiote-agui status demo --authorize
-```
-
-Open its `authorizationUrl` in the intended browser. Keep this link private; knowing the readable session ID does not grant access to generated content.
-
-Pages reconnect automatically with a bounded retry delay. Reload, reconnect, or opening another tab restores the latest accepted markup and reruns its marked modules. Live component state resets to the values in that markup; `update` commands are not replayed. Restarting the same session ID restores its cached definition without the original input file.
+Pages reconnect automatically with a bounded retry delay. Local-only tabs and shared user pages restore the latest accepted markup and rerun its marked modules. Their live component state resets to the values in that markup; `update` commands are not replayed. Viewers instead reconnect to the current mirrored view. Restarting the same session ID restores its cached definition without the original input file.
 
 Validation and stylesheet loading happen before content replacement, preserving the current interface if either fails. Module code can have side effects; an execution failure can leave changed content. Delivery to several tabs and state updates are not transactions. After a failed or timed-out delivery, inspect the pages or reload the session URL before retrying. A queued insertion cannot verify browser-specific behavior until a page connects.
 
@@ -309,6 +312,6 @@ The entry also exports Symbiote's `executeWebMCPTool()`, `getActiveWebMCPTools()
 
 Worker metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Cached HTML lives under `~/.symbiote-agui/sessions/.cache/<HEX_SESSION_ID>.html`, outside disposable worker directories. Set the same absolute `AGUI_STATE_DIR` for all commands and MCP to use another storage root; its cache is stored in `.cache/`. Session IDs remain case-sensitive.
 
-`stop` retains cached HTML and discards live state and events. Starting the same ID rebuilds styles, restores the saved HTML and inline modules, and authorizes the browser for the new session. The original source file is not needed. This restores the interface definition with its initial state; user progress, timers, closures, and state updates are not persisted. `clear` removes the saved definition.
+`stop` retains cached HTML and discards live state and events. Starting the same ID rebuilds styles, restores the saved HTML and inline modules, and opens the browser for the new session. The original source file is not needed. This restores the interface definition with its initial state; user progress, timers, closures, and state updates are not persisted. `clear` removes the saved definition.
 
-Keep authorization URLs and tokens private.
+Share public links with the intended audience.

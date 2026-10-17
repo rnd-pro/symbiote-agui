@@ -16,8 +16,8 @@ export let COMMANDS = Object.freeze({
     options: [],
   },
   status: {
-    usage: 'status <SESSION_ID> [--authorize]',
-    options: ['authorize'],
+    usage: 'status <SESSION_ID>',
+    options: [],
   },
   share: {
     usage: 'share <SESSION_ID>',
@@ -67,10 +67,10 @@ export let HELP = [
   'pages lists connected tabs; tools discovers one tab (use --page with several tabs).',
   'call reads JSON { pageId, discoveryId, name, input } from file or stdin.',
   'call targets one page, validates tool input, and never retries automatically.',
-  'status --authorize returns a private link for authorizing another browser.',
+  'Open the returned URL directly; browser authorization is not required.',
   'stop retains cached markup; clear removes the saved interface and live content.',
   'stop-all stops recorded sessions; clear-all clears running and cached interfaces.',
   'Both use the current state directory and report per-session results.',
-  'start --tunnel or share creates a public Quick Tunnel and private authorization link.',
+  'start --tunnel or share creates a public Quick Tunnel with user and viewer links.',
   'cloudflared is used from PATH or downloaded and verified once; stop closes the tunnel.',
 ].join('\n');

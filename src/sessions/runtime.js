@@ -12,7 +12,7 @@ import { SESSION_STATE } from './constants.js';
 import { SessionEvents } from './events.js';
 import { createPageAccess } from '../server/page-access.js';
 import { handleToolRequest } from '../tools/service.js';
-import { TOOL_OPERATION_TIMEOUT_MS } from '../transport/constants.js';
+import { TOOL_OPERATION_TIMEOUT_MS, PAGE_ROLE } from '../transport/constants.js';
 import { withTimeout } from '../shared/timeout.js';
 import { readCachedMarkup, prepareCachedMarkup, clearCachedMarkup } from './cache.js';
 import { SessionTunnel } from '../tunnel/session-tunnel.js';
@@ -79,7 +79,11 @@ export class SessionRuntime {
       url: this.record.url,
       clients,
       ...(this.tunnel ? { tunnel: { ...this.tunnel.status } } : {}),
-      ...(this.tunnel?.origin ? { publicUrl: `${this.tunnel.origin}${this.access?.path}` } : {}),
+      ...(this.tunnel?.origin ? {
+        publicUrl: `${this.tunnel.origin}${this.access?.path}`,
+        publicUserUrl: `${this.tunnel.origin}${this.access?.path}?mode=user`,
+        publicViewerUrl: `${this.tunnel.origin}${this.access?.path}?mode=viewer`,
+      } : {}),
     };
   }
 
@@ -151,7 +155,7 @@ export class SessionRuntime {
       } catch (error) {
         throw new CommandError(errorMessage(error));
       }
-      if (this.closing || !this.pages?.clients.size) {
+      if (this.closing || !this.pages || ![...this.pages.pages.values()].some((page) => page.role !== PAGE_ROLE.VIEWER)) {
         throw new CommandError('Open the session URL before updating component state.', ERROR_CODE.PAGE_UNAVAILABLE, EXIT_CODE.RUNTIME_ERROR);
       }
       try {
@@ -182,6 +186,10 @@ export class SessionRuntime {
     try {
       await this.tunnel.start();
       if (this.closing) { throw new Error('The session ended while sharing.'); }
+      await this.enqueue(async () => {
+        access.sharing = true;
+        this.pages?.shared.enable(this.latest?.revision || 0);
+      });
       return this.status();
     } catch (error) {
       throw new CommandError(`Could not share session ${this.record.sessionId}: ${errorMessage(error)}`, ERROR_CODE.TUNNEL_FAILED, EXIT_CODE.RUNTIME_ERROR);

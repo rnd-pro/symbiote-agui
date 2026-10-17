@@ -37,22 +37,17 @@ test('sharing is idempotent, authorizes only configured origins, and stops its o
   });
   let session = await cli('start', sessionId, '--tunnel', '--no-open');
   assert.equal(session.publicUrl, 'https://agui-test.trycloudflare.com/shared/');
+  assert.equal(session.publicViewerUrl, `${session.publicUrl}?mode=viewer`);
+  assert.equal(session.publicUserUrl, `${session.publicUrl}?mode=user`);
   assert.equal(session.tunnel.state, 'ready');
-  let token = new URL(session.publicAuthorizationUrl).hash.slice(1);
   let origin = new URL(session.publicUrl).origin;
-  let endpoint = new URL('authorize', session.url);
-  let request = { method: 'POST', headers: { Origin: origin, Authorization: `Bearer ${token}` } };
-  let authorized = await fetch(endpoint, request);
-  assert.equal(authorized.status, 204);
-  let header = authorized.headers.get('set-cookie');
-  assert.match(header || '', /HttpOnly; SameSite=Strict; Secure$/);
-  let cookie = header?.split(';')[0] || '';
-  assert.equal((await fetch(endpoint, { ...request, headers: { ...request.headers, Origin: 'https://attacker.example', 'X-Forwarded-Host': new URL(origin).host } })).status, 403);
-  let socket = new WebSocket(new URL('socket', session.url).href.replace('http:', 'ws:'), { origin, headers: { Cookie: cookie } });
-  let rendered = once(socket, 'message');
+  let socket = new WebSocket(new URL('socket', session.url).href.replace('http:', 'ws:'), { origin });
+  let rendered = new Promise((resolve) => socket.on('message', (data) => {
+    let message = JSON.parse(data.toString());
+    if (message.type === 'render') { resolve(message); }
+  }));
   await once(socket, 'open');
-  let [data] = await rendered;
-  let message = JSON.parse(data.toString());
+  let message = await rendered;
   assert.equal(message.stylesheetUrl, '/styles.css.js');
   socket.send(JSON.stringify({ type: 'result', id: message.id }));
   assert.equal((await cli('pages', sessionId)).pages[0].url, session.publicUrl);
@@ -62,8 +57,8 @@ test('sharing is idempotent, authorizes only configured origins, and stops its o
   assert.equal((await fixture.pids()).length, 1);
   assert.equal(isProcessAlive(pid), true);
   let status = await cli('status', sessionId);
-  assert.equal(status.publicAuthorizationUrl, undefined);
-  assert.equal((await cli('status', sessionId, '--authorize')).publicAuthorizationUrl, session.publicAuthorizationUrl);
+  assert.equal(status.publicViewerUrl, session.publicViewerUrl);
+  assert.equal(new URL(status.publicUserUrl).hash, '');
   assert.ok((await readSession(sessionId))?.controlUrl?.startsWith('http://127.0.0.1:'));
   socket.close();
   await once(socket, 'close');
@@ -111,11 +106,8 @@ test('failed or exited tunnels leave the local session usable and can be recreat
   }
   assert.equal(status.publicUrl, undefined);
   assert.equal(status.tunnel.state, 'failed');
-  let denied = await fetch(new URL('authorize', status.url), {
-    method: 'POST',
-    headers: { Origin: new URL(shared.publicUrl).origin, Authorization: `Bearer ${new URL(shared.publicAuthorizationUrl).hash.slice(1)}` },
-  });
-  assert.equal(denied.status, 403);
+  let denied = new WebSocket(new URL('socket', status.url).href.replace('http:', 'ws:'), { origin: new URL(shared.publicUrl).origin });
+  await assert.rejects(once(denied, 'open'), /403/);
   assert.equal((await cli('share', 'retry')).tunnel.state, 'ready');
 });
 

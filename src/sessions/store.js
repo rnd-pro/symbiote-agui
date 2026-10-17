@@ -37,7 +37,6 @@ export async function reserveSession(sessionId) {
     controlToken: randomBytes(32).toString('hex'),
     pid: process.pid,
     launcherPid: process.pid,
-    pageToken: randomBytes(32).toString('hex'),
   };
 
   try {

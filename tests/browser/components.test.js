@@ -23,7 +23,7 @@ test('RAT templates, context providers, and handlers survive repeated insertions
   browser = await puppeteer.launch({ executablePath, headless: true, userDataDir: join(state.directory, 'browser'), timeout: 10_000, protocolTimeout: 10_000 });
   let started = await cli('start', 'components', '--no-open');
   let page = await browser.newPage();
-  await page.goto(started.authorizationUrl);
+  await page.goto(started.url);
   /** @type {string[]} */
   let errors = [];
   page.on('pageerror', (error) => errors.push(String(error)));

@@ -1,13 +1,12 @@
-import { CONNECTION_STATUS_ID, MAX_EVENT_BYTES, RECONNECT_MIN_MS, RECONNECT_MAX_MS, SOCKET_PATH, PAGE_TOKEN_PATTERN } from '../../transport/constants.js';
+import { CONNECTION_STATUS_ID, MAX_EVENT_BYTES, RECONNECT_MIN_MS, RECONNECT_MAX_MS, SOCKET_PATH, PAGE_ROLE } from '../../transport/constants.js';
 import { executePageCommand, sendPageResult } from './commands.js';
 import { setEventSender } from './events.js';
 import { disposeModules } from './modules.js';
 import { CONTENT_ROOT_ID } from '../../markup/constants.js';
 import { replaceContent } from './replace-content.js';
-import { createAuthorization } from './authorization.js';
+import { SharedView } from './shared-view.js';
 
 export function connectSession() {
-  let authorize = createAuthorization();
   let status = document.getElementById(CONNECTION_STATUS_ID);
   /** @type {WebSocket | undefined} */
   let socket;
@@ -18,9 +17,15 @@ export function connectSession() {
   let delay = RECONNECT_MIN_MS;
   let updates = Promise.resolve();
   let generation = 0;
+  let shared = new SharedView((message) => {
+    if (socket?.readyState !== WebSocket.OPEN || socket.bufferedAmount > MAX_EVENT_BYTES) { return false; }
+    socket.send(message);
+    return true;
+  }, (message) => showStatus(message));
 
   /** @param {string} message */
   function showStatus(message) {
+    message ||= shared.label();
     if (status) {
       status.textContent = message;
       status.hidden = !message;
@@ -28,33 +33,21 @@ export function connectSession() {
   }
 
   setEventSender((message) => {
-    if (socket?.readyState !== WebSocket.OPEN || socket.bufferedAmount > MAX_EVENT_BYTES) { return false; }
+    if (shared.role === PAGE_ROLE.VIEWER || socket?.readyState !== WebSocket.OPEN || socket.bufferedAmount > MAX_EVENT_BYTES) { return false; }
     socket.send(message);
     return true;
   });
 
-  async function connect() {
+  function connect() {
     if (ended || paused) { return; }
     let attempt = ++generation;
     showStatus('Connecting...');
-    try {
-      let authorized = await authorize();
-      if (ended || paused || attempt !== generation) { return; }
-      if (!authorized) {
-        let sessionId = location.pathname.split('/')[1];
-        showStatus(`Browser authorization required. Run npx symbiote-agui status ${sessionId} --authorize and open authorizationUrl.`);
-        return;
-      }
-    } catch {
-      if (ended || paused || attempt !== generation) { return; }
-      showStatus('Connection lost. Reconnecting...');
-      scheduleReconnect();
-      return;
-    }
     let url = new URL(SOCKET_PATH, location.href);
     url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
     url.hash = '';
     url.search = '';
+    let mode = new URL(location.href).searchParams.get('mode');
+    if (['user', 'viewer'].includes(mode || '')) { url.searchParams.set('mode', mode || ''); }
     let current = new WebSocket(url);
     socket = current;
     showStatus('Connecting...');
@@ -65,9 +58,20 @@ export function connectSession() {
     };
     current.onmessage = (event) => {
       updates = updates.then(async () => {
+        if (current !== socket || attempt !== generation) { return; }
         let message = /** @type {import('../../../types/transport.js').ServerMessage} */ (JSON.parse(event.data));
+        if (message.type === 'role') {
+          await shared.setRole(message);
+          showStatus('');
+          return;
+        }
+        if (message.type === 'snapshot') {
+          shared.display(message);
+          return;
+        }
         if (message.type === 'stop') {
           ended = true;
+          shared.disconnect();
           clearTimeout(timer);
           showStatus('Session ended.');
           try {
@@ -79,7 +83,11 @@ export function connectSession() {
           return;
         }
         try {
+          if (shared.role === PAGE_ROLE.VIEWER) { throw new Error('This page is a read-only viewer.'); }
+          if (message.type === 'render') { shared.rendered = true; }
           let result = await executePageCommand(message);
+          if (message.type === 'render') { shared.revision = message.revision; }
+          shared.publish();
           sendPageResult(current, message.id, result);
           showStatus('');
         } catch (error) {
@@ -90,6 +98,7 @@ export function connectSession() {
       }).catch((error) => showStatus(`Connection error: ${error.message}`));
     };
     current.onclose = (event) => {
+      if (current === socket) { shared.disconnect(); }
       if (event.code === 1000 && event.reason === 'Session ended') { ended = true; }
       if (ended) { showStatus('Session ended.'); return; }
       if (paused || attempt !== generation) { return; }
@@ -102,13 +111,6 @@ export function connectSession() {
     timer = window.setTimeout(connect, delay);
     delay = Math.min(delay * 2, RECONNECT_MAX_MS);
   }
-
-  window.addEventListener('hashchange', () => {
-    if (!PAGE_TOKEN_PATTERN.test(location.hash.slice(1))) { return; }
-    clearTimeout(timer);
-    socket?.close(1000, 'Authorizing');
-    connect();
-  });
 
   window.addEventListener('pagehide', () => {
     paused = true;

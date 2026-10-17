@@ -59,7 +59,7 @@ export async function run(args) {
           throw new CommandError(`${errorMessage(error)} The local session remains running. Use status, share, or stop for ${request.sessionId}.`, ERROR_CODE.TUNNEL_FAILED, EXIT_CODE.RUNTIME_ERROR);
         }
       },
-      status: () => statusSession(request.sessionId, request.authorize),
+      status: () => statusSession(request.sessionId),
       stop: () => stopSession(request.sessionId),
       clear: () => clearSession(request.sessionId),
       share: () => shareSession(request.sessionId),
@@ -73,11 +73,10 @@ export async function run(args) {
     let status = await handlers[request.command]();
     if (request.command === 'start' && request.open && 'url' in status && status.url) {
       try {
-        await openPage(status.publicAuthorizationUrl || status.authorizationUrl || status.url);
-        let { authorizationUrl, publicAuthorizationUrl, ...visible } = status;
-        status = { ...visible, opened: true };
+        await openPage(status.publicUserUrl || status.publicUrl || status.url);
+        status = { ...status, opened: true };
       } catch {
-        status = { ...status, opened: false, warning: 'Could not open the default browser. Open publicAuthorizationUrl or authorizationUrl manually.' };
+        status = { ...status, opened: false, warning: 'Could not open the default browser. Open publicUserUrl, publicUrl, or url manually.' };
       }
     }
     if ('action' in status && status.action === 'call' && isToolError(status.result)) {

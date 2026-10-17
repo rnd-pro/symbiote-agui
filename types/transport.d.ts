@@ -13,15 +13,29 @@ export interface RenderUpdate {
   stylesheetUrl: string;
 }
 
+export type PageRole = 'user' | 'viewer';
+
+export interface MirrorSnapshot extends RenderUpdate {}
+
+export interface PageRoleMessage {
+  type: 'role';
+  role: PageRole;
+  userConnected: boolean;
+  revision: number;
+  capture: boolean;
+}
+
 export type PageCommand =
   | ({ type: 'render' } & RenderUpdate)
   | ({ type: 'update' } & StateUpdate)
   | { type: 'tools' }
   | { type: 'call'; discoveryId: string; name: string; input: Record<string, unknown>; deadline: number };
 
-export type ServerMessage = (PageCommand & { id: string }) | { type: 'stop' };
+export type ServerMessage = (PageCommand & { id: string }) | { type: 'stop' }
+  | PageRoleMessage | ({ type: 'snapshot' } & MirrorSnapshot);
 
 export type PageMessage =
+  | ({ type: 'snapshot' } & MirrorSnapshot)
   | { type: 'result'; id: string; result?: unknown; error?: string }
   | { type: 'hello'; title: string }
   | { type: 'event'; name: string; data: unknown };

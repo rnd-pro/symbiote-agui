@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { WebSocket, WebSocketServer } from 'ws';
-import { HEARTBEAT_MS, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, PAGE_REQUEST_TIMEOUT_MS } from '../transport/constants.js';
-import { hasPageAccess, isPageOrigin } from './page-access.js';
+import { HEARTBEAT_MS, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, PAGE_REQUEST_TIMEOUT_MS, PAGE_ROLE } from '../transport/constants.js';
+import { isPageOrigin } from './page-access.js';
+import { SharedPages } from './shared-pages.js';
 
 export class PageConnection {
   /** @type {Set<WebSocket>} */
@@ -10,6 +11,7 @@ export class PageConnection {
   pending = new Map();
   /** @type {Map<string, import('../../types/tools.js').PagePeer>} */
   pages = new Map();
+  shared = new SharedPages(this.pages);
 
   /**
    * @param {import('node:http').Server} server
@@ -24,7 +26,9 @@ export class PageConnection {
       let endpoint;
       try { endpoint = new URL(request.url || '/', origin); }
       catch { socket.destroy(); return; }
-      if (endpoint.pathname !== access.socketPath || endpoint.search || !isPageOrigin(request.headers.origin, origin, access) || !hasPageAccess(request, access)) {
+      let mode = endpoint.searchParams.get('mode');
+      let validQuery = access.sharing && ['user', 'viewer'].includes(mode || '') && [...endpoint.searchParams.keys()].length === 1;
+      if (endpoint.pathname !== access.socketPath || (endpoint.search && !validQuery) || !isPageOrigin(request.headers.origin, origin, access)) {
         socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
         return;
       }
@@ -36,14 +40,23 @@ export class PageConnection {
     this.server.on('connection', (socket, request) => {
       this.clients.add(socket);
       let pageId = randomUUID();
-      let page = { socket, url: new URL(access.path, request.headers.origin).href, title: 'AGUI', ready: false, error: '' };
+      let endpoint = new URL(request.url || '/', origin);
+      let viewerRequested = endpoint.searchParams.get('mode') === 'viewer';
+      /** @type {import('../../types/tools.js').PagePeer} */
+      let page = {
+        socket, url: new URL(`${access.path}${endpoint.search}`, request.headers.origin).href,
+        viewerRequested,
+        title: 'AGUI', ready: false, error: '',
+      };
       this.pages.set(pageId, page);
+      this.shared.assign(page);
       alive.add(socket);
       socket.on('pong', () => alive.add(socket));
       socket.on('error', () => socket.terminate());
       socket.on('close', () => {
         this.clients.delete(socket);
         this.pages.delete(pageId);
+        this.shared.notify();
         alive.delete(socket);
         for (let [id, pending] of this.pending) {
           if (pending.socket === socket) {
@@ -55,10 +68,17 @@ export class PageConnection {
         try {
           if (binary) { throw new Error('Expected JSON text.'); }
           let message = /** @type {import('../../types/transport.js').PageMessage} */ (JSON.parse(data.toString()));
+          if (message.type === 'hello' && typeof message.title === 'string') {
+            page.title = message.title.slice(0, 200);
+            return;
+          }
+          if (page.role === PAGE_ROLE.VIEWER) { throw new Error('Viewers cannot send actions or state.'); }
+          if (message.type === 'snapshot') {
+            this.shared.publish(page, message);
+            return;
+          }
           if (message.type === 'result' && typeof message.id === 'string' && this.pending.get(message.id)?.socket === socket) {
             this.finish(message.id, message.error ? new Error(String(message.error).slice(0, 2000)) : undefined, message.result);
-          } else if (message.type === 'hello' && typeof message.title === 'string') {
-            page.title = message.title.slice(0, 200);
           } else if (message.type === 'event' && typeof message.name === 'string' && message.name.length > 0 && message.name.length <= 128 && Buffer.byteLength(data.toString()) <= MAX_EVENT_BYTES) {
             onEvent(message);
           }
@@ -66,7 +86,8 @@ export class PageConnection {
           socket.close(1008, 'Invalid page message.');
         }
       });
-      void initialize(socket).then(() => { page.ready = true; }).catch((error) => {
+      let initialized = page.role === PAGE_ROLE.VIEWER ? Promise.resolve() : initialize(socket);
+      void initialized.then(() => { page.ready = true; this.shared.notify(); }).catch((error) => {
         page.error = String(error.message);
         onEvent({ type: 'event', name: 'agui:error', data: { message: String(error.message).slice(0, 2000) } });
         console.error('Could not restore page:', error.message);
@@ -104,6 +125,10 @@ export class PageConnection {
    */
   request(socket, command) {
     return new Promise((resolve, reject) => {
+      if ([...this.pages.values()].some((page) => page.socket === socket && page.role === PAGE_ROLE.VIEWER)) {
+        reject(new Error('Viewers cannot execute page commands. Select the user page.'));
+        return;
+      }
       let id = randomUUID();
       let timer = setTimeout(() => this.finish(id, new Error('The page request timed out. Its outcome may be unknown; do not retry automatically.')), PAGE_REQUEST_TIMEOUT_MS);
       this.pending.set(id, { socket, timer, resolve, reject });
@@ -119,7 +144,8 @@ export class PageConnection {
 
   /** @param {import('../../types/transport.js').PageCommand} command */
   async broadcast(command) {
-    let clients = [...this.clients];
+    if (command.type === 'render') { this.shared.reset(command.revision); }
+    let clients = [...this.pages.values()].filter((page) => page.role !== PAGE_ROLE.VIEWER).map((page) => page.socket);
     let results = await Promise.allSettled(clients.map((socket) => this.request(socket, command)));
     let failure = results.find((result) => result.status === 'rejected');
     if (failure?.status === 'rejected') { throw failure.reason; }

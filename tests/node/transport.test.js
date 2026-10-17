@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 import test from 'node:test';
@@ -16,34 +16,32 @@ function pageAccess() {
   return createPageAccess({
     sessionId: 'socket-test',
     instanceId: randomUUID(),
-    pageToken: randomBytes(32).toString('hex'),
     controlToken: '',
     pid: process.pid,
     launcherPid: process.pid,
   });
 }
 
-test('WebSocket access requires a scoped cookie, session path, and matching origin', async (t) => {
+test('WebSocket admission needs only the session path and allowed origin', async (t) => {
   let server = createServer();
   server.listen(0, '127.0.0.1');
   let origin = await waitForServer(server);
   let access = pageAccess();
-  let cookie = `${access.cookieName}=${access.token}`;
   let pages = new PageConnection(server, origin, access, async () => {}, () => {});
   t.after(async () => { await pages.close(); await closeServer(server); });
-  for (let [path, supplied, requestOrigin] of [
-    [access.socketPath, cookie, 'http://example.com'],
-    [access.socketPath, '', origin],
-    [access.socketPath, `${access.cookieName}=wrong`, origin],
-    [access.socketPath, `agui-other=${access.token}`, origin],
-    ['/other/socket', cookie, origin],
-    [`${access.socketPath}?token=${access.token}`, cookie, origin],
+  for (let [path, requestOrigin] of [
+    [access.socketPath, 'http://example.com'],
+    [access.socketPath, undefined],
+    [access.socketPath, 'null'],
+    ['/other/socket', origin],
+    [access.socketPath + '?mode=viewer', origin],
+    [access.socketPath + '?token=invalid', origin],
   ]) {
-    let socket = new WebSocket(`${origin.replace('http:', 'ws:')}${path}`, { origin: requestOrigin, headers: { Cookie: supplied } });
+    let socket = new WebSocket(origin.replace('http:', 'ws:') + path, { origin: requestOrigin });
     await assert.rejects(once(socket, 'open'), /403/);
   }
   assert.equal(pages.clients.size, 0);
-  let socket = new WebSocket(`${origin.replace('http:', 'ws:')}${access.socketPath}`, { origin, headers: { Cookie: cookie } });
+  let socket = new WebSocket(origin.replace('http:', 'ws:') + access.socketPath, { origin });
   await once(socket, 'open');
   assert.equal(pages.clients.size, 1);
 });
@@ -57,7 +55,6 @@ test('page acknowledgements are correlated and disconnection rejects pending del
   t.after(async () => { await pages.close(); await closeServer(server); });
   let socket = new WebSocket(`${origin.replace('http:', 'ws:')}${access.socketPath}`, {
     origin,
-    headers: { Cookie: `${access.cookieName}=${access.token}` },
   });
   await once(socket, 'open');
   let [peer] = pages.clients;
@@ -102,7 +99,7 @@ test('tool results are scoped to their socket and timed out requests cannot be c
   let access = pageAccess();
   let pages = new PageConnection(server, origin, access, async () => {}, () => {});
   t.after(async () => { await pages.close(); await closeServer(server); });
-  let options = { origin, headers: { Cookie: `${access.cookieName}=${access.token}` } };
+  let options = { origin };
   let first = new WebSocket(`${origin.replace('http:', 'ws:')}${access.socketPath}`, options);
   await once(first, 'open');
   let second = new WebSocket(`${origin.replace('http:', 'ws:')}${access.socketPath}`, options);
@@ -140,4 +137,65 @@ test('event buffering reports overflow and drains without duplicates', () => {
   assert.equal(batch.events[0]?.data, 2);
   assert.equal(batch.dropped, 2);
   assert.deepEqual(events.drain(), { events: [], dropped: 0 });
+});
+
+test('shared pages elect one user without credentials, release the slot, and reject viewer actions', async (t) => {
+  let access = pageAccess();
+  access.sharing = true;
+  let server = createServer();
+  server.listen(0, '127.0.0.1');
+  let origin = await waitForServer(server);
+  let events = new SessionEvents();
+  let pages = new PageConnection(server, origin, access, async () => {}, (message) => events.add(message));
+  pages.shared.enable(0);
+  t.after(async () => { await pages.close(); await closeServer(server); });
+  let connect = async (mode = '') => {
+    let socket = new WebSocket(origin.replace('http:', 'ws:') + access.socketPath + (mode ? '?mode=' + mode : ''), { origin });
+    socket.on('message', (data) => {
+      let message = JSON.parse(data.toString());
+      if (message.type === 'render') { socket.send(JSON.stringify({ type: 'result', id: message.id })); }
+    });
+    await once(socket, 'open');
+    return socket;
+  };
+  let viewer = await connect('viewer');
+  assert.equal(pages.shared.user(), undefined);
+  let user = await connect('user');
+  let second = await connect();
+  let duplicate = await connect();
+  assert.deepEqual([...pages.pages.values()].map((page) => page.role), ['viewer', 'user', 'viewer', 'viewer']);
+  let nextSnapshot = new Promise((resolve) => viewer.on('message', (data) => {
+    let message = JSON.parse(data.toString());
+    if (message.type === 'snapshot') { resolve(message); }
+  }));
+  user.send(JSON.stringify({ type: 'snapshot', html: '<p>Count: 7</p>', revision: 0, stylesheetUrl: '/styles.css.js' }));
+  assert.equal((await nextSnapshot).html, '<p>Count: 7</p>');
+  user.send(JSON.stringify({ type: 'event', name: 'count', data: 7 }));
+  let viewerClosed = once(viewer, 'close');
+  viewer.send(JSON.stringify({ type: 'event', name: 'count', data: 999 }));
+  assert.equal((await viewerClosed)[0], 1008);
+  assert.deepEqual(events.drain().events.map((event) => event.data), [7]);
+  let forgedClosed = once(second, 'close');
+  second.send(JSON.stringify({ type: 'snapshot', html: '<p>Forged</p>', revision: 0, stylesheetUrl: '/styles.css.js' }));
+  assert.equal((await forgedClosed)[0], 1008);
+  assert.equal(pages.shared.latest?.html, '<p>Count: 7</p>');
+  let viewerPeer = [...pages.pages.values()].find((page) => page.role === 'viewer');
+  assert.ok(viewerPeer);
+  await assert.rejects(pages.request(viewerPeer.socket, { type: 'tools' }), /Viewers cannot/);
+  let ownerPage = pages.shared.user();
+  assert.ok(ownerPage);
+  let userDisconnected = once(ownerPage.socket, 'close');
+  user.close();
+  await userDisconnected;
+  assert.equal(pages.shared.user(), undefined);
+  assert.equal([...pages.pages.values()].every((page) => page.role === 'viewer'), true);
+  let reconnect = await connect();
+  assert.equal([...pages.pages.values()].filter((page) => page.role === 'user').length, 1);
+  let reset = new Promise((resolve) => duplicate.on('message', (data) => {
+    let message = JSON.parse(data.toString());
+    if (message.type === 'snapshot' && message.revision === 1) { resolve(message); }
+  }));
+  await pages.broadcast({ type: 'render', html: '', revision: 1, stylesheetUrl: '/styles.css.js?revision=1' });
+  assert.equal((await reset).html, '');
+  reconnect.close();
 });

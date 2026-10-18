@@ -1,317 +1,70 @@
 # AGUI - Agentic Generative User Interface
 
-> Create interactive browser interfaces from an AI agent.
+[![npm version](https://img.shields.io/npm/v/symbiote-agui)](https://www.npmjs.com/package/symbiote-agui)
+[![npm downloads](https://img.shields.io/npm/dm/symbiote-agui)](https://www.npmjs.com/package/symbiote-agui)
+[![MIT license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+[![Node.js 24 or newer](https://img.shields.io/badge/Node.js-%3E%3D24-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/en/download)
 
-AGUI lets AI agents create and update interactive interfaces in regular browser pages. Use the CLI to deliver markup, update component state, and retrieve user interaction events. Use `tools` and `call` to discover and invoke Symbiote component tools through the page's existing WebSocket connection. No MCP harness setup is required; an optional stdio MCP server exposes the same operations. Named sessions save their interface definition for reuse after restart.
+> An interactive workspace for your AI conversation.
 
-## Usage with npx
+Symbiote AGUI lets your AI agent create a browser interface for the task you are working on together. Explore data, fill in forms, compare options, or work through a checklist while your agent responds to your choices.
 
-Use Node.js 24 or newer. With an HTML fragment in `view.html` and a JSON state command in `state.json`, run from any directory. See the [interactive counter](#interactive-counter) for complete HTML and state-file examples.
+The interface runs on your computer and opens in your normal browser. Your agent handles the interface code and updates it as the task changes.
+
+## Why use AGUI?
+
+- Turn data and long chat responses into dashboards, filters, and comparison views.
+- Make choices through forms, buttons, and checklists that your agent can respond to.
+- Share a live view with other people while one person interacts.
+- Reopen saved interfaces by name for recurring tasks.
+
+## Get started
+
+You need Node.js 24 or newer and an AI agent that can run shell commands.
+
+Install the [AGUI skill](./skills/symbiote-agui/SKILL.md) for your agent:
 
 ```sh
-npx symbiote-agui start demo
-npx symbiote-agui insert demo --file ./view.html
-npx symbiote-agui update demo --file ./state.json
-npx symbiote-agui events demo
-npx symbiote-agui status demo
-npx symbiote-agui stop demo
+npx skills add rnd-pro/symbiote-agui --skill symbiote-agui
 ```
 
-File paths resolve from your current directory; session data lives under `~/.symbiote-agui`. Starting the same ID restores its saved interface. Use `npx symbiote-agui clear demo` to forget it. Use `--no-open` on `start` to open the returned `url` yourself.
+Choose your agent in the installer, then ask it for an interface. For example:
+
+> Use Symbiote AGUI to create a weekly planner where I can prioritize tasks and check them off.
+
+Your agent runs AGUI through `npx symbiote-agui` and opens the page for you. Use the interface and continue the conversation whenever you want to change it.
+
+## How it works
+
+You describe a task. Your agent creates a named AGUI session and supplies its interface. The browser shows the result and sends your interactions back to the agent, which can update the page as you work.
+
+AGUI runs locally by default. The CLI is enough to use it; [MCP integrations](./docs/reference.md#optional-agui-mcp) are available for agent environments that support them.
 
 ## Internet sharing
 
-Start a session with a public Cloudflare Quick Tunnel:
+Ask your agent to enable a public tunnel and give you a viewer link. AGUI creates the tunnel automatically, without a Cloudflare account or domain.
+
+One person uses the interactive page while others watch its updates through a read-only viewer link. Viewer links stay read-only. When the interactive user disconnects, the next eligible connection can take that role.
+
+Anyone with a public link can open it. Links are temporary, and your computer and AGUI session must remain running. See [sharing behavior and limits](./docs/reference.md#internet-sharing).
+
+## Reopen or finish a session
+
+Ask your agent to reopen a session by name, stop it when you are finished, or clear it when you want to discard the saved interface. Reopening restores the interface definition; previous inputs and task progress are not saved automatically.
+
+You can also check or stop a session yourself:
 
 ```sh
-npx symbiote-agui start demo --tunnel
+npx symbiote-agui status my-workspace
+npx symbiote-agui stop my-workspace
 ```
 
-For an already running session, use:
+## Built with
 
-```sh
-npx symbiote-agui share demo
-```
+[Symbiote.js and Runtime Agnostic Templates (RAT)](https://github.com/symbiotejs/symbiote.js#runtime-agnostic-templates-rat) provide reactive interfaces built from portable HTML templates. [JSDA-Kit](https://github.com/rnd-pro/jsda-kit) serves pages and assets on demand, keeping AGUI ready to run without a separate application build setup.
 
-`share` returns a shareable `publicUrl`, such as `https://random-name.trycloudflare.com/demo/`. Anyone with this link can open the shared interface directly. `start --tunnel` opens it automatically; `--no-open` returns the links instead.
+## Learn more
 
-- `publicUrl` and `publicUserUrl` (`?mode=user`): the first eligible visitor becomes the interactive user. Later visitors become viewers, even if they request user mode.
-- `publicViewerUrl` (`?mode=viewer`): always read-only, even before the user arrives. Publish this link for an audience.
-
-The first eligible WebSocket connection gets the user role. While it is connected, later connections are viewers. Once it disconnects, the next eligible connection or reconnection gets the role, regardless of browser. Existing viewer connections stay read-only until they reconnect; explicit viewer links always remain read-only. When sharing starts with local tabs already connected, the first connected tab becomes the user. Local-only sessions retain independent interactive tabs.
-
-Viewers receive the user's rendered content and form values, including changes made through CLI tools and state updates. They do not execute generated modules or expose tools; the server rejects viewer actions, events, and state submissions. `pages` reports each connection's `role`; `tools` selects the user automatically. Late viewers receive the current view. If the user disconnects, viewers retain the last view. An insertion without a user waits for the user to render it; clearing removes the old view immediately.
-
-Mirroring covers light DOM and ordinary form values, with a 1 MiB snapshot limit. Password values are omitted. Canvas, video frames, embedded pages, and shadow-root contents are not streamed. Viewers can scroll independently. These links publish the interface to anyone who has them.
-
-AGUI uses `cloudflared` from PATH or downloads a checksum-verified official binary once into `<state-root>/.bin/cloudflared/`. Automatic downloads support macOS/Linux on x64 or arm64 and Windows on x64. Set `AGUI_CLOUDFLARED_PATH` to an absolute executable path before starting a worker to use a specific installation. No Cloudflare account, domain, or separate terminal command is required. Initial provisioning and tunnel connection can take up to 90 seconds in addition to local session startup. [Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
-
-Only the page server is tunneled; the CLI control server stays local. Use the same `tools`, `call`, `update`, and `events` commands to operate the user interface. Pages connect directly by WebSocket, with session-path and origin checks. The local CLI control server still requires its own authentication.
-
-Repeated `share` calls reuse a running tunnel. `stop` and `stop-all` close owned tunnels; `clear` and `clear-all` clear interfaces while leaving workers and their tunnels available. Restarting a session restores its markup but requires `--tunnel` or `share` to create a new public hostname. Quick Tunnels are temporary, have no uptime guarantee, and require the host machine to remain online. [Cloudflare limitations](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/#limitations).
-
-If tunnel creation fails, `TUNNEL_FAILED` is returned and the local session remains available. Inspect `status` for `tunnel.state` and any error, then correct the reported problem and use `share` again. A connector that exits later is reported as failed, and its public origin is revoked.
-
-## Agent setup
-
-Load the portable [Symbiote AGUI skill](./skills/symbiote-agui/SKILL.md) in the agent's harness, or copy its folder from the installed package into the harness's skill directory. The agent needs access to a shell to run the CLI. The agent prepares HTML and JSON input files and passes them with `--file`, using simple `npx symbiote-agui` commands. This lets hosts reuse an approved command prefix; shell redirection, pipelines, and wrappers can require separate approval. Host approval policies remain in effect.
-
-`start` opens the session in the OS default browser. With `start demo --no-open`, open the returned `url` manually. If opening fails, the server remains available and the result includes `opened: false`, a warning, and its readable URLs.
-
-### Operate page tools with npx
-
-```sh
-npx symbiote-agui pages demo
-npx symbiote-agui tools demo
-npx symbiote-agui tools demo --page <PAGE_ID>
-npx symbiote-agui call demo --file ./call.json
-```
-
-`tools` selects the only interactive page automatically, ignoring viewers. With several interactive local-only pages, choose a `pageId` from `pages` and pass `--page`. Discovery returns tool names, descriptions, input schemas, `pageId`, and `discoveryId`. The call JSON contains `{ "pageId": "...", "discoveryId": "...", "name": "...", "input": {} }`; use the returned IDs, exact tool name, and schema-compatible input. `call` also accepts JSON on stdin, limited to 1 MiB. See the [WebMCP example](#webmcp) for a complete call.
-
-Calls target one page and use the same authenticated worker and WebSocket as content delivery. Native browser WebMCP, remote debugging, and a configured MCP server are optional. Reuse the IDs until the catalog changes; rediscover after replacement or visibility changes and select the current page after reload, reconnection, or restart. Discovery waits for queued rendering and bounded catalog stabilization; discover again after initialization if an expected async tool is still absent. Page requests have a 10-second timeout and worker tool operations a 25-second limit. A timeout, disconnection, or unserializable result can leave the outcome unknown; do not retry automatically. Browser results are limited to 1 MiB; `undefined` results become `null`.
-
-### Routine agent workflow
-
-1. Start a named session with `npx symbiote-agui start demo` and check `ok` and `restored`. For `SESSION_EXISTS`, use `npx symbiote-agui status demo` once to reuse a session belonging to the task or choose another ID.
-2. Reuse an owned running session or restored interface without regenerating or reinserting it. Insert markup for a new or deliberately changed definition; use `update` for small state changes.
-3. Discover tools with `npx symbiote-agui tools demo`. If several pages are connected, run `npx symbiote-agui pages demo` and select one with `tools demo --page <PAGE_ID>`. Keep the returned `pageId`, `discoveryId`, names, and schemas.
-4. Prepare a JSON file containing those IDs, the discovered name, and schema-compatible `input`, then run `npx symbiote-agui call demo --file ./call.json`. Check `ok` and use `result` as confirmation. Reuse the selected IDs while current; select again after reload, reconnection, or restart.
-5. For user interaction, read `npx symbiote-agui events demo` and process the relevant data. Events return immediately and clear the queue; an empty batch means no new input. Check again when interaction is expected, without tight polling. Leave the session available while the user interacts; use `stop` when finished and `clear` when the saved definition should be discarded.
-
-Tool results and CLI events usually provide confirmation without repeated status checks, DOM inspection, screenshots, or unrelated commands. A call with an unknown outcome requires checking the result before another invocation, including through a different control route.
-
-### Optional: Connect AGUI MCP
-
-Run `npx symbiote-agui --help` once and accept npm's installation prompt if shown. Configure an MCP server in your agent harness with command `npx` and arguments `symbiote-agui`, `mcp`, then reconnect the harness to load its tools. The server communicates over stdio; diagnostics go to stderr. Use the same `AGUI_STATE_DIR` as your CLI commands when overriding session storage.
-
-The server exposes three tools:
-
-- `list_pages({ sessionId })` returns connected pages with their `pageId`, URL, title, and readiness.
-- `list_tools({ sessionId, pageId? })` returns Symbiote tool names, descriptions, schemas, and a `discoveryId`. With one connected page, `pageId` is selected automatically. With several, choose one from `list_pages`.
-- `call_tool({ sessionId, pageId, discoveryId, name, input })` validates arguments against the discovered schema and invokes that tool on the selected page. Results are returned as text JSON and structured content; Symbiote errors also set MCP's `isError` flag.
-
-The optional server uses the same page targeting, validation, timeouts, and result limits as the CLI.
-
-### Optional: Connect Chrome DevTools MCP
-
-For native browser WebMCP access or browser inspection, connect Chrome DevTools MCP to the same Chrome profile that contains the session page.
-
-1. Use Chrome with WebMCP enabled, following the [Chrome WebMCP setup](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging).
-2. Open `chrome://inspect/#remote-debugging` in Chrome and enable remote debugging.
-3. Run `npx chrome-devtools-mcp --help` once to install the MCP runner; accept npm's installation prompt if shown.
-4. Add the MCP server to your agent harness with command `npx` and arguments `chrome-devtools-mcp`, `--autoConnect`, and `--categoryExperimentalWebmcp`.
-5. Reconnect or restart the harness to load its MCP configuration. Approve Chrome's connection prompt when the agent first accesses the browser.
-
-For Codex, add this server to your MCP settings in `~/.codex/config.toml`:
-
-```toml
-[mcp_servers.chrome-devtools]
-command = "npx"
-args = ["chrome-devtools-mcp", "--autoConnect", "--categoryExperimentalWebmcp"]
-enabled_tools = ["list_pages", "list_webmcp_tools", "execute_webmcp_tool"]
-startup_timeout_sec = 60
-tool_timeout_sec = 60
-```
-
-The agent needs `list_pages` to select the session URL, `list_webmcp_tools` to discover actions, and `execute_webmcp_tool` to invoke them. Confirm these tools are available in the agent's tool list. Keep the MCP connection for subsequent actions. Apple Events access is not required.
-
-On macOS, a missing `DevToolsActivePort` error can mean the system has blocked access to Chrome's data. In System Settings, open Privacy & Security > Files & Folders and allow Google Chrome access for the app running the MCP server, such as Codex. Retry the connection after granting that permission. See the [Chrome MCP access issue](https://github.com/ChromeDevTools/chrome-devtools-mcp/issues/3089).
-
-See the [Chrome connection instructions](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance) and [Codex MCP settings](https://developers.openai.com/codex/mcp) for your harness's connection controls.
-
-## Sessions and commands
-
-### Commands and results
-
-- IDs are case-sensitive names matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`, unique for the current OS user across working directories. Duplicate starts return `SESSION_EXISTS`.
-- `start` starts a session and returns its URL, restoring cached markup and rebuilding its styles when available. `restored: true` confirms restoration; `false` means no cached definition was found. It does not wait for a browser connection; use the returned state to distinguish a waiting session from one with connected pages. Startup has a 30-second timeout.
-- `insert` reads a UTF-8 HTML fragment from `--file` or stdin, limited to 1 MiB. Relative paths resolve from the caller's working directory. Empty input clears the content root. Interactive stdin requires a file or redirected input.
-- Each insertion replaces generated content, resets local state, and atomically saves the accepted fragment, including inline modules. With connected pages, success waits for their acknowledgements and returns `delivery: "applied"`. Without a page, it saves the fragment and returns `delivery: "queued"`; rendering and module execution happen on connection.
-- `update` reads a JSON state command from file or stdin with the same size limit. It requires at least one connected page and waits for acknowledgements. It does not replace markup.
-- `events` returns and clears buffered UI events. The worker retains the most recent 100 events, each limited to 16 KiB; `dropped` reports overflow since the previous read. Events are temporary, not a durable log.
-- `status` returns `waiting` when the worker is running without connected pages, `ready` when pages are connected, and `stopped` when the worker is absent. Running results include `url` and `clients`.
-- `share` creates or reuses the session's public Quick Tunnel and returns public user and viewer links. `start --tunnel` starts a local session and then shares it. Shared status includes `publicUrl` while the tunnel is ready and a `tunnel` object with its state and any error.
-- `pages` lists connected pages, URLs, titles, readiness, and shared-session roles. `tools` discovers one interactive page, optionally selected with `--page`; it ignores viewers.
-- `call` reads JSON `{ pageId, discoveryId, name, input }` from file or stdin and invokes one discovered tool. Invalid or stale requests are rejected; no automatic retries occur. Native tool errors return `ok: false`, `TOOL_FAILED`, and the original `result`, with exit code 1.
-- `mcp` runs the optional MCP server over stdio until its client disconnects. Session lifecycle remains available through the CLI commands above.
-- `stop` is idempotent. It clears live content and tools, notifies pages, closes connections and servers, and removes worker metadata and credentials. It retains the cached interface and leaves browser tabs open.
-- `clear` removes the cached definition and live content/tools, returning `cleared: true`. A running session stays available for new insertions. It also works on stopped sessions and is idempotent. An empty `insert` saves a blank definition; use `clear` to remove it entirely.
-- `stop-all` stops every recorded session in the current storage root, retaining cached definitions. Browser tabs remain open. `clear-all` removes all saved definitions, including those of stopped sessions, and clears live content/tools while leaving running workers available. Neither command takes a session ID.
-
-```sh
-npx symbiote-agui stop-all
-npx symbiote-agui clear-all
-```
-
-These commands use the current `AGUI_STATE_DIR`, or the default storage shared across working directories for the current OS user. They process a snapshot of known IDs; new IDs created during the operation are outside the batch. Results include `command`, `total`, and a `sessions` array with each session's `ok` and result or error. A failure does not prevent other sessions from being processed: partial failure returns `ok: false`, a summary `error`, and exit code 1. An empty batch succeeds with `total: 0`.
-
-Session commands other than `mcp` write one JSON object to stdout. Success includes `{ "ok": true, "sessionId": "demo", "state": "waiting", "url": "http://127.0.0.1:PORT/demo/", "clients": 0 }`. Failures include `{ "ok": false, "error": { "code": "...", "message": "..." } }`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text; diagnostics go to stderr or the worker log. The `mcp` command reserves stdout for MCP protocol messages.
-
-### Connection and recovery
-
-The page address contains your named session ID, for example `http://127.0.0.1:PORT/demo/`. The ID stays the same when restarted; the port can change. It identifies the interface and is separate from the worker's numeric OS process ID.
-
-Open the readable session URL directly in any browser. Browser connections require no authorization request, cookie, or token link. WebSocket admission checks the session path and allowed origin. In shared sessions, the first eligible connection is the user; later connections are viewers until the user disconnects and the next eligible connection takes the slot. Explicit viewer links never claim it.
-
-Pages reconnect automatically with a bounded retry delay. Local-only tabs and shared user pages restore the latest accepted markup and rerun its marked modules. Their live component state resets to the values in that markup; `update` commands are not replayed. Viewers instead reconnect to the current mirrored view. Restarting the same session ID restores its cached definition without the original input file.
-
-Validation and stylesheet loading happen before content replacement, preserving the current interface if either fails. Module code can have side effects; an execution failure can leave changed content. Delivery to several tabs and state updates are not transactions. After a failed or timed-out delivery, inspect the pages or reload the session URL before retrying. A queued insertion cannot verify browser-specific behavior until a page connects.
-
-Use `status` after `SESSION_EXISTS`; reuse a session belonging to the task or choose another ID. Start a stopped session before inserting. For `PAGE_UNAVAILABLE`, open the session URL. For `INSERT_FAILED` or `UPDATE_FAILED`, correct the reported problem. If the worker stays `SESSION_UNREACHABLE`, inspect its log rather than repeatedly starting it or killing a stored PID.
-
-Cache read, markup validation, and style compilation failures stop startup and retain the saved definition. Browser rendering and module execution happen after a page connects; their failures appear as `agui:error` events. `CACHE_ERROR` reports storage failures; resolve the reported path or permission problem before retrying. Failed insertions preserve the previous accepted cache. If saving fails after browser delivery, the page may already have changed; reloading restores the last accepted interface. Use `clear` only when you intend to discard the saved definition.
-
-## Markup, RAT, and interactivity
-
-Use standard HTML and complete Tailwind classes such as `p-4`, `md:grid-cols-2`, and `w-[123px]`. Classes are collected from inserted markup, including nested templates, and compiled locally. Classes added later by JavaScript are not detected. Styles accumulate for the session lifetime. Success does not wait for external images or asynchronous widgets.
-
-`<agui-component>` supports inline RAT markup. One direct child `<script type="text/json">` or `<script type="application/json">` initializes an object with plain local state keys. Use `{{prop}}` for text, `bind="onclick: handler"` for events, and native Symbiote APIs for state:
-
-- `element.$.prop = value` updates one existing field; scoped fields use `element.$['map/lat']` or `element.$['*lat']`.
-- `element.set$({ count: 10 })` updates existing local fields. A second argument of `true` forces unchanged primitive notifications.
-- `element.add$({ newField: value })` adds fields. Pass `true` as the second argument to also overwrite existing ones.
-
-Executable scripts inserted as ordinary markup remain inert. Explicitly opt into inline modules with `<script type="module" data-agui>`. Place these modules outside templates. Module-scope code runs before mounting so it can register component classes; a default exported function receives `(root, { emit })` after mounting and may return a cleanup function, including an async function, for replacement or graceful stop. Modules execute from generated Blob URLs. Resolve imports to full URLs, for example `await import(new URL('/client/index.js', location.href).href)`; root-relative imports alone do not resolve from a Blob URL. That entry exports `AguiComponent`, `ContextProvider`, `Symbiote`, `PubSub`, `html`, `css`, `emit`, `ToolDescriptor`, `getActiveWebMCPTools`, and `webMCPRegistry`.
-
-### Interactive counter
-
-Save this fragment as `counter.html`:
-
-```html
-<agui-component id="counter" class="block p-8">
-  <script type="application/json">{"count":0,"increment":null}</script>
-  <button type="button" class="rounded bg-blue-600 p-4 text-white" bind="onclick: increment">
-    Count: {{count}}
-  </button>
-</agui-component>
-<script type="module" data-agui>
-export default (root, { emit }) => {
-  let counter = root.querySelector('#counter');
-  counter.set$({
-    increment: () => {
-      counter.$.count += 1;
-      emit('count', { count: counter.$.count });
-    },
-  });
-};
-</script>
-```
-
-After starting `demo`, insert the file. Clicking increments the count and queues a `count` event:
-
-```sh
-npx symbiote-agui insert demo --file ./counter.html
-npx symbiote-agui events demo
-```
-
-To update the count, save this command as `state.json`:
-
-```json
-{ "selector": "#counter", "values": { "count": 10 } }
-```
-
-```sh
-npx symbiote-agui update demo --file ./state.json
-```
-
-An update selects components inside the content root and calls their native `set$()` method. Use `"method":"add$"` to add fields and `"rewrite":true` to overwrite existing ones. Functions belong in modules; state commands contain JSON values. `emit()` returns `false` when the connection is unavailable and does not buffer events in the page.
-
-### Contexts and templates
-
-An anonymous provider exposes local fields to descendants through `^` bindings. A named provider also mirrors its local state into a shared context; keep one provider per named context. Shared updates and provider updates synchronize in both directions, including fields added through `add$()`.
-
-```html
-<context-provider id="map-data" ctx="map">
-  <script type="application/json">{"lat":10,"lon":20}</script>
-  <agui-component><output>{{^lat}}, {{^lon}}</output></agui-component>
-</context-provider>
-<agui-component ctx="map"><output>{{*lat}}, {{*lon}}</output></agui-component>
-<agui-component><output>{{map/lat}}</output></agui-component>
-```
-
-Use templates in the same insertion for reusable markup. Unknown custom tags with `use-template` are registered as generic components. For custom behavior, register a subclass of `AguiComponent` with `YourComponent.reg('your-component')` in a marked module; registrations persist for the page lifetime. Symbiote's `reg()` also supplies the tag identity used by WebMCP. Replacement resets provider-owned contexts and removes old subscriptions.
-
-```html
-<template id="user_card_template">
-  <div>{{userName}}</div>
-  <div>{{userAge}}</div>
-</template>
-<user-card use-template="template#user_card_template">
-  <script type="application/json">{"userName":"Alex","userAge":42}</script>
-</user-card>
-```
-
-### Data-driven lists
-
-Use Symbiote's [Itemize API](https://github.com/symbiotejs/symbiote.js/blob/main/docs/list-rendering.md) for repeating rows: a container such as `<div itemize="tasks" item-tag="task-row">` holds one `<template>`, and component state supplies the collection. Each row is a component with its own data scope. Keyed objects supply `_KEY_` for item identity. Assign a new collection to update the list.
-
-Give interactive rows local handlers through their data descriptors or a registered item class. Reusing one local handler for several controls on a single component produces one automatic tool; Itemize row handlers produce separate tools with item identities. Parent-owned `^handler` bindings retain source item context. Standard DOM listeners are not Symbiote bindings and do not automatically expose tools. See the skill's [runnable Itemize example](./skills/symbiote-agui/SKILL.md#repeating-items-with-itemize).
-
-### WebMCP
-
-The browser entry imports Symbiote's [WebMCP extension](https://github.com/symbiotejs/symbiote.js/blob/main/docs/webmcp.md) before rendering and enables `Symbiote.mcpToolMode`. Symbiote automatically exposes bound handlers as tools; the counter above exposes `increment_in_agui-component`. The CLI can discover and invoke them without native browser WebMCP. When the native API is available, Symbiote also registers them there. Popup bindings such as `^increment` retain their ancestor owner and source component identity.
-
-For explicit descriptions, input schemas, and visibility, initialize native `ToolDescriptor` values in a component's `init$`. For example, insert:
-
-```html
-<tool-counter><output>Count: {{count}}</output></tool-counter>
-<script type="module" data-agui>
-let { AguiComponent, ToolDescriptor } = await import(new URL('/client/index.js', location.href).href);
-if (!customElements.get('tool-counter')) {
-  class ToolCounter extends AguiComponent {
-    componentDescription = 'The visible counter.';
-    init$ = {
-      count: 0,
-      canSet: true,
-      set_count: new ToolDescriptor({
-        description: 'Set the counter value.',
-        deps: ['canSet'],
-        when: () => this.$.canSet,
-        inputSchema: {
-          type: 'object',
-          properties: { count: { type: 'integer' } },
-          required: ['count'],
-          additionalProperties: false,
-        },
-        execute: ({ count }) => { this.$.count = count; return { count }; },
-      }),
-    };
-  }
-  ToolCounter.reg('tool-counter');
-}
-</script>
-```
-
-This exposes `set_count_in_tool-counter`. Include every state key read by `when()` in `deps`; visibility is not tracked automatically. Descriptors in named `PubSub` contexts register once per context; delete module-owned contexts in the module cleanup. Symbiote removes component tools on replacement and stop. Define descriptors before first render: immediately adding and syncing them after mount can abort a pending native registration.
-
-Use the CLI `tools` and `call` commands to operate these tools in an ordinary browser. For native WebMCP access, follow the [optional Chrome DevTools MCP setup](#optional-connect-chrome-devtools-mcp).
-
-For the counter above, run `npx symbiote-agui tools demo`, then save its returned IDs, the exact discovered name, and arguments in `call.json`:
-
-```json
-{
-  "pageId": "<pageId from discovery>",
-  "discoveryId": "<discoveryId from discovery>",
-  "name": "set_count_in_tool-counter",
-  "input": { "count": 12 }
-}
-```
-
-```sh
-npx symbiote-agui call demo --file ./call.json
-```
-
-The returned `ok: true` and `result: { "count": 12 }` confirm the action and the interface displays `Count: 12`. Keep the selected IDs for subsequent calls while the catalog remains current. With optional Chrome MCP, select the page matching the session URL, discover through `list_webmcp_tools`, and invoke through `execute_webmcp_tool`. The CLI handles sessions, markup, state updates, and events.
-
-For browser-side integrations, `/client/index.js` exports `listPageTools()` and async `executePageTool(name, input = {})`. They forward Symbiote's public discovery and invocation APIs and work without native browser WebMCP. Discovery preserves names, descriptions, and schemas; execution preserves results and Symbiote's `isError` responses. Callers validate inputs against the discovered schemas. Replacement and stop remove tools from discovery and invocation.
-
-The entry also exports Symbiote's `executeWebMCPTool()`, `getActiveWebMCPTools()`, and `webMCPRegistry`. Registry entries report `nativeActive` for native browser registration. WebMCP remains experimental.
-
-## Session storage
-
-Worker metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Cached HTML lives under `~/.symbiote-agui/sessions/.cache/<HEX_SESSION_ID>.html`, outside disposable worker directories. Set the same absolute `AGUI_STATE_DIR` for all commands and MCP to use another storage root; its cache is stored in `.cache/`. Session IDs remain case-sensitive.
-
-`stop` retains cached HTML and discards live state and events. Starting the same ID rebuilds styles, restores the saved HTML and inline modules, and opens the browser for the new session. The original source file is not needed. This restores the interface definition with its initial state; user progress, timers, closures, and state updates are not persisted. `clear` removes the saved definition.
-
-Share public links with the intended audience.
+- [Session controls, sharing limits, and optional integrations](./docs/reference.md)
+- [AGUI skill for agents creating and operating interfaces](./skills/symbiote-agui/SKILL.md)
+- [Package on npm](https://www.npmjs.com/package/symbiote-agui)

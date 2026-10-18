@@ -164,7 +164,7 @@ Calls target one page and validate input against the discovered schema. Prefer a
 
 Import `ToolDescriptor` from the fully resolved `/client/index.js` URL for explicit tools. Define descriptors in a subclass's `init$` before first render, with `description`, `inputSchema`, and `execute`. Use `componentDescription` for extra component context. Conditional tools need both `when` and `deps` listing every state key read by the condition. Immediately adding and syncing descriptors after mount can abort pending native registrations.
 
-Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete module-owned contexts in the module cleanup; component tools follow Symbiote's DOM lifecycle automatically. Use the exported `getActiveWebMCPTools()` and entries' `nativeActive` field for diagnostics. See the [project README](https://github.com/rnd-pro/symbiote-agui#webmcp) for a complete explicit tool example. Define tools with Symbiote's APIs and invoke them through CLI `tools` and `call`, optional AGUI MCP, or the optional native browser consumer. Use CLI events when awaiting user input.
+Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete module-owned contexts in the module cleanup; component tools follow Symbiote's DOM lifecycle automatically. Use the exported `getActiveWebMCPTools()` and entries' `nativeActive` field for diagnostics. See the [Symbiote WebMCP guide](https://github.com/symbiotejs/symbiote.js/blob/main/docs/webmcp.md) for explicit tool examples. Define tools with Symbiote's APIs and invoke them through CLI `tools` and `call`, optional AGUI MCP, or the optional native browser consumer. Use CLI events when awaiting user input.
 
 ## Optional AGUI MCP
 
@@ -172,7 +172,7 @@ For harness-native tools, configure command `npx` with arguments `["symbiote-agu
 
 ## Optional Chrome MCP
 
-For native browser WebMCP or browser inspection, follow the [Chrome MCP setup](https://github.com/rnd-pro/symbiote-agui#optional-connect-chrome-devtools-mcp). Its `list_pages` selects a Chrome page by the CLI's readable URL; `list_webmcp_tools` and `execute_webmcp_tool` discover and invoke native tools. Chrome setup and permission requirements apply only to this route. Keep the chosen control route and do not repeat an uncertain action through another route.
+For native browser WebMCP or browser inspection, follow the [Chrome MCP setup](https://github.com/rnd-pro/symbiote-agui/blob/main/docs/reference.md#optional-chrome-devtools-mcp). Its `list_pages` selects a Chrome page by the CLI's readable URL; `list_webmcp_tools` and `execute_webmcp_tool` discover and invoke native tools. Chrome setup and permission requirements apply only to this route. Keep the chosen control route and do not repeat an uncertain action through another route.
 
 ## Reconnection and recovery
 

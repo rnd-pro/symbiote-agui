@@ -1,0 +1,94 @@
+# AGUI reference
+
+For an introduction and first-use setup, see the [README](../README.md). Interface generation, Symbiote patterns, and tool invocation are covered by the [AGUI skill](../skills/symbiote-agui/SKILL.md).
+
+## Session controls
+
+Use Node.js 24 or newer. Session IDs are case-sensitive, contain 1-64 letters, digits, underscores, or hyphens, and start with a letter or digit. IDs are shared across working directories for the current OS user.
+
+```sh
+npx symbiote-agui start my-workspace
+npx symbiote-agui status my-workspace
+npx symbiote-agui stop my-workspace
+npx symbiote-agui clear my-workspace
+```
+
+- `start` opens the regular browser and restores the saved interface when available. With `--no-open`, open the returned `url` yourself.
+- `status` reports `waiting` without connected pages, `ready` with connected pages, or `stopped`. A shared session can have viewers connected while waiting for an interactive user.
+- `stop` ends the session and its tunnel, retaining the saved interface. Tabs remain open with `Session ended.`.
+- `clear` discards the saved interface and clears live content. A running session and its tunnel stay available. Clearing also works while stopped.
+
+`stop-all` and `clear-all` apply to every session in the current storage root, including sessions created from other directories. Use them only when you intend to affect all those interfaces.
+
+Run `npx symbiote-agui --help` for the command list. Session commands return JSON, except help and version. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input.
+
+## Saved interfaces and reconnection
+
+AGUI saves accepted HTML and inline modules by session ID. Restarting rebuilds styles and restores that definition, even if the original input file was deleted. It does not save live component state, user progress, timers, or state updates.
+
+Local-only tabs are independently interactive. Reloading or reconnecting a local tab or shared user page restores the definition's initial state. Viewers reconnect to the current mirrored view instead.
+
+Interaction events are temporary: reading them drains the queue, which retains at most 100 events. AGUI is not a database for application data; the agent must arrange durable storage when the task needs it.
+
+Session metadata, logs, and saved definitions live under `~/.symbiote-agui/sessions/`. Set `AGUI_STATE_DIR` to an absolute directory to use another storage root. Use the same value for CLI commands and optional MCP integration.
+
+## Internet sharing
+
+```sh
+npx symbiote-agui start my-workspace --tunnel
+npx symbiote-agui share my-workspace
+```
+
+Use `start --tunnel` for a new session or `share` for one already running. Results include:
+
+- `publicUrl`: the shared page.
+- `publicUserUrl` (`?mode=user`): requests the interactive role.
+- `publicViewerUrl` (`?mode=viewer`): always read-only, including before a user arrives.
+
+The first eligible connection gets the user role. Other connections are viewers while that user is connected. After disconnect, the next eligible connection or reconnection can take the role. Existing viewers stay viewers until reconnecting; explicit viewer links never claim the role. If local tabs are already connected when sharing starts, the first connected tab becomes the user.
+
+Viewers receive the current rendered view and subsequent user and agent updates. They run no generated modules, expose no tools, and cannot submit actions or events. They retain the last view when the user disconnects. New insertions wait for a user to render them; clearing removes the old view immediately.
+
+Mirroring covers light DOM and ordinary form values, with a 1 MiB snapshot limit. Password values are omitted. Canvas, video frames, embedded pages, and shadow-root contents are not streamed. Viewers can scroll independently.
+
+AGUI uses `cloudflared` from PATH or downloads and verifies an official binary once. Automatic provisioning supports macOS/Linux on x64 or arm64 and Windows on x64. Set `AGUI_CLOUDFLARED_PATH` to an absolute executable path before starting a session to select an installation. Provisioning and tunnel connection can take up to 90 seconds after local startup.
+
+Repeated `share` calls reuse the running tunnel. Restarting a worker requires sharing again and creates a new hostname. Public links are accessible to anyone who has them and require the host to stay online. Cloudflare Quick Tunnels are temporary and have no uptime guarantee. See [Cloudflare's limits](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/#limitations).
+
+Only the page server is exposed. The CLI control server stays local and authenticated. Browser connections require no cookie, token, or authorization request; WebSocket admission checks the session path and allowed origin.
+
+## Optional AGUI MCP
+
+The CLI workflow requires no MCP setup. To expose AGUI tools directly in a compatible agent environment, add an MCP server with:
+
+```json
+{
+  "command": "npx",
+  "args": ["symbiote-agui", "mcp"]
+}
+```
+
+Reconnect the agent environment after configuration. This stdio server exposes `list_pages`, `list_tools`, and `call_tool` over the same worker and WebSocket used by the CLI. Shared-session viewers are excluded from automatic tool targeting. Session creation and content delivery remain available through the CLI.
+
+## Optional Chrome DevTools MCP
+
+Use this integration when you need native browser WebMCP access or browser inspection.
+
+1. Enable WebMCP in Chrome using the [Chrome WebMCP instructions](https://developer.chrome.com/docs/devtools/agents/webmcp-debugging).
+2. Enable remote debugging at `chrome://inspect/#remote-debugging`.
+3. Add Chrome DevTools MCP to your agent environment with command `npx` and arguments `chrome-devtools-mcp`, `--autoConnect`, and `--categoryExperimentalWebmcp`.
+4. Reconnect the agent environment and approve Chrome's connection prompt.
+
+The agent needs `list_pages`, `list_webmcp_tools`, and `execute_webmcp_tool`. Apple Events access is not required. On macOS, a missing `DevToolsActivePort` error can indicate that the host app needs Google Chrome access under System Settings > Privacy & Security > Files & Folders.
+
+See the [Chrome connection guide](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/advanced-usage.md#automatically-connecting-to-a-running-chrome-instance). For Symbiote APIs and explicit tool examples, see the [Symbiote WebMCP guide](https://github.com/symbiotejs/symbiote.js/blob/main/docs/webmcp.md).
+
+## Troubleshooting
+
+- `SESSION_EXISTS`: use `status` to find the existing session; do not repeatedly start it.
+- `PAGE_UNAVAILABLE`: open the session URL. Shared sessions need a user connection for state updates and tool calls.
+- `TUNNEL_FAILED`: the local session remains running. Inspect `status`, correct the reported problem, and use `share` again. Later connector exits also appear in status.
+- `CACHE_ERROR`: inspect the reported storage path. Failed insertions preserve the saved definition, although a page may already have received changes.
+- `SESSION_UNREACHABLE`: inspect the session's `worker.log` rather than repeatedly starting it or killing a stored process ID.
+
+A failed browser opener returns `opened: false` and readable URLs; open the appropriate URL manually. A failed or timed-out tool call can have an unknown outcome. Check its result before asking the agent to repeat it.

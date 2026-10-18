@@ -32,6 +32,9 @@ export class SessionRuntime {
   /** @type {import('../../types/transport.js').RenderUpdate | undefined} */
   latest;
   updates = Promise.resolve();
+  tunnelOperations = Promise.resolve();
+  /** @type {Promise<import('../../types/session.js').SessionStatus> | undefined} */
+  tunnelRenewal;
   events = new SessionEvents();
   revision = 0;
   closing = false;
@@ -172,14 +175,36 @@ export class SessionRuntime {
     try { await this.pages?.close(); }
     finally {
       await this.tunnel?.close();
+      await this.tunnelOperations;
       await this.updates;
       await closeServer(this.server);
     }
   }
 
-  async share() {
+  /** @param {boolean} [recreate] */
+  share(recreate = false) {
+    if (recreate && this.tunnelRenewal) { return this.tunnelRenewal; }
+    let task = this.tunnelOperations.then(() => this.openTunnel(recreate));
+    this.tunnelOperations = task.then(() => {}, () => {});
+    if (recreate) {
+      this.tunnelRenewal = task;
+      let clear = () => { this.tunnelRenewal = undefined; };
+      void task.then(clear, clear);
+    }
+    return task;
+  }
+
+  /** @param {boolean} recreate */
+  async openTunnel(recreate) {
     if (this.closing || !this.record.url || !this.access) {
       throw new CommandError('The session is stopped.', ERROR_CODE.SESSION_STOPPED, EXIT_CODE.RUNTIME_ERROR);
+    }
+    if (recreate) {
+      await this.tunnel?.close();
+      this.tunnel = undefined;
+      if (this.closing) {
+        throw new CommandError('The session is stopped.', ERROR_CODE.SESSION_STOPPED, EXIT_CODE.RUNTIME_ERROR);
+      }
     }
     let access = this.access;
     this.tunnel ||= new SessionTunnel(this.record.url, (origin) => { access.publicOrigin = origin; }, recordDirectory(this.record));

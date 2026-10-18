@@ -4,7 +4,7 @@ import { CONTROL_TIMEOUT_MS, SESSION_STATE } from './constants.js';
 
 /**
  * @param {import('../../types/session.js').SessionRecord} record
- * @param {'status' | 'stop' | 'insert' | 'update' | 'events' | 'tools' | 'clear' | 'share'} action
+ * @param {'status' | 'stop' | 'insert' | 'update' | 'events' | 'tools' | 'clear' | 'share' | 'tunnel-renew'} action
  * @param {number} timeout
  * @param {string} [html]
  * @returns {Promise<import('../../types/session.js').SessionStatus>}
@@ -26,6 +26,9 @@ export async function requestSession(record, action, timeout = CONTROL_TIMEOUT_M
       signal: AbortSignal.timeout(timeout),
       redirect: 'error',
     });
+    if (action === 'tunnel-renew' && response.status === 404) {
+      throw new CommandError('Tunnel renewal is unavailable in this worker. Stop and restart the session.', ERROR_CODE.TUNNEL_FAILED, EXIT_CODE.RUNTIME_ERROR);
+    }
     let reply = /** @type {import('../../types/session.js').ControlReply} */ (await response.json());
 
     if (reply.instanceId !== record.instanceId || reply.pid !== record.pid) {

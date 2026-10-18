@@ -13,6 +13,7 @@ import { callTool } from './tools.js';
 import { runAllSessions } from '../sessions/all.js';
 import { shareSession } from '../sessions/share.js';
 import { errorMessage } from '../shared/system-error.js';
+import { checkSessionTunnel, renewSessionTunnel } from '../sessions/tunnel.js';
 
 /** @param {import('../../types/cli.js').CommandResult} result */
 function printResult(result) {
@@ -73,6 +74,8 @@ export async function run(args) {
       stop: () => stopSession(request.sessionId),
       clear: () => clearSession(request.sessionId),
       share: () => shareSession(request.sessionId),
+      'tunnel renew': () => renewSessionTunnel(request.sessionId),
+      'tunnel check': () => checkSessionTunnel(request.sessionId),
       insert: () => insertMarkup(request.sessionId, request.file),
       update: () => updateState(request.sessionId, request.file),
       events: () => readEvents(request.sessionId),
@@ -83,6 +86,10 @@ export async function run(args) {
     let status = await handlers[request.command]();
     if (request.command === 'start' && request.open && 'url' in status && status.url) {
       status = await openSessionPage(status);
+    }
+    if (request.command.startsWith('tunnel ') && 'tunnel' in status && status.tunnel?.active === false) {
+      printResult({ ok: false, ...status, error: { code: ERROR_CODE.TUNNEL_FAILED, message: status.tunnel.checkError || 'The tunnel is inactive.' } });
+      return EXIT_CODE.RUNTIME_ERROR;
     }
     if ('action' in status && status.action === 'call' && isToolError(status.result)) {
       printResult({

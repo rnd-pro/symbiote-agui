@@ -24,7 +24,7 @@ export class SessionTunnel {
   /** @type {Promise<void> | undefined} */
   stopping;
   /** @type {import('../../types/session.js').TunnelStatus} */
-  status = { state: 'starting' };
+  status = { state: 'starting', active: null };
   /** @type {string | undefined} */
   origin;
 
@@ -44,10 +44,10 @@ export class SessionTunnel {
     if (this.starting) { return this.starting; }
     this.controller = new AbortController();
     let signal = AbortSignal.any([this.controller.signal, AbortSignal.timeout(TUNNEL_START_TIMEOUT_MS)]);
-    this.status = { state: 'starting' };
+    this.status = { state: 'starting', active: null };
     this.starting = this.open(signal).catch(async (error) => {
       await this.stopChild();
-      this.status = { state: 'failed', error: errorMessage(error) };
+      this.status = { state: 'failed', active: false, error: errorMessage(error) };
       throw error;
     }).finally(() => { this.starting = undefined; });
     return this.starting;
@@ -83,7 +83,7 @@ export class SessionTunnel {
         this.origin = undefined;
         this.onOrigin(undefined);
         let message = lastError || lastLine || `cloudflared exited (${reason || code}). Run share again to create a new tunnel.`;
-        if (settled && !this.controller?.signal.aborted) { this.status = { state: 'failed', error: message }; }
+        if (settled && !this.controller?.signal.aborted) { this.status = { state: 'failed', active: false, error: message }; }
         reject(new Error(message));
       });
       for (let reader of readers) {
@@ -97,7 +97,7 @@ export class SessionTunnel {
             cleanup();
             this.origin = origin;
             this.onOrigin(origin);
-            this.status = { state: 'ready' };
+            this.status = { state: 'ready', active: null };
             resolve(origin);
           }
         });
@@ -124,7 +124,7 @@ export class SessionTunnel {
         await this.starting?.catch(() => {});
         this.origin = undefined;
         this.onOrigin(undefined);
-        this.status = { state: 'stopped' };
+        this.status = { state: 'stopped', active: false };
       })();
     }
     return this.stopping;

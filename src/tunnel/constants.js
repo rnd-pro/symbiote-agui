@@ -2,6 +2,8 @@ export let CLOUDFLARED_VERSION = '2026.10.1';
 export let TUNNEL_START_TIMEOUT_MS = 90_000;
 export let TUNNEL_REQUEST_TIMEOUT_MS = TUNNEL_START_TIMEOUT_MS + 10_000;
 export let TUNNEL_STOP_TIMEOUT_MS = 3_000;
+export let TUNNEL_CHECK_TIMEOUT_MS = 5_000;
+export let TUNNEL_HEALTH_PATH = 'tunnel-health';
 export let MAX_DOWNLOAD_BYTES = 128 * 1024 * 1024;
 
 export let CLOUDFLARED_ASSETS = Object.freeze({

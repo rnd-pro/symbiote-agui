@@ -23,6 +23,14 @@ export let COMMANDS = Object.freeze({
     usage: 'share <SESSION_ID>',
     options: [],
   },
+  'tunnel renew': {
+    usage: 'tunnel renew <SESSION_ID>',
+    options: [],
+  },
+  'tunnel check': {
+    usage: 'tunnel check <SESSION_ID>',
+    options: [],
+  },
   pages: {
     usage: 'pages <SESSION_ID>',
     options: [],
@@ -46,6 +54,8 @@ export let COMMANDS = Object.freeze({
 });
 
 export let ALL_COMMANDS = Object.freeze({
+  'tunnel renew all': { usage: 'tunnel renew all', options: [] },
+  'tunnel check all': { usage: 'tunnel check all', options: [] },
   'start all': { usage: 'start all [--no-open]', options: ['no-open'] },
   'status all': { usage: 'status all', options: [] },
   'stop all': { usage: 'stop all', options: [] },
@@ -77,5 +87,8 @@ export let HELP = [
   'stop all (also stop-all) stops recorded sessions; clear-all clears running and cached interfaces.',
   'Both use the current state directory and report per-session results.',
   'start --tunnel or share creates a public Quick Tunnel with user and viewer links.',
+  'tunnel renew recreates public links; tunnel check verifies public reachability without recreating.',
+  'Tunnel all commands target running sessions already configured for sharing.',
+  'status checks configured tunnels; tunnel.active reports reachability independently of connector state.',
   'cloudflared is used from PATH or downloaded and verified once; stop closes the tunnel.',
 ].join('\n');

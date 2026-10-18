@@ -68,6 +68,7 @@ process.once('message', async (message) => {
       tools: (input) => runtime.tools(input),
       clear: () => runtime.clear(),
       share: () => runtime.share(),
+      tunnelRenew: () => runtime.share(true),
     });
     control = endpoint.server;
     record.controlUrl = endpoint.url;

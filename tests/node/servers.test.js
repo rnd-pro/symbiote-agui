@@ -8,6 +8,7 @@ import { reserveSession } from '../../src/sessions/store.js';
 import { temporaryState } from './state-fixture.js';
 import { MAX_HTML_BYTES } from '../../src/markup/constants.js';
 import { createPageAccess } from '../../src/server/page-access.js';
+import { checkTunnelActivity } from '../../src/tunnel/activity.js';
 
 test('JSDA serves the page on loopback without exposing source files', async (t) => {
   let state = await temporaryState();
@@ -38,6 +39,14 @@ test('JSDA serves the page on loopback without exposing source files', async (t)
   assert.match(client.headers.get('content-type') || '', /javascript/);
   assert.match(await client.text(), /replaceContent/);
   assert.equal((await fetch(new URL('/client/component.js', page.url))).status, 404);
+  let health = await fetch(new URL('tunnel-health?nonce=unique-check', page.url));
+  assert.equal(health.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(await health.json(), { sessionId: 'readable-page', nonce: 'unique-check' });
+  assert.equal((await fetch(new URL('tunnel-health', page.url))).status, 400);
+  assert.equal((await fetch(new URL('/other/tunnel-health?nonce=check', page.url))).status, 404);
+  let checked = await checkTunnelActivity({ sessionId: 'readable-page', state: 'waiting', publicUrl: page.url, tunnel: { state: 'ready' } });
+  assert.equal(checked.tunnel?.active, true);
+  assert.ok(checked.tunnel?.checkedAt);
 });
 
 test('markup control errors retain worker identity and reject oversized bodies', async (t) => {

@@ -42,6 +42,10 @@ Session metadata, logs, and saved definitions live under `~/.symbiote-agui/sessi
 ```sh
 npx symbiote-agui start my-workspace --tunnel
 npx symbiote-agui share my-workspace
+npx symbiote-agui tunnel check my-workspace
+npx symbiote-agui tunnel renew my-workspace
+npx symbiote-agui tunnel check all
+npx symbiote-agui tunnel renew all
 ```
 
 Use `start --tunnel` for a new session or `share` for one already running. Results include:
@@ -58,7 +62,13 @@ Mirroring covers light DOM and ordinary form values, with a 1 MiB snapshot limit
 
 AGUI uses `cloudflared` from PATH or downloads and verifies an official binary once. Automatic provisioning supports macOS/Linux on x64 or arm64 and Windows on x64. Set `AGUI_CLOUDFLARED_PATH` to an absolute executable path before starting a session to select an installation. Provisioning and tunnel connection can take up to 90 seconds after local startup.
 
-Repeated `share` calls reuse the running tunnel. Restarting a worker requires sharing again and creates a new hostname. Public links are accessible to anyone who has them and require the host to stay online. Cloudflare Quick Tunnels are temporary and have no uptime guarantee. See [Cloudflare's limits](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/#limitations).
+Repeated `share` calls reuse the running tunnel. `tunnel renew <SESSION_ID>` closes its connector and creates replacement public links while keeping the session, interface, and local URL available. It also enables sharing for a running session without a tunnel. Open and distribute the new links; old public pages can disconnect. If replacement fails, the local session remains available and the old tunnel is not restored.
+
+`tunnel check <SESSION_ID>` and `status` verify the public URL with a fresh, session-specific response, with a five-second request timeout. Connector `tunnel.state: "ready"` alone does not establish public reachability. `tunnel.active` is `true` when reachable, `false` when inactive or the check fails, and `null` when a newly created connector has not been checked. `tunnel.checkedAt` records a completed public check; `tunnel.checkError` explains failures separately from connector errors. A failed check does not prove Cloudflare disabled the tunnel: local network or DNS failures can also cause it. Public URL fields identify the configured hostname; check `tunnel.active` before using them. Checks do not create or replace tunnels.
+
+`tunnel renew all` and `tunnel check all` target running sessions already configured for sharing, including failed connectors. They skip saved-only sessions and running sessions without sharing, report per-session results, and continue after failures. A failed check or renewal exits with code 1 and preserves available status details. An empty batch succeeds. If a worker reports that tunnel renewal is unavailable, stop and start that session before retrying.
+
+Restarting a worker requires sharing again and creates a new hostname. Public links are accessible to anyone who has them and require the host to stay online. Cloudflare Quick Tunnels are temporary and have no uptime guarantee. See [Cloudflare's limits](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/#limitations).
 
 Only the page server is exposed. The CLI control server stays local and authenticated. Browser connections require no cookie, token, or authorization request; WebSocket admission checks the session path and allowed origin.
 
@@ -92,7 +102,7 @@ See the [Chrome connection guide](https://github.com/ChromeDevTools/chrome-devto
 
 - `SESSION_EXISTS`: use `status` to find the existing session; do not repeatedly start it.
 - `PAGE_UNAVAILABLE`: open the session URL. Shared sessions need a user connection for state updates and tool calls.
-- `TUNNEL_FAILED`: the local session remains running. Inspect `status`, correct the reported problem, and use `share` again. Later connector exits also appear in status.
+- `TUNNEL_FAILED`: the local session remains running. Inspect `status`, correct the reported problem, and use `tunnel renew <SESSION_ID>` to replace stale links or `share` to retry a failed connector. Later connector exits also appear in status.
 - `CACHE_ERROR`: inspect the reported storage path. Failed insertions preserve the saved definition, although a page may already have received changes.
 - `SESSION_UNREACHABLE`: inspect the session's `worker.log` rather than repeatedly starting it or killing a stored process ID.
 

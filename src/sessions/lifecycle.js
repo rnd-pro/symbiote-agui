@@ -1,12 +1,14 @@
 import { SHUTDOWN_TIMEOUT_MS, SESSION_STATE } from './constants.js';
 import { requestSession } from './client.js';
 import { isProcessAlive, readSession, releaseSession } from './store.js';
+import { checkTunnelActivity } from '../tunnel/activity.js';
 
 /**
  * @param {string} sessionId
+ * @param {boolean} [checkTunnel]
  * @returns {Promise<import('../../types/session.js').SessionStatus>}
  */
-export async function statusSession(sessionId) {
+export async function statusSession(sessionId, checkTunnel = true) {
   let record = await readSession(sessionId);
 
   if (!record || !isProcessAlive(record.pid)) {
@@ -14,6 +16,7 @@ export async function statusSession(sessionId) {
   }
 
   let status = await requestSession(record, 'status');
+  if (checkTunnel && status.tunnel) { status = await checkTunnelActivity(status); }
   return { ...status, pid: record.pid, active: status.state !== SESSION_STATE.STOPPED };
 }
 

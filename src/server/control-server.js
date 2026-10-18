@@ -24,7 +24,7 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
 
     let action = `${request.method} ${request.url}`;
 
-    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update', 'POST /tools', 'POST /clear', 'POST /share'].includes(action)) {
+    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update', 'POST /tools', 'POST /clear', 'POST /share', 'POST /tunnel-renew'].includes(action)) {
       response.writeHead(404).end();
       return;
     }
@@ -57,6 +57,10 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
       if (action === 'POST /share') {
         if (!actions.share) { throw new CommandError('Sharing is unavailable in this worker. Stop and restart the session.', ERROR_CODE.TUNNEL_FAILED, EXIT_CODE.RUNTIME_ERROR); }
         result = await actions.share();
+      }
+      if (action === 'POST /tunnel-renew') {
+        if (!actions.tunnelRenew) { throw new CommandError('Tunnel renewal is unavailable in this worker. Stop and restart the session.', ERROR_CODE.TUNNEL_FAILED, EXIT_CODE.RUNTIME_ERROR); }
+        result = await actions.tunnelRenew();
       }
       if (action === 'POST /update' || action === 'POST /tools') {
         let handler = action === 'POST /tools' ? actions.tools : actions.update;

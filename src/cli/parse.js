@@ -38,7 +38,9 @@ export function parseCommand(args) {
     return { kind: 'version' };
   }
 
-  let [name, sessionId] = positionals;
+  let commandLength = positionals[0] === 'tunnel' ? 2 : 1;
+  let name = positionals.slice(0, commandLength).join(' ');
+  let sessionId = positionals[commandLength];
 
   if (name === 'mcp') {
     if (positionals.length !== 1 || Object.keys(values).length) { throw new CommandError('Usage: symbiote-agui mcp'); }
@@ -62,7 +64,7 @@ export function parseCommand(args) {
     throw new CommandError('Unknown command. Use --help for usage.');
   }
 
-  if (positionals.length !== 2 || !sessionId) {
+  if (positionals.length !== commandLength + 1 || !sessionId) {
     throw new CommandError(`${name} requires exactly one SESSION_ID.`);
   }
 

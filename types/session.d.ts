@@ -26,11 +26,14 @@ export interface SessionStatus {
 
 export interface TunnelStatus {
   state: 'starting' | 'ready' | 'failed' | 'stopped';
+  active?: boolean | null;
+  checkedAt?: string;
+  checkError?: string;
   error?: string;
 }
 
 export type SessionOperationResult = ({ ok: true } & SessionStatus)
-  | (CommandFailure & { sessionId: string; active?: null });
+  | (CommandFailure & Omit<Partial<SessionStatus>, 'active'> & { sessionId: string; active?: boolean | null });
 
 export type AllSessionsResult = {
   command: import('./cli.js').AllSessionsCommand;
@@ -69,6 +72,7 @@ export interface ControlActions {
   tools?(input: unknown): Promise<SessionStatus>;
   clear?(): Promise<SessionStatus>;
   share?(): Promise<SessionStatus>;
+  tunnelRenew?(): Promise<SessionStatus>;
 }
 
 export interface PreparedCache {

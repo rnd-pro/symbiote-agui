@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { closeServer, waitForServer } from '../shared/server.js';
 import { createStyles } from '../markup/styles.js';
 import { STYLESHEET_PATH, CLIENT_SCRIPT_PATH } from '../markup/constants.js';
+import { TUNNEL_HEALTH_PATH } from '../tunnel/constants.js';
 
 /** @param {import('../../types/session.js').PageAccess} access */
 export async function startPageServer(access) {
@@ -24,6 +25,18 @@ export async function startPageServer(access) {
     let pathname = request.url?.split('?')[0];
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
+    if (request.method === 'GET' && pathname === `${access.path}${TUNNEL_HEALTH_PATH}`) {
+      let nonce = new URL(request.url || '', 'http://localhost').searchParams.get('nonce');
+      if (!nonce || !/^[a-zA-Z0-9-]{1,64}$/.test(nonce)) {
+        response.writeHead(400).end();
+        return;
+      }
+      response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({
+        sessionId: access.path.slice(1, -1),
+        nonce,
+      }));
+      return;
+    }
     if (request.method === 'GET' && pathname === access.path.slice(0, -1)) {
       response.writeHead(308, { location: access.path }).end();
       return;

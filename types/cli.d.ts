@@ -11,7 +11,7 @@ export type CliRequest =
   | { kind: 'help' }
   | { kind: 'version' }
   | { kind: 'mcp' }
-  | { kind: 'all'; command: AllSessionsCommand }
+  | { kind: 'all'; command: AllSessionsCommand; open?: boolean }
   | {
     kind: 'command';
     command: SessionCommand;

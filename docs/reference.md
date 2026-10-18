@@ -8,17 +8,22 @@ Use Node.js 24 or newer. Session IDs are case-sensitive, contain 1-64 letters, d
 
 ```sh
 npx symbiote-agui start my-workspace
+npx symbiote-agui start all
+npx symbiote-agui status all
 npx symbiote-agui status my-workspace
 npx symbiote-agui stop my-workspace
+npx symbiote-agui stop all
 npx symbiote-agui clear my-workspace
 ```
 
 - `start` opens the regular browser and restores the saved interface when available. With `--no-open`, open the returned `url` yourself.
+- `start all` starts saved and recorded sessions in the current storage root, reuses running workers without resetting their interfaces, and opens their pages. Use `--no-open` to return links without opening tabs. It returns per-session results and continues after failures. Restarted sessions restore saved definitions and run locally; use `share <SESSION_ID>` to create new public links.
 - `status` reports `waiting` without connected pages, `ready` with connected pages, or `stopped`. A shared session can have viewers connected while waiting for an interactive user.
+- `status all` lists all recorded and saved sessions in the current storage root. Each successful result has `active: true` for a running session or `active: false` with `state: "stopped"` for an inactive session. Running sessions include verified OS process IDs (`pid`), local URLs, and current public user/viewer URLs when sharing is active. Inactive sessions have no live links or PID. Unreachable sessions report individual failures with `active: null` (unknown) without hiding other results. Results contain `command`, `total`, and a `sessions` array; partial failures set `ok: false` and exit with code 1. The word `all` selects the bulk operation for `start`, `status`, and `stop`.
 - `stop` ends the session and its tunnel, retaining the saved interface. Tabs remain open with `Session ended.`.
 - `clear` discards the saved interface and clears live content. A running session and its tunnel stay available. Clearing also works while stopped.
 
-`stop-all` and `clear-all` apply to every session in the current storage root, including sessions created from other directories. Use them only when you intend to affect all those interfaces.
+`stop all` (also available as `stop-all`) stops every session and its tunnel in the current storage root, retaining saved interfaces. `clear-all` discards every saved definition and clears live interfaces while keeping workers running. Both include sessions created from other directories and report per-session results, continuing after individual failures. `all` is reserved for the bulk operation in `start all`, `status all`, and `stop all`.
 
 Run `npx symbiote-agui --help` for the command list. Session commands return JSON, except help and version. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input.
 

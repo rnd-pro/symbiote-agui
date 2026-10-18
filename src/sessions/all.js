@@ -1,4 +1,5 @@
-import { stopSession } from './lifecycle.js';
+import { statusSession, stopSession } from './lifecycle.js';
+import { ensureSessionStarted } from './start.js';
 import { clearSession } from './clear.js';
 import { listSessionIds } from './list.js';
 import { CommandError } from '../shared/command-error.js';
@@ -10,13 +11,17 @@ import { errorMessage } from '../shared/system-error.js';
  * @returns {Promise<import('../../types/session.js').AllSessionsResult>}
  */
 export async function runAllSessions(command) {
+  let stop = { run: stopSession, code: ERROR_CODE.STOP_FAILED };
   let operations = {
-    'stop-all': { run: stopSession, code: ERROR_CODE.STOP_FAILED },
+    'start all': { run: ensureSessionStarted, code: ERROR_CODE.START_FAILED },
+    'status all': { run: statusSession, code: ERROR_CODE.SESSION_UNREACHABLE },
+    'stop all': stop,
+    'stop-all': stop,
     'clear-all': { run: clearSession, code: ERROR_CODE.CLEAR_FAILED },
   };
   let operation = operations[command];
   let ids;
-  try { ids = await listSessionIds(command === 'clear-all'); }
+  try { ids = await listSessionIds(['clear-all', 'start all', 'status all'].includes(command)); }
   catch (error) {
     throw new CommandError(`Cannot list sessions: ${errorMessage(error)}`, operation.code, EXIT_CODE.RUNTIME_ERROR);
   }
@@ -27,6 +32,7 @@ export async function runAllSessions(command) {
       return {
         ok: false,
         sessionId,
+        ...(command === 'status all' ? { active: null } : {}),
         error: {
           code: error instanceof CommandError ? error.code : operation.code,
           message: errorMessage(error),

@@ -45,11 +45,17 @@ export function parseCommand(args) {
     return { kind: 'mcp' };
   }
 
-  if (name && Object.hasOwn(ALL_COMMANDS, name)) {
-    if (positionals.length !== 1 || Object.keys(values).length) {
-      throw new CommandError(`Usage: symbiote-agui ${name}`);
+  let groupedCommand = `${name} ${sessionId}`;
+  let allCommand = Object.hasOwn(ALL_COMMANDS, groupedCommand) ? groupedCommand : name;
+  if (allCommand && Object.hasOwn(ALL_COMMANDS, allCommand)) {
+    let command = /** @type {import('../../types/cli.js').AllSessionsCommand} */ (allCommand);
+    let definition = ALL_COMMANDS[command];
+    /** @type {string[]} */
+    let allowed = definition.options;
+    if (positionals.length !== allCommand.split(' ').length || Object.keys(values).some((option) => !allowed.includes(option))) {
+      throw new CommandError(`Usage: symbiote-agui ${definition.usage}`);
     }
-    return { kind: 'all', command: /** @type {import('../../types/cli.js').AllSessionsCommand} */ (name) };
+    return { kind: 'all', command, ...(command === 'start all' ? { open: !values['no-open'] } : {}) };
   }
 
   if (!name || !Object.hasOwn(COMMANDS, name)) {

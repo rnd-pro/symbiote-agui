@@ -52,12 +52,15 @@ Anyone with a public link can open it. Links are temporary, and your computer an
 
 Ask your agent to reopen a session by name, stop it when you are finished, or clear it when you want to discard the saved interface. Reopening restores the interface definition; previous inputs and task progress are not saved automatically.
 
-You can also check or stop a session yourself:
+List all sessions with active/inactive status and current links for running sessions, check one session, or stop it yourself:
 
 ```sh
+npx symbiote-agui status all
 npx symbiote-agui status my-workspace
 npx symbiote-agui stop my-workspace
 ```
+
+Run `npx symbiote-agui start all` to reopen all saved sessions, reusing those already running. To stop every session and its tunnel while keeping saved interfaces, run `npx symbiote-agui stop all`.
 
 ## Built with
 

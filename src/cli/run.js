@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { startSession } from '../sessions/start.js';
 import { statusSession, stopSession, readEvents } from '../sessions/lifecycle.js';
 import { insertMarkup, updateState } from '../sessions/insert.js';
-import { openPage } from '../browser/open.js';
+import { openSessionPage } from '../browser/open.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { HELP } from './commands.js';
@@ -46,6 +46,11 @@ export async function run(args) {
 
     if (request.kind === 'all') {
       let result = await runAllSessions(request.command);
+      if (request.command === 'start all' && request.open) {
+        result.sessions = await Promise.all(result.sessions.map(async (session) => session.ok
+          ? { ...session, ...await openSessionPage(session) }
+          : session));
+      }
       process.stdout.write(`${JSON.stringify(result)}\n`);
       return result.ok ? EXIT_CODE.SUCCESS : EXIT_CODE.RUNTIME_ERROR;
     }
@@ -72,12 +77,7 @@ export async function run(args) {
     };
     let status = await handlers[request.command]();
     if (request.command === 'start' && request.open && 'url' in status && status.url) {
-      try {
-        await openPage(status.publicUserUrl || status.publicUrl || status.url);
-        status = { ...status, opened: true };
-      } catch {
-        status = { ...status, opened: false, warning: 'Could not open the default browser. Open publicUserUrl, publicUrl, or url manually.' };
-      }
+      status = await openSessionPage(status);
     }
     if ('action' in status && status.action === 'call' && isToolError(status.result)) {
       process.stdout.write(`${JSON.stringify({

@@ -4,15 +4,17 @@ import { isProcessAlive, readSession, releaseSession } from './store.js';
 
 /**
  * @param {string} sessionId
+ * @returns {Promise<import('../../types/session.js').SessionStatus>}
  */
 export async function statusSession(sessionId) {
   let record = await readSession(sessionId);
 
   if (!record || !isProcessAlive(record.pid)) {
-    return { sessionId, state: SESSION_STATE.STOPPED };
+    return { sessionId, state: SESSION_STATE.STOPPED, active: false };
   }
 
-  return requestSession(record, 'status');
+  let status = await requestSession(record, 'status');
+  return { ...status, pid: record.pid, active: status.state !== SESSION_STATE.STOPPED };
 }
 
 /** @param {string} sessionId */

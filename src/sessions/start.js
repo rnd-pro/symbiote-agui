@@ -7,7 +7,8 @@ import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { hasErrorCode } from '../shared/system-error.js';
 import { withTimeout } from '../shared/timeout.js';
-import { SHUTDOWN_TIMEOUT_MS, STARTUP_TIMEOUT_MS } from './constants.js';
+import { SESSION_STATE, SHUTDOWN_TIMEOUT_MS, STARTUP_TIMEOUT_MS } from './constants.js';
+import { statusSession } from './lifecycle.js';
 import { requestSession } from './client.js';
 import { getStateRoot, isProcessAlive, readSession, recordDirectory, releaseSession, reserveSession, writeSession } from './store.js';
 
@@ -150,5 +151,20 @@ export async function startSession(sessionId) {
     throw new CommandError(`Could not start session ${sessionId}: ${error instanceof Error ? error.message : error}.`, ERROR_CODE.START_FAILED, EXIT_CODE.RUNTIME_ERROR);
   } finally {
     await log?.close();
+  }
+}
+
+/** @param {string} sessionId */
+export async function ensureSessionStarted(sessionId) {
+  let status = await statusSession(sessionId);
+  if (status.state !== SESSION_STATE.STOPPED) { return status; }
+  try {
+    let started = await startSession(sessionId);
+    return { ...started, ...await statusSession(sessionId) };
+  } catch (error) {
+    if (error instanceof CommandError && error.code === ERROR_CODE.SESSION_EXISTS) {
+      return statusSession(sessionId);
+    }
+    throw error;
   }
 }

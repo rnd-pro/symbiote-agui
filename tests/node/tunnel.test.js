@@ -59,6 +59,17 @@ test('sharing is idempotent, authorizes only configured origins, and stops its o
   let status = await cli('status', sessionId);
   assert.equal(status.publicViewerUrl, session.publicViewerUrl);
   assert.equal(new URL(status.publicUserUrl).hash, '');
+  let listing = await cli('status', 'all');
+  assert.equal(listing.total, 1);
+  assert.partialDeepStrictEqual(listing.sessions[0], {
+    ok: true,
+    sessionId,
+    pid: (await readSession(sessionId))?.pid,
+    url: session.url,
+    publicUrl: session.publicUrl,
+    publicUserUrl: session.publicUserUrl,
+    publicViewerUrl: session.publicViewerUrl,
+  });
   assert.ok((await readSession(sessionId))?.controlUrl?.startsWith('http://127.0.0.1:'));
   socket.close();
   await once(socket, 'close');
@@ -106,6 +117,11 @@ test('failed or exited tunnels leave the local session usable and can be recreat
   }
   assert.equal(status.publicUrl, undefined);
   assert.equal(status.tunnel.state, 'failed');
+  let listing = await cli('status', 'all');
+  assert.equal(listing.sessions[0].tunnel.state, 'failed');
+  for (let key of ['publicUrl', 'publicUserUrl', 'publicViewerUrl']) {
+    assert.equal(listing.sessions[0][key], undefined);
+  }
   let denied = new WebSocket(new URL('socket', status.url).href.replace('http:', 'ws:'), { origin: new URL(shared.publicUrl).origin });
   await assert.rejects(once(denied, 'open'), /403/);
   assert.equal((await cli('share', 'retry')).tunnel.state, 'ready');

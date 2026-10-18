@@ -34,16 +34,28 @@ test('CLI calls reject malformed envelopes before contacting a session', async (
 });
 
 test('commands for all sessions require no session ID and reject extra arguments or options', () => {
-  for (let command of ['stop-all', 'clear-all']) {
-    assert.deepEqual(parseCommand([command]), { kind: 'all', command });
+  for (let command of ['status all', 'stop all', 'stop-all', 'clear-all']) {
+    let parts = command.split(' ');
+    assert.deepEqual(parseCommand(parts), { kind: 'all', command });
     for (let args of [
-      [command, 'desk'],
-      [command, '--file', 'input.json'],
-      [command, '--no-open'],
-      [command, '--authorize'],
-      [command, '--page', 'tab'],
+      [...parts, 'desk'],
+      [...parts, '--file', 'input.json'],
+      [...parts, '--no-open'],
+      [...parts, '--authorize'],
+      [...parts, '--page', 'tab'],
     ]) {
       assert.throws(() => parseCommand(args), { code: 'INVALID_INPUT' });
     }
   }
+  assert.partialDeepStrictEqual(parseCommand(['status', 'desk']), { kind: 'command', command: 'status', sessionId: 'desk' });
+  assert.partialDeepStrictEqual(parseCommand(['stop', 'desk']), { kind: 'command', command: 'stop', sessionId: 'desk' });
+});
+
+test('start all opens pages by default and accepts only the no-open option', () => {
+  assert.deepEqual(parseCommand(['start', 'all']), { kind: 'all', command: 'start all', open: true });
+  assert.deepEqual(parseCommand(['start', 'all', '--no-open']), { kind: 'all', command: 'start all', open: false });
+  for (let extra of [['desk'], ['--tunnel'], ['--file', 'input.html'], ['--page', 'tab']]) {
+    assert.throws(() => parseCommand(['start', 'all', ...extra]), { code: 'INVALID_INPUT' });
+  }
+  assert.partialDeepStrictEqual(parseCommand(['start', 'desk']), { kind: 'command', command: 'start', sessionId: 'desk' });
 });

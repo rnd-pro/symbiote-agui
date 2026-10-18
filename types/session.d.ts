@@ -6,6 +6,8 @@ export type SessionState = typeof SESSION_STATE[keyof typeof SESSION_STATE];
 export interface SessionStatus {
   sessionId: string;
   state: SessionState;
+  active?: boolean;
+  pid?: number;
   url?: string;
   publicUrl?: string;
   publicUserUrl?: string;
@@ -28,7 +30,7 @@ export interface TunnelStatus {
 }
 
 export type SessionOperationResult = ({ ok: true } & SessionStatus)
-  | (CommandFailure & { sessionId: string });
+  | (CommandFailure & { sessionId: string; active?: null });
 
 export type AllSessionsResult = {
   command: import('./cli.js').AllSessionsCommand;

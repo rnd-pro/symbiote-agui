@@ -14,6 +14,11 @@ import { runAllSessions } from '../sessions/all.js';
 import { shareSession } from '../sessions/share.js';
 import { errorMessage } from '../shared/system-error.js';
 
+/** @param {import('../../types/cli.js').CommandResult} result */
+function printResult(result) {
+  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+}
+
 /**
  * @param {string[]} args
  * @returns {Promise<import('../../types/cli.js').ExitCode>}
@@ -51,7 +56,7 @@ export async function run(args) {
           ? { ...session, ...await openSessionPage(session) }
           : session));
       }
-      process.stdout.write(`${JSON.stringify(result)}\n`);
+      printResult(result);
       return result.ok ? EXIT_CODE.SUCCESS : EXIT_CODE.RUNTIME_ERROR;
     }
 
@@ -80,14 +85,14 @@ export async function run(args) {
       status = await openSessionPage(status);
     }
     if ('action' in status && status.action === 'call' && isToolError(status.result)) {
-      process.stdout.write(`${JSON.stringify({
+      printResult({
         ok: false,
         ...status,
         error: { code: ERROR_CODE.TOOL_FAILED, message: 'The page tool reported an error. See result for details.' },
-      })}\n`);
+      });
       return EXIT_CODE.RUNTIME_ERROR;
     }
-    process.stdout.write(`${JSON.stringify({ ok: true, ...status })}\n`);
+    printResult({ ok: true, ...status });
     return EXIT_CODE.SUCCESS;
   } catch (error) {
     let failure = error instanceof CommandError
@@ -103,7 +108,7 @@ export async function run(args) {
       },
     };
 
-    process.stdout.write(`${JSON.stringify(result)}\n`);
+    printResult(result);
     return failure.exitCode;
   }
 }

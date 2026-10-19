@@ -2,4 +2,6 @@ node_modules/
 *.tsbuildinfo
 .DS_Store
 *.tgz
+planning
 examples
+TMP

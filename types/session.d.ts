@@ -18,6 +18,7 @@ export interface SessionStatus {
   opened?: boolean;
   warning?: string;
   restored?: boolean;
+  synced?: boolean;
   cleared?: boolean;
   events?: import('./transport.js').SessionEvent[];
   dropped?: number;
@@ -71,6 +72,7 @@ export interface ControlActions {
   events?(): SessionStatus;
   tools?(input: unknown): Promise<SessionStatus>;
   clear?(): Promise<SessionStatus>;
+  sync?(): Promise<SessionStatus>;
   share?(): Promise<SessionStatus>;
   tunnelRenew?(): Promise<SessionStatus>;
 }

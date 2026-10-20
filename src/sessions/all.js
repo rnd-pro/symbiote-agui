@@ -6,6 +6,16 @@ import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { errorMessage } from '../shared/system-error.js';
 import { sharedSessionTunnel } from './tunnel.js';
+import { syncDefinition } from '../library/catalog.js';
+import { readCachedMarkup } from './cache.js';
+import { readSession, isProcessAlive } from './store.js';
+
+/** @param {string} sessionId */
+async function syncRunningDefinition(sessionId) {
+  let record = await readSession(sessionId);
+  if (!record || !isProcessAlive(record.pid) || await readCachedMarkup(sessionId) === undefined) { return undefined; }
+  return syncDefinition(sessionId);
+}
 
 /**
  * @param {import('../../types/cli.js').AllSessionsCommand} command
@@ -14,6 +24,7 @@ import { sharedSessionTunnel } from './tunnel.js';
 export async function runAllSessions(command) {
   let stop = { run: stopSession, code: ERROR_CODE.STOP_FAILED };
   let operations = {
+    'sync all': { run: syncRunningDefinition, code: ERROR_CODE.UPDATE_FAILED },
     'tunnel renew all': { run: (/** @type {string} */ id) => sharedSessionTunnel(id, true), code: ERROR_CODE.TUNNEL_FAILED },
     'tunnel check all': { run: (/** @type {string} */ id) => sharedSessionTunnel(id, false), code: ERROR_CODE.TUNNEL_FAILED },
     'start all': { run: ensureSessionStarted, code: ERROR_CODE.START_FAILED },

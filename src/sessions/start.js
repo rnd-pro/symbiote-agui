@@ -9,8 +9,9 @@ import { hasErrorCode } from '../shared/system-error.js';
 import { withTimeout } from '../shared/timeout.js';
 import { SESSION_STATE, SHUTDOWN_TIMEOUT_MS, STARTUP_TIMEOUT_MS } from './constants.js';
 import { statusSession } from './lifecycle.js';
+import { getSettings } from '../config/settings.js';
 import { requestSession } from './client.js';
-import { getStateRoot, isProcessAlive, readSession, recordDirectory, releaseSession, reserveSession, writeSession } from './store.js';
+import { getDefaultStateRoot, getStateRoot, isProcessAlive, readSession, recordDirectory, releaseSession, reserveSession, writeSession } from './store.js';
 
 /**
  * @param {string} sessionId
@@ -110,7 +111,12 @@ export async function startSession(sessionId) {
     log = await open(join(recordDirectory(record), 'worker.log'), 'a', 0o600);
     child = spawn(process.execPath, [fileURLToPath(new URL('./worker.js', import.meta.url))], {
       cwd: recordDirectory(record),
-      env: { ...process.env, AGUI_STATE_DIR: getStateRoot() },
+      env: {
+        ...process.env,
+        AGUI_STATE_DIR: getDefaultStateRoot(),
+        AGUI_WORKER_STATE_DIR: getStateRoot(),
+        AGUI_LIBRARY_DIR: getSettings().folder || '',
+      },
       detached: true,
       stdio: ['ignore', log.fd, log.fd, 'ipc'],
     });

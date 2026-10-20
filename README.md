@@ -17,6 +17,7 @@ The interface runs on your computer and opens in your normal browser. Your agent
 - Make choices through forms, buttons, and checklists that your agent can respond to.
 - Share a live view with other people while one person interacts.
 - Reopen saved interfaces by name for recurring tasks.
+- Keep task interfaces and their descriptions in Git so your team can reuse and improve them.
 
 ## Get started
 
@@ -63,6 +64,18 @@ npx symbiote-agui stop my-workspace
 ```
 
 Run `npx symbiote-agui start all` to reopen all saved sessions, reusing those already running. To stop every session and its tunnel while keeping saved interfaces, run `npx symbiote-agui stop all`.
+
+## Build a shared team library
+
+Choose a folder inside your team's Git checkout:
+
+```sh
+npx symbiote-agui config folder ./aguis
+```
+
+AGUI saves each interface as an HTML file with a Markdown description. Include the folder and `.agui.json` in your normal Git workflow. Your agent can discover an existing interface, adapt it as the task evolves, and load your teammates' changes. Runtime connections and control tokens stay on your computer.
+
+Without a folder setting, AGUI keeps using its private cache. See the [team library guide](./docs/library.md) for discovery, descriptions, and syncing running interfaces.
 
 ## Built with
 

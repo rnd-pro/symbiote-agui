@@ -1,4 +1,7 @@
 export let COMMANDS = Object.freeze({
+  save: { usage: 'save <SESSION_ID> [--file <HTML_PATH>]', options: ['file'] },
+  describe: { usage: 'describe <SESSION_ID> [--file <MARKDOWN_PATH>]', options: ['file'] },
+  sync: { usage: 'sync <SESSION_ID>', options: [] },
   start: {
     usage: 'start <SESSION_ID> [--no-open] [--tunnel]',
     options: ['no-open', 'tunnel'],
@@ -54,6 +57,7 @@ export let COMMANDS = Object.freeze({
 });
 
 export let ALL_COMMANDS = Object.freeze({
+  'sync all': { usage: 'sync all', options: [] },
   'tunnel renew all': { usage: 'tunnel renew all', options: [] },
   'tunnel check all': { usage: 'tunnel check all', options: [] },
   'start all': { usage: 'start all [--no-open]', options: ['no-open'] },
@@ -68,12 +72,20 @@ export let HELP = [
   '',
   ...Object.values(COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(ALL_COMMANDS).map(({ usage }) => `  ${usage}`),
+  '  list [--query <TEXT>]        Discover saved AGUIs by ID or Markdown description',
+  '  config folder <PATH>         Set the project AGUI folder in .agui.json',
+  '  config show                  Show effective storage settings',
+  '  config reset                 Remove the project folder setting',
   '  mcp                         Run the MCP server over stdio',
   '',
   '  --help, -h     Show help',
   '  --version, -v  Show version',
   '',
   'insert reads UTF-8 HTML from stdin when --file is absent.',
+  'save stores a definition without starting it; without --file it saves existing content or imports the private cache.',
+  'describe reads or replaces the Markdown description; accepted inserts preserve existing descriptions.',
+  'sync reloads saved HTML into running sessions without rewriting source files or running Git commands.',
+  'AGUI_LIBRARY_DIR overrides the project folder; without a folder, private caching remains the default.',
   'insert replaces the session content; input is limited to 1 MiB.',
   'update reads JSON { selector, values, method?, rewrite? } from file or stdin.',
   'events returns and clears buffered interface events.',

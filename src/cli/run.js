@@ -14,6 +14,8 @@ import { runAllSessions } from '../sessions/all.js';
 import { shareSession } from '../sessions/share.js';
 import { errorMessage } from '../shared/system-error.js';
 import { checkSessionTunnel, renewSessionTunnel } from '../sessions/tunnel.js';
+import { describeDefinition, saveDefinition, syncDefinition } from '../library/catalog.js';
+import { runLibraryCommand } from './library.js';
 
 /** @param {import('../../types/cli.js').CommandResult} result */
 function printResult(result) {
@@ -27,6 +29,10 @@ function printResult(result) {
 export async function run(args) {
   try {
     let request = parseCommand(args);
+    if (request.kind === 'library') {
+      printResult({ ok: true, ...await runLibraryCommand(request) });
+      return EXIT_CODE.SUCCESS;
+    }
 
     if (request.kind === 'mcp') {
       try {
@@ -62,6 +68,9 @@ export async function run(args) {
     }
 
     let handlers = {
+      save: () => saveDefinition(request.sessionId, request.file),
+      describe: () => describeDefinition(request.sessionId, request.file),
+      sync: () => syncDefinition(request.sessionId),
       start: async () => {
         let local = await startSession(request.sessionId);
         if (!request.tunnel) { return local; }

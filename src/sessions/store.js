@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, rmdir, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -6,11 +6,19 @@ import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { hasErrorCode } from '../shared/system-error.js';
 import { sessionKey } from './identity.js';
+import { getSettings } from '../config/settings.js';
 
-export function getStateRoot() {
+export function getDefaultStateRoot() {
   return process.env.AGUI_STATE_DIR
     ? resolve(process.env.AGUI_STATE_DIR)
     : join(homedir(), '.symbiote-agui', 'sessions');
+}
+
+export function getStateRoot() {
+  if (process.env.AGUI_WORKER_STATE_DIR) { return resolve(process.env.AGUI_WORKER_STATE_DIR); }
+  let root = getDefaultStateRoot();
+  let folder = getSettings().folder;
+  return folder ? join(root, '.libraries', createHash('sha256').update(folder).digest('hex')) : root;
 }
 
 /** @param {string} sessionId */

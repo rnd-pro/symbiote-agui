@@ -37,7 +37,7 @@ test('cache publication is atomic, private, and preserves inline modules and emp
   }
   await save('desk', '');
   assert.equal(await readCachedMarkup('desk'), '');
-  assert.equal((await readdir(dirname(cachePath('desk')))).length, 1);
+  assert.equal((await readdir(dirname(cachePath('desk')))).length, 2);
   await clearCachedMarkup('desk');
   await clearCachedMarkup('desk');
   assert.equal(await readCachedMarkup('desk'), undefined);

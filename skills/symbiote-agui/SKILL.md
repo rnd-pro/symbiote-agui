@@ -1,6 +1,6 @@
 ---
 name: symbiote-agui
-description: Create, restore, share, and operate interactive interfaces with Symbiote AGUI. Use for generated HTML, Tailwind styling, RAT templates, component state updates, and user interaction through the AGUI CLI, with optional MCP integration.
+description: Create, discover, evolve, share, and operate interactive interfaces with Symbiote AGUI. Use for reusable team AGUI libraries, generated HTML, Tailwind styling, RAT templates, component state updates, and user interaction through the CLI, with optional MCP integration.
 ---
 
 # Symbiote AGUI
@@ -13,9 +13,19 @@ Use a shell with Node.js 24 or newer. Run `npx symbiote-agui --help` once and ac
 
 For routine use, prepare HTML and JSON files with workspace file tools, then run one simple command beginning with `npx symbiote-agui`, passing input with `--file`. Reuse the host's existing approval for that command prefix. Avoid heredocs, pipes, shell wrappers, and inline environment assignments in these invocations: they can prevent approval reuse. Host permissions still apply; AGUI cannot grant itself access or suppress an enforced prompt.
 
+## Reusable task interfaces
+
+Before creating an interface for a recurring task, use `npx symbiote-agui list --query "task terms"` and `npx symbiote-agui describe <SESSION_ID>` to find an existing definition. Reuse and improve a matching AGUI instead of regenerating it.
+
+For a team library requested by the user, run `npx symbiote-agui config folder ./aguis` inside their Git checkout. `.agui.json` stores the relative folder setting; `config show` reports effective settings, and `config reset` removes that setting. The nearest configuration applies in child directories. An absolute `AGUI_LIBRARY_DIR` overrides it; an empty value selects private caching. Without a folder, retain the default private-cache workflow. Do not change storage scope merely to resolve an ID collision.
+
+Accepted insertions save `<ID>.html` and create a missing `<ID>.md` in the selected library. Use `npx symbiote-agui save <ID> --file /absolute/path/view.html` to save a definition without starting it. `save <ID>` also imports a private cached definition when that ID is absent from the selected library, leaving the private copy intact. Prepare a useful Markdown description and apply it with `npx symbiote-agui describe <ID> --file /absolute/path/description.md`. Document purpose, data sources, actions, and persistence expectations; update it with meaningful interface changes and preserve existing task knowledge. Existing descriptions survive insertions.
+
+Keep Git commits, pulls, and conflict resolution in the user's normal workflow. After source changes, use `npx symbiote-agui sync <ID>` to reload a running session, or `sync all` for running sessions with saved definitions in the current scope. Sync reads files without rewriting them, resets live component state, reruns modules, and requires fresh tool discovery. Start stopped definitions normally. HTML and Markdown travel through Git; live state, credentials, logs, and tunnel URLs do not. Library folders isolate sessions with matching IDs; workers retain the folder selected at startup. `clear` removes both source and description, including Git-managed files. See the [team library guide](../../docs/library.md) for details.
+
 ## Routine workflow
 
-Choose a case-sensitive session ID matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`. Reuse it for the same interface; IDs are shared across working directories for the current OS user.
+Choose a session ID matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`. Reuse it for the same interface. Private-cache IDs are case-sensitive and shared across working directories for the current OS user; team-library IDs are scoped to their folder and must differ beyond letter case for portability.
 
 1. Run `npx symbiote-agui start demo`. Check `ok` and `restored`. If `SESSION_EXISTS` is returned, use `npx symbiote-agui status demo` once and reuse a session belonging to this task, or choose another ID.
 2. Reuse an owned running session or a `restored: true` interface without regenerating or reinserting it. For a new or deliberately changed definition, use `npx symbiote-agui insert demo --file /absolute/path/view.html` using a prepared file. Use `update` for small state changes.
@@ -176,7 +186,7 @@ Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete
 
 ## Optional AGUI MCP
 
-For harness-native tools, configure command `npx` with arguments `["symbiote-agui", "mcp"]` and reconnect the harness. It exposes `list_pages`, `list_tools`, and `call_tool` with the same page selection, discovery IDs, schema validation, and results as the CLI. Use the same absolute `AGUI_STATE_DIR` for CLI and MCP when overriding storage. Missing MCP tools do not block CLI operations.
+For harness-native tools, configure command `npx` with arguments `["symbiote-agui", "mcp"]` and reconnect the harness. It exposes `list_pages`, `list_tools`, and `call_tool` with the same page selection, discovery IDs, schema validation, and results as the CLI. Use the same `AGUI_STATE_DIR` and library folder settings for CLI and MCP. Missing MCP tools do not block CLI operations.
 
 ## Optional Chrome MCP
 
@@ -198,4 +208,4 @@ Pages reconnect automatically. Local-only tabs and shared user pages restore the
 - `CLEAR_FAILED`: clearing could not finish on every page. Check the reported error before retrying; the saved definition is retained unless clearing succeeds.
 - `START_FAILED`, `START_TIMEOUT`, or persistent `SESSION_UNREACHABLE`: inspect the message and private `worker.log`; report a persistent blocker rather than repeatedly retrying or killing a stored PID.
 
-Metadata and logs live under `~/.symbiote-agui/sessions/<HEX_SESSION_ID>/<INSTANCE_ID>/`. Saved HTML lives in the separate `.cache/<HEX_SESSION_ID>.html` under the session storage root. Use the same absolute `AGUI_STATE_DIR` for CLI and MCP when overriding storage.
+Runtime metadata and logs stay in private storage under `~/.symbiote-agui/sessions/` or `AGUI_STATE_DIR`, with separate library namespaces. Default-cache HTML and Markdown live in `.cache/`; a configured library holds readable `<ID>.html` and `<ID>.md` pairs instead. Use the same private root and library settings for CLI and MCP.

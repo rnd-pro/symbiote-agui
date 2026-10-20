@@ -2,6 +2,7 @@ import { parseArgs } from 'node:util';
 import { assertSessionId } from '../sessions/identity.js';
 import { CommandError } from '../shared/command-error.js';
 import { COMMANDS, ALL_COMMANDS } from './commands.js';
+import { parseLibraryCommand } from './library.js';
 
 /**
  * @param {string[]} args
@@ -22,6 +23,7 @@ export function parseCommand(args) {
         file: { type: 'string' },
         page: { type: 'string' },
         tunnel: { type: 'boolean' },
+        query: { type: 'string' },
       },
     });
   } catch (error) {
@@ -37,6 +39,8 @@ export function parseCommand(args) {
   if (values.version) {
     return { kind: 'version' };
   }
+  let library = parseLibraryCommand(positionals, values);
+  if (library) { return library; }
 
   let commandLength = positionals[0] === 'tunnel' ? 2 : 1;
   let name = positionals.slice(0, commandLength).join(' ');

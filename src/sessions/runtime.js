@@ -110,11 +110,16 @@ export class SessionRuntime {
     return this.replaceMarkup('', false);
   }
 
+  sync() {
+    return this.replaceMarkup('', true, true);
+  }
+
   /**
    * @param {string} html
    * @param {boolean} persist
+   * @param {boolean} [fromSaved]
    */
-  replaceMarkup(html, persist) {
+  replaceMarkup(html, persist, fromSaved = false) {
     return this.enqueue(async () => {
       if (this.closing || !this.styles || !this.pages || !this.latest) {
         throw new CommandError('The session is stopped.', ERROR_CODE.SESSION_STOPPED, EXIT_CODE.RUNTIME_ERROR);
@@ -123,9 +128,14 @@ export class SessionRuntime {
       /** @type {import('../../types/session.js').PreparedCache | undefined} */
       let cache;
       try {
+        if (fromSaved) {
+          let saved = await readCachedMarkup(this.record.sessionId);
+          if (saved === undefined) { throw new CommandError('No saved definition to sync.', ERROR_CODE.CACHE_ERROR, EXIT_CODE.RUNTIME_ERROR); }
+          html = saved;
+        }
         let { classes } = analyzeMarkup(html);
         let stylesheet = this.styles.build(classes);
-        if (persist) { cache = await prepareCachedMarkup(this.record.sessionId, html); }
+        if (persist && !fromSaved) { cache = await prepareCachedMarkup(this.record.sessionId, html); }
         publishStyles(stylesheet);
         this.revision += 1;
         let update = {
@@ -135,9 +145,9 @@ export class SessionRuntime {
         };
         let applied = await this.pages.broadcast({ type: 'render', ...update });
         if (cache) { await cache.commit(); }
-        else { await clearCachedMarkup(this.record.sessionId); }
+        else if (!persist) { await clearCachedMarkup(this.record.sessionId); }
         this.latest = update;
-        return { ...this.status(), delivery: applied ? 'applied' : 'queued', ...(!persist ? { cleared: true } : {}) };
+        return { ...this.status(), delivery: applied ? 'applied' : 'queued', ...(fromSaved ? { synced: true } : {}), ...(!persist ? { cleared: true } : {}) };
       } catch (error) {
         publishStyles(previous);
         if (error instanceof CommandError && error.code === ERROR_CODE.CACHE_ERROR) { throw error; }

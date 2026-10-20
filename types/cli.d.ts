@@ -7,7 +7,13 @@ export type AllSessionsCommand = keyof typeof ALL_COMMANDS;
 export type ErrorCode = typeof ERROR_CODE[keyof typeof ERROR_CODE];
 export type ExitCode = typeof EXIT_CODE[keyof typeof EXIT_CODE];
 
+export type LibraryRequest =
+  | { kind: 'library'; command: 'config folder'; folder: string }
+  | { kind: 'library'; command: 'config show' | 'config reset' }
+  | { kind: 'library'; command: 'list'; query?: string };
+
 export type CliRequest =
+  | LibraryRequest
   | { kind: 'help' }
   | { kind: 'version' }
   | { kind: 'mcp' }
@@ -32,4 +38,5 @@ export interface CommandFailure {
 
 export type CommandResult = ({ ok: true } & (SessionStatus | import('./tools.js').SessionToolResponse))
   | CommandFailure
-  | import('./session.js').AllSessionsResult;
+  | import('./session.js').AllSessionsResult
+  | ({ ok: true } & import('./library.js').LibraryResult);

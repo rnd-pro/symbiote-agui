@@ -2,6 +2,8 @@
 
 `npx symbiote-agui start <SESSION_ID>` opens the page automatically. With `--no-open`, open the returned `url` directly. The browser connects by WebSocket without an authorization request, cookie, or token link.
 
+Tab titles come from the session ID in the page URL. A shared emoji palette provides a stable per-ID SVG favicon across local and shared pages. Page connection and content updates restore this identity independently of generated headings.
+
 In shared sessions, the first eligible connection is the user and other pages are viewers. After the user disconnects, the next eligible connection or reconnection can take the role. Explicit viewer links remain read-only. Viewer pages display a sandboxed, inert snapshot of the user's light DOM and form values. They run no generated modules and expose no tools. Snapshots are coalesced, bounded to 1 MiB, and retain each viewer's scroll position. Local-only pages receive markup and state updates independently while the session runs. Local-only tabs and shared user pages restore the latest accepted markup with its initial component state on reload or reconnect; viewers reconnect to the current mirrored view.
 
 Use `<agui-component>` for inline RAT markup and `use-template` for reusable DOM templates. Unknown custom tags using that attribute receive generic component classes. Register custom subclasses through Symbiote's `reg()` so WebMCP receives their tag identity. Definitions persist for the page lifetime; each insertion supplies fresh instances and templates.

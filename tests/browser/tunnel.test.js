@@ -73,12 +73,17 @@ test('public links elect one user and deliver a live read-only mirror to other b
   await page.waitForSelector('#counter button');
   await waitForMirror(viewer, 0);
   assert.equal(page.url(), session.publicUrl);
+  assert.equal(await page.title(), 'tunnel-ui');
+  assert.equal(await viewer.title(), 'tunnel-ui');
+  let icon = await page.$eval('link[rel="icon"]', (element) => element.getAttribute('href'));
+  assert.equal(await viewer.$eval('link[rel="icon"]', (element) => element.getAttribute('href')), icon);
   assert.equal(await page.$eval('#counter', (element) => getComputedStyle(element).width), '321px');
   assert.equal(await page.evaluate(() => typeof Reflect.get(document, 'modelContext')), 'undefined');
   assert.deepEqual(await page.browserContext().cookies(), []);
   assert.equal(requests.some((path) => path.endsWith('/authorize')), false);
   let discovery = await cli('tools', 'tunnel-ui');
   let pages = (await cli('pages', 'tunnel-ui')).pages;
+  assert.ok(pages.every((/** @type {import('../../types/tools.js').ConnectedPage} */ item) => item.title === 'tunnel-ui'));
   assert.deepEqual(pages.map((/** @type {import('../../types/tools.js').ConnectedPage} */ item) => item.role), ['viewer', 'user']);
   let viewerId = pages.find((/** @type {import('../../types/tools.js').ConnectedPage} */ item) => item.role === 'viewer').pageId;
   await assert.rejects(cli('tools', 'tunnel-ui', '--page', viewerId), (error) => hasCliError(error, 'PAGE_UNAVAILABLE'));
@@ -114,6 +119,8 @@ test('public links elect one user and deliver a live read-only mirror to other b
   assert.equal((await cli('tools', 'tunnel-ui')).pageId, discovery.pageId);
   await late.reload();
   await waitForMirror(late, 2);
+  assert.equal(await late.title(), 'tunnel-ui');
+  assert.equal(await late.$eval('link[rel="icon"]', (element) => element.getAttribute('href')), icon);
   assert.equal(await late.evaluate(() => Reflect.get(window, 'aguiRuns')), undefined);
   await sendStdin('update', 'tunnel-ui', JSON.stringify({ selector: '#counter', values: { count: 9 } }));
   await waitForMirror(viewer, 9);
@@ -137,6 +144,8 @@ test('public links elect one user and deliver a live read-only mirror to other b
   await waitForMirror(viewer, 1);
   await page.goto(session.publicUserUrl);
   await waitForMirror(page, 1);
+  assert.equal(await page.title(), 'tunnel-ui');
+  assert.equal(await page.$eval('link[rel="icon"]', (element) => element.getAttribute('href')), icon);
   assert.equal(await page.evaluate(() => Reflect.get(window, 'aguiRuns')), undefined);
   assert.deepEqual(await late.browserContext().cookies(), []);
   let [pid] = await fixture.pids();
@@ -186,6 +195,10 @@ test('sharing existing local tabs retires viewer modules and releases the user s
   assert.equal(await viewer.$eval('#counter button', (element) => element.textContent), 'Count: 0');
   await cli('share', 'local-share');
   await waitForMirror(viewer, 1);
+  assert.equal(await user.title(), 'local-share');
+  assert.equal(await viewer.title(), 'local-share');
+  assert.equal(await user.$eval('link[rel="icon"]', (element) => element.getAttribute('href')),
+    await viewer.$eval('link[rel="icon"]', (element) => element.getAttribute('href')));
   assert.equal(await viewer.evaluate(() => Reflect.get(window, 'aguiRuns')), undefined);
   assert.equal(await viewer.$('#counter'), null);
   await user.close();

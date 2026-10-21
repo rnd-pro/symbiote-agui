@@ -5,8 +5,10 @@ import { disposeModules } from './modules.js';
 import { CONTENT_ROOT_ID } from '../../markup/constants.js';
 import { replaceContent } from './replace-content.js';
 import { SharedView } from './shared-view.js';
+import { syncPageIdentity } from './identity.js';
 
 export function connectSession() {
+  syncPageIdentity();
   let status = document.getElementById(CONNECTION_STATUS_ID);
   /** @type {WebSocket | undefined} */
   let socket;
@@ -53,6 +55,7 @@ export function connectSession() {
     showStatus('Connecting...');
     current.onopen = () => {
       delay = RECONNECT_MIN_MS;
+      syncPageIdentity();
       current.send(JSON.stringify({ type: 'hello', title: document.title }));
       showStatus('');
     };
@@ -79,6 +82,7 @@ export function connectSession() {
           } finally {
             let root = document.getElementById(CONTENT_ROOT_ID);
             if (root) { replaceContent(root, document.createDocumentFragment()); }
+            syncPageIdentity();
           }
           return;
         }

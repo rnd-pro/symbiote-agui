@@ -67,6 +67,8 @@ Anyone with a public link can open it. Links are temporary, and your computer an
 
 ## Reopen or finish a session
 
+Browser tabs show the session ID as their title and use a stable colored emoji favicon to help distinguish interfaces.
+
 Ask your agent to reopen a session by name, stop it when you are finished, or clear it when you want to discard the saved interface. Reopening restores the interface definition; previous inputs and task progress are not saved automatically.
 
 List all sessions with active/inactive status and current links for running sessions, check one session, or stop it yourself:

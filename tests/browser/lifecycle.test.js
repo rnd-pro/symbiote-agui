@@ -62,6 +62,22 @@ test('regular pages receive markup independently and remain open after stop', {
   await secondPage.waitForFunction(() => document.querySelector('h1')?.textContent === 'Independent session');
   assert.equal(firstPage.url(), first.url);
   assert.equal(secondPage.url(), second.url);
+  assert.equal(await firstPage.title(), 'demo');
+  assert.equal(await secondPage.title(), 'Demo');
+  let icon = await firstPage.$eval('link[rel="icon"]', (element) => element.getAttribute('href'));
+  let secondIcon = await secondPage.$eval('link[rel="icon"]', (element) => element.getAttribute('href'));
+  assert.ok(icon?.startsWith('data:image/svg+xml,'));
+  assert.notEqual(icon, secondIcon);
+  assert.equal(await anotherBrowser.$eval('link[rel="icon"]', (element) => element.getAttribute('href')), icon);
+  assert.equal(await firstPage.evaluate(async (href) => {
+    let image = new Image();
+    image.src = href || '';
+    await image.decode();
+    return image.naturalWidth > 0 && image.naturalHeight > 0;
+  }, icon), true);
+  let listed = (await cli('pages', 'demo')).pages;
+  assert.equal(listed.length, 2);
+  assert.ok(listed.every((/** @type {import('../../types/tools.js').ConnectedPage} */ page) => page.title === 'demo'));
   assert.equal(await firstPage.evaluate(() => document.cookie), '');
   assert.equal(anotherBrowser.url(), first.url);
   await isolated.close();
@@ -75,17 +91,23 @@ test('regular pages receive markup independently and remain open after stop', {
   let background = await firstPage.$eval('button', (element) => getComputedStyle(element).backgroundColor);
   await firstPage.hover('button');
   assert.notEqual(await firstPage.$eval('button', (element) => getComputedStyle(element).backgroundColor), background);
-  let replacement = '<details open class="p-8"><summary>Next</summary><p>Replacement</p></details>';
+  let replacement = '<details open class="p-8"><summary>Next</summary><p>Replacement</p></details>'
+    + '<script type="module" data-agui>document.title = "Generated title";</script>';
   assert.equal((await insertStdin('demo', replacement)).delivery, 'applied');
+  assert.equal(await firstPage.title(), 'demo');
   await firstPage.click('summary');
   assert.equal(await firstPage.$eval('details', (element) => element.open), false);
   await assert.rejects(insertStdin('demo', '<agui-component><script type="text/json">{broken}</script></agui-component>'), (error) => hasCliError(error, 'INSERT_FAILED'));
   assert.equal(await firstPage.$eval('details', (element) => element.open), false);
   await firstPage.reload();
   await firstPage.waitForSelector('details');
+  assert.equal(await firstPage.title(), 'demo');
+  assert.equal(await firstPage.$eval('link[rel="icon"]', (element) => element.getAttribute('href')), icon);
   assert.equal(await firstPage.$eval('details', (element) => element.open), true);
   assert.equal(await secondPage.$eval('h1', (element) => element.textContent), 'Independent session');
   await insertStdin('demo', '');
+  assert.equal(await firstPage.title(), 'demo');
+  assert.equal(await firstPage.$eval('link[rel="icon"]', (element) => element.getAttribute('href')), icon);
   assert.equal(await firstPage.$eval('main', (element) => element.childElementCount), 0);
   assert.equal((await cli('stop', 'demo')).state, 'stopped');
   assert.equal(firstPage.isClosed(), false);
@@ -105,6 +127,8 @@ test('regular pages receive markup independently and remain open after stop', {
   await firstPage.goto(restarted.url);
   await waitForSession('demo', 'ready');
   assert.equal(firstPage.url(), restarted.url);
+  assert.equal(await firstPage.title(), 'demo');
+  assert.equal(await firstPage.$eval('link[rel="icon"]', (element) => element.getAttribute('href')), icon);
   await cli('stop', 'demo');
   assert.deepEqual(await readdir(state.directory), ['.cache', 'view with spaces.html']);
   assert.equal(browser.connected, true);

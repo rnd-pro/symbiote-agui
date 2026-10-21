@@ -27,6 +27,8 @@ Operation results include individual bulk failures. Repeated mutation request ID
 
 ## Session controls
 
+Local, shared user, and viewer tabs use the session ID as their browser title. A colored emoji favicon is selected from a fixed palette by session ID and stays the same across reloads and restarts. Colors can repeat between sessions.
+
 Use Node.js 24 or newer. Session IDs are case-sensitive, contain 1-64 letters, digits, underscores, or hyphens, and start with a letter or digit. Private-cache IDs are shared across working directories for the current OS user. A configured library scopes IDs to its folder; use names that differ beyond letter case in a shared folder for portability.
 
 ```sh

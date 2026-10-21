@@ -3,6 +3,7 @@ import { analyzeFragment } from '../../markup/fragment.js';
 import { validateStateUpdate } from '../../transport/state-update.js';
 import { replaceContent } from './replace-content.js';
 import { disposeModules, loadModules, mountModules } from './modules.js';
+import { syncPageIdentity } from './identity.js';
 
 /** @param {import('../../../types/transport.js').RenderUpdate} update */
 export async function renderMarkup(update) {
@@ -34,6 +35,7 @@ export async function renderMarkup(update) {
     next.remove();
     throw error;
   } finally {
+    syncPageIdentity();
     next.onload = null;
     next.onerror = null;
   }
@@ -52,4 +54,5 @@ export function updateState(input) {
   for (let component of components) {
     component[method](update.values, update.rewrite);
   }
+  syncPageIdentity();
 }

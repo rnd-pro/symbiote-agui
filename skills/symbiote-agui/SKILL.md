@@ -41,6 +41,8 @@ Use `npx symbiote-agui status all` to find all recorded and saved sessions in th
 
 `start` opens a regular page in the OS default browser. Its readable `url` contains the session ID, for example `http://127.0.0.1:PORT/demo/`; the port can change on restart. With `--no-open`, open the returned `url` manually. A failed opener returns `opened: false`, a warning, and the readable URLs. Pages connect directly by WebSocket without cookies, tokens, or a browser authorization step.
 
+Browser tab titles use the session ID, and a stable colored emoji favicon is assigned from a fixed palette. This applies to local, shared user, and viewer pages. Choose descriptive session IDs; headings in generated content do not set the tab title.
+
 Session commands return one JSON object on stdout. Check `ok`; errors include `error.code` and `error.message`. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input. Help and version return plain text. A running session is `waiting` without pages and `ready` with connected pages; results include `url` and `clients`. Startup returns before a page connects. Insertions return `delivery: "applied"` after page acknowledgements or `"queued"` without pages. Queued success cannot verify browser rendering or module execution.
 
 `start` restores accepted HTML and inline modules and rebuilds styles even after the original file is deleted. Live state starts from that definition; user progress, timers, closures, and `update` commands are not persisted. `npx symbiote-agui stop demo` retains this cache, ends the session, and leaves tabs open with `Session ended.` Use `npx symbiote-agui clear demo` when the user intends to discard the saved interface. It clears live content/tools too, keeps a running session available, and also works when stopped.
@@ -64,6 +66,8 @@ The first eligible WebSocket connection gets the user role. Other connections ar
 Use the same CLI tools and events for shared sessions. `pages` reports URLs and `role: "user"` or `"viewer"`. `tools` selects the user automatically even with several viewers; viewer targets are rejected. Local-only sessions retain independent interactive tabs and require page selection when several are connected. `stop`, `stop all`, and `stop-all` close tunnels. Clearing leaves workers and tunnels running. Quick Tunnel URLs are temporary and change after recreation; the host must remain online. Cached markup survives restart, but sharing must be requested again. `TUNNEL_FAILED` leaves the local session available; inspect the reported problem and `status` before retrying `share`. Tunnel status reports later connector exits instead of silently retrying or retaining a dead public URL.
 
 ## Markup and handlers
+
+Design generated interfaces as practical utilities focused on the user's task. Keep relevant data and actions easy to reach, with concise labels and only the headings or explanations needed to use them. Avoid slogans, promotional copy, hero sections, and excessive subheadings unless the user explicitly requests that style or content.
 
 When writing or reviewing Symbiote components, consult the [code examples](https://raw.githubusercontent.com/symbiotejs/symbiote.js/refs/heads/main/docs/examples.md) and [common mistakes](https://raw.githubusercontent.com/symbiotejs/symbiote.js/refs/heads/main/docs/common-mistakes.md) guides.
 

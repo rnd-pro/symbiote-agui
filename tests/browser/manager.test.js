@@ -58,6 +58,13 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.goto(manager.launchUrl);
   await page.waitForSelector('[data-session="desk"]');
   assert.equal(page.url(), manager.url, 'Bootstrap removes the credential from the URL.');
+  assert.equal(await page.title(), 'AGUI Manager');
+  assert.equal(await page.$eval('link[rel="icon"]', async (element) => {
+    let image = new Image();
+    image.src = element.getAttribute('href') || '';
+    await image.decode();
+    return image.naturalWidth > 0 && image.naturalHeight > 0;
+  }), true);
   assert.match(await page.$eval('.counts', (element) => element.textContent || ''), /1 total \/ 0 running \/ 1 stopped/);
   assert.equal(await page.$eval('#manager-theme', (element) => (/** @type {HTMLSelectElement} */ (element)).value), 'system');
   assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(238, 237, 229)');

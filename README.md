@@ -39,6 +39,8 @@ Your agent runs AGUI through `npx symbiote-agui` and opens the page for you. Use
 
 You describe a task. Your agent creates a named AGUI session and supplies its interface. The browser shows the result and sends your interactions back to the agent, which can update the page as you work.
 
+AGUI exposes UI actions as WebMCP tools and invokes them through Symbiote.js's public API over WebSockets. Named actions and structured inputs reduce DOM inspection, screenshot analysis, and fragile click sequences, making interaction more efficient and predictable. You keep using your regular browser without drivers or remote debugging, simplifying setup. The control channel stays scoped to the AGUI page and its exposed actions, avoiding the broader browser access that browser automation can require.
+
 AGUI runs locally by default. The CLI is enough to use it; [MCP integrations](./docs/reference.md#optional-agui-mcp) are available for agent environments that support them.
 
 ## Internet sharing

@@ -2,6 +2,29 @@
 
 For an introduction and first-use setup, see the [README](../README.md). See the [team library guide](./library.md) for Git-based reuse, folder settings, descriptions, and syncing. Interface generation, Symbiote patterns, and tool invocation are covered by the [AGUI skill](../skills/symbiote-agui/SKILL.md).
 
+## Session manager
+
+```sh
+npx symbiote-agui manager
+npx symbiote-agui manager --no-open
+npx symbiote-agui manager status
+npx symbiote-agui manager stop
+```
+
+The built-in Symbiote page calls AGUI functions directly over its own authenticated WebSocket. It does not need an agent, MCP setup, or browser debugging. It lists running and saved sessions, descriptions, clients, process IDs, and current links. Search, status filters, individual controls, and scoped bulk actions are available. The Theme selector offers System, Light, and Dark; your choice is remembered across reloads and synchronized between tabs in the same browser at the manager URL. System follows your operating system preference.
+
+One detached manager runs per private state directory and resolved library folder. Repeating `manager` reuses it. Its storage scope is fixed at startup; changing the project folder setting selects a separate manager on the next launch. Session stop/clear-all commands leave the manager running. `manager stop` stops only the manager and waits for accepted operations to finish.
+
+Launching opens and authorizes your browser automatically. With `--no-open`, open the returned private `launchUrl` once. Its credential is removed from the address bar and retained in that browser's storage for reloads, reconnects, and additional tabs. The readable `url` works afterward in that browser. Keep `launchUrl` private. A different browser needs the launch link from `manager` too.
+
+The manager binds only to loopback, validates Host/Origin and operation inputs, and cannot be framed or published through AGUI tunnels. Ordinary generated pages and public user/viewer pages cannot call its management operations. Worker control tokens stay inside Node. The manager page serves packaged assets only and cannot run arbitrary functions, shell commands, or access a browser-selected filesystem path.
+
+Use Attach tunnel on a running local session to create public user and viewer links without restarting its worker or resetting its live interface. Failed attachment leaves the session available and exposes Retry tunnel. Tunnel attached identifies an existing connector; use the public links to share it, Check tunnel to verify reachability, or Renew tunnel to replace inactive links. The CLI equivalent is `npx symbiote-agui share <SESSION_ID>`.
+
+Every connection loads fresh backend state. While visible, the page refreshes roughly every five seconds and after operations, including changes made through the CLI or Git. Tunnel reachability is checked separately with Check tunnel; check times and stale/unchecked health are shown. Renew replaces public links. Sync resets live interface state. Clear requires confirmation and deletes saved HTML and Markdown, including files in a configured Git library.
+
+Operation results include individual bulk failures. Repeated mutation request IDs reuse their result for ten minutes; conflicting operations on a session run in sequence. A disconnect or timeout can leave an unknown outcome. The page refreshes after reconnecting and never automatically replays an action. Review current status before deliberately submitting it again.
+
 ## Session controls
 
 Use Node.js 24 or newer. Session IDs are case-sensitive, contain 1-64 letters, digits, underscores, or hyphens, and start with a letter or digit. Private-cache IDs are shared across working directories for the current OS user. A configured library scopes IDs to its folder; use names that differ beyond letter case in a shared folder for portability.

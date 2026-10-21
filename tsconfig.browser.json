@@ -4,6 +4,7 @@
     "types": []
   },
   "include": [
+    "src/manager/page/**/*.js",
     "src/page/client/**/*.js",
     "types/components.d.ts"
   ],

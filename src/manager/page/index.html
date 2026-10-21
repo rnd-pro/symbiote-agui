@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>AGUI session manager</title>
+    <script type="module" blocking="render" src="./page/theme.js"></script>
+    <link rel="stylesheet" href="./page/styles.css">
+    <script type="module" src="./page/index.js"></script>
+  </head>
+  <body>
+    <agui-session-manager class="mx-auto block max-w-6xl px-4 py-6 sm:px-8 sm:py-10">
+      <header class="mb-7 flex flex-wrap items-start justify-between gap-5">
+        <div class="flex min-w-0 items-start gap-4">
+          <span class="terminal-mark" aria-hidden="true">&gt;_</span>
+          <div class="min-w-0">
+            <p class="eyebrow">Symbiote AGUI / session manager</p>
+            <h1 class="mt-2 text-2xl font-semibold tracking-tight sm:text-4xl">Workspace console<span class="text-console-accent" aria-hidden="true">_</span></h1>
+            <p class="mt-3 max-w-xl text-sm leading-6 text-console-muted">Your interfaces. Your machine. Ready for the next task.</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-end gap-3">
+          <span class="local-label">[ local control ]</span>
+          <label for="manager-theme">Theme
+            <select id="manager-theme" ref="themeSelect" bind="value: theme; onchange: selectTheme">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+        </div>
+      </header>
+      <main class="terminal-window">
+        <div class="window-bar">
+          <span class="text-console-muted">agui://sessions</span>
+          <p class="connection" role="status" bind="@data-tone: connectionTone">{{connection}}</p>
+        </div>
+        <div class="p-4 sm:p-6">
+          <div class="scope">
+            <div class="flex flex-wrap justify-between gap-2"><strong class="eyebrow">01 / storage scope</strong><small>{{checkedAt}}</small></div>
+            <p class="mt-3 break-all text-sm leading-6">{{scope}}</p>
+          </div>
+          <div class="my-6 border-y border-console-line py-4">
+            <p class="mb-2 text-xs text-console-accent"><span aria-hidden="true">$ </span>status --all</p>
+            <p class="counts text-sm leading-7">{{counts}}</p>
+          </div>
+          <div class="toolbar grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
+            <label>Search sessions<input type="search" ref="search" placeholder="Name or description..." bind="oninput: filter"></label>
+            <label>Status<select ref="state" bind="onchange: filter"><option value="all">All statuses</option><option value="running">Running</option><option value="stopped">Stopped</option><option value="unknown">Unknown</option></select></label>
+            <button type="button" bind="onclick: refresh; disabled: refreshDisabled">Refresh</button>
+          </div>
+          <div class="bulk toolbar mt-4 flex flex-col items-stretch gap-3 border-l-2 border-console-accent bg-console-raised p-4 sm:flex-row sm:items-end">
+            <label class="min-w-0 sm:flex-1">All sessions in this scope<select ref="operation"><option value="start">Start saved sessions</option><option value="stop">Stop running sessions</option><option value="sync">Sync running definitions</option><option value="tunnel check">Check shared tunnels</option><option value="tunnel renew">Renew shared tunnels</option><option value="clear">Clear saved and live content</option></select></label>
+            <button type="button" class="primary" bind="onclick: bulk; disabled: controlsDisabled">Apply to all</button>
+          </div>
+          <pre class="notice" role="status" aria-live="polite">{{notice}}</pre>
+          <div class="mb-4 mt-7 flex items-center gap-3"><h2 class="eyebrow shrink-0">02 / session index</h2><span class="h-px flex-1 bg-console-line" aria-hidden="true"></span></div>
+          <p class="empty-state" bind="hidden: emptyHidden">{{empty}}</p>
+          <div class="sessions" itemize="rows" item-tag="agui-session-row"></div>
+        </div>
+        <dialog ref="description" aria-labelledby="description-heading">
+          <h2 id="description-heading" class="eyebrow">AGUI description / README</h2>
+          <pre ref="descriptionText"></pre>
+          <form method="dialog"><button autofocus>Close</button></form>
+        </dialog>
+      </main>
+      <footer class="mt-5 flex flex-wrap justify-between gap-3 text-xs leading-5 text-console-muted">
+        <span><span class="text-console-accent" aria-hidden="true">&gt; </span>Local controls stay on this machine.</span>
+        <span>Public links share interfaces, never this console.</span>
+      </footer>
+    </agui-session-manager>
+  </body>
+</html>

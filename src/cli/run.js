@@ -29,6 +29,12 @@ function printResult(result) {
 export async function run(args) {
   try {
     let request = parseCommand(args);
+    if (request.kind === 'manager') {
+      let { startManager, statusManager, stopManager } = await import('../manager/lifecycle.js');
+      let operations = { start: () => startManager(request.open), status: statusManager, stop: stopManager };
+      printResult({ ok: true, ...await operations[request.command]() });
+      return EXIT_CODE.SUCCESS;
+    }
     if (request.kind === 'library') {
       printResult({ ok: true, ...await runLibraryCommand(request) });
       return EXIT_CODE.SUCCESS;

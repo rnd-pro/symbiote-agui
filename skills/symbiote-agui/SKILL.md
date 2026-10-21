@@ -184,6 +184,12 @@ Import `ToolDescriptor` from the fully resolved `/client/index.js` URL for expli
 
 Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete module-owned contexts in the module cleanup; component tools follow Symbiote's DOM lifecycle automatically. Use the exported `getActiveWebMCPTools()` and entries' `nativeActive` field for diagnostics. See the [Symbiote WebMCP guide](https://github.com/symbiotejs/symbiote.js/blob/main/docs/webmcp.md) for explicit tool examples. Define tools with Symbiote's APIs and invoke them through CLI `tools` and `call`, optional AGUI MCP, or the optional native browser consumer. Use CLI events when awaiting user input.
 
+## Built-in session manager
+
+Use `npx symbiote-agui manager` when the user wants to manage AGUIs themselves. It opens the packaged local manager with current running and saved sessions, descriptions, lifecycle controls, sync, sharing, and tunnel checks/renewal. Actions call AGUI directly; do not create a generated management dashboard or an agent event-processing loop for these operations.
+
+`manager --no-open` returns a private `launchUrl` to authorize a browser automatically. Open that link once; later tabs/reloads can use the readable `url`. Do not publish the launch link or put it in generated markup. `manager status` reports the current manager and scope; `manager stop` closes it without stopping sessions. Ordinary stop-all/clear-all leave it running. The manager stays in the library/private-cache scope selected at launch and is not exposed through tunnels.
+
 ## Optional AGUI MCP
 
 For harness-native tools, configure command `npx` with arguments `["symbiote-agui", "mcp"]` and reconnect the harness. It exposes `list_pages`, `list_tools`, and `call_tool` with the same page selection, discovery IDs, schema validation, and results as the CLI. Use the same `AGUI_STATE_DIR` and library folder settings for CLI and MCP. Missing MCP tools do not block CLI operations.

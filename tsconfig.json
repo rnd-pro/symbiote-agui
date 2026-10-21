@@ -13,6 +13,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "paths": {
+      "/manager/vendor/core/index.js": ["./node_modules/@symbiotejs/symbiote/types/core/index.d.ts"],
       "linkedom": [
         "./types/linkedom.d.ts"
       ],
@@ -33,6 +34,7 @@
     "tests/browser/**/*.js"
   ],
   "exclude": [
+    "src/manager/page/**/*.js",
     "src/page/client/**/*.js"
   ]
 }

@@ -33,6 +33,7 @@ test('the production tarball runs through npm exec outside the checkout', { time
   await mkdir(caller);
   t.after(async () => {
     try {
+      await cli('manager', 'stop').catch(() => {});
       if (started) { await cli('stop', 'package-smoke'); }
     } finally {
       await rm(directory, { recursive: true, force: true });
@@ -56,7 +57,7 @@ test('the production tarball runs through npm exec outside the checkout', { time
   let packages = JSON.parse(await runNpm(['pack', '--json', '--pack-destination', directory], root));
   let packed = Array.isArray(packages) ? packages[0] : Object.values(packages)[0];
   let files = packed.files.map((/** @type {{path: string}} */ file) => file.path);
-  for (let path of ['bin/symbiote-agui.js', 'src/page/shell.html', 'src/page/theme.css', 'src/page/client/index.js', 'src/page/client/tool-bridge.js', 'src/mcp/server.js', 'skills/symbiote-agui/SKILL.md']) {
+  for (let path of ['bin/symbiote-agui.js', 'src/page/shell.html', 'src/page/theme.css', 'src/page/client/index.js', 'src/page/client/tool-bridge.js', 'src/mcp/server.js', 'src/manager/worker.js', 'src/manager/page/index.html', 'src/manager/page/index.js', 'src/manager/page/rows.js', 'src/manager/page/connection.js', 'src/manager/page/styles.css', 'skills/symbiote-agui/SKILL.md']) {
     assert.ok(files.includes(path), `${path} must be included in the tarball.`);
   }
   assert.equal(files.some((/** @type {string} */ path) => /^(tests|planning|node_modules)\//.test(path) || path === 'AGENTS.md'), false);
@@ -88,6 +89,15 @@ test('the production tarball runs through npm exec outside the checkout', { time
   started = true;
   assert.equal(session.state, 'waiting');
   assert.equal((await cli('status', 'package-smoke')).url, session.url);
+  let manager = await cli('manager', '--no-open');
+  assert.equal(manager.active, true);
+  assert.equal((await cli('manager', 'status')).url, manager.url);
+  for (let path of ['', 'page/index.js', 'page/connection.js', 'page/rows.js', 'page/theme.js', 'page/styles.css', 'constants.js', 'vendor/core/index.js', 'vendor/utils/setNestedProp.js']) {
+    let response = await fetch(new URL(path, manager.url));
+    assert.equal(response.status, 200, `Packaged manager asset: ${path}`);
+    assert.ok((await response.text()).length);
+  }
+  assert.equal((await cli('manager', 'stop')).active, false);
   assert.deepEqual((await cli('pages', 'package-smoke')).pages, []);
   await assert.rejects(cli('tools', 'package-smoke'), (error) => {
     let failure = /** @type {Error & { stdout: string }} */ (error);

@@ -14,13 +14,17 @@ export function publishStyles(css) {
   stylesheet = css;
 }
 
-/** @returns {Promise<import('../../types/markup.js').StyleCompiler>} */
-export async function createStyles() {
-  let source = new URL('../page/theme.css', import.meta.url);
-  let compiler = await compile(await readFile(source, 'utf8'), {
+/** @param {URL} source */
+export async function compileStyles(source) {
+  return compile(await readFile(source, 'utf8'), {
     base: dirname(fileURLToPath(source)),
     onDependency() {},
   });
+}
+
+/** @returns {Promise<import('../../types/markup.js').StyleCompiler>} */
+export async function createStyles() {
+  let compiler = await compileStyles(new URL('../page/theme.css', import.meta.url));
   publishStyles(compiler.build([]));
   return compiler;
 }

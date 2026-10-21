@@ -160,16 +160,19 @@ export async function startSession(sessionId) {
   }
 }
 
-/** @param {string} sessionId */
-export async function ensureSessionStarted(sessionId) {
-  let status = await statusSession(sessionId);
+/**
+ * @param {string} sessionId
+ * @param {boolean} [checkTunnel]
+ */
+export async function ensureSessionStarted(sessionId, checkTunnel = true) {
+  let status = await statusSession(sessionId, checkTunnel);
   if (status.state !== SESSION_STATE.STOPPED) { return status; }
   try {
     let started = await startSession(sessionId);
-    return { ...started, ...await statusSession(sessionId) };
+    return { ...started, ...await statusSession(sessionId, checkTunnel) };
   } catch (error) {
     if (error instanceof CommandError && error.code === ERROR_CODE.SESSION_EXISTS) {
-      return statusSession(sessionId);
+      return statusSession(sessionId, checkTunnel);
     }
     throw error;
   }

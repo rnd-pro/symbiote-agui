@@ -14,6 +14,7 @@ export type LibraryRequest =
 
 export type CliRequest =
   | LibraryRequest
+  | { kind: 'manager'; command: 'start' | 'status' | 'stop'; open: boolean }
   | { kind: 'help' }
   | { kind: 'version' }
   | { kind: 'mcp' }
@@ -37,6 +38,7 @@ export interface CommandFailure {
 }
 
 export type CommandResult = ({ ok: true } & (SessionStatus | import('./tools.js').SessionToolResponse))
+  | ({ ok: true } & import('./manager.js').ManagerStatus)
   | CommandFailure
   | import('./session.js').AllSessionsResult
   | ({ ok: true } & import('./library.js').LibraryResult);

@@ -3,6 +3,7 @@ import { WebSocket, WebSocketServer } from 'ws';
 import { HEARTBEAT_MS, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, PAGE_REQUEST_TIMEOUT_MS, PAGE_ROLE } from '../transport/constants.js';
 import { isPageOrigin } from './page-access.js';
 import { SharedPages } from './shared-pages.js';
+import { PageFeedback } from './page-feedback.js';
 
 export class PageConnection {
   /** @type {Set<WebSocket>} */
@@ -19,8 +20,10 @@ export class PageConnection {
    * @param {import('../../types/session.js').PageAccess} access
    * @param {(socket: WebSocket) => Promise<void>} initialize
    * @param {(message: Extract<import('../../types/transport.js').PageMessage, { type: 'event' }>) => void} onEvent
+   * @param {import('../feedback/session-feedback.js').SessionFeedback} [feedback]
    */
-  constructor(server, origin, access, initialize, onEvent) {
+  constructor(server, origin, access, initialize, onEvent, feedback) {
+    this.feedback = feedback ? new PageFeedback(feedback, this.pages, this.pending) : undefined;
     this.server = new WebSocketServer({ noServer: true, maxPayload: MAX_PAGE_MESSAGE_BYTES });
     server.on('upgrade', (request, socket, head) => {
       let endpoint;
@@ -56,6 +59,7 @@ export class PageConnection {
       socket.on('close', () => {
         this.clients.delete(socket);
         this.pages.delete(pageId);
+        this.feedback?.disconnect(socket);
         this.shared.notify();
         alive.delete(socket);
         for (let [id, pending] of this.pending) {
@@ -73,6 +77,11 @@ export class PageConnection {
             return;
           }
           if (page.role === PAGE_ROLE.VIEWER) { throw new Error('Viewers cannot send actions or state.'); }
+          if (message.type === 'feedback-submit' || message.type === 'feedback-read') {
+            if (!this.feedback) { throw new Error('Feedback transport is unavailable.'); }
+            this.feedback.receive(socket, message, Buffer.byteLength(data.toString()));
+            return;
+          }
           if (message.type === 'snapshot') {
             this.shared.publish(page, message);
             return;
@@ -86,6 +95,7 @@ export class PageConnection {
           socket.close(1008, 'Invalid page message.');
         }
       });
+      this.feedback?.connect(socket);
       let initialized = page.role === PAGE_ROLE.VIEWER ? Promise.resolve() : initialize(socket);
       void initialized.then(() => { page.ready = true; this.shared.notify(); }).catch((error) => {
         page.error = String(error.message);
@@ -153,6 +163,7 @@ export class PageConnection {
   }
 
   async close() {
+    this.feedback?.close();
     clearInterval(this.heartbeat);
     for (let id of this.pending.keys()) {
       this.finish(id, new Error('The session ended.'));

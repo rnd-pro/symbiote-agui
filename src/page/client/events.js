@@ -1,4 +1,5 @@
 import { MAX_EVENT_BYTES } from '../../transport/constants.js';
+export { submitFeedback } from './feedback.js';
 
 /** @type {(message: string) => boolean} */
 let send = () => false;

@@ -23,6 +23,29 @@ export interface FeedbackSubmission extends FeedbackReference {
   event: FeedbackEvent;
 }
 
+export interface FeedbackSubmitOptions {
+  userEvent: Event;
+  submissionId?: string;
+  revision?: FeedbackRevision;
+}
+
+export interface FeedbackUiState {
+  connected: boolean;
+  availability: FeedbackStatus['state'];
+  pending: number;
+  delivery: FeedbackDelivery | null;
+  status: import('./uilib.js').UiStatus;
+  message: string;
+}
+
+export interface FeedbackClientRequest {
+  reference: FeedbackReference;
+  message: string;
+  promise: Promise<FeedbackDelivery>;
+  resolve(result: FeedbackDelivery): void;
+  timer: number;
+}
+
 /** Worker-owned routing; never accepted from the page. */
 export interface FeedbackEnvelope extends FeedbackSubmission {
   sessionId: string;

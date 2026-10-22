@@ -1,5 +1,5 @@
 import { MODULE_SELECTOR } from '../../transport/constants.js';
-import { emit } from './events.js';
+import { emit, submitFeedback } from './events.js';
 
 /** @type {import('../../../types/transport.js').ModuleCleanup[]} */
 let cleanups = [];
@@ -37,7 +37,7 @@ export async function loadModules(fragment) {
 export async function mountModules(root, modules) {
   for (let module of modules) {
     if (typeof module.default === 'function') {
-      let cleanup = await module.default(root, { emit });
+      let cleanup = await module.default(root, { emit, submitFeedback });
       if (typeof cleanup === 'function') { cleanups.push(cleanup); }
     }
   }

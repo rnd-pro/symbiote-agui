@@ -20,6 +20,7 @@ if (mode === 'hold') {
 } else if (mode === 'unavailable') {
   process.stdout.write(JSON.stringify({ state: 'unavailable' }));
 } else {
-  if (mode === 'record') { await appendFile(argument, `${JSON.stringify(envelope)}\n`); }
+  if (mode === 'record' || mode === 'delayed-record') { await appendFile(argument, `${JSON.stringify(envelope)}\n`); }
+  if (mode === 'delayed-record') { await new Promise((resolve) => setTimeout(resolve, 1_000)); }
   process.stdout.write(JSON.stringify({ state: 'accepted', receiptId: envelope.submissionId }));
 }

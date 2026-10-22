@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { CommandError } from '../shared/command-error.js';
 import { executeFeedback } from './execute.js';
-import { validateFeedbackIdentity, validateFeedbackRegistration, validateFeedbackSubmission } from './validate.js';
+import { validateFeedbackIdentity, validateFeedbackRegistration } from './validate.js';
+import { validateFeedbackSubmission, validateFeedbackReference } from './submission.js';
 import { DELIVERY_STATE, FEEDBACK_STATE, FEEDBACK_LIMITS, feedbackFailure } from './constants.js';
 
 export class SessionFeedback extends EventEmitter {
@@ -58,6 +59,7 @@ export class SessionFeedback extends EventEmitter {
     this.#registration = registration;
     this.#state = FEEDBACK_STATE.READY;
     this.#failure = undefined;
+    this.emit('status', this.status());
     return this.status();
   }
 
@@ -72,6 +74,20 @@ export class SessionFeedback extends EventEmitter {
   async close() {
     this.#closed = true;
     await this.disable(this.identity);
+  }
+
+  /** @param {unknown} input */
+  read(input) {
+    let reference = validateFeedbackReference(input);
+    if (reference.instanceId !== this.identity.instanceId) {
+      return { ...reference, state: DELIVERY_STATE.REJECTED, failure: feedbackFailure('STALE_INSTANCE') };
+    }
+    let receipt = this.#receipts.get(reference.submissionId);
+    if (!receipt) { return { ...reference, state: DELIVERY_STATE.UNKNOWN, failure: feedbackFailure('DELIVERY_UNKNOWN') }; }
+    if (!Object.is(receipt.delivery.revision, reference.revision)) {
+      return { ...reference, state: DELIVERY_STATE.REJECTED, failure: feedbackFailure('INVALID_SUBMISSION') };
+    }
+    return structuredClone(receipt.delivery);
   }
 
   /**
@@ -106,6 +122,7 @@ export class SessionFeedback extends EventEmitter {
     this.#receipts.set(submission.submissionId, { fingerprint, delivery });
     this.#queue.push(submission);
     this.#lastDelivery = delivery;
+    this.emit('status', this.status());
     this.#start();
     return structuredClone(delivery);
   }
@@ -150,6 +167,7 @@ export class SessionFeedback extends EventEmitter {
     for (let submission of this.#queue.splice(0)) {
       this.#complete(submission, { state: DELIVERY_STATE.REJECTED, failure });
     }
+    this.emit('status', this.status());
   }
 
   /**
@@ -163,5 +181,6 @@ export class SessionFeedback extends EventEmitter {
       ...(submission.revision !== undefined ? { revision: submission.revision } : {}), ...result };
     this.#lastDelivery = receipt.delivery;
     this.emit('delivery', structuredClone(receipt.delivery));
+    this.emit('status', this.status());
   }
 }

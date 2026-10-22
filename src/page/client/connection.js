@@ -6,6 +6,8 @@ import { CONTENT_ROOT_ID } from '../../markup/constants.js';
 import { replaceContent } from './replace-content.js';
 import { SharedView } from './shared-view.js';
 import { syncPageIdentity } from './identity.js';
+import { setFeedbackSender, setFeedbackConnected, setFeedbackRole, receiveFeedback } from './feedback.js';
+import { withoutFeedback } from './feedback-guard.js';
 
 export function connectSession() {
   syncPageIdentity();
@@ -34,11 +36,14 @@ export function connectSession() {
     }
   }
 
-  setEventSender((message) => {
+  /** @param {string} message */
+  let send = (message) => {
     if (shared.role === PAGE_ROLE.VIEWER || socket?.readyState !== WebSocket.OPEN || socket.bufferedAmount > MAX_EVENT_BYTES) { return false; }
     socket.send(message);
     return true;
-  });
+  };
+  setEventSender(send);
+  setFeedbackSender(send);
 
   function connect() {
     if (ended || paused) { return; }
@@ -54,16 +59,25 @@ export function connectSession() {
     socket = current;
     showStatus('Connecting...');
     current.onopen = () => {
+      setFeedbackConnected(true);
       delay = RECONNECT_MIN_MS;
       syncPageIdentity();
       current.send(JSON.stringify({ type: 'hello', title: document.title }));
       showStatus('');
     };
     current.onmessage = (event) => {
+      if (current !== socket || attempt !== generation) { return; }
+      let message;
+      try { message = /** @type {import('../../../types/transport.js').ServerMessage} */ (JSON.parse(event.data)); }
+      catch { showStatus('Connection error: invalid server message.'); return; }
+      if (message.type === 'feedback-status' || message.type === 'feedback-result') {
+        withoutFeedback(() => receiveFeedback(message));
+        return;
+      }
       updates = updates.then(async () => {
         if (current !== socket || attempt !== generation) { return; }
-        let message = /** @type {import('../../../types/transport.js').ServerMessage} */ (JSON.parse(event.data));
         if (message.type === 'role') {
+          setFeedbackRole(message.role);
           await shared.setRole(message);
           showStatus('');
           return;
@@ -73,6 +87,7 @@ export function connectSession() {
           return;
         }
         if (message.type === 'stop') {
+          setFeedbackConnected(false);
           ended = true;
           shared.disconnect();
           clearTimeout(timer);
@@ -102,7 +117,7 @@ export function connectSession() {
       }).catch((error) => showStatus(`Connection error: ${error.message}`));
     };
     current.onclose = (event) => {
-      if (current === socket) { shared.disconnect(); }
+      if (current === socket) { shared.disconnect(); setFeedbackConnected(false); }
       if (event.code === 1000 && event.reason === 'Session ended') { ended = true; }
       if (ended) { showStatus('Session ended.'); return; }
       if (paused || attempt !== generation) { return; }
@@ -117,6 +132,7 @@ export function connectSession() {
   }
 
   window.addEventListener('pagehide', () => {
+    setFeedbackConnected(false);
     paused = true;
     generation += 1;
     clearTimeout(timer);

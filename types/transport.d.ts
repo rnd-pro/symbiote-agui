@@ -1,11 +1,9 @@
 import type { ComponentState } from './components.js';
-import type { FeedbackDelivery, FeedbackStatus, FeedbackSubmission } from './feedback.js';
+import type { FeedbackDelivery, FeedbackStatus, FeedbackSubmission, FeedbackReference, FeedbackEvent, FeedbackSubmitOptions } from './feedback.js';
 
-/** Feedback transport contracts; wired into the live protocol in stage 4. */
-export interface FeedbackPageMessage {
-  type: 'feedback-submit';
-  submission: FeedbackSubmission;
-}
+export type FeedbackPageMessage =
+  | { type: 'feedback-submit'; submission: FeedbackSubmission }
+  | { type: 'feedback-read'; references: FeedbackReference[] };
 
 export type FeedbackServerMessage =
   | { type: 'feedback-status'; feedback: FeedbackStatus }
@@ -46,9 +44,10 @@ export type PageCommand =
   | { type: 'call'; discoveryId: string; name: string; input: Record<string, unknown>; deadline: number };
 
 export type ServerMessage = (PageCommand & { id: string }) | { type: 'stop' }
-  | PageRoleMessage | ({ type: 'snapshot' } & MirrorSnapshot);
+  | PageRoleMessage | ({ type: 'snapshot' } & MirrorSnapshot) | FeedbackServerMessage;
 
 export type PageMessage =
+  | FeedbackPageMessage
   | ({ type: 'snapshot' } & MirrorSnapshot)
   | { type: 'result'; id: string; result?: unknown; error?: string }
   | { type: 'hello'; title: string }
@@ -74,6 +73,7 @@ export interface FragmentAnalysis {
 
 export interface PageApi {
   emit(name: string, data?: unknown): boolean;
+  submitFeedback(event: FeedbackEvent, options: FeedbackSubmitOptions): Promise<FeedbackDelivery>;
 }
 
 export type ModuleCleanup = () => void | Promise<void>;

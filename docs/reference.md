@@ -54,7 +54,7 @@ Run `npx symbiote-agui --help` for the command list. Session commands return JSO
 
 ## Private feedback handlers
 
-The CLI can register a private command for the current worker. Browser submission wiring is not connected yet; configuring a handler does not forward ordinary events or trigger database writes. Verify native delivery to the same originating conversation, including idle and busy behavior, before configuring it.
+The CLI can register a private command for the current worker. Explicit browser submissions can invoke that command; ordinary events are never forwarded automatically. Verify native delivery to the same originating conversation, including idle and busy behavior, before configuring it. Delivery acknowledgement does not confirm an external write.
 
 ```sh
 npx symbiote-agui feedback status my-workspace
@@ -85,6 +85,30 @@ The handler must report native acknowledgement with one JSON object on stdout: `
 Execution is ordered on a separate queue. Limits are 16 KiB per configuration/submission message, 16 pending submissions, 100 retained receipts, 10 seconds per command, and 8 KiB of combined stdout/stderr. A full queue rejects new work explicitly. Identical submission IDs reuse retained receipts; conflicting payloads are rejected. Timeout, malformed acknowledgement, or a failure after dispatch reports an unknown outcome and never retries automatically. External persistence needs a separate verified acknowledgement from the agent.
 
 Registration stays in memory and is disabled by clear, stop, explicit disable, or a handler reporting the conversation unavailable. Disabling rejects queued work and terminates active commands; publication already accepted by a native harness cannot be undone. POSIX cleanup targets the spawned process group; Windows cleanup targets the direct child. The originating conversation binding lasts for the worker instance, so changing conversations requires a new instance. Restarted workers have feedback disabled. Older workers report unsupported feedback and are not restarted automatically.
+
+### Explicit browser submissions
+
+Marked modules receive `submitFeedback` alongside `emit`, and `/client/index.js` exports it for component methods. Call it inside a real Save/Apply/Submit handler after local validation and saving the local draft. Read fields from the existing Symbiote context; keep normal input bindings and `pub-to` attributes.
+
+```js
+let delivery = await submitFeedback({
+  type: 'changes.submitted',
+  source: 'contact-editor',
+  data: { name: this.$.name, role: this.$.role },
+}, { userEvent, submissionId: commitId, revision });
+```
+
+`userEvent` must be the trusted native click or submit event received by the handler. Each event can submit once. Synthetic events, native agent-invoked form submissions, restoration, and agent-driven page/tool commands are blocked. Omit `submissionId` to generate a UUID, or use an application's immutable commit UUID. Supply the application revision separately when acknowledgements must match a specific version. The API resolves with `accepted`, `rejected`, or `unknown`; `queued` is an intermediate transport state. It never marks application records persisted.
+
+The reserved native Symbiote context `AGUI_FEEDBACK` exposes `availability`, `connected`, `pending`, `delivery`, `status`, and `message`. Treat it as read-only and do not create a provider with that name. `status` and `message` bind directly to existing UI components:
+
+```html
+<agui-state bind="$.status: AGUI_FEEDBACK/status; $.message: AGUI_FEEDBACK/message"></agui-state>
+```
+
+Pending delivery uses `loading`; rejection or uncertainty uses `error`. Confirmed conversation delivery uses `ready`, which hides `agui-state`; use a normal text binding to `AGUI_FEEDBACK/message` if a delivery confirmation should remain visible. Keep local-save and external-persistence indicators in the application's own context. With no handler, local editing and saving continue and explicit feedback returns `DISABLED` or `UNAVAILABLE`.
+
+Feedback shares the existing WebSocket but has separate submission, result, and receipt-read messages. Viewers cannot submit or query it. Reconnecting pages query retained receipts by the original submission ID, instance ID, and revision; they never replay a submission automatically. Unconfirmed sends become unknown. Receipt recovery is limited to the same worker and retained history; a reload does not preserve the page's in-memory recovery list, so persist commit references with application drafts when needed. Wrong worker instances are rejected, and newer submissions are not overwritten in the feedback UI by an older completion. Reading ordinary `events` still drains only the ordinary event queue.
 
 ## Saved interfaces and reconnection
 

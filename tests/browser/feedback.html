@@ -1,0 +1,41 @@
+<feedback-editor id="editor" ctx="FEEDBACK_EDITOR">
+  <agui-field id="name" label="Name" name="name" pub-to="FEEDBACK_EDITOR/name" bind="$.value: FEEDBACK_EDITOR/name"></agui-field>
+  <agui-field id="role" label="Role" name="role" pub-to="FEEDBACK_EDITOR/role" bind="$.value: FEEDBACK_EDITOR/role"></agui-field>
+  <button id="save" type="button" bind="onclick: save">Save</button>
+  <button id="ordinary" type="button" bind="onclick: ordinary">Ordinary event</button>
+  <output id="local-name" bind="textContent: savedName"></output>
+  <agui-state id="feedback-state" bind="$.status: AGUI_FEEDBACK/status; $.message: AGUI_FEEDBACK/message"></agui-state>
+  <output id="delivery-message" bind="textContent: AGUI_FEEDBACK/message"></output>
+</feedback-editor>
+<script type="module" data-agui>
+let { ContextProvider, ToolDescriptor, submitFeedback, PubSub, emit } = await import(new URL('/client/index.js', location.href).href);
+if (!customElements.get('feedback-editor')) {
+  class FeedbackEditor extends ContextProvider {
+    init$ = {
+      name: '', role: '', savedName: '',
+      save: (event) => this.commit(event),
+      ordinary: () => emit('ordinary', { name: this.$.name }),
+      tryCachedEvent: new ToolDescriptor({
+        name: 'feedback_try_cached', description: 'Attempt to reuse a prior user event during an agent call.',
+        execute: () => this.commit(this.lastUserEvent),
+      }),
+    };
+
+    async commit(userEvent) {
+      if (userEvent instanceof Event) { this.lastUserEvent = userEvent; }
+      let submissionId = crypto.randomUUID();
+      let revision = this.revisionOverride ?? submissionId;
+      this.lastSubmission = submissionId;
+      this.$.savedName = this.$.name;
+      this.result = await submitFeedback({ type: 'changes.submitted', source: this.localName,
+        data: { name: this.$.name, role: this.$.role } }, { userEvent, submissionId, revision });
+      return this.result;
+    }
+  }
+  FeedbackEditor.reg('feedback-editor');
+}
+export default async () => {
+  window.feedbackTest = { submitFeedback, PubSub };
+  window.restoreAttempt = await submitFeedback({ type: 'restore', source: 'editor', data: null }, { userEvent: new Event('click') });
+};
+</script>

@@ -100,7 +100,7 @@ export let HELP = [
   'update reads JSON { selector, values, method?, rewrite? } from file or stdin.',
   'events returns and clears buffered interface events.',
   'feedback configure reads private JSON from file or stdin; registration lasts only for the current worker.',
-  'feedback status and disable require a running session; page submission support is not enabled yet.',
+  'feedback status and disable require a running session; only explicit browser submissions invoke the handler.',
   'start all restores saved sessions, reuses running workers, and opens their pages unless --no-open.',
   'status all lists running and saved sessions with active flags and current links for running sessions.',
   'pages lists connected tabs; tools discovers one tab (use --page with several tabs).',

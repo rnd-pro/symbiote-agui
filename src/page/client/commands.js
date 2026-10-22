@@ -1,11 +1,17 @@
 import { renderMarkup, updateState } from './render.js';
 import { ToolBridge } from './tool-bridge.js';
 import { MAX_PAGE_MESSAGE_BYTES } from '../../transport/constants.js';
+import { withoutFeedback } from './feedback-guard.js';
 
 let tools = new ToolBridge();
 
 /** @param {import('../../../types/transport.js').PageCommand} command */
-export async function executePageCommand(command) {
+export function executePageCommand(command) {
+  return withoutFeedback(() => executeCommand(command));
+}
+
+/** @param {import('../../../types/transport.js').PageCommand} command */
+async function executeCommand(command) {
   if (command.type === 'render') {
     tools.invalidate();
     await renderMarkup(command);

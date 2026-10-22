@@ -43,7 +43,7 @@ AGUI exposes UI actions as WebMCP tools and invokes them through Symbiote.js's p
 
 AGUI runs locally by default. The CLI is enough to use it; [MCP integrations](./docs/reference.md#optional-agui-mcp) are available for agent environments that support them.
 
-The CLI also supports [private feedback handler registration](./docs/reference.md#private-feedback-handlers). Browser submission wiring is not connected yet; registration alone does not send UI actions to an agent.
+With a verified [private feedback handler](./docs/reference.md#private-feedback-handlers), explicit Save or Submit actions can deliver consolidated changes to the originating conversation. Routine edits stay local, and delivery acknowledgement is separate from external persistence.
 
 ## Reusable UI components
 

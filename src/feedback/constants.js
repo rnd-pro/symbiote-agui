@@ -2,6 +2,7 @@ import { MAX_EVENT_BYTES, MAX_EVENTS } from '../transport/constants.js';
 
 export let FEEDBACK_STATE = Object.freeze({ DISABLED: 'disabled', READY: 'ready', UNAVAILABLE: 'unavailable' });
 export let DELIVERY_STATE = Object.freeze({ QUEUED: 'queued', ACCEPTED: 'accepted', REJECTED: 'rejected', UNKNOWN: 'unknown' });
+export let FEEDBACK_CONTEXT = 'AGUI_FEEDBACK';
 export let FEEDBACK_LIMITS = Object.freeze({
   bytes: MAX_EVENT_BYTES,
   pending: 16,
@@ -19,6 +20,9 @@ export let FEEDBACK_FAILURES = Object.freeze({
   QUEUE_FULL: 'The feedback queue is full. Changes remain pending.',
   COMMAND_FAILED: 'The feedback command could not start. No delivery was attempted.',
   DELIVERY_UNKNOWN: 'Delivery could not be confirmed. Reconcile before retrying.',
+  USER_ACTION_REQUIRED: 'Feedback requires an explicit user action.',
+  AGENT_UPDATE: 'Feedback is paused while the agent updates the interface.',
+  DISCONNECTED: 'Changes remain local. The feedback connection is unavailable.',
 });
 export let FEEDBACK_ENVIRONMENT = Object.freeze([
   'PATH', 'HOME', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA', 'SystemRoot', 'WINDIR',

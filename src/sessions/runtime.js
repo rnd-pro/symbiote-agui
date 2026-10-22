@@ -73,7 +73,7 @@ export class SessionRuntime {
           await this.pages.request(socket, { type: 'render', ...this.latest });
         }
       }),
-      (message) => this.events.add(message));
+      (message) => this.events.add(message), this.feedback);
   }
 
   /** @returns {import('../../types/session.js').SessionStatus} */

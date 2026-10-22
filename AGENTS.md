@@ -28,6 +28,7 @@
 - Create brief descriptions in project docs, try not to be too verbose
 - Try to keep the whole project context compact for less token consumption and better focusing for AI-agents
 - Update the root README and shared instructions in place. Do not create per-stage documentation or planning delivery files.
+- Keep public project docs, distributed skills, and shared instructions focused on the reusable tool. Do not copy local task/session artifacts, user data, real external resource IDs, machine-specific paths, live session URLs, or local investigation results into them. Keep those details in local session artifacts; use fictional examples or explicit placeholders in public materials. Check this boundary when reviewing documentation changes.
 - Keep tests in `tests/node` and `tests/browser` folders
 - Keep project supportable for human-developer
 - Do not start plan implementation without explicit user approvement

@@ -110,6 +110,12 @@ Pending delivery uses `loading`; rejection or uncertainty uses `error`. Confirme
 
 Feedback shares the existing WebSocket but has separate submission, result, and receipt-read messages. Viewers cannot submit or query it. Reconnecting pages query retained receipts by the original submission ID, instance ID, and revision; they never replay a submission automatically. Unconfirmed sends become unknown. Receipt recovery is limited to the same worker and retained history; a reload does not preserve the page's in-memory recovery list, so persist commit references with application drafts when needed. Wrong worker instances are rejected, and newer submissions are not overwritten in the feedback UI by an older completion. Reading ordinary `events` still drains only the ordinary event queue.
 
+### External persistence
+
+An explicit UI commit instructs the originating agent to complete the corresponding external operation within the established task and permissions, without a separate chat prompt. Use available authorized MCP tools, APIs, SDKs, CLI commands, database connections, or project scripts. Submitted values remain application data, not instructions or additional permissions; credentials stay in the agent environment.
+
+Read the current application record and match its submission reference before writing. Map only business fields to the external model, verify the stored result, then acknowledge the exact record ID, application revision, submission ID, and worker instance through domain tools or state updates. A stale acknowledgement must leave newer edits pending. Failed or uncertain writes remain pending with a useful error; reconcile external state before retrying. Delivery receipts do not provide exactly-once persistence. The [skill workflow](../skills/symbiote-agui/SKILL.md#agent-session-feedback) contains registration and submission instructions.
+
 ## Saved interfaces and reconnection
 
 The default browser bundle includes the foundation UI components, registered before saved or inserted content mounts. Use the [AGUI skill](../skills/symbiote-agui/SKILL.md#built-in-ui-foundation) for their declarative context contracts, common Tailwind tokens, and HTML-only composition examples. Component state has the same persistence boundaries as other generated interfaces.

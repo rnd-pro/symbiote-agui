@@ -42,17 +42,14 @@ export function validateDataReference(input) {
 
 /**
  * @param {unknown} input
- * @returns {import('../../types/data.js').DataCommit}
+ * @returns {import('../../types/data.js').DataChange[]}
  */
-export function validateDataCommit(input) {
+export function validateDataChanges(input) {
   jsonData(input);
-  dataObject(input, ['commitId', 'instanceId', 'markupRevision', 'baseRevision', 'changes']);
-  let reference = validateDataReference({ commitId: input.commitId, instanceId: input.instanceId, markupRevision: input.markupRevision });
-  if (typeof input.baseRevision !== 'string' || !/^[\da-f-]{36}$/i.test(input.baseRevision)
-    || !Array.isArray(input.changes) || !input.changes.length || input.changes.length > DATA_LIMITS.targets) { throw new Error('Invalid data commit.'); }
+  if (!Array.isArray(input) || !input.length || input.length > DATA_LIMITS.targets) { throw new Error('Invalid data providers.'); }
   /** @type {import('../../types/data.js').DataChange[]} */
   let changes = [];
-  for (let change of input.changes) {
+  for (let change of input) {
     dataObject(change, ['provider', 'values']);
     if (typeof change.provider !== 'string' || !change.provider.trim() || change.provider.length > 128) { throw new Error('Invalid provider.'); }
     if (!change.values || typeof change.values !== 'object' || Array.isArray(change.values)) { throw new Error('Invalid values.'); }
@@ -61,7 +58,20 @@ export function validateDataCommit(input) {
     changes.push({ provider: change.provider,
       values: /** @type {import('../../types/data.js').DataChange['values']} */ (change.values) });
   }
-  if (new Set(changes.map((change) => change.provider)).size !== changes.length
-    || new TextEncoder().encode(JSON.stringify({ type: 'data-commit', commit: input })).byteLength > DATA_LIMITS.bytes) { throw new Error('Data commit exceeds limits.'); }
-  return structuredClone({ ...reference, baseRevision: input.baseRevision, changes });
+  if (new Set(changes.map((change) => change.provider)).size !== changes.length) { throw new Error('Duplicate data providers.'); }
+  return structuredClone(changes);
+}
+
+/**
+ * @param {unknown} input
+ * @returns {import('../../types/data.js').DataCommit}
+ */
+export function validateDataCommit(input) {
+  jsonData(input);
+  dataObject(input, ['commitId', 'instanceId', 'markupRevision', 'baseRevision', 'changes']);
+  let reference = validateDataReference({ commitId: input.commitId, instanceId: input.instanceId, markupRevision: input.markupRevision });
+  if (typeof input.baseRevision !== 'string' || !/^[\da-f-]{36}$/i.test(input.baseRevision)) { throw new Error('Invalid data commit.'); }
+  if (new TextEncoder().encode(JSON.stringify({ type: 'data-commit', commit: input })).byteLength > DATA_LIMITS.bytes) { throw new Error('Data commit exceeds limits.'); }
+  let changes = validateDataChanges(input.changes);
+  return { ...reference, baseRevision: input.baseRevision, changes };
 }

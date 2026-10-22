@@ -4,6 +4,10 @@ Group components by purpose: `layouts/` for dashboard, panel, header, and toolba
 
 Import every component from `index.js` and register it before the page connects. JSDA bundles this entry into the normal page client, with one Symbiote instance and no per-session imports.
 
+The internal `controls/data-toolbar/` helpers prepare the common data toolbar; the component is not registered yet. `JsonTransfer` accepts one native file input, a getter for selected `persist` targets, a `report` callback for native component state, and an optional JSON-file/manual export target from data-flow metadata. Its `pickImport()`, `importFile(file)`, `exportFile()`, and `dispose()` methods handle browser files without a worker or feedback handler. Pass only the current accepted provider/key declarations; refresh or dispose the helper when its component is replaced.
+
+Portable files contain `{ "version": 1, "changes": [{ "provider": "APP", "values": { "records": [] } }] }`. Import requires exactly the selected providers/keys and plain bounded JSON, replaces those draft values through native contexts, and retains unrelated fields. It does not merge records, save a baseline, or send feedback. Export includes unsaved edits and reports download initiation only. Both use a 1 MiB limit. Results carry the selected bindings and an actual file-label endpoint for the toolbar's data-flow state; `initialSource` and private discovery metadata are not rewritten. Callers select an appropriate manual/JSON export destination; no local filesystem path is assumed.
+
 Place the page-wide `agui-header` immediately before `agui-dashboard` under the same application provider. Its content uses the dashboard's maximum width and responsive gutters. A floating header reports its height to the following dashboard for focus scroll spacing.
 
 Keep native rendering defaults in the shared base. Only layout components enable `processInnerHtml` to process bindings in authored children; controls and feedback components render their own templates.

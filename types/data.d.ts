@@ -64,3 +64,25 @@ export interface DataReceipt {
   fingerprint: string;
   result: DataResult;
 }
+
+export interface DataTransferDocument {
+  version: 1;
+  changes: DataChange[];
+}
+
+export interface DataTransferState {
+  operation: 'import' | 'export';
+  state: 'picking' | 'reading' | 'exporting' | 'imported' | 'download-started' | 'cancelled' | 'error';
+  message: string;
+  fileName?: string;
+  targets?: DataTarget[];
+  endpoint?: import('./metadata.js').DataEndpoint;
+  failure?: { code: keyof typeof import('../src/page/client/uilib/controls/data-toolbar/constants.js').TRANSFER_FAILURES; message: string };
+}
+
+export interface DataTransferOptions {
+  input: HTMLInputElement;
+  targets(): DataTarget[];
+  report(state: DataTransferState): void;
+  exportTarget?: import('./metadata.js').DataEndpoint;
+}

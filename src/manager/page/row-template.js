@@ -1,4 +1,4 @@
-export let SESSION_ROW_TEMPLATE = `
+export let SESSION_ROW_TEMPLATE = /*html*/ `
   <agui-panel role="article" class="grid gap-3" bind="@data-session: ^sessionId; @data-state: ^statusKind">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="min-w-0 break-words [overflow-wrap:anywhere]">

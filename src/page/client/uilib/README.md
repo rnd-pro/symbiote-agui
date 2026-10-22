@@ -1,8 +1,10 @@
 # UI library
 
-Group components by purpose: `layouts/` for dashboard, panel, header, and toolbar; `controls/` for field, select, toggle, and theme toggle; `feedback/` for state presentation. Keep each component's logic and optional template in its own folder inside its category. Shared base classes, control markup fragments, and common constants belong in `shared/`.
+Group components by purpose: `layouts/` for dashboard, panel, header, and toolbar; `controls/` for field, select, toggle, and theme toggle; `feedback/` for state presentation; `content/` for icons and other display primitives. Keep each component's logic and optional template in its own folder inside its category. Shared base classes, control markup fragments, and common constants belong in `shared/`.
 
 Import every component from `index.js` and register it before the page connects. JSDA bundles this entry into the normal page client, with one Symbiote instance and no per-session imports.
+
+Use `agui-icon` with a `name` attribute or native `$.name`/`state` binding. Its Material Symbols font subset is bundled locally, with no runtime font requests. Decorative icons need no text; informative icons take caller-provided accessible names. Keep the supported names and font subset synchronized using the [icon maintenance instructions](./content/icon/README.md).
 
 Place one `agui-data-toolbar` last in the dashboard, with `bind="state: AGUI_TEXT/dataToolbar"` for page-supplied common copy, or bind an application-owned `{ texts: { ... } }` state object. It defaults to all accepted `persist` declarations; optional `provider` and space-separated `keys` attributes select a subset. Set `form="FORM_ID"` when outside the form to validate it on Save. It shares a committed baseline across Save, Cancel, Import, and Export, and uses native subscriptions to track drafts. Save requires a real user event, awaits local cache publication, then delivers a bounded reference through feedback. New edits remain dirty. The reserved native `AGUI_SESSION` context supplies each page's own `role`, `connected`, and `userConnected`; viewers get a separate disabled toolbar outside the inert mirror, never the user's copied role label.
 

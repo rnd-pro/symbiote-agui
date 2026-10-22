@@ -27,6 +27,7 @@
   },
   "include": [
     "bin/**/*.js",
+    "scripts/**/*.js",
     "src/**/*.js",
     "types/**/*.d.ts",
     "tests/node/**/*.js",

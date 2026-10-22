@@ -11,6 +11,8 @@
       "notifications": true,
       "statusOptions": [{"value":"new","label":"New"},{"value":"contacted","label":"Contacted"},{"value":"archived","label":"Archived","disabled":true}],
       "componentState": {"status":"error","message":"The data source is unavailable.","retryLabel":"Retry"},
+      "iconName": "search",
+      "iconOptions": [{"value":"search","label":"Search"},{"value":"settings","label":"Settings"},{"value":"person","label":"Person"}],
       "submissionExamples": [
         {"label":"Populated","message":"A sample profile is ready to edit."},
         {"label":"Imported","message":"JSON imported. Changes are not saved."},
@@ -71,6 +73,22 @@
       <agui-state status="empty" message="No contacts match the current filters."></agui-state>
       <agui-state id="retry-state" bind="state: APP/componentState"></agui-state>
       <p class="text-sm text-agui-muted">Retry sends an action to the agent. This gallery does not contact an external service.</p>
+    </agui-panel>
+    <agui-panel slot="full" class="grid gap-4">
+      <h2>Icons</h2>
+      <agui-toolbar aria-label="Icon examples">
+        <agui-icon name="home" aria-label="Home"></agui-icon>
+        <agui-icon name="dashboard" aria-label="Dashboard"></agui-icon>
+        <agui-icon name="mail" aria-label="Email"></agui-icon>
+        <agui-icon name="check_circle" aria-label="Complete" class="text-agui-accent"></agui-icon>
+        <agui-icon name="warning" aria-label="Warning" class="text-agui-danger"></agui-icon>
+        <button type="button"><agui-icon name="download"></agui-icon>Download</button>
+        <button type="button" aria-label="Settings"><agui-icon name="settings"></agui-icon></button>
+      </agui-toolbar>
+      <agui-toolbar aria-label="Dynamic icon">
+        <agui-select label="Icon" pub-to="APP/iconName" bind="$.value: APP/iconName; $.options: APP/iconOptions"></agui-select>
+        <agui-icon id="dynamic-icon" bind="$.name: APP/iconName; @aria-label: APP/iconName"></agui-icon>
+      </agui-toolbar>
     </agui-panel>
     <agui-panel slot="full" class="grid gap-4">
       <h2>Data workflow</h2>

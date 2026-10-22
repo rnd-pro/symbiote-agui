@@ -8,6 +8,7 @@ import { ThemeToggle } from './controls/theme-toggle/theme-toggle.js';
 import { Toggle } from './controls/toggle/toggle.js';
 import { State } from './feedback/state/state.js';
 import { DataToolbar } from './controls/data-toolbar/data-toolbar.js';
+import { Icon } from './content/icon/icon.js';
 
 export function registerUiLibComponents() {
   Dashboard.reg('agui-dashboard');
@@ -20,4 +21,5 @@ export function registerUiLibComponents() {
   ThemeToggle.reg('agui-theme-toggle');
   State.reg('agui-state');
   DataToolbar.reg('agui-data-toolbar');
+  Icon.reg('agui-icon');
 }

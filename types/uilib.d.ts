@@ -8,6 +8,11 @@ export type UiValue = string | boolean;
 export type UiControl = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 export type UiStatus = 'ready' | 'loading' | 'empty' | 'error';
 export type UiTexts = Readonly<Record<string, string>>;
+export type UiIconName = keyof typeof import('../src/page/client/uilib/content/icon/collection.js').ICON_NAMES;
+
+export interface UiIconState {
+  name: UiIconName | '';
+}
 
 export interface UiControlState {
   value: UiValue;

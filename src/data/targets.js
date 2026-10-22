@@ -4,7 +4,7 @@ import { PERSIST_ATTRIBUTE, DATA_LIMITS } from './constants.js';
 import { jsonData } from './validate.js';
 
 /**
- * @param {DocumentFragment} fragment
+ * @param {ParentNode} fragment
  * @returns {Map<string, { element: Element; script: Element; keys: string[]; values: import('../../types/components.js').ComponentState }>}
  */
 export function dataTargets(fragment) {

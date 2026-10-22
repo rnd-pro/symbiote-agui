@@ -14,3 +14,4 @@ export let MODULE_SELECTOR = 'script[type="module"][data-agui]';
 export let MIRROR_INTERVAL_MS = 100;
 export let MIRROR_REFRESH_MS = 1_000;
 export let PAGE_ROLE = Object.freeze({ USER: 'user', VIEWER: 'viewer' });
+export let SESSION_CONTEXT = 'AGUI_SESSION';

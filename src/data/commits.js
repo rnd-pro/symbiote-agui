@@ -7,6 +7,7 @@ import { DATA_LIMITS, dataFailure } from './constants.js';
 import { validateDataCommit, validateDataReference } from './validate.js';
 import { declaredData, patchData, mergeSavedData } from './markup.js';
 import { readRuntimeCache, prepareRuntimeCache, sourceHash } from './cache.js';
+import { readMetadata } from '../metadata/store.js';
 
 export class SessionData extends EventEmitter {
   /** @type {string} */
@@ -20,12 +21,15 @@ export class SessionData extends EventEmitter {
   /** @type {Map<string, import('../../types/data.js').DataReceipt>} */
   receipts = new Map();
   pending = 0;
+  /** @type {import('../../types/metadata.js').DataFlow | undefined} */
+  dataFlow;
 
   /** @param {import('../sessions/runtime.js').SessionRuntime} runtime */
   constructor(runtime) { super(); this.runtime = runtime; }
 
   /** @param {string} source */
   async restore(source) {
+    this.dataFlow = (await readMetadata(this.runtime.record.sessionId)).dataFlow;
     this.source = source;
     let cached = await readRuntimeCache(this.runtime.record.sessionId);
     let html = source;
@@ -45,7 +49,7 @@ export class SessionData extends EventEmitter {
   /** @returns {import('../../types/data.js').DataStatus} */
   status() {
     return { instanceId: this.runtime.record.instanceId, markupRevision: this.runtime.latest?.revision ?? 0,
-      revision: this.revision, targets: this.targets };
+      revision: this.revision, targets: this.targets, ...(this.dataFlow ? { dataFlow: this.dataFlow } : {}) };
   }
 
   /**
@@ -147,6 +151,7 @@ export class SessionData extends EventEmitter {
     catch { return this.reject(reference, 'INVALID_TARGET'); }
     let cache;
     try {
+      this.dataFlow = (await readMetadata(runtime.record.sessionId)).dataFlow;
       if (await readCachedMarkup(runtime.record.sessionId) !== this.source) { return this.reject(reference, 'SOURCE_CHANGED'); }
       let revision = randomUUID();
       cache = await prepareRuntimeCache(runtime.record.sessionId, html, this.source, revision, this.raw);

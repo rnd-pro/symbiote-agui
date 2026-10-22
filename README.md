@@ -47,7 +47,7 @@ With a verified [private feedback handler](./docs/reference.md#private-feedback-
 
 ## Reusable UI components
 
-AGUI includes dashboard layouts, panels, floating headers, toolbars, fields, selects, toggles, theme toggles, and content states in its default browser bundle. Agents compose these as HTML with primitive attributes, standard Symbiote property/state bindings, and common Tailwind design tokens. A common context provider can hold shared application data; individual fields need no JSON setup. Standard controls handle their own interactions without session-specific initialization scripts. The [AGUI skill](./skills/symbiote-agui/SKILL.md#built-in-ui-foundation) contains the complete usage contract and examples.
+AGUI includes dashboard layouts, panels, floating headers, toolbars, fields, selects, toggles, theme toggles, and content states in its default browser bundle. The floating data toolbar provides Save, Cancel changes, Import/Export JSON, separate save/delivery statuses, and user/viewer and connection indicators. Agents compose these as HTML with primitive attributes, standard Symbiote property/state bindings, and common Tailwind design tokens. A common context provider can hold shared application data; individual fields need no JSON setup. Standard controls handle their own interactions without session-specific initialization scripts. The [AGUI skill](./skills/symbiote-agui/SKILL.md#built-in-ui-foundation) contains the complete usage contract and examples.
 
 ## Manage sessions in your browser
 

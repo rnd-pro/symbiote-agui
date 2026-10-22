@@ -53,7 +53,10 @@ export class SharedView {
         return;
       }
       let root = document.getElementById(CONTENT_ROOT_ID);
-      if (root) { replaceContent(root, document.createDocumentFragment()); }
+      if (root) {
+        replaceContent(root, document.createDocumentFragment());
+        root.append(document.createElement('agui-data-toolbar'));
+      }
     }
     if (this.role === PAGE_ROLE.USER) {
       if (message.capture) { this.revision = message.revision; }
@@ -95,10 +98,11 @@ export class SharedView {
       frame.title = 'Live view of the user interface';
       frame.id = 'agui-viewer';
       frame.setAttribute('sandbox', 'allow-same-origin');
-      frame.style.cssText = 'display:block;width:100%;height:100dvh;border:0;';
+      frame.style.cssText = 'display:block;width:100%;height:calc(100dvh - var(--agui-data-toolbar-height, 0px));border:0;';
       frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\' http: https:; img-src http: https: data: blob:; font-src http: https: data:; media-src http: https: blob:; base-uri \'none\'; form-action \'none\'"><link id="mirror-styles" rel="stylesheet"><style id="mirror-root-styles"></style></head><body inert style="margin:0"><main id="mirror-content"></main></body></html>';
       frame.onload = () => this.applySnapshot();
-      document.getElementById(CONTENT_ROOT_ID)?.replaceChildren(frame);
+      let toolbar = document.createElement('agui-data-toolbar');
+      document.getElementById(CONTENT_ROOT_ID)?.replaceChildren(frame, toolbar);
       this.frame = frame;
     }
     this.applySnapshot();
@@ -116,6 +120,7 @@ export class SharedView {
     frame.ownerDocument.body.dataset.theme = document.body.dataset.theme;
     let fragment = document.createElement('template');
     fragment.innerHTML = html;
+    fragment.content.querySelectorAll('agui-data-toolbar').forEach((element) => element.remove());
     let x = frame.contentWindow?.scrollX || 0;
     let y = frame.contentWindow?.scrollY || 0;
     root.replaceChildren(fragment.content);

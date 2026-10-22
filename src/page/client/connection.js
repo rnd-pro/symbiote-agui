@@ -9,6 +9,7 @@ import { syncPageIdentity } from './identity.js';
 import { setFeedbackSender, setFeedbackConnected, setFeedbackRole, receiveFeedback } from './feedback.js';
 import { withoutFeedback } from './feedback-guard.js';
 import { setDataSender, setDataConnected, setDataRole, setDataRendered, receiveData } from './data.js';
+import { updateSessionContext } from './session-context.js';
 
 export function connectSession() {
   syncPageIdentity();
@@ -66,6 +67,7 @@ export function connectSession() {
     socket = current;
     showStatus('Connecting...');
     current.onopen = () => {
+      updateSessionContext({ connected: true });
       setFeedbackConnected(true);
       setDataConnected(true);
       delay = RECONNECT_MIN_MS;
@@ -89,6 +91,7 @@ export function connectSession() {
       updates = updates.then(async () => {
         if (current !== socket || attempt !== generation) { return; }
         if (message.type === 'role') {
+          updateSessionContext({ role: message.role, userConnected: message.userConnected });
           setFeedbackRole(message.role);
           setDataRole(message.role);
           await shared.setRole(message);
@@ -100,6 +103,7 @@ export function connectSession() {
           return;
         }
         if (message.type === 'stop') {
+          updateSessionContext({ connected: false });
           setFeedbackConnected(false);
           setDataConnected(false);
           ended = true;
@@ -131,7 +135,7 @@ export function connectSession() {
       }).catch((error) => showStatus(`Connection error: ${error.message}`));
     };
     current.onclose = (event) => {
-      if (current === socket) { shared.disconnect(); setFeedbackConnected(false); setDataConnected(false); }
+      if (current === socket) { updateSessionContext({ connected: false }); shared.disconnect(); setFeedbackConnected(false); setDataConnected(false); }
       if (event.code === 1000 && event.reason === 'Session ended') { ended = true; }
       if (ended) { showStatus('Session ended.'); return; }
       if (paused || attempt !== generation) { return; }
@@ -146,6 +150,7 @@ export function connectSession() {
   }
 
   window.addEventListener('pagehide', () => {
+    updateSessionContext({ connected: false });
     setFeedbackConnected(false);
     setDataConnected(false);
     paused = true;

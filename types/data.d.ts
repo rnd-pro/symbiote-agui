@@ -33,6 +33,7 @@ export interface DataStatus {
   markupRevision: number;
   revision: string;
   targets: DataTarget[];
+  dataFlow?: import('./metadata.js').DataFlow;
 }
 
 export interface DataUiState {

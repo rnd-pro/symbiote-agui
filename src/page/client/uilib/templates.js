@@ -2,6 +2,7 @@ import { FIELD_TEMPLATE, TEXTAREA_TEMPLATE } from './controls/field/template.js'
 import { SELECT_TEMPLATE } from './controls/select/template.js';
 import { TOGGLE_TEMPLATE } from './controls/toggle/template.js';
 import { STATE_TEMPLATE } from './feedback/state/template.js';
+import { DATA_TOOLBAR_TEMPLATE } from './controls/data-toolbar/template.js';
 
 export let UILIB_TEMPLATES = Object.freeze({
   field: FIELD_TEMPLATE,
@@ -9,4 +10,5 @@ export let UILIB_TEMPLATES = Object.freeze({
   select: SELECT_TEMPLATE,
   toggle: TOGGLE_TEMPLATE,
   state: STATE_TEMPLATE,
+  dataToolbar: DATA_TOOLBAR_TEMPLATE,
 });

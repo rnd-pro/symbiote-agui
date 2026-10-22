@@ -92,7 +92,7 @@ Metadata lives under the private, library-scoped state root in `.metadata/`, out
 
 ## Local data commits
 
-Declare persistent properties on a named provider with `persist="key otherKey"` and one direct inline JSON script. Each declared key must exist in that JSON. Use one declaration per provider, outside reusable templates; `AGUI_DATA` and `AGUI_FEEDBACK` are reserved names. Metadata bindings describe intent; they do not enable persistence.
+Declare persistent properties on a named provider with `persist="key otherKey"` and one direct inline JSON script. Each declared key must exist in that JSON. Use one declaration per provider, outside reusable templates; `AGUI_DATA`, `AGUI_FEEDBACK`, and `AGUI_SESSION` are reserved names. Metadata bindings describe intent; they do not enable persistence.
 
 ```html
 <context-provider ctx="APP" persist="records">
@@ -117,7 +117,19 @@ Optional `{ commitId }` accepts a UUID. Identical IDs and payloads reuse retaine
 
 Reload, reconnect, and stop/start initialize declared values from committed inline JSON. Keep handlers and transient state outside `persist`, and do not overwrite restored properties with module defaults. Compatible definition replacements retain saved values and use defaults for newly added keys. Removed/renamed declarations or changed non-null top-level types cause `DATA_CONFLICT` on insert/sync. This checks declaration compatibility, not business schemas. An incompatible source found at startup restores the previous saved interface with a warning and blocks commits until reconciled. After backing up needed data, `npx symbiote-agui sync my-workspace --reset-data` explicitly discards that snapshot and loads source defaults. `sync all` cannot reset data. Clear removes the snapshot; stop retains it. Private snapshots are scoped to session/library identity and do not accompany copied team definitions.
 
-Existing workers need a deliberate stop/start to load upgraded code; they are never restarted automatically. The common data toolbar and JSON transfer controls are not included yet. Internal transfer helpers now support versioned `{ "version": 1, "changes": [{ "provider": "APP", "values": { "records": [] } }] }` files up to 1 MiB. They validate the complete selected provider/key contract before replacing a draft, export current unsaved values, and report file labels through the existing data-flow endpoint model. They never save or notify the agent; the toolbar will expose these actions in a later stage.
+Existing workers need a deliberate stop/start to load upgraded code; they are never restarted automatically.
+
+### Floating data toolbar
+
+Add one `<agui-data-toolbar></agui-data-toolbar>` last in the dashboard. It targets all declared `persist` keys by default. Optional `provider="APP" keys="records"` selects a subset; `form="FORM_ID"` enables validation when the toolbar is outside the form. The default bundle supplies its actions without session scripts. The bar wraps at narrow widths, reserves its measured height, and includes safe-area padding. Review layout and native file pickers in your browser.
+
+Save captures the draft and confirms local publication before submitting `agui.data.submitted` feedback containing the commit reference and actual provider bindings when they fit within 4 KiB. Larger selections send `targetCount`; inspect `read_submission_status` for bindings. The agent reads metadata for the intended flow and uses the scoped `read_saved_data` tool to inspect committed values. Local save, agent delivery, external verification, errors, and unsaved edits remain separate. Disabled feedback still permits local saving. A failed cache write sends no feedback and keeps edits. Check save status queries an uncertain receipt without resubmitting; it never automatically forwards a recovered save to the agent.
+
+Cancel changes restores the last locally committed snapshot and does not undo prior saves or external operations. Import replaces selected draft properties after validating the complete contract; it does not save, merge, or notify. Export includes unsaved values and reports download initiation only. Both work while disconnected. Portable files contain `{ "version": 1, "changes": [{ "provider": "APP", "values": { "records": [] } }] }` and are limited to 1 MiB. The toolbar reports actual file labels and uses a configured manual/JSON export destination when present; initial-source metadata remains unchanged. Worker data-flow metadata is loaded at startup and refreshed by Save.
+
+The bar displays the current page's User/Viewer role and Connected/Disconnected socket state. Native `AGUI_SESSION` owns these read-only fields. Viewer controls are disabled and live outside the inert mirrored document, so indicators reflect the viewer's own connection. A connected socket does not imply external synchronization.
+
+Discover the toolbar's scoped `read_submission_status`, `read_saved_data`, and `acknowledge_submission` tools normally. Saved reads require `commitId`, `instanceId`, `markupRevision`, `revision`, `provider`, and `key`; optional `path`, `offset`, and `limit` select nested data and bound results to 8 KiB. Expired receipts or superseded revisions fail explicitly. Acknowledgements require the exact four reference fields and `state` (`verified`, `failed`, or `unknown`), with an optional message up to 512 characters. Verify the entire submitted operation before reporting `verified`; the toolbar does not infer record-level database success. Native `bind="$.externalResult: APP/result"` accepts the same acknowledgement object. Older acknowledgements cannot mark newer submissions verified, and successful acknowledgements never clear newer unsaved edits.
 
 ## Private feedback handlers
 

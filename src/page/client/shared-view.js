@@ -1,3 +1,4 @@
+import { html } from '@symbiotejs/symbiote/core/html.js';
 import { COMPONENT_TAG, CONTENT_ROOT_ID, PAGE_TEXT_CONTEXT } from '../../markup/constants.js';
 import { MAX_PAGE_MESSAGE_BYTES, MIRROR_INTERVAL_MS, MIRROR_REFRESH_MS, PAGE_ROLE } from '../../transport/constants.js';
 import { disposeModules } from './modules.js';
@@ -131,7 +132,7 @@ export class SharedView {
 
   createToolbar() {
     let content = document.createElement(COMPONENT_TAG);
-    content.innerHTML = `<agui-data-toolbar bind="state: ${PAGE_TEXT_CONTEXT}/dataToolbar"></agui-data-toolbar>`;
+    content.innerHTML = html`<agui-data-toolbar bind="state: ${PAGE_TEXT_CONTEXT}/dataToolbar"></agui-data-toolbar>`;
     return content;
   }
 

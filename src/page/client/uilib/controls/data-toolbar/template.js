@@ -1,4 +1,6 @@
-export let DATA_TOOLBAR_TEMPLATE = `
+import { html } from '@symbiotejs/symbiote/core/html.js';
+
+export let DATA_TOOLBAR_TEMPLATE = html`
   <div ref="bar" class="agui-data-bar">
     <agui-toolbar bind="@aria-label: actionsLabel">
       <button type="button" bind="textContent: ^saveLabel; onclick: ^save; disabled: ^saveDisabled; @title: ^saveHint"></button>

@@ -1,3 +1,4 @@
+import { html } from '@symbiotejs/symbiote/core/html.js';
 import { SESSION_ICON_EMOJI } from '../icon-palette.js';
 
 export function syncPageIdentity() {
@@ -8,7 +9,7 @@ export function syncPageIdentity() {
   for (let character of sessionId) {
     color = (color * 31 + character.charCodeAt(0)) % SESSION_ICON_EMOJI.length;
   }
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="90" text-anchor="middle" font-size="90">${SESSION_ICON_EMOJI[color]}</text></svg>`;
+  let svg = html`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="90" text-anchor="middle" font-size="90">${SESSION_ICON_EMOJI[color]}</text></svg>`;
   let href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
   let icon = document.querySelector('link[data-agui-icon]');
   if (!(icon instanceof HTMLLinkElement)) {

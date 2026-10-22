@@ -12,6 +12,8 @@ export interface DefinitionInfo {
   htmlPath: string;
   descriptionPath: string;
   description?: string;
+  metadata?: import('./metadata.js').SessionMetadata;
+  dataFlowSummary?: string;
 }
 
 export type LibraryResult =

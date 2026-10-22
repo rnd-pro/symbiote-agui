@@ -5,6 +5,7 @@ import { rowState } from './rows.js';
 import { MANAGER_REFRESH_MS } from '../constants.js';
 import { getTheme, setTheme, watchTheme } from './theme.js';
 import { STATUS_OPTIONS, BULK_OPTIONS } from './options.js';
+import { formatDataFlow } from '../../metadata/format.js';
 
 class SessionManager extends ContextProvider {
   init$ = {
@@ -80,7 +81,7 @@ class SessionManager extends ContextProvider {
     let sessions = this.snapshot?.sessions || [];
     let query = String(this.$.query).toLowerCase();
     let filter = this.$.statusFilter;
-    let matches = sessions.filter((row) => `${row.sessionId} ${row.definition?.title || ''} ${row.definition?.description || ''}`.toLowerCase().includes(query)
+    let matches = sessions.filter((row) => `${row.sessionId} ${row.definition?.title || ''} ${row.definition?.description || ''} ${JSON.stringify(row.definition?.metadata ?? {})}`.toLowerCase().includes(query)
       && (filter === 'all' || (filter === 'running' && row.active === true) || (filter === 'stopped' && row.active === false) || (filter === 'unknown' && row.active === null)));
     let disabled = !this.connection?.ready || this.busy || !this.loaded;
     this.$.controlsDisabled = disabled;
@@ -111,7 +112,8 @@ class SessionManager extends ContextProvider {
       let result = await this.connection.request(operation, { ...(sessionId ? { sessionId } : { all: true }), ...(warning ? { confirm: true } : {}) });
       if (result.description) {
         let dialog = /** @type {HTMLDialogElement} */ (this.ref.description);
-        this.ref.descriptionText.textContent = result.description.description || 'No description.';
+        this.ref.descriptionText.textContent = [result.description.description || 'No description.',
+          formatDataFlow(result.description.metadata?.dataFlow)].filter(Boolean).join('\n\n');
         dialog.showModal();
       }
       this.$.notice = (result.description ? `Description loaded for ${sessionId}.` : result.sessions?.map((row) => `${row.sessionId}: ${row.ok ? `${operation} completed` : row.error.message}`).join('\n'))

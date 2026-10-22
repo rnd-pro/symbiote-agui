@@ -2,6 +2,15 @@ import { DICT } from '@symbiotejs/symbiote/core/dictionary.js';
 import { DATA_SELECTOR } from './constants.js';
 
 /**
+ * @param {unknown} key
+ * @returns {key is string}
+ */
+export function isPlainStateKey(key) {
+  return typeof key === 'string' && !!key && !['__proto__', 'constructor', 'prototype'].includes(key)
+    && !/^[*^@+]/.test(key) && !key.startsWith('--') && !key.includes('/');
+}
+
+/**
  * @param {Element} element
  * @returns {import('../../types/components.js').ComponentState}
  */
@@ -24,7 +33,7 @@ export function readInitialData(element) {
     throw new Error(`JSON data in ${element.localName} must be an object.`);
   }
   for (let key of Object.keys(data)) {
-    if (!key || ['__proto__', 'constructor', 'prototype'].includes(key) || /^[*^@+]/.test(key) || key.startsWith('--') || key.includes('/')) {
+    if (!isPlainStateKey(key)) {
       throw new Error(`JSON data requires plain state keys: ${key}.`);
     }
   }

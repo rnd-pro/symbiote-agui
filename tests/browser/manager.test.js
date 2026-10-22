@@ -6,6 +6,8 @@ import puppeteer from 'puppeteer-core';
 import { cli } from './helpers.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';
+import { setSessionMetadata } from '../../src/metadata/service.js';
+import { sampleMetadata } from '../node/metadata-fixture.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
@@ -47,6 +49,7 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   let source = join(state.directory, 'desk.html');
   await writeFile(source, '<h1>Original definition</h1>');
   await cli('save', 'desk', '--file', source);
+  await setSessionMetadata('desk', sampleMetadata());
   let manager = await cli('manager', '--no-open');
   browser = await puppeteer.launch({ executablePath, headless: true, args: ['--disable-blink-features=WebMCP,WebMCPTesting'] });
   let page = await browser.newPage();
@@ -57,6 +60,11 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   page.on('pageerror', (error) => { errors.push(String(error)); t.diagnostic(String(error)); });
   await page.goto(manager.launchUrl);
   await page.waitForSelector('[data-session="desk"]');
+  assert.match(await page.$eval('[data-session="desk"] .data-flow', (element) => element.textContent || ''), /demo.inventory/);
+  await action(page, 'Description');
+  await page.waitForSelector('dialog[open]');
+  assert.match(await page.$eval('dialog pre', (element) => element.textContent || ''), /Initial source: json-file \(sample-inventory.json\)/);
+  await page.click('dialog button');
   assert.equal(page.url(), manager.url, 'Bootstrap removes the credential from the URL.');
   assert.equal(await page.title(), 'AGUI Manager');
   assert.equal(await page.$eval('link[rel="icon"]', async (element) => {

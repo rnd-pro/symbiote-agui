@@ -89,6 +89,21 @@ For a team library requested by the user, run `npx symbiote-agui config folder .
 
 Accepted insertions save `<ID>.html` and create a missing `<ID>.md` in the selected library. Use `npx symbiote-agui save <ID> --file /absolute/path/view.html` to save a definition without starting it. `save <ID>` also imports a private cached definition when that ID is absent from the selected library, leaving the private copy intact. Prepare a useful Markdown description and apply it with `npx symbiote-agui describe <ID> --file /absolute/path/description.md`. Document purpose, data sources, actions, and persistence expectations; update it with meaningful interface changes and preserve existing task knowledge. Existing descriptions survive insertions.
 
+For data manipulation sessions, record structured data-flow metadata with `npx symbiote-agui metadata set <ID> --file /absolute/path/metadata.json` (or JSON stdin). Use a complete `dataFlow` field, for example with fictional inventory data:
+
+```json
+{"dataFlow":{
+  "description":"Edit a sample inventory.",
+  "initialSource":{"kind":"json-file","reference":"sample.json","description":"Manually imported records."},
+  "bindings":[{"provider":"INVENTORY","keys":["records"]}],
+  "targets":[{"kind":"database","reference":"demo.inventory","description":"Authorized agent-mediated updates."}]
+}}
+```
+
+Endpoint kinds are `inline-json`, `json-file`, `agui-cache`, `database`, `api`, `manual`, and `other`; references are optional, non-secret resource names or HTTP(S) URLs without credentials, query strings, or fragments. Group unique plain property keys under each unique provider. Input is limited to 16 KiB. Unknown fields and runtime settings are rejected. Metadata describes intentions, not actual saved state or permission to execute a source/target. Keep credentials and records out of it, and preserve the initial origin when restoring cached data.
+
+Read it with `metadata get <ID>` or `describe <ID>`; `list --query` searches metadata and returns a summary. The manager shows it in session rows and Description. `metadata set` replaces supplied top-level fields, retains omitted fields, and preserves Markdown; a supplied `dataFlow` replaces that whole field. `metadata clear <ID> --key dataFlow` removes only the flow metadata. These commands require a saved definition, work while stopped or running, and neither restart a worker nor change application data or trigger feedback. Metadata stays private to the session/library scope across stop/start and sync; session clear removes it. It is not copied with shared HTML/Markdown or `save` imports. Transfer only selected metadata explicitly when the user intends to share its non-secret source/target references.
+
 Keep Git commits, pulls, and conflict resolution in the user's normal workflow. After source changes, use `npx symbiote-agui sync <ID>` to reload a running session, or `sync all` for running sessions with saved definitions in the current scope. Sync reads files without rewriting them, resets live component state, reruns modules, and requires fresh tool discovery. Start stopped definitions normally. HTML and Markdown travel through Git; live state, credentials, logs, and tunnel URLs do not. Library folders isolate sessions with matching IDs; workers retain the folder selected at startup. `clear` removes both source and description, including Git-managed files. See the [team library guide](../../docs/library.md) for details.
 
 ## Routine workflow

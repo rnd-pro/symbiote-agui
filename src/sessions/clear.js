@@ -6,12 +6,15 @@ import { clearCachedMarkup } from './cache.js';
 import { requestSession } from './client.js';
 import { SESSION_STATE } from './constants.js';
 import { isProcessAlive, readSession, releaseSession, reserveSession } from './store.js';
+import { clearMetadata } from '../metadata/store.js';
 
 /** @param {string} sessionId */
 export async function clearSession(sessionId) {
   let record = await readSession(sessionId);
   if (record && isProcessAlive(record.pid)) {
-    return requestSession(record, 'clear', INSERT_TIMEOUT_MS);
+    let result = await requestSession(record, 'clear', INSERT_TIMEOUT_MS);
+    await clearMetadata(sessionId);
+    return result;
   }
   if (record) { await releaseSession(record); }
   let reservation;

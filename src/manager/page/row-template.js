@@ -8,6 +8,7 @@ export let SESSION_ROW_TEMPLATE = `
       <span class="session-status">{{^status}}</span>
     </div>
     <p class="break-words text-sm [overflow-wrap:anywhere]">{{^summary}}</p>
+    <p class="data-flow break-words text-sm text-agui-muted empty:hidden [overflow-wrap:anywhere]">{{^dataFlow}}</p>
     <p class="text-xs leading-6 text-agui-muted">{{^details}}</p>
     <p class="text-xs leading-6 text-agui-muted">{{^tunnel}}</p>
     <p class="error text-sm text-agui-danger">{{^error}}</p>

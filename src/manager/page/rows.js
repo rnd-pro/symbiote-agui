@@ -4,7 +4,7 @@ import { SESSION_ROW_TEMPLATE } from './row-template.js';
 /** @extends {Symbiote<Record<string, unknown>>} */
 export class SessionRow extends Symbiote {
   init$ = {
-    sessionId: '', title: '', summary: '', status: '', statusKind: 'unknown', details: '', error: '', tunnel: '',
+    sessionId: '', title: '', summary: '', dataFlow: '', status: '', statusKind: 'unknown', details: '', error: '', tunnel: '',
     url: '', userUrl: '', viewerUrl: '', noLocal: true, noPublic: true,
     startDisabled: true, stopDisabled: true, syncDisabled: true, clearDisabled: true,
     shareDisabled: true, tunnelDisabled: true, describeDisabled: true,
@@ -34,6 +34,7 @@ export function rowState(row, disabled, act) {
     sessionId: row.sessionId,
     title: row.definition?.title || row.sessionId,
     summary: row.definition?.summary || (saved ? 'Saved interface' : 'No saved definition'),
+    dataFlow: row.definition?.dataFlowSummary || '',
     status: unknown ? 'Unknown' : active ? `Running (${row.state})` : 'Stopped',
     statusKind: unknown ? 'unknown' : active ? 'running' : 'stopped',
     details: `${saved ? 'Saved' : 'Unsaved'} | ${row.clients ?? 0} browser connections${row.pid ? ` | PID ${row.pid}` : ''}`,

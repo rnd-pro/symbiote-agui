@@ -73,12 +73,19 @@ export let FEEDBACK_COMMANDS = Object.freeze({
   disable: { usage: 'feedback disable <SESSION_ID>', options: [] },
 });
 
+export let METADATA_COMMANDS = Object.freeze({
+  get: { usage: 'metadata get <SESSION_ID>', options: [] },
+  set: { usage: 'metadata set <SESSION_ID> [--file <PATH>]', options: ['file'] },
+  clear: { usage: 'metadata clear <SESSION_ID> --key dataFlow', options: ['key'] },
+});
+
 export let HELP = [
   'Usage: symbiote-agui <command>',
   '',
   ...Object.values(COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(ALL_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(FEEDBACK_COMMANDS).map(({ usage }) => `  ${usage}`),
+  ...Object.values(METADATA_COMMANDS).map(({ usage }) => `  ${usage}`),
   '  manager [--no-open]          Open the built-in local session manager',
   '  manager status              Show the manager URL and storage scope',
   '  manager stop                Stop the manager without stopping sessions',
@@ -94,6 +101,9 @@ export let HELP = [
   'insert reads UTF-8 HTML from stdin when --file is absent.',
   'save stores a definition without starting it; without --file it saves existing content or imports the private cache.',
   'describe reads or replaces the Markdown description; accepted inserts preserve existing descriptions.',
+  'metadata get/set/clear read or edit private session data-flow descriptions without starting a worker.',
+  'metadata set reads JSON from file or stdin; supplied fields replace those fields, leaving others unchanged.',
+  'metadata clear --key dataFlow removes only data-flow metadata, not application data or the description.',
   'sync reloads saved HTML into running sessions without rewriting source files or running Git commands.',
   'AGUI_LIBRARY_DIR overrides the project folder; without a folder, private caching remains the default.',
   'insert replaces the session content; input is limited to 1 MiB.',

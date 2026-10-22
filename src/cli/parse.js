@@ -4,6 +4,7 @@ import { CommandError } from '../shared/command-error.js';
 import { COMMANDS, ALL_COMMANDS } from './commands.js';
 import { parseLibraryCommand } from './library.js';
 import { parseFeedbackCommand } from './feedback.js';
+import { parseMetadataCommand } from './metadata.js';
 
 /**
  * @param {string[]} args
@@ -25,6 +26,7 @@ export function parseCommand(args) {
         page: { type: 'string' },
         tunnel: { type: 'boolean' },
         query: { type: 'string' },
+        key: { type: 'string' },
       },
     });
   } catch (error) {
@@ -52,6 +54,8 @@ export function parseCommand(args) {
   if (library) { return library; }
   let feedback = parseFeedbackCommand(positionals, values);
   if (feedback) { return feedback; }
+  let metadata = parseMetadataCommand(positionals, values);
+  if (metadata) { return metadata; }
 
   let commandLength = positionals[0] === 'tunnel' ? 2 : 1;
   let name = positionals.slice(0, commandLength).join(' ');

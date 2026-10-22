@@ -26,7 +26,7 @@ npx symbiote-agui describe leads
 npx symbiote-agui start leads
 ```
 
-`list` returns IDs, titles, summaries, and file paths without opening browsers. Search matches the ID and Markdown description, without case sensitivity. `describe` returns the complete description. Reuse a matching interface before generating a new one.
+`list` returns IDs, titles, summaries, and file paths without opening browsers. Search matches the ID, Markdown description, and private data-flow metadata, without case sensitivity. `describe` returns the complete description and metadata when present. Reuse a matching interface before generating a new one.
 
 Every accepted `insert` saves its definition in the selected folder and creates a description if missing. Existing descriptions are preserved. To save a prepared definition without starting a session, or update its description:
 
@@ -59,6 +59,8 @@ npx symbiote-agui sync all
 Session IDs are scoped to the selected library folder. Different checkouts can use the same ID independently. Commands from another working directory that selects the same folder reach the same local sessions. Without a library, the existing per-user session scope applies.
 
 Workers keep the folder selected at startup, even if configuration later changes. Reselect that folder to manage those workers. Runtime metadata, logs, control tokens, and tunnel processes remain in private storage under `AGUI_STATE_DIR` or `~/.symbiote-agui/sessions/`; none are written to the team folder. Public links and live state are not shared through Git.
+
+[Data-flow metadata](./reference.md#session-data-flow-metadata) records the initial source, bindings, and intended destinations without editing the Markdown description. It is private to this library's local storage scope, survives stop/start and sync, and is removed by session clear. Copying definitions or using `save` to import them does not transfer that metadata. Transfer selected metadata explicitly with `metadata get` and `metadata set` after reviewing its local references.
 
 `stop` retains HTML and Markdown. `clear` removes both files and clears a running interface; `clear-all` does this throughout the selected scope. Review these deletions in Git before committing. Atomic saves detect a source file changed during preparation and fail rather than intentionally overwrite the newer contents. Resolve Git conflicts before loading a definition.
 

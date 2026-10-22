@@ -1,6 +1,7 @@
 import { definitionPaths, assertPortableName } from '../library/paths.js';
 import { prepareTextFile, readOptional, removeFile } from '../library/files.js';
 import { defaultDescription, ensureDescription } from '../library/descriptions.js';
+import { clearMetadata } from '../metadata/store.js';
 
 /** @param {string} sessionId */
 export function cachePath(sessionId) {
@@ -47,4 +48,5 @@ export async function clearCachedMarkup(sessionId) {
   let paths = definitionPaths(sessionId);
   await removeFile(paths.htmlPath);
   await removeFile(paths.descriptionPath);
+  await clearMetadata(sessionId);
 }

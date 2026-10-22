@@ -2,6 +2,8 @@ import { writeFile } from 'node:fs/promises';
 import { definitionPaths } from './paths.js';
 import { readOptional, storageError } from './files.js';
 import { hasErrorCode } from '../shared/system-error.js';
+import { readMetadata } from '../metadata/store.js';
+import { dataFlowSummary } from '../metadata/format.js';
 
 /** @param {string} sessionId */
 export function defaultDescription(sessionId) {
@@ -32,5 +34,7 @@ export async function definitionInfo(sessionId) {
   let description = await readOptional(paths.descriptionPath) ?? '';
   let title = description.match(/^#\s+(.+)$/m)?.[1]?.trim() || sessionId;
   let summary = description.split(/\r?\n/).find((line) => line.trim() && !line.startsWith('#'))?.trim() || '';
-  return { sessionId, ...paths, title, summary, description };
+  let metadata = await readMetadata(sessionId);
+  return { sessionId, ...paths, title, summary, description,
+    ...(metadata.dataFlow ? { metadata, dataFlowSummary: dataFlowSummary(metadata.dataFlow) } : {}) };
 }

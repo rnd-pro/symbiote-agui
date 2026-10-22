@@ -99,6 +99,8 @@ AGUI saves each interface as an HTML file with a Markdown description. Include t
 
 Without a folder setting, AGUI keeps using its private cache. See the [team library guide](./docs/library.md) for discovery, descriptions, and syncing running interfaces.
 
+Sessions can also describe their initial data source, provider bindings, and intended destinations. Inspect this through `describe`, search it with `list --query`, or view it in the manager. The [metadata commands](./docs/reference.md#session-data-flow-metadata) maintain this information privately without changing application data or starting a worker.
+
 ## Built with
 
 [Symbiote.js and Runtime Agnostic Templates (RAT)](https://github.com/symbiotejs/symbiote.js#runtime-agnostic-templates-rat) provide reactive interfaces built from portable HTML templates. [JSDA-Kit](https://github.com/rnd-pro/jsda-kit) serves pages and assets on demand, keeping AGUI ready to run without a separate application build setup.
@@ -108,3 +110,7 @@ Without a folder setting, AGUI keeps using its private cache. See the [team libr
 - [Session controls, sharing limits, and optional integrations](./docs/reference.md)
 - [AGUI skill for agents creating and operating interfaces](./skills/symbiote-agui/SKILL.md)
 - [Package on npm](https://www.npmjs.com/package/symbiote-agui)
+
+## License
+
+**MIT** &copy; [RND-PRO.com](https://rnd-pro.com/)

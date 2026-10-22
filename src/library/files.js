@@ -15,10 +15,13 @@ export function storageError(path, error) {
   return new CommandError(`Cannot access interface cache ${path}: ${errorMessage(error)}`, ERROR_CODE.CACHE_ERROR, EXIT_CODE.RUNTIME_ERROR);
 }
 
-/** @param {string} path */
-export async function readOptional(path) {
+/**
+ * @param {string} path
+ * @param {number} [maxBytes]
+ */
+export async function readOptional(path, maxBytes) {
   let stream = createReadStream(path);
-  try { return await readUtf8Markup(stream); }
+  try { return await readUtf8Markup(stream, maxBytes); }
   catch (error) {
     if (hasErrorCode(error, 'ENOENT')) { return undefined; }
     throw storageError(path, error);
@@ -34,10 +37,14 @@ export async function removeFile(path) {
 /**
  * @param {string} path
  * @param {string} text
+ * @param {{ text: string | undefined }} [expected]
  * @returns {Promise<import('../../types/session.js').PreparedCache>}
  */
-export async function prepareTextFile(path, text) {
+export async function prepareTextFile(path, text, expected) {
   let before = await readOptional(path);
+  if (expected && expected.text !== before) {
+    throw storageError(path, new Error('The file changed while preparing this save. Review the changes and retry.'));
+  }
   let temporary = `${path}.${randomUUID()}.tmp`;
   try {
     await mkdir(dirname(path), { recursive: true, mode: 0o700 });

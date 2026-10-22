@@ -16,9 +16,15 @@ export type FeedbackCliRequest =
   | { kind: 'feedback'; command: 'configure'; sessionId: string; file?: string }
   | { kind: 'feedback'; command: 'status' | 'disable'; sessionId: string };
 
+export type MetadataCliRequest =
+  | { kind: 'metadata'; command: 'get'; sessionId: string }
+  | { kind: 'metadata'; command: 'set'; sessionId: string; file?: string }
+  | { kind: 'metadata'; command: 'clear'; sessionId: string; key: string };
+
 export type CliRequest =
   | LibraryRequest
   | FeedbackCliRequest
+  | MetadataCliRequest
   | { kind: 'manager'; command: 'start' | 'status' | 'stop'; open: boolean }
   | { kind: 'help' }
   | { kind: 'version' }
@@ -46,4 +52,5 @@ export type CommandResult = ({ ok: true } & (SessionStatus | import('./tools.js'
   | ({ ok: true } & import('./manager.js').ManagerStatus)
   | CommandFailure
   | import('./session.js').AllSessionsResult
-  | ({ ok: true } & import('./library.js').LibraryResult);
+  | ({ ok: true } & import('./library.js').LibraryResult)
+  | ({ ok: true } & import('./metadata.js').SessionMetadataResult);

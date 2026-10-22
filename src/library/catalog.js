@@ -18,8 +18,8 @@ export async function listDefinitions(query = '') {
   let ids = await listDefinitionIds();
   let definitions = await Promise.all(ids.map(definitionInfo));
   let text = query.toLowerCase();
-  let matches = definitions.filter((entry) => `${entry.sessionId}\n${entry.description}`.toLowerCase().includes(text));
-  return { total: matches.length, definitions: matches.map(({ description, ...entry }) => entry) };
+  let matches = definitions.filter((entry) => `${entry.sessionId}\n${entry.description}\n${JSON.stringify(entry.metadata ?? {})}`.toLowerCase().includes(text));
+  return { total: matches.length, definitions: matches.map(({ description, metadata, ...entry }) => entry) };
 }
 
 /**

@@ -52,6 +52,44 @@ npx symbiote-agui clear my-workspace
 
 Run `npx symbiote-agui --help` for the command list. Session commands return JSON, except help and version. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input.
 
+## Session data-flow metadata
+
+Saved sessions can carry structured private metadata alongside their Markdown description:
+
+```sh
+npx symbiote-agui metadata get my-workspace
+npx symbiote-agui metadata set my-workspace --file ./metadata.json
+npx symbiote-agui metadata clear my-workspace --key dataFlow
+```
+
+`get` returns `{ sessionId, metadata }` inside the normal CLI result. `set` accepts JSON from a file or stdin, replacing each supplied top-level metadata field and retaining omitted fields. A supplied `dataFlow` must be complete; nested objects are not merged. `clear --key dataFlow` removes only that field, preserving HTML, Markdown, and application data. Commands work with stopped and running saved sessions without restarting workers.
+
+Example `metadata.json` using fictional data:
+
+```json
+{
+  "dataFlow": {
+    "description": "Edit a sample inventory.",
+    "initialSource": {
+      "kind": "json-file",
+      "reference": "sample-inventory.json",
+      "description": "Manually imported records."
+    },
+    "bindings": [{ "provider": "INVENTORY", "keys": ["records"] }],
+    "targets": [
+      { "kind": "agui-cache", "description": "Intended local snapshot." },
+      { "kind": "database", "reference": "demo.inventory", "description": "Authorized agent-mediated updates." }
+    ]
+  }
+}
+```
+
+`dataFlow` requires a description, one `initialSource`, nonempty provider `bindings`, and nonempty `targets`. Each endpoint has `kind`, `description`, and an optional non-secret `reference`. Kinds are `inline-json`, `json-file`, `agui-cache`, `database`, `api`, `manual`, or `other`. Group unique plain property keys under each unique provider. Input is limited to 16 KiB; unknown fields, runtime settings, and credential-bearing URLs are rejected. URL references use HTTP(S) without credentials, query strings, or fragments; use a descriptive resource name when a URL is unsuitable. Never include credentials or application records in descriptions or references.
+
+`describe` returns full metadata when present. `list --query` searches it and returns a data-flow summary; the local manager displays that summary and includes the full flow in its Description dialog. Metadata describes intended behavior, not proof of synchronization or authorization to perform it. Editing it does not read a source, write a target, change initial application values, or trigger feedback. Preserve the original source description when a cache restores the same data.
+
+Metadata lives under the private, library-scoped state root in `.metadata/`, outside shared definitions and worker instance directories. Stop/start, insert, sync, and Markdown edits retain it; clearing the session removes it. Copying HTML/Markdown or importing a private definition into a team folder does not copy metadata. To transfer it intentionally, prepare a file containing the desired `metadata` object from `get` and run `set` in the destination scope. Review local references before sharing that file. Reloading an existing manager does not update its running code; restart the manager after upgrading to load the new metadata UI.
+
 ## Private feedback handlers
 
 The CLI can register a private command for the current worker. Explicit browser submissions can invoke that command; ordinary events are never forwarded automatically. Verify native delivery to the same originating conversation, including idle and busy behavior, before configuring it. Delivery acknowledgement does not confirm an external write.

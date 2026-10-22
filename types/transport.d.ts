@@ -1,4 +1,15 @@
 import type { ComponentState } from './components.js';
+import type { FeedbackDelivery, FeedbackStatus, FeedbackSubmission } from './feedback.js';
+
+/** Feedback transport contracts; wired into the live protocol in stage 4. */
+export interface FeedbackPageMessage {
+  type: 'feedback-submit';
+  submission: FeedbackSubmission;
+}
+
+export type FeedbackServerMessage =
+  | { type: 'feedback-status'; feedback: FeedbackStatus }
+  | { type: 'feedback-result'; delivery: FeedbackDelivery };
 
 export interface StateUpdate {
   selector: string;

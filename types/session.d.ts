@@ -23,7 +23,12 @@ export interface SessionStatus {
   events?: import('./transport.js').SessionEvent[];
   dropped?: number;
   toolResponse?: import('./tools.js').ToolResponse;
+  feedback?: import('./feedback.js').FeedbackStatus;
 }
+
+export type SessionFeedbackStatus = SessionStatus & {
+  feedback: import('./feedback.js').FeedbackStatus;
+};
 
 export interface TunnelStatus {
   state: 'starting' | 'ready' | 'failed' | 'stopped';
@@ -75,6 +80,9 @@ export interface ControlActions {
   sync?(): Promise<SessionStatus>;
   share?(): Promise<SessionStatus>;
   tunnelRenew?(): Promise<SessionStatus>;
+  feedbackConfigure?(input: unknown): Promise<SessionFeedbackStatus>;
+  feedbackStatus?(): SessionFeedbackStatus;
+  feedbackDisable?(input: unknown): Promise<SessionFeedbackStatus>;
 }
 
 export interface PreparedCache {

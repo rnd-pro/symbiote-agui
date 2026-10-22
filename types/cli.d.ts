@@ -12,6 +12,11 @@ export type LibraryRequest =
   | { kind: 'library'; command: 'config show' | 'config reset' }
   | { kind: 'library'; command: 'list'; query?: string };
 
+/** Feedback command contract; added to CliRequest when runtime support lands. */
+export type FeedbackCliRequest =
+  | { kind: 'feedback'; command: 'configure'; sessionId: string; file?: string }
+  | { kind: 'feedback'; command: 'status' | 'disable'; sessionId: string };
+
 export type CliRequest =
   | LibraryRequest
   | { kind: 'manager'; command: 'start' | 'status' | 'stop'; open: boolean }

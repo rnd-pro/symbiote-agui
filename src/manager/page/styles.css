@@ -1,99 +1,22 @@
 @import 'tailwindcss' source(none);
-
-@theme inline {
-  --color-console-bg: var(--console-bg);
-  --color-console-panel: var(--console-panel);
-  --color-console-raised: var(--console-raised);
-  --color-console-ink: var(--console-ink);
-  --color-console-muted: var(--console-muted);
-  --color-console-line: var(--console-line);
-  --color-console-control: var(--console-control);
-  --color-console-accent: var(--console-accent);
-  --color-console-live: var(--console-live);
-  --color-console-link: var(--console-link);
-  --color-console-danger: var(--console-danger);
-}
+@import '../../page/uilib.css';
 
 @layer base {
-  :root {
-    color-scheme: light dark;
-    --console-bg: light-dark(#eeede5, #0b1017);
-    --console-panel: light-dark(#faf9f3, #101923);
-    --console-raised: light-dark(#eae9df, #182430);
-    --console-ink: light-dark(#202e35, #e0e9ee);
-    --console-muted: light-dark(#53616b, #9aaebb);
-    --console-line: light-dark(#c0c5bf, #34485b);
-    --console-control: light-dark(#768078, #627e90);
-    --console-accent: light-dark(#875200, #f8c46d);
-    --console-live: light-dark(#21603d, #91d5a1);
-    --console-link: light-dark(#006374, #8cd7eb);
-    --console-danger: light-dark(#a62c42, #ff9eaf);
-  }
-  :root[data-theme='light'] { color-scheme: light; }
-  :root[data-theme='dark'] { color-scheme: dark; }
-  body {
-    @apply m-0 bg-console-bg font-mono text-console-ink antialiased;
-    background-image: radial-gradient(var(--console-line) .6px, transparent .6px);
-    background-size: 12px 12px;
-  }
-  ::selection { @apply bg-console-accent text-console-bg; }
-  :focus-visible { @apply outline-2 outline-offset-4 outline-console-accent; }
-  input, select, button {
-    @apply min-h-11 max-w-full border border-console-control bg-console-panel px-3 py-2 text-sm text-console-ink;
-    border-radius: 0;
-  }
-  input, select { @apply w-full min-w-0; }
-  input::placeholder { @apply text-console-muted; }
-  button { @apply cursor-pointer font-medium; }
-  button:hover:enabled { @apply border-console-accent bg-console-accent text-console-bg; }
-  button:disabled { @apply cursor-default opacity-40; }
-  label { @apply grid min-w-0 gap-2 text-xs text-console-muted; }
-  small, code { @apply text-xs text-console-muted; }
-  pre { @apply whitespace-pre-wrap break-words text-sm leading-6; font-family: inherit; }
-  a { @apply text-console-link underline decoration-console-control underline-offset-4; }
-  a:hover { @apply text-console-accent; }
-  dialog { @apply m-auto max-h-[85vh] w-[min(650px,90vw)] overflow-y-auto border border-console-accent bg-console-panel p-6 text-console-ink; }
-  dialog pre { @apply my-5; }
+  body { @apply antialiased; }
+  pre { @apply whitespace-pre-wrap break-words text-sm leading-6; }
+  a { @apply text-agui-accent underline underline-offset-4; }
+  a:focus-visible { @apply outline-2 outline-offset-2 outline-agui-accent; }
+  dialog { @apply m-auto max-h-[85vh] w-[min(650px,90vw)] overflow-y-auto rounded-xl border border-agui-border bg-agui-surface p-6 text-agui-text shadow-xl; }
   dialog::backdrop { background: rgb(0 0 0 / .65); }
-  [hidden] { display: none !important; }
 }
 
 @layer components {
-  .terminal-mark { @apply flex size-12 shrink-0 items-center justify-center bg-console-accent text-xl font-bold text-console-bg; }
-  .eyebrow { @apply text-xs font-semibold uppercase tracking-widest text-console-accent; }
-  .local-label { @apply border border-console-line bg-console-panel px-3 py-2 text-xs text-console-muted; }
-  .terminal-window { @apply border border-console-line bg-console-panel; box-shadow: 6px 6px 0 var(--console-line); }
-  .window-bar { @apply flex flex-wrap items-center justify-between gap-3 border-b border-console-line bg-console-raised px-4 py-3 text-xs sm:px-6; }
-  .connection { @apply min-w-0 break-words text-console-accent; }
-  .connection[data-tone='live'] { @apply text-console-live; }
-  .scope { @apply min-w-0; }
-  .sessions { @apply grid gap-4; }
   agui-session-row { @apply block min-w-0; }
-  article { @apply border border-console-line border-l-2 border-l-console-muted bg-console-panel p-4 sm:p-5; }
-  article[data-state='running'] { @apply border-l-console-live; }
-  article[data-state='unknown'] { @apply border-l-console-accent; }
-  .session-heading { @apply flex flex-wrap items-start justify-between gap-3; }
-  .session-heading > div { @apply min-w-0 break-words; overflow-wrap: anywhere; }
-  .session-heading h3 { @apply mb-1 text-base font-semibold; }
-  .badge { @apply shrink-0 border border-console-control px-2 py-1 text-xs text-console-muted; }
-  [data-state='running'] .badge { @apply border-console-live text-console-live; }
-  [data-state='unknown'] .badge { @apply border-console-accent text-console-accent; }
-  .summary { @apply mb-3 mt-4 max-w-prose text-sm leading-6; overflow-wrap: anywhere; }
-  .muted { @apply my-1 text-xs leading-6 text-console-muted; }
-  .links { @apply mt-4 flex flex-wrap gap-x-5 gap-y-3 text-xs; }
-  .actions { @apply mt-5 flex flex-wrap gap-2 border-t border-console-line pt-4; }
-  .actions button { @apply text-xs; }
-  button.primary { @apply border-console-accent text-console-accent; }
-  button.primary:hover:enabled { @apply bg-console-accent text-console-bg; }
-  button.danger { @apply border-console-danger text-console-danger; }
-  button.danger:hover:enabled { @apply bg-console-danger text-console-bg; }
-  .error { @apply my-3 text-sm text-console-danger; }
-  .notice { @apply mt-5 border border-console-line border-l-2 border-l-console-accent bg-console-raised p-4; }
-  .empty-state { @apply border border-dashed border-console-control p-6 text-sm leading-6 text-console-muted; }
-  .error:empty, .notice:empty { display: none; }
-}
-
-@media (forced-colors: active) {
-  .terminal-window, article, .badge { border-color: CanvasText; }
-  :focus-visible { outline-color: Highlight; }
+  .connection { @apply max-w-prose break-words text-agui-muted; }
+  .connection[data-tone='live'] { @apply text-agui-text; }
+  .session-status { @apply rounded-full bg-agui-raised px-3 py-1 text-xs font-medium text-agui-muted; }
+  [data-state='running'] .session-status { @apply bg-agui-accent text-agui-on-accent; }
+  [data-state='unknown'] .session-status { @apply text-agui-danger; }
+  .notice:empty,
+  .error:empty { display: none; }
 }

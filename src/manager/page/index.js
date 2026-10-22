@@ -1,26 +1,24 @@
-import Symbiote from '/manager/vendor/core/index.js';
+import { ContextProvider } from '../../page/client/context-provider.js';
+import { registerUiLibComponents } from '../../page/client/uilib/index.js';
 import { ManagerConnection } from './connection.js';
 import { rowState } from './rows.js';
 import { MANAGER_REFRESH_MS } from '../constants.js';
 import { getTheme, setTheme, watchTheme } from './theme.js';
+import { STATUS_OPTIONS, BULK_OPTIONS } from './options.js';
 
-/** @extends {Symbiote<Record<string, unknown>>} */
-class SessionManager extends Symbiote {
-  processInnerHtml = true;
+class SessionManager extends ContextProvider {
   init$ = {
     connection: 'Connecting...', connectionTone: 'offline', scope: '', checkedAt: 'Waiting for a snapshot',
-    counts: '', empty: 'Loading sessions...', emptyHidden: false, notice: '',
+    counts: '', empty: 'Loading sessions...', emptyStatus: 'loading', notice: '',
     rows: {}, controlsDisabled: true, refreshDisabled: true,
     theme: getTheme(),
-    selectTheme: () => {
-      setTheme((/** @type {HTMLSelectElement} */ (this.ref.themeSelect)).value);
-      this.$.theme = getTheme();
-    },
-    filter: () => this.renderRows(),
+    systemTheme: getTheme() === 'system',
+    useSystemTheme: () => { this.$.theme = 'system'; },
+    statusOptions: STATUS_OPTIONS, bulkOptions: BULK_OPTIONS,
+    query: '', statusFilter: 'all', bulkOperation: 'start',
     refresh: () => { void this.refresh(); },
     bulk: () => {
-      let control = /** @type {HTMLSelectElement} */ (this.ref.operation);
-      void this.act(/** @type {import('../../../types/manager.js').ManagerOperation} */ (control.value));
+      void this.act(/** @type {import('../../../types/manager.js').ManagerOperation} */ (this.$.bulkOperation));
     },
   };
   /** @type {import('../../../types/manager.js').ManagerSnapshot | undefined} */
@@ -37,7 +35,13 @@ class SessionManager extends Symbiote {
   stopThemeSync;
 
   renderCallback() {
+    this.sub('theme', (theme) => {
+      setTheme(String(theme));
+      this.$.systemTheme = theme === 'system';
+    });
     this.stopThemeSync = watchTheme((theme) => { this.$.theme = theme; });
+    this.sub('query', () => this.renderRows(), false);
+    this.sub('statusFilter', () => this.renderRows(), false);
     this.connection = new ManagerConnection((ready, message) => {
       this.$.connection = message;
       this.$.connectionTone = ready ? 'live' : 'offline';
@@ -65,6 +69,7 @@ class SessionManager extends Symbiote {
     } catch (error) {
       this.$.notice = String(error instanceof Error ? error.message : error);
       this.$.empty = 'Session discovery failed. Refresh to try again.';
+      this.$.emptyStatus = 'error';
     } finally {
       this.refreshing = false;
       if (this.refreshAgain) { this.refreshAgain = false; void this.refresh(); }
@@ -73,15 +78,15 @@ class SessionManager extends Symbiote {
 
   renderRows() {
     let sessions = this.snapshot?.sessions || [];
-    let query = (/** @type {HTMLInputElement | undefined} */ (this.ref.search))?.value.toLowerCase() || '';
-    let filter = (/** @type {HTMLSelectElement | undefined} */ (this.ref.state))?.value || 'all';
+    let query = String(this.$.query).toLowerCase();
+    let filter = this.$.statusFilter;
     let matches = sessions.filter((row) => `${row.sessionId} ${row.definition?.title || ''} ${row.definition?.description || ''}`.toLowerCase().includes(query)
       && (filter === 'all' || (filter === 'running' && row.active === true) || (filter === 'stopped' && row.active === false) || (filter === 'unknown' && row.active === null)));
     let disabled = !this.connection?.ready || this.busy || !this.loaded;
     this.$.controlsDisabled = disabled;
     this.$.counts = `${sessions.length} total / ${sessions.filter((row) => row.active === true).length} running / ${sessions.filter((row) => row.active === false).length} stopped / ${sessions.filter((row) => row.active === null).length} unknown`;
     this.$.rows = Object.fromEntries(matches.map((row) => [row.sessionId, rowState(row, disabled, (operation, id) => { void this.act(operation, id); })]));
-    this.$.emptyHidden = matches.length > 0;
+    this.$.emptyStatus = matches.length > 0 ? 'ready' : this.loaded ? 'empty' : 'loading';
     this.$.empty = this.loaded ? sessions.length ? 'No sessions match these filters.' : 'No sessions saved or running in this scope.' : 'Loading sessions...';
   }
 
@@ -123,3 +128,4 @@ class SessionManager extends Symbiote {
   }
 }
 SessionManager.reg('agui-session-manager');
+registerUiLibComponents();

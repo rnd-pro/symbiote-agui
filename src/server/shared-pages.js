@@ -65,11 +65,19 @@ export class SharedPages {
   publish(page, snapshot) {
     if (!this.enabled || this.user() !== page) { throw new Error('Only the user can publish a live view.'); }
     if (typeof snapshot.html !== 'string' || !Number.isSafeInteger(snapshot.revision) ||
+      (snapshot.rootStyles !== undefined && typeof snapshot.rootStyles !== 'string') ||
+      (snapshot.theme !== undefined && !['system', 'light', 'dark'].includes(snapshot.theme)) ||
       ![STYLESHEET_PATH, `${STYLESHEET_PATH}?revision=${this.revision}`].includes(snapshot.stylesheetUrl)) {
       throw new Error('Invalid live view.');
     }
     if (snapshot.revision !== this.revision) { return; }
-    this.latest = { html: snapshot.html, revision: snapshot.revision, stylesheetUrl: snapshot.stylesheetUrl };
+    this.latest = {
+      html: snapshot.html,
+      revision: snapshot.revision,
+      stylesheetUrl: snapshot.stylesheetUrl,
+      rootStyles: snapshot.rootStyles ?? '',
+      theme: snapshot.theme ?? 'system',
+    };
     for (let viewer of this.pages.values()) {
       if (viewer.role === PAGE_ROLE.VIEWER) { this.send(viewer.socket); }
     }

@@ -40,10 +40,11 @@ test('public links elect one user and deliver a live read-only mirror to other b
   proxy.setTarget(session.url);
   await insertStdin('tunnel-ui', [
     '<agui-component id="counter" class="block w-[321px]">',
-    '<script type="application/json">{"count":0,"increment":null}</script>',
+    '<script type="application/json">{"count":0,"increment":null,"choiceOptions":[{"value":"new","label":"New"},{"value":"done","label":"Done"}]}</script>',
     '<button bind="onclick: increment">Count: {{count}}</button>',
     '<input id="notes" aria-label="Notes" value="hello">',
     '<input id="flag" aria-label="Flag" type="checkbox">',
+    '<agui-select id="choice-control" ctx="choice" label="Status" value="new" bind="$.options: choiceOptions"></agui-select>',
     '</agui-component>',
     '<script type="module" data-agui>',
     'Reflect.set(window, "aguiRuns", (Reflect.get(window, "aguiRuns") || 0) + 1);',
@@ -72,6 +73,12 @@ test('public links elect one user and deliver a live read-only mirror to other b
   await page.goto(session.publicUrl);
   await page.waitForSelector('#counter button');
   await waitForMirror(viewer, 0);
+  await page.select('#choice-control select', 'done');
+  await viewer.waitForFunction(() => {
+    let frame = /** @type {HTMLIFrameElement | null} */ (document.getElementById('agui-viewer'));
+    let select = /** @type {HTMLSelectElement | null} */ (frame?.contentDocument?.querySelector('#choice-control select'));
+    return select?.value === 'done';
+  });
   assert.equal(page.url(), session.publicUrl);
   assert.equal(await page.title(), 'tunnel-ui');
   assert.equal(await viewer.title(), 'tunnel-ui');
@@ -109,6 +116,8 @@ test('public links elect one user and deliver a live read-only mirror to other b
   assert.equal(await frame.evaluate(() => Reflect.get(window, 'aguiRuns')), undefined);
   assert.equal(await frame.evaluate(() => customElements.get('agui-component')), undefined);
   assert.equal(await frame.$eval('#counter', (element) => getComputedStyle(element).width), '321px');
+  assert.equal(await page.$eval('#choice-control select', (element) => element.getBoundingClientRect().height), 40);
+  assert.equal(await frame.$eval('#choice-control select', (element) => element.getBoundingClientRect().height), 40);
   await frame.click('#counter button');
   assert.equal(await page.$eval('#counter button', (element) => element.textContent), 'Count: 2');
   let lateContext = await browser.createBrowserContext();
@@ -126,7 +135,11 @@ test('public links elect one user and deliver a live read-only mirror to other b
   await waitForMirror(viewer, 9);
   await waitForMirror(late, 9);
   let events = (await cli('events', 'tunnel-ui')).events;
-  assert.deepEqual(events.map((/** @type {import('../../types/transport.js').SessionEvent} */ event) => event.data), [{ count: 1 }, { count: 2 }]);
+  assert.deepEqual(events.map((/** @type {import('../../types/transport.js').SessionEvent} */ event) => event.data), [
+    { widgetId: 'choice-control', context: 'choice', action: 'change', value: 'done' },
+    { count: 1 },
+    { count: 2 },
+  ]);
   await page.reload();
   await page.waitForSelector('#counter button');
   await waitForMirror(viewer, 0);

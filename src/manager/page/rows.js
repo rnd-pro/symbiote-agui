@@ -1,4 +1,5 @@
-import Symbiote from '/manager/vendor/core/index.js';
+import { Symbiote } from '@symbiotejs/symbiote';
+import { SESSION_ROW_TEMPLATE } from './row-template.js';
 
 /** @extends {Symbiote<Record<string, unknown>>} */
 export class SessionRow extends Symbiote {
@@ -13,33 +14,7 @@ export class SessionRow extends Symbiote {
   };
 }
 
-SessionRow.template = `
-  <article bind="@data-session: sessionId; @data-state: statusKind">
-    <div class="session-heading">
-      <div><h3>{{title}}</h3><code>/{{sessionId}}</code></div>
-      <span class="badge">{{status}}</span>
-    </div>
-    <p class="summary">{{summary}}</p>
-    <p class="muted">{{details}}</p>
-    <p class="muted">{{tunnel}}</p>
-    <p class="error">{{error}}</p>
-    <div class="links">
-      <a target="_blank" rel="noopener noreferrer" bind="href: url; hidden: noLocal">Open local page</a>
-      <a target="_blank" rel="noopener noreferrer" bind="href: userUrl; hidden: noPublic">Public user page</a>
-      <a target="_blank" rel="noopener noreferrer" bind="href: viewerUrl; hidden: noPublic">Viewer page</a>
-    </div>
-    <div class="actions">
-      <button type="button" class="primary" bind="onclick: start; disabled: startDisabled">Start</button>
-      <button type="button" bind="onclick: stop; disabled: stopDisabled">Stop</button>
-      <button type="button" bind="onclick: sync; disabled: syncDisabled">Sync</button>
-      <button type="button" class="primary" bind="onclick: share; disabled: shareDisabled; title: shareHint">{{shareLabel}}</button>
-      <button type="button" bind="onclick: check; disabled: tunnelDisabled">Check tunnel</button>
-      <button type="button" bind="onclick: renew; disabled: tunnelDisabled">Renew tunnel</button>
-      <button type="button" bind="onclick: describe; disabled: describeDisabled">Description</button>
-      <button type="button" class="danger" bind="onclick: clear; disabled: clearDisabled">Clear</button>
-    </div>
-  </article>
-`;
+SessionRow.template = SESSION_ROW_TEMPLATE;
 SessionRow.reg('agui-session-row');
 
 /**

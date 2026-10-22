@@ -11,65 +11,49 @@
     <script type="module" src="./page/index.js"></script>
   </head>
   <body>
-    <agui-session-manager class="mx-auto block max-w-6xl px-4 py-6 sm:px-8 sm:py-10">
-      <header class="mb-7 flex flex-wrap items-start justify-between gap-5">
-        <div class="flex min-w-0 items-start gap-4">
-          <span class="terminal-mark" aria-hidden="true">&gt;_</span>
-          <div class="min-w-0">
-            <p class="eyebrow">Symbiote AGUI / session manager</p>
-            <h1 class="mt-2 text-2xl font-semibold tracking-tight sm:text-4xl">Workspace console<span class="text-console-accent" aria-hidden="true">_</span></h1>
-            <p class="mt-3 max-w-xl text-sm leading-6 text-console-muted">Your interfaces. Your machine. Ready for the next task.</p>
-          </div>
+    <agui-session-manager ctx="MANAGER" class="block">
+      <agui-header floating>
+        <div class="min-w-0">
+          <h1>AGUI Manager</h1>
+          <p class="connection mt-1 text-sm" role="status" bind="@data-tone: MANAGER/connectionTone">{{MANAGER/connection}}</p>
         </div>
-        <div class="flex flex-wrap items-end gap-3">
-          <span class="local-label">[ local control ]</span>
-          <label for="manager-theme">Theme
-            <select id="manager-theme" ref="themeSelect" bind="value: theme; onchange: selectTheme">
-              <option value="system">System</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </label>
-        </div>
-      </header>
-      <main class="terminal-window">
-        <div class="window-bar">
-          <span class="text-console-muted">agui://sessions</span>
-          <p class="connection" role="status" bind="@data-tone: connectionTone">{{connection}}</p>
-        </div>
-        <div class="p-4 sm:p-6">
-          <div class="scope">
-            <div class="flex flex-wrap justify-between gap-2"><strong class="eyebrow">01 / storage scope</strong><small>{{checkedAt}}</small></div>
-            <p class="mt-3 break-all text-sm leading-6">{{scope}}</p>
+        <agui-toolbar aria-label="Appearance">
+          <agui-theme-toggle id="manager-theme" ctx="MANAGER"></agui-theme-toggle>
+          <button id="system-theme" type="button" bind="onclick: MANAGER/useSystemTheme; disabled: MANAGER/systemTheme">Use system theme</button>
+        </agui-toolbar>
+      </agui-header>
+      <agui-dashboard role="main">
+        <agui-panel class="grid gap-3" aria-label="Storage scope">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2>Storage scope</h2>
+            <small class="text-xs text-agui-muted">{{MANAGER/checkedAt}}</small>
           </div>
-          <div class="my-6 border-y border-console-line py-4">
-            <p class="mb-2 text-xs text-console-accent"><span aria-hidden="true">$ </span>status --all</p>
-            <p class="counts text-sm leading-7">{{counts}}</p>
-          </div>
-          <div class="toolbar grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
-            <label>Search sessions<input type="search" ref="search" placeholder="Name or description..." bind="oninput: filter"></label>
-            <label>Status<select ref="state" bind="onchange: filter"><option value="all">All statuses</option><option value="running">Running</option><option value="stopped">Stopped</option><option value="unknown">Unknown</option></select></label>
-            <button type="button" bind="onclick: refresh; disabled: refreshDisabled">Refresh</button>
-          </div>
-          <div class="bulk toolbar mt-4 flex flex-col items-stretch gap-3 border-l-2 border-console-accent bg-console-raised p-4 sm:flex-row sm:items-end">
-            <label class="min-w-0 sm:flex-1">All sessions in this scope<select ref="operation"><option value="start">Start saved sessions</option><option value="stop">Stop running sessions</option><option value="sync">Sync running definitions</option><option value="tunnel check">Check shared tunnels</option><option value="tunnel renew">Renew shared tunnels</option><option value="clear">Clear saved and live content</option></select></label>
-            <button type="button" class="primary" bind="onclick: bulk; disabled: controlsDisabled">Apply to all</button>
-          </div>
-          <pre class="notice" role="status" aria-live="polite">{{notice}}</pre>
-          <div class="mb-4 mt-7 flex items-center gap-3"><h2 class="eyebrow shrink-0">02 / session index</h2><span class="h-px flex-1 bg-console-line" aria-hidden="true"></span></div>
-          <p class="empty-state" bind="hidden: emptyHidden">{{empty}}</p>
-          <div class="sessions" itemize="rows" item-tag="agui-session-row"></div>
-        </div>
-        <dialog ref="description" aria-labelledby="description-heading">
-          <h2 id="description-heading" class="eyebrow">AGUI description / README</h2>
-          <pre ref="descriptionText"></pre>
-          <form method="dialog"><button autofocus>Close</button></form>
-        </dialog>
-      </main>
-      <footer class="mt-5 flex flex-wrap justify-between gap-3 text-xs leading-5 text-console-muted">
-        <span><span class="text-console-accent" aria-hidden="true">&gt; </span>Local controls stay on this machine.</span>
-        <span>Public links share interfaces, never this console.</span>
-      </footer>
+          <p class="break-all text-sm text-agui-muted">{{MANAGER/scope}}</p>
+          <p class="counts text-sm">{{MANAGER/counts}}</p>
+        </agui-panel>
+        <agui-panel class="grid gap-4">
+          <agui-toolbar class="toolbar items-end" aria-label="Session filters">
+            <agui-field label="Search sessions" type="search" name="query" placeholder="Name or description..." pub-to="MANAGER/query" bind="$.value: MANAGER/query"></agui-field>
+            <agui-select label="Status" name="status" pub-to="MANAGER/statusFilter" bind="$.options: MANAGER/statusOptions; $.value: MANAGER/statusFilter"></agui-select>
+            <button type="button" bind="onclick: MANAGER/refresh; disabled: MANAGER/refreshDisabled">Refresh</button>
+          </agui-toolbar>
+          <agui-toolbar class="bulk items-end" aria-label="Bulk session actions">
+            <agui-select label="All sessions in this scope" name="operation" pub-to="MANAGER/bulkOperation" bind="$.options: MANAGER/bulkOptions; $.value: MANAGER/bulkOperation; $.disabled: MANAGER/controlsDisabled"></agui-select>
+            <button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; disabled: MANAGER/controlsDisabled">Apply to all</button>
+          </agui-toolbar>
+          <pre class="notice rounded-md border border-agui-border bg-agui-raised p-3 text-sm" role="status" aria-live="polite">{{MANAGER/notice}}</pre>
+        </agui-panel>
+        <section class="grid min-w-0 gap-4" aria-labelledby="sessions-heading">
+          <h2 id="sessions-heading" class="text-lg font-semibold">Sessions</h2>
+          <agui-state bind="$.status: MANAGER/emptyStatus; $.message: MANAGER/empty"></agui-state>
+          <div class="sessions grid gap-4" itemize="MANAGER/rows" item-tag="agui-session-row"></div>
+        </section>
+      </agui-dashboard>
+      <dialog ref="description" aria-labelledby="description-heading">
+        <h2 id="description-heading" class="text-lg font-semibold">Session description</h2>
+        <pre ref="descriptionText" class="my-5"></pre>
+        <form method="dialog"><button autofocus>Close</button></form>
+      </dialog>
     </agui-session-manager>
   </body>
 </html>

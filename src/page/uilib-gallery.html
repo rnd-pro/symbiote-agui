@@ -1,0 +1,64 @@
+<context-provider id="gallery-data" ctx="APP">
+  <script type="application/json">
+    {
+      "nameLabel": "Name",
+      "theme": "system",
+      "density": "comfortable",
+      "query": "",
+      "status": "",
+      "sharedName": "Alex",
+      "sharedStatus": "new",
+      "notifications": true,
+      "statusOptions": [{"value":"new","label":"New"},{"value":"contacted","label":"Contacted"},{"value":"archived","label":"Archived","disabled":true}],
+      "componentState": {"status":"error","message":"The data source is unavailable.","retryLabel":"Retry"}
+    }
+  </script>
+  <agui-header floating>
+    <h1>UI library</h1>
+    <agui-theme-toggle id="theme-toggle" ctx="APP"></agui-theme-toggle>
+  </agui-header>
+  <agui-dashboard layout="split" bind="@density: APP/density">
+    <agui-toolbar aria-label="Contact filters">
+      <agui-field id="query-control" label="Search" hint="Starts from application state." bind="$.value: APP/query" type="search" name="query" placeholder="Name or role..."></agui-field>
+      <agui-select id="status-control" label="Status" placeholder="All statuses" name="status" bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
+    </agui-toolbar>
+    <agui-panel slot="main" class="grid gap-5">
+      <h2>Native controls</h2>
+      <agui-field id="name-control" bind="$.label: APP/nameLabel" value="Alex" hint="Required field" required name="name" autocomplete="name"></agui-field>
+      <agui-field label="Email" hint="Format: name@example.com" type="email" name="email" autocomplete="email"></agui-field>
+      <agui-field label="Follow-up date" value="2026-10-21" type="date" name="follow_up"></agui-field>
+      <agui-field label="Connected on LinkedIn" type="checkbox" checked name="connected"></agui-field>
+      <agui-field label="Email preferred" type="radio" value="email" name="preferred_channel" checked></agui-field>
+      <agui-toggle id="notifications-toggle" label="Notifications" name="notifications" pub-to="APP/notifications" bind="$.value: APP/notifications"></agui-toggle>
+      <agui-toggle label="Unavailable option" name="disabled_toggle" disabled></agui-toggle>
+      <agui-field label="Notes" value="Prepare a proposal after the first conversation." type="textarea" name="notes" rows="3"></agui-field>
+      <agui-field label="Read-only value" value="Saved record" readonly name="saved_value"></agui-field>
+      <agui-field label="Disabled value" value="Unavailable" disabled name="disabled_value"></agui-field>
+      <agui-field label="External validation error" value="Existing contact" error="This contact already exists." name="duplicate"></agui-field>
+      <div class="flex flex-wrap gap-3" aria-label="Button style samples">
+        <button class="agui-button-primary" type="button">Primary</button>
+        <button type="button">Default</button>
+        <button class="agui-button-danger" type="button">Danger</button>
+        <button type="button" disabled>Disabled</button>
+      </div>
+    </agui-panel>
+    <agui-panel slot="side" class="grid content-start gap-5">
+      <h2>Application bindings</h2>
+      <agui-field label="Shared name" name="shared_name" pub-to="APP/sharedName" bind="$.value: APP/sharedName"></agui-field>
+      <agui-select label="Shared status" name="shared_status" pub-to="APP/sharedStatus" bind="$.options: APP/statusOptions; $.value: APP/sharedStatus"></agui-select>
+      <agui-select id="status-mirror" label="Application status" readonly placeholder="All statuses" name="status_mirror" bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
+      <agui-component class="grid gap-2 text-sm">
+        <p>Search: <output>{{APP/query}}</output></p>
+        <p>Status: <output>{{APP/status}}</output></p>
+        <p>Shared name: <output>{{APP/sharedName}}</output></p>
+        <p>Shared status: <output>{{APP/sharedStatus}}</output></p>
+        <p>Notifications: <output>{{APP/notifications}}</output></p>
+      </agui-component>
+      <h2>Content states</h2>
+      <agui-state status="loading" message="Loading contacts..."></agui-state>
+      <agui-state status="empty" message="No contacts match the current filters."></agui-state>
+      <agui-state id="retry-state" bind="state: APP/componentState"></agui-state>
+      <p class="text-sm text-agui-muted">Retry sends an action to the agent. This gallery does not contact an external service.</p>
+    </agui-panel>
+  </agui-dashboard>
+</context-provider>

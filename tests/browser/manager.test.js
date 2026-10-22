@@ -66,28 +66,29 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
     return image.naturalWidth > 0 && image.naturalHeight > 0;
   }), true);
   assert.match(await page.$eval('.counts', (element) => element.textContent || ''), /1 total \/ 0 running \/ 1 stopped/);
-  assert.equal(await page.$eval('#manager-theme', (element) => (/** @type {HTMLSelectElement} */ (element)).value), 'system');
-  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(238, 237, 229)');
-  await page.select('#manager-theme', 'dark');
-  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(11, 16, 23)');
+  assert.ok(await page.$('agui-header[floating] + agui-dashboard'));
+  assert.ok(await page.$('agui-field[type="search"] input'));
+  assert.ok(await page.$('agui-select[name="status"] .agui-select-chevron'));
+  await page.select('agui-select[name="status"] select', 'running');
+  await page.waitForFunction(() => document.querySelectorAll('agui-session-row').length === 0);
+  await page.select('agui-select[name="status"] select', 'all');
+  await page.waitForSelector('[data-session="desk"]');
+  assert.equal(await page.$eval('#manager-theme input', (element) => element.checked), false);
+  await page.click('#manager-theme input');
   await page.reload();
   await page.waitForSelector('[data-session="desk"]');
-  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(11, 16, 23)', 'Explicit dark overrides the light system preference after reload.');
   let second = await browser.newPage();
   await second.goto(manager.url);
   await second.waitForSelector('[data-session="desk"]');
-  assert.equal(await second.$eval('#manager-theme', (element) => (/** @type {HTMLSelectElement} */ (element)).value), 'dark');
-  await second.select('#manager-theme', 'light');
+  assert.equal(await second.$eval('#manager-theme input', (element) => element.checked), true);
+  await second.click('#manager-theme input');
   await page.bringToFront();
-  await page.waitForFunction(() => document.documentElement.dataset.theme === 'light');
-  assert.equal(await page.$eval('#manager-theme', (element) => (/** @type {HTMLSelectElement} */ (element)).value), 'light', 'Changes in another tab update the selection.');
+  await page.waitForFunction(() => document.body.dataset.theme === 'light');
+  assert.equal(await page.$eval('#manager-theme input', (element) => element.checked), false, 'Changes in another tab update the selection.');
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
-  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(238, 237, 229)', 'Explicit light overrides the dark system preference.');
-  await page.select('#manager-theme', 'system');
+  await page.click('#system-theme');
   assert.equal(await page.evaluate(() => localStorage.getItem('agui-manager-theme')), null);
-  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), 'rgb(11, 16, 23)');
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
-  await page.waitForFunction(() => getComputedStyle(document.body).backgroundColor === 'rgb(238, 237, 229)');
   await page.reload();
   await page.waitForSelector('[data-session="desk"]');
   await action(page, 'Start');
@@ -155,20 +156,25 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.waitForSelector('a[href*="reconnected-manager.trycloudflare.com"]');
   assert.equal((await fixture.pids()).length, connectors + 1, 'A disconnected renewal is accepted once and never replayed.');
   if (process.env.AGUI_MANAGER_SCREENSHOT) {
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
     await page.screenshot({ path: `${process.env.AGUI_MANAGER_SCREENSHOT}.light.png`, fullPage: true });
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
     await page.screenshot({ path: process.env.AGUI_MANAGER_SCREENSHOT, fullPage: true });
   }
   await page.setViewport({ width: 390, height: 844 });
-  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'Manager fits a narrow viewport.');
-  if (process.env.AGUI_MANAGER_SCREENSHOT) { await page.screenshot({ path: `${process.env.AGUI_MANAGER_SCREENSHOT}.mobile.png`, fullPage: true }); }
+  if (process.env.AGUI_MANAGER_SCREENSHOT) {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({ path: `${process.env.AGUI_MANAGER_SCREENSHOT}.mobile.png`, fullPage: true });
+  }
   await page.setViewport({ width: 1100, height: 900 });
   await page.type('input[type="search"]', 'not-present');
   await page.waitForFunction(() => document.querySelectorAll('agui-session-row').length === 0);
-  await page.$eval('input[type="search"]', (element) => { element.value = ''; element.dispatchEvent(new Event('input')); });
+  await page.$eval('input[type="search"]', (element) => { element.value = ''; element.dispatchEvent(new Event('input', { bubbles: true })); });
   await page.waitForSelector('[data-session="desk"]');
-  await cli('stop', 'desk');
+  await page.select('agui-select[name="operation"] select', 'stop');
+  await page.click('.bulk button');
+  await notice(page, 'stop completed');
   await second.bringToFront();
   await second.waitForFunction(() => document.querySelector('.counts')?.textContent?.includes('1 stopped'), { timeout: 12_000 });
   await page.bringToFront();

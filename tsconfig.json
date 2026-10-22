@@ -13,7 +13,6 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "paths": {
-      "/manager/vendor/core/index.js": ["./node_modules/@symbiotejs/symbiote/types/core/index.d.ts"],
       "linkedom": [
         "./types/linkedom.d.ts"
       ],

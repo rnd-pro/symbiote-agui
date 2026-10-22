@@ -13,6 +13,74 @@ Use a shell with Node.js 24 or newer. Run `npx symbiote-agui --help` once and ac
 
 For routine use, prepare HTML and JSON files with workspace file tools, then run one simple command beginning with `npx symbiote-agui`, passing input with `--file`. Reuse the host's existing approval for that command prefix. Avoid heredocs, pipes, shell wrappers, and inline environment assignments in these invocations: they can prevent approval reuse. Host permissions still apply; AGUI cannot grant itself access or suppress an enforced prompt.
 
+## Built-in UI foundation
+
+The default JSDA page bundle includes and registers every available library component. Compose them directly in HTML with Symbiote contexts; do not add imports, registration scripts, per-component JSON, or JavaScript initialization. Use these before generating custom components.
+
+- `agui-dashboard`: responsive workspace. `layout="single"` (default), `split`, `equal`, or `grid`; `density="comfortable"` (default) or `compact`. In split mode, direct children with `slot="main"` use two columns and `slot="side"` one. Toolbars and `slot="full"` span all columns. These layout slot attributes do not require Shadow DOM.
+- `agui-panel`: content container; supply ordinary child markup and optional headings/actions.
+- `agui-header`: page-wide header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` under the same application provider. Add `floating` for sticky positioning; use `--agui-header-offset` if another sticky element is above it.
+- `agui-toolbar`: wrapping logical control group. Give it an `aria-label` or `label`. Place related fields, selects, and buttons inside it.
+- `agui-field`: renders its own native input and supplies a visible label, required marker, hints, errors, context synchronization, and tools. Set `type` to text (default), search, email, url, tel, number, date, checkbox, or radio; use `type="textarea"` for multiline text. Put native attributes such as `name`, `placeholder`, `autocomplete`, `min`, `max`, `step`, `minlength`, `maxlength`, `pattern`, `rows`, and `cols` on the field. Attribute changes propagate to the internal control; recreate the field to switch between input and textarea. Do not supply child inputs, light DOM slots, or a slot processor. Use `agui-select` for options.
+- `agui-select`: native single-select driven by an `options` property binding; provide `name` on the component. Each option is `{ "value": "new", "label": "New", "disabled": false }`; value/label are strings, disabled is optional. Use `placeholder` for a clear/empty option; reserve the empty value for it. No HTML option generation or modules are needed.
+- `agui-toggle`: reusable boolean control with a native checkbox styled as a 24px-high on/off switch inside a standard 40px-high clickable label. Use `label`, `name`, `checked`, `disabled`, `readonly`, `hint`, and `error` attributes or the same native `$.value` and `state` bindings as fields. Values are booleans, with local state and the usual control tools/change action. Example: `<agui-toggle label="Notifications" name="notifications" checked></agui-toggle>`.
+- `agui-theme-toggle`: specializes `agui-toggle`, inheriting its template, sizing, attributes, and boolean control tools/change action. On means dark theme; off means light theme. Its visible label proposes the next action, "Switch to light theme" or "Switch to dark theme"; its default accessible name stays "Dark theme". It reads and writes shared `*theme` through Symbiote's `ctx` contract, initially `system`, and applies that value to `document.body.dataset.theme`. For example, `<agui-theme-toggle ctx="APP"></agui-theme-toggle>` controls the page and shares the `APP/theme` value. The body owns page colors and the system/light/dark theme; dashboards and other components inherit it. System mode follows the OS until toggled or externally updated. No dashboard theme binding, inline JavaScript, or persistence setup is needed.
+- `agui-state`: attribute/property `status` is `ready` (hidden), `loading`, `empty`, or `error`; optional `message` overrides the default. A nonempty `retryLabel` shows a Retry action only in error state. Retry emits intent; it does not perform or confirm an external operation.
+
+### Attributes and bindings
+
+Use attributes for primitive values. A field needs no provider or JSON script:
+
+```html
+<agui-field label="Name" value="Alex" name="name" required></agui-field>
+<agui-field label="Unavailable" value="Saved record" name="disabled_value" disabled></agui-field>
+<agui-field label="Connected" type="checkbox" checked name="connected"></agui-field>
+<agui-state status="empty" message="No contacts yet."></agui-state>
+```
+
+Each primitive owns its local value by default, so sibling fields remain independent. Set `label`, `hint`, `error`, `disabled`, `readonly`, and `required` directly on the host. Text input, textarea, date, number, radio, and select values are strings; checkbox values are booleans and use `checked` for an attribute default. Boolean attributes use presence/absence. Always provide an accessible label.
+
+For dynamic data, use standard Symbiote `bind` assignments through the native `$` state proxy, for example `bind="$.label: *nameLabel"`. For an object, use `bind="state: APP/componentState"`; the adapter calls native `add$(value, true)` to initialize or update state. Do not add a JSON parser, provider, or initialization script per primitive. One common provider may hold shared task records, option arrays, and state objects:
+
+```html
+<context-provider id="app-data" ctx="APP">
+  <script type="application/json">
+    {"nameLabel":"Contact name","statusOptions":[{"value":"new","label":"New"}],"componentState":{"label":"Email","value":"alex@example.com","readonly":true}}
+  </script>
+  <agui-field bind="$.label: *nameLabel" value="Alex" name="name"></agui-field>
+  <agui-select label="Status" value="new" name="status" bind="$.options: *statusOptions"></agui-select>
+  <agui-field type="email" name="email" bind="state: APP/componentState"></agui-field>
+</context-provider>
+```
+
+Control state properties are `value`, `label`, `hint`, `error`, `disabled`, `readonly`, and `required`. Selects also expose `options` and `placeholder`; state presentation exposes `status`, `message`, and `retryLabel`. State objects use flat native Symbiote keys, including native scope prefixes when needed; the adapter does not filter or remap them. Native `defineAccessor()` installs the `state` binding in `initCallback()` and replays early assignments through `add$()`. Read reactive state through the native `$` proxy. Supplied properties take precedence over attribute defaults. Native configuration such as `name`, `type`, `autocomplete`, and constraints stays on host attributes, which can also use standard bindings such as `bind="@placeholder: APP/searchHint"`.
+
+Bindings use normal Symbiote scope: `*property` reads the owning component's named context, `APP/property` names the context explicitly, and `^property` uses pop-up lookup. Use explicit names across nested component boundaries. Property bindings pass data into a primitive; they do not create automatic two-way binding to the source. User input updates the control's own value and emits its normal events and `agui:action` notification.
+
+Add `pub-to="CTX/prop"` to any value control to publish edits directly to an existing context property. This works for fields (including textarea, checkbox, and radio), selects, toggles, and theme toggles. Text/select/radio values are strings; checkbox/toggle values are booleans. User input and value-changing `set_value`/`clear_value` calls publish through Symbiote's native `$` proxy. Initialization and incoming `bind`/`state`/CLI state assignments do not publish. Disabled and read-only controls cannot publish edits. Declare the target in your common provider; no context parser or event handler is needed. Pair incoming and outgoing bindings when both directions are needed:
+
+```html
+<agui-field label="Name" name="name" pub-to="APP/name" bind="$.value: APP/name"></agui-field>
+<agui-select label="Status" name="status" pub-to="APP/status" bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
+<agui-toggle label="Notifications" name="notifications" pub-to="APP/notifications" bind="$.value: APP/notifications"></agui-toggle>
+```
+
+Component state is local, including on elements with `ctx`. The native `ctx`/CSS context name only selects a namespace for explicit `*property` bindings; it does not turn local properties into shared ones. Feed application state into controls with bindings such as `bind="$.value: APP/status"`. Several controls can receive the same application value; opt into publishing edits with `pub-to` to synchronize them without handlers. The theme toggle explicitly uses shared `*theme` and applies it to the document body.
+
+Inside components, declare defaults in native `init$` and use `$`, `add$()`, and `sub()` directly. Do not add wrappers for context selection, property initialization, subscriptions, or lifecycle cleanup.
+
+Update common application data through CLI `update`, for example `{ "selector": "#app-data", "values": { "nameLabel": "Customer name" } }`; ordinary bindings propagate the change. For a local primitive, target its ID and public property, such as `{ "selector": "#name-control", "values": { "value": "Ada" } }`. Use `add$` for new properties. Native input interactions remain local and require no agent round trip.
+
+### Styling and tools
+
+Use common Tailwind utilities for customization. Semantic colors are `agui-bg`, `agui-surface`, `agui-raised`, `agui-text`, `agui-muted`, `agui-border`, `agui-accent`, `agui-on-accent`, and `agui-danger`; for example `bg-agui-surface text-agui-text`. Shared CSS tokens have the same names prefixed by `--`. Native controls can use `.agui-input`, `.agui-label`, `.agui-hint`, and `.agui-button`, with `.agui-button-primary` or `.agui-button-danger`. Button styles do not create task actions. Controls inside fields/selects are styled automatically. Library template utilities are compiled together with session classes. Component defaults use native `rootStyles` with the same design tokens and the `components` cascade layer, so Tailwind utilities can override them. Both compiled utilities and adopted root styles reach read-only viewers; no session-specific stylesheet setup is needed.
+
+Field, select, and toggle descriptors expose `set_value` with `{ "value": "..." }` (boolean for checkboxes and toggles), `clear_value`, and `read_value`. Discover exact names using CLI `tools`; responses contain just the value and change flag. Disabled/read-only controls reject changes. Repeating an already applied value emits no extra change event. `agui-state` exposes `retry` only when its Retry control is available.
+
+Meaningful interactions emit `agui:action` with `{ "widgetId": "...", "context": "...", "action": "change", "value": "..." }` or action `retry`. Give interactive components IDs. Values longer than 2048 characters are represented by `valueLength` in the event; use `read_value` or provider state for the actual value. Events are notifications, not storage. State resets on sync/replacement/restart follow ordinary AGUI semantics; components do not save to a database automatically.
+
+For manual review, save or insert the packaged `src/page/uilib-gallery.html` into one gallery session. It demonstrates independent local controls, shared application inputs, property/object bindings, a floating header, and content states without executable scripts. The theme toggle applies the common provider's `theme` to the body; bind `density` to the dashboard attribute. Updates are live state, not persisted browser settings.
+
 ## Reusable task interfaces
 
 Before creating an interface for a recurring task, use `npx symbiote-agui list --query "task terms"` and `npx symbiote-agui describe <SESSION_ID>` to find an existing definition. Reuse and improve a matching AGUI instead of regenerating it.
@@ -130,7 +198,7 @@ Inside modules, use Symbiote's native `$`, `set$()`, `add$()`, and `sub()` APIs.
 
 An anonymous `<context-provider>` exposes local fields to descendants through `^prop`. A provider with `ctx="map"` also mirrors fields into a named context. Consumers use `ctx="map"` with `*prop`, or explicit `map/prop` bindings. Use one provider per named context. Provider synchronization is bidirectional, including fields added through `add$()`.
 
-For reusable markup, include `<template id="card-template">...</template>` and a custom tag with `use-template="template#card-template"` in the same insertion. Unknown tags using `use-template` become generic components. Register custom subclasses through `YourComponent.reg('your-component')` to preserve Symbiote's WebMCP tag identity; registrations persist until page reload. No ready-made widget catalog is provided.
+For custom reusable markup, include `<template id="card-template">...</template>` and a custom tag with `use-template="template#card-template"` in the same insertion. Unknown tags using `use-template` become generic components. Register custom subclasses through `YourComponent.reg('your-component')` to preserve Symbiote's WebMCP tag identity; registrations persist until page reload. Prefer the built-in foundation components above when they cover the task.
 
 ## Repeating items with Itemize
 

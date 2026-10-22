@@ -15,7 +15,10 @@ export interface RenderUpdate {
 
 export type PageRole = 'user' | 'viewer';
 
-export interface MirrorSnapshot extends RenderUpdate {}
+export interface MirrorSnapshot extends RenderUpdate {
+  rootStyles?: string;
+  theme?: string;
+}
 
 export interface PageRoleMessage {
   type: 'role';

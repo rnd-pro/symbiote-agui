@@ -13,8 +13,8 @@ export async function startPageServer(access) {
   config.dynamic.routes = fileURLToPath(new URL('../page/routes.js', import.meta.url));
   config.dynamic.cache.inMemory = false;
   config.minify.html = false;
-  config.minify.css = false;
-  config.minify.js = false;
+  config.minify.css = true;
+  config.minify.js = true;
   config.log = false;
 
   let server = createServer({ port: { host: '127.0.0.1', port: 0 } });

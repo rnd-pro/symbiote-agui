@@ -29,5 +29,6 @@ export function captureSnapshot(revision) {
     }
     if (element.matches('a, area')) { element.removeAttribute('href'); }
   }
-  return { html: copy.innerHTML, revision, stylesheetUrl: stylesheet };
+  let rootStyles = document.adoptedStyleSheets.flatMap((sheet) => [...sheet.cssRules].map((rule) => rule.cssText)).join('\n');
+  return { html: copy.innerHTML, revision, stylesheetUrl: stylesheet, rootStyles, theme: document.body.dataset.theme ?? 'system' };
 }

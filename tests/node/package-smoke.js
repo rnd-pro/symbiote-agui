@@ -92,7 +92,7 @@ test('the production tarball runs through npm exec outside the checkout', { time
   let manager = await cli('manager', '--no-open');
   assert.equal(manager.active, true);
   assert.equal((await cli('manager', 'status')).url, manager.url);
-  for (let path of ['', 'page/index.js', 'page/connection.js', 'page/rows.js', 'page/theme.js', 'page/styles.css', 'constants.js', 'vendor/core/index.js', 'vendor/utils/setNestedProp.js']) {
+  for (let path of ['', 'page/index.js', 'page/theme.js', 'page/styles.css']) {
     let response = await fetch(new URL(path, manager.url));
     assert.equal(response.status, 200, `Packaged manager asset: ${path}`);
     assert.ok((await response.text()).length);

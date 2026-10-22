@@ -1,9 +1,10 @@
 import { AguiComponent } from './component.js';
 import { initializeContext, releaseContext } from './contexts.js';
-import { DICT } from '@symbiotejs/symbiote';
+import { DICT, css } from '@symbiotejs/symbiote';
 import { readInitialData } from '../../markup/data.js';
 
 export class ContextProvider extends AguiComponent {
+  processInnerHtml = true;
   /** @type {import('@symbiotejs/symbiote').PubSub<import('../../../types/components.js').ComponentState> | undefined} */
   providedContext;
   providedName = '';
@@ -70,3 +71,5 @@ export class ContextProvider extends AguiComponent {
     });
   }
 }
+
+ContextProvider.rootStyles = css`@layer components { context-provider { display: contents; } }`;

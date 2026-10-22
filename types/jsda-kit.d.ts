@@ -3,6 +3,14 @@ declare module 'jsda-kit/server/JSDAServer.js' {
   export function createServer(options: { port: import('node:net').ListenOptions }): import('node:http').Server;
 }
 
+declare module 'jsda-kit/server/build-asset.js' {
+  export function jsBuild(entry: string): Promise<string>;
+}
+
+declare module 'jsda-kit/node/cssMin.js' {
+  export function cssMin(css: string): string;
+}
+
 declare module 'jsda-kit/cfg' {
   let config: {
     dynamic: {

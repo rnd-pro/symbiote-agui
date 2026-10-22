@@ -1,8 +1,8 @@
 import { timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { dirname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { jsBuild } from 'jsda-kit/server/build-asset.js';
 import { WebSocketServer, WebSocket } from 'ws';
 import { closeServer, waitForServer } from '../shared/server.js';
 import { ManagerOperations } from './operations.js';
@@ -23,15 +23,16 @@ function authorized(value, expected) {
  * @param {() => void} stop
  */
 export async function startManagerServer(record, stop) {
-  let stylesheet = await createManagerStyles();
+  let [stylesheet, client] = await Promise.all([
+    createManagerStyles(),
+    jsBuild(fileURLToPath(new URL('./page/index.js', import.meta.url))),
+  ]);
   let operations = new ManagerOperations();
   let origin = '';
   let host = '';
   let assets = new URL('./page/', import.meta.url);
-  let vendorRoot = dirname(dirname(fileURLToPath(import.meta.resolve('@symbiotejs/symbiote'))));
   let files = new Map([[MANAGER_PATH, new URL('index.html', assets)]]);
-  for (let file of ['index.js', 'connection.js', 'rows.js', 'theme.js']) { files.set(`${MANAGER_PATH}page/${file}`, new URL(file, assets)); }
-  files.set(`${MANAGER_PATH}constants.js`, new URL('./constants.js', import.meta.url));
+  files.set(`${MANAGER_PATH}page/theme.js`, new URL('theme.js', assets));
   let server = createServer(async (request, response) => {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
@@ -56,15 +57,11 @@ export async function startManagerServer(record, stop) {
       response.writeHead(200, { 'Content-Type': 'text/css; charset=utf-8' }).end(stylesheet);
       return;
     }
-    let file = files.get(path);
-    let vendorPrefix = `${MANAGER_PATH}vendor/`;
-    if (!file && path.startsWith(vendorPrefix)) {
-      let relative = path.slice(vendorPrefix.length);
-      let absolute = resolve(vendorRoot, relative);
-      if (/^[a-zA-Z0-9_./-]+\.js$/.test(relative) && absolute.startsWith(`${vendorRoot}${sep}`)) {
-        file = new URL(`file://${absolute}`);
-      }
+    if (path === `${MANAGER_PATH}page/index.js`) {
+      response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }).end(client);
+      return;
     }
+    let file = files.get(path);
     if (!file) { response.writeHead(404).end(); return; }
     try {
       let content = await readFile(file);

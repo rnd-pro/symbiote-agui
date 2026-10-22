@@ -67,6 +67,7 @@ export class SharedView {
     if (this.observer || !root) { return; }
     this.observer = new MutationObserver(this.schedule);
     this.observer.observe(root, { subtree: true, attributes: true, childList: true, characterData: true });
+    this.observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
     root.addEventListener('input', this.schedule, true);
     root.addEventListener('change', this.schedule, true);
     this.refresh = window.setInterval(() => this.publish(), MIRROR_REFRESH_MS);
@@ -95,7 +96,7 @@ export class SharedView {
       frame.id = 'agui-viewer';
       frame.setAttribute('sandbox', 'allow-same-origin');
       frame.style.cssText = 'display:block;width:100%;height:100dvh;border:0;';
-      frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\' http: https:; img-src http: https: data: blob:; font-src http: https: data:; media-src http: https: blob:; base-uri \'none\'; form-action \'none\'"><link id="mirror-styles" rel="stylesheet"></head><body inert style="margin:0"><main id="mirror-content"></main></body></html>';
+      frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\' http: https:; img-src http: https: data: blob:; font-src http: https: data:; media-src http: https: blob:; base-uri \'none\'; form-action \'none\'"><link id="mirror-styles" rel="stylesheet"><style id="mirror-root-styles"></style></head><body inert style="margin:0"><main id="mirror-content"></main></body></html>';
       frame.onload = () => this.applySnapshot();
       document.getElementById(CONTENT_ROOT_ID)?.replaceChildren(frame);
       this.frame = frame;
@@ -108,14 +109,18 @@ export class SharedView {
     let document = frame?.contentDocument;
     let root = document?.getElementById('mirror-content');
     let stylesheet = document?.getElementById('mirror-styles');
-    if (!frame || !document || !root || !stylesheet || !this.snapshot) { return; }
+    let rootStyles = document?.getElementById('mirror-root-styles');
+    if (!frame || !document || !root || !stylesheet || !rootStyles || !this.snapshot) { return; }
     let { html, stylesheetUrl } = this.snapshot;
+    document.body.dataset.theme = this.snapshot.theme ?? 'system';
+    frame.ownerDocument.body.dataset.theme = document.body.dataset.theme;
     let fragment = document.createElement('template');
     fragment.innerHTML = html;
     let x = frame.contentWindow?.scrollX || 0;
     let y = frame.contentWindow?.scrollY || 0;
     root.replaceChildren(fragment.content);
     if (stylesheet.getAttribute('href') !== stylesheetUrl) { stylesheet.setAttribute('href', stylesheetUrl); }
+    if (rootStyles.textContent !== (this.snapshot.rootStyles ?? '')) { rootStyles.textContent = this.snapshot.rootStyles ?? ''; }
     frame.contentWindow?.scrollTo(x, y);
   }
 

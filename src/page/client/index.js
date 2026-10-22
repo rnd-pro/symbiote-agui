@@ -4,10 +4,12 @@ import { COMPONENT_TAG, PROVIDER_TAG } from '../../markup/constants.js';
 import { AguiComponent } from './component.js';
 import { ContextProvider } from './context-provider.js';
 import { connectSession } from './connection.js';
+import { registerUiLibComponents } from './uilib/index.js';
 
 Symbiote.mcpToolMode = true;
 AguiComponent.reg(COMPONENT_TAG);
 ContextProvider.reg(PROVIDER_TAG);
+registerUiLibComponents();
 connectSession();
 
 export { Symbiote, PubSub, html, css } from '@symbiotejs/symbiote';

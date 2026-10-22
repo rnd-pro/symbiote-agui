@@ -10,14 +10,14 @@ function normalizeTheme(value) {
 
 let preference = normalizeTheme(null);
 try { preference = normalizeTheme(localStorage.getItem(storageKey)); } catch { /* Use the system theme when storage is unavailable. */ }
-document.documentElement.dataset.theme = preference;
+document.body.dataset.theme = preference;
 
 export function getTheme() { return preference; }
 
 /** @param {string} value */
 export function setTheme(value) {
   preference = normalizeTheme(value);
-  document.documentElement.dataset.theme = preference;
+  document.body.dataset.theme = preference;
   try {
     if (preference === 'system') { localStorage.removeItem(storageKey); }
     else { localStorage.setItem(storageKey, preference); }
@@ -29,7 +29,7 @@ export function watchTheme(changed) {
   let listener = (/** @type {StorageEvent} */ event) => {
     if (event.key !== storageKey && event.key !== null) { return; }
     preference = normalizeTheme(event.newValue);
-    document.documentElement.dataset.theme = preference;
+    document.body.dataset.theme = preference;
     changed(preference);
   };
   window.addEventListener('storage', listener);

@@ -130,7 +130,12 @@ test('manager WebSocket requires its origin and credential; assets cannot serve 
   assert.equal(response.headers.get('x-frame-options'), 'DENY');
   let css = await (await fetch(`${endpoint.url}page/styles.css`)).text();
   assert.doesNotMatch(css, /@apply|@import|@theme/, 'The manager serves compiled Tailwind CSS.');
-  assert.match(css, /grid-template-columns/, 'Classes from the complete HTML document are included.');
+  assert.match(css, /word-break:\s*break-all/, 'Classes from the complete HTML document are included.');
+  assert.match(css, /overflow-wrap:\s*anywhere/, 'Row template classes are included.');
+  let bundle = await (await fetch(`${endpoint.url}page/index.js`)).text();
+  assert.match(bundle, /agui-dashboard/);
+  assert.match(bundle, /agui-toggle/);
+  assert.doesNotMatch(bundle, /from ['"]@symbiotejs/);
   let badOrigin = new WebSocket(socketUrl, { origin: 'http://127.0.0.1:1111' });
   badOrigin.on('error', () => {});
   await new Promise((resolve) => badOrigin.on('unexpected-response', (_request, reply) => {

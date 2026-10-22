@@ -168,8 +168,10 @@ test('shared pages elect one user without credentials, release the slot, and rej
     let message = JSON.parse(data.toString());
     if (message.type === 'snapshot') { resolve(message); }
   }));
-  user.send(JSON.stringify({ type: 'snapshot', html: '<p>Count: 7</p>', revision: 0, stylesheetUrl: '/styles.css.js' }));
-  assert.equal((await nextSnapshot).html, '<p>Count: 7</p>');
+  user.send(JSON.stringify({ type: 'snapshot', html: '<p>Count: 7</p>', revision: 0, stylesheetUrl: '/styles.css.js', rootStyles: '@layer components { p { color: red; } }' }));
+  let snapshot = await nextSnapshot;
+  assert.equal(snapshot.html, '<p>Count: 7</p>');
+  assert.equal(snapshot.rootStyles, '@layer components { p { color: red; } }');
   user.send(JSON.stringify({ type: 'event', name: 'count', data: 7 }));
   let viewerClosed = once(viewer, 'close');
   viewer.send(JSON.stringify({ type: 'event', name: 'count', data: 999 }));

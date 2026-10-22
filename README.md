@@ -43,6 +43,10 @@ AGUI exposes UI actions as WebMCP tools and invokes them through Symbiote.js's p
 
 AGUI runs locally by default. The CLI is enough to use it; [MCP integrations](./docs/reference.md#optional-agui-mcp) are available for agent environments that support them.
 
+## Reusable UI components
+
+AGUI includes dashboard layouts, panels, floating headers, toolbars, fields, selects, toggles, theme toggles, and content states in its default browser bundle. Agents compose these as HTML with primitive attributes, standard Symbiote property/state bindings, and common Tailwind design tokens. A common context provider can hold shared application data; individual fields need no JSON setup. Standard controls handle their own interactions without session-specific initialization scripts. The [AGUI skill](./skills/symbiote-agui/SKILL.md#built-in-ui-foundation) contains the complete usage contract and examples.
+
 ## Manage sessions in your browser
 
 Open the built-in session manager:
@@ -53,7 +57,7 @@ npx symbiote-agui manager
 
 See running and saved interfaces, search their descriptions, and start, stop, sync, clear, or share them directly. The manager refreshes session status automatically and can check or renew public tunnels. It works independently of your agent and stays available when you stop all sessions.
 
-The manager is local to your computer and uses your current library folder or private cache. See [manager controls](./docs/reference.md#session-manager) for lifecycle commands and access details.
+The manager uses the same UI library and theme as generated interfaces. It is local to your computer and uses your current library folder or private cache. See [manager controls](./docs/reference.md#session-manager) for lifecycle commands and access details.
 
 ## Internet sharing
 

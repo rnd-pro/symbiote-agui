@@ -11,7 +11,7 @@ npx symbiote-agui manager status
 npx symbiote-agui manager stop
 ```
 
-The built-in Symbiote page calls AGUI functions directly over its own authenticated WebSocket. It does not need an agent, MCP setup, or browser debugging. It lists running and saved sessions, descriptions, clients, process IDs, and current links. Search, status filters, individual controls, and scoped bulk actions are available. The Theme selector offers System, Light, and Dark; your choice is remembered across reloads and synchronized between tabs in the same browser at the manager URL. System follows your operating system preference.
+The built-in Symbiote page calls AGUI functions directly over its own authenticated WebSocket. It does not need an agent, MCP setup, or browser debugging. It lists running and saved sessions, descriptions, clients, process IDs, and current links. Search, status filters, individual controls, and scoped bulk actions use the shared UI library. The theme toggle selects light/dark, and Use system theme restores your operating system preference. Your choice is remembered across reloads and synchronized between tabs in the same browser at the manager URL.
 
 One detached manager runs per private state directory and resolved library folder. Repeating `manager` reuses it. Its storage scope is fixed at startup; changing the project folder setting selects a separate manager on the next launch. Session stop/clear-all commands leave the manager running. `manager stop` stops only the manager and waits for accepted operations to finish.
 
@@ -53,6 +53,8 @@ npx symbiote-agui clear my-workspace
 Run `npx symbiote-agui --help` for the command list. Session commands return JSON, except help and version. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input.
 
 ## Saved interfaces and reconnection
+
+The default browser bundle includes the foundation UI components, registered before saved or inserted content mounts. Use the [AGUI skill](../skills/symbiote-agui/SKILL.md#built-in-ui-foundation) for their declarative context contracts, common Tailwind tokens, and HTML-only composition examples. Component state has the same persistence boundaries as other generated interfaces.
 
 AGUI saves accepted HTML and inline modules by session ID. Restarting rebuilds styles and restores that definition, even if the original input file was deleted. It does not save live component state, user progress, timers, or state updates.
 

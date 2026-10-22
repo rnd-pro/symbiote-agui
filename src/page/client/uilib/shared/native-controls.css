@@ -1,0 +1,106 @@
+@layer components {
+  agui-field,
+  agui-select,
+  agui-toggle,
+  agui-theme-toggle { @apply grid min-w-0 gap-1 text-agui-text; }
+  .agui-control-label { @apply grid gap-2; }
+
+  input:not([type='checkbox'], [type='radio']),
+  textarea,
+  select,
+  .agui-input {
+    @apply w-full rounded-md border border-agui-border bg-agui-bg px-3 py-1.5 text-base text-agui-text;
+    height: var(--agui-control-height);
+    min-width: var(--agui-control-height);
+  }
+  textarea { @apply h-auto min-h-24 resize-y; }
+  select { @apply appearance-none pe-10; }
+  .agui-select-control { @apply relative block min-w-0; }
+  .agui-select-chevron {
+    @apply pointer-events-none absolute inset-y-0 my-auto size-4 text-agui-muted;
+    inset-inline-end: .75rem;
+    rotate: 0deg;
+  }
+  select:open + .agui-select-chevron { rotate: 180deg; }
+  select:disabled + .agui-select-chevron { @apply opacity-50; }
+  @supports (appearance: base-select) {
+    select,
+    ::picker(select) { appearance: base-select; }
+    select::picker-icon { display: none; }
+    ::picker(select) { @apply rounded-md border border-agui-border bg-agui-surface text-agui-text shadow-lg; }
+    option {
+      @apply px-3 py-2;
+      min-height: var(--agui-control-height);
+    }
+    option:enabled:hover { @apply bg-agui-raised; }
+  }
+  label:has(> input[type='checkbox'], > input[type='radio']) {
+    @apply flex flex-row-reverse items-center justify-end gap-2;
+    min-height: var(--agui-control-height);
+    min-width: var(--agui-control-height);
+  }
+  input[type='checkbox'],
+  input[type='radio'] { @apply m-0 size-5 shrink-0 accent-agui-accent; }
+  input[switch] {
+    @apply appearance-none rounded-full border border-agui-border bg-agui-raised p-[.1875rem];
+    width: calc(var(--agui-toggle-height) * 1.75);
+    height: var(--agui-toggle-height);
+  }
+  input[switch]::before {
+    @apply block rounded-full bg-agui-muted;
+    width: calc(var(--agui-toggle-height) - .5rem);
+    height: calc(var(--agui-toggle-height) - .5rem);
+    content: '';
+  }
+  input[switch]:enabled { @apply cursor-pointer; }
+  input[switch]:checked { @apply border-agui-accent bg-agui-accent; }
+  input[switch]:checked::before {
+    @apply bg-agui-on-accent;
+    transform: translateX(calc(var(--agui-toggle-height) * .75));
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    input[switch]::before { transition: transform 150ms ease; }
+    .agui-select-chevron { transition: rotate 150ms ease; }
+  }
+  @media (forced-colors: active) {
+    input[switch] { appearance: auto; }
+    input[switch]::before { content: none; }
+  }
+  input::placeholder,
+  textarea::placeholder { @apply text-agui-muted; }
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  button:focus-visible { @apply outline-2 outline-offset-2 outline-agui-accent; }
+  input:disabled,
+  textarea:disabled,
+  select:disabled,
+  button:disabled { @apply cursor-not-allowed opacity-50; }
+  input:user-invalid,
+  textarea:user-invalid,
+  select:user-invalid,
+  input[aria-invalid='true'],
+  textarea[aria-invalid='true'],
+  select[aria-invalid='true'] { @apply border-agui-danger; }
+  input,
+  select,
+  textarea,
+  button,
+  a,
+  [tabindex] {
+    scroll-margin-block-start: calc(var(--agui-header-height) + var(--agui-header-offset) + 1rem);
+  }
+  button,
+  .agui-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-agui-text px-3 py-1.5 text-sm font-semibold text-agui-surface shadow-sm;
+    height: var(--agui-control-height);
+    min-width: var(--agui-control-height);
+  }
+  button:enabled { @apply cursor-pointer; }
+  button:hover:enabled { @apply opacity-90; }
+  .agui-button-primary { @apply border-agui-accent bg-agui-accent text-agui-on-accent; }
+  .agui-button-primary:hover:enabled { @apply bg-agui-accent opacity-90; }
+  .agui-button-danger { @apply border-agui-danger bg-transparent text-agui-danger shadow-none; }
+  .agui-label { @apply text-sm font-medium text-agui-text; }
+  .agui-hint { @apply text-sm text-agui-muted; }
+}

@@ -5,6 +5,6 @@
       <agui-field id="name" label="Name" name="name" required pub-to="APP/name" bind="$.value: APP/name"></agui-field>
       <agui-field id="email" label="Email" name="email" type="email" pub-to="APP/email" bind="$.value: APP/email"></agui-field>
     </form>
-    <agui-data-toolbar id="data" form="editor"></agui-data-toolbar>
+    <agui-data-toolbar id="data" form="editor" bind="state: AGUI_TEXT/dataToolbar"></agui-data-toolbar>
   </agui-dashboard>
 </context-provider>

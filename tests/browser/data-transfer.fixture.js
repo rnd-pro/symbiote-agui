@@ -1,6 +1,7 @@
 import { PubSub } from '@symbiotejs/symbiote';
 import { JsonTransfer } from '../../src/page/client/uilib/controls/data-toolbar/transfer.js';
 import { feedbackSuppressed } from '../../src/page/client/feedback-guard.js';
+import { dataToolbarTexts } from '../../src/page/client/page-text.js';
 
 let targets = [{ provider: 'APP', keys: ['records', 'count'] }, { provider: 'OTHER', keys: ['enabled'] }];
 let context = PubSub.registerCtx({ records: [{ name: 'Initial' }], count: 0, filter: 'keep' }, 'APP');
@@ -12,7 +13,7 @@ let suppressed = [];
 context.sub('records', () => suppressed.push(feedbackSuppressed()), false);
 let input = document.querySelector('input');
 if (!(input instanceof HTMLInputElement)) { throw new Error('Missing file input.'); }
-let transfer = new JsonTransfer({ input, targets: () => targets, report: (state) => {
+let transfer = new JsonTransfer({ input, texts: dataToolbarTexts, targets: () => targets, report: (state) => {
   states.push(state);
   let output = document.querySelector('output');
   if (output) { output.textContent = state.message; }

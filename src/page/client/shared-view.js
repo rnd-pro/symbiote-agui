@@ -1,4 +1,4 @@
-import { CONTENT_ROOT_ID } from '../../markup/constants.js';
+import { COMPONENT_TAG, CONTENT_ROOT_ID, PAGE_TEXT_CONTEXT } from '../../markup/constants.js';
 import { MAX_PAGE_MESSAGE_BYTES, MIRROR_INTERVAL_MS, MIRROR_REFRESH_MS, PAGE_ROLE } from '../../transport/constants.js';
 import { disposeModules } from './modules.js';
 import { replaceContent } from './replace-content.js';
@@ -55,7 +55,7 @@ export class SharedView {
       let root = document.getElementById(CONTENT_ROOT_ID);
       if (root) {
         replaceContent(root, document.createDocumentFragment());
-        root.append(document.createElement('agui-data-toolbar'));
+        root.append(this.createToolbar());
       }
     }
     if (this.role === PAGE_ROLE.USER) {
@@ -101,7 +101,7 @@ export class SharedView {
       frame.style.cssText = 'display:block;width:100%;height:calc(100dvh - var(--agui-data-toolbar-height, 0px));border:0;';
       frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\' http: https:; img-src http: https: data: blob:; font-src http: https: data:; media-src http: https: blob:; base-uri \'none\'; form-action \'none\'"><link id="mirror-styles" rel="stylesheet"><style id="mirror-root-styles"></style></head><body inert style="margin:0"><main id="mirror-content"></main></body></html>';
       frame.onload = () => this.applySnapshot();
-      let toolbar = document.createElement('agui-data-toolbar');
+      let toolbar = this.createToolbar();
       document.getElementById(CONTENT_ROOT_ID)?.replaceChildren(frame, toolbar);
       this.frame = frame;
     }
@@ -127,6 +127,12 @@ export class SharedView {
     if (stylesheet.getAttribute('href') !== stylesheetUrl) { stylesheet.setAttribute('href', stylesheetUrl); }
     if (rootStyles.textContent !== (this.snapshot.rootStyles ?? '')) { rootStyles.textContent = this.snapshot.rootStyles ?? ''; }
     frame.contentWindow?.scrollTo(x, y);
+  }
+
+  createToolbar() {
+    let content = document.createElement(COMPONENT_TAG);
+    content.innerHTML = `<agui-data-toolbar bind="state: ${PAGE_TEXT_CONTEXT}/dataToolbar"></agui-data-toolbar>`;
+    return content;
   }
 
   disconnect() {

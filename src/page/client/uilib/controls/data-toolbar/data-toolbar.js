@@ -31,7 +31,8 @@ export class DataToolbar extends UiComponent {
   issue = '';
   disposed = false;
   init$ = {
-    externalResult: undefined, dirty: false, roleLabel: 'User', socketConnected: 'false', connectionLabel: 'Disconnected', editMessage: '',
+    texts: undefined, externalResult: undefined, dirty: false, roleLabel: '', socketConnected: 'false', connectionLabel: '', editMessage: '',
+    actionsLabel: '', saveLabel: '', cancelLabel: '', importLabel: '', exportLabel: '', checkSaveLabel: '', fileLabel: '',
     localMessage: '', deliveryMessage: '', externalMessage: '', transferMessage: '', errorMessage: '', saveHint: '',
     saveDisabled: true, cancelDisabled: true, importDisabled: true, exportDisabled: true, uncertain: false, checkDisabled: true,
     save: (/** @type {Event} */ event) => { void this.save(event); }, cancel: () => this.cancel(),
@@ -62,6 +63,7 @@ export class DataToolbar extends UiComponent {
       this.transferState = state;
       this.refresh();
     } });
+    this.sub('texts', () => this.refresh());
     for (let target of this.targets) {
       for (let key of target.keys) { this.sub(`${target.provider}/${key}`, () => this.refresh()); }
     }
@@ -84,7 +86,7 @@ export class DataToolbar extends UiComponent {
     this.sub('externalResult', (value) => {
       if (!value) { return; }
       try { this.acknowledge(/** @type {import('../../../../../../types/data-toolbar.js').ExternalAcknowledgement} */ (value)); }
-      catch { this.issue = 'The external result does not match the submitted snapshot.'; this.refresh(); }
+      catch { this.issue = 'ackMismatch'; this.refresh(); }
     });
     this.sizeObserver = new ResizeObserver(() => {
       if (!this.disposed) { document.documentElement.style.setProperty('--agui-data-toolbar-height', `${this.ref.bar.getBoundingClientRect().height}px`); }
@@ -101,20 +103,25 @@ export class DataToolbar extends UiComponent {
     presentToolbar(this);
   }
 
+  /** @param {string} key */
+  text(key) {
+    return String((/** @type {import('../../../../../../types/uilib.js').UiTexts | undefined} */ (this.$.texts))?.[key] ?? '');
+  }
+
   /** @param {Event} event */
   async save(event) {
     if (this.$.saveDisabled || feedbackSuppressed() || !event?.isTrusted || !['click', 'submit'].includes(event.type)
       || Reflect.get(event, 'agentInvoked') === true) { return; }
     let formId = this.getAttribute('form');
     let form = formId ? document.getElementById(formId) : this.closest('form');
-    if (form instanceof HTMLFormElement && !form.reportValidity()) { this.issue = 'Check the form fields before saving.'; this.refresh(); return; }
+    if (form instanceof HTMLFormElement && !form.reportValidity()) { this.issue = 'formInvalid'; this.refresh(); return; }
     let data = getDataState().current;
     if (!data) { return; }
     /** @type {import('../../../../../../types/data-toolbar.js').ToolbarSubmission} */
     let submitted;
     try {
       submitted = { reference: { commitId: crypto.randomUUID(), instanceId: data.instanceId, markupRevision: data.markupRevision }, changes: captureDraft(this.targets) };
-    } catch (error) { this.issue = error instanceof Error ? error.message : 'The draft is not valid JSON.'; this.refresh(); return; }
+    } catch { this.issue = 'draftInvalid'; this.refresh(); return; }
     this.issue = '';
     this.submission = submitted;
     this.refresh();
@@ -150,7 +157,7 @@ export class DataToolbar extends UiComponent {
       replaceDraft({ version: 1, changes: this.baseline }, this.targets);
       this.issue = '';
       this.transferState = undefined;
-    } catch { this.issue = 'Could not restore the saved draft. Export needed edits before reloading.'; }
+    } catch { this.issue = 'cancelFailed'; }
     this.refresh();
   }
 

@@ -61,6 +61,7 @@ test('persistence declarations and JSON commits reject undeclared, ambiguous, re
     dataHtml.replace('persist="records"', 'persist="missing"'), dataHtml.replace('ctx="APP"', 'ctx="AGUI_DATA"'),
     dataHtml + dataHtml, '<context-provider ctx="AGUI_FEEDBACK"></context-provider>',
     '<context-provider ctx="AGUI_SESSION"></context-provider>',
+    '<context-provider ctx="AGUI_TEXT"></context-provider>',
     `<template>${dataHtml}</template>`,
     '<div ctx="APP" persist="records"><script type="application/json">{"records":[]}</script></div>',
   ]) { assert.throws(() => analyzeMarkup(html)); }

@@ -28,6 +28,7 @@
 - Create brief descriptions in project docs, try not to be too verbose
 - Try to keep the whole project context compact for less token consumption and better focusing for AI-agents
 - Update the root README and shared instructions in place. Do not create per-stage documentation or planning delivery files.
+- Keep the root README abstract and focused on project purpose, benefits, and main user workflows. Do not include implementation details, API contracts, or inventories of evolving features such as uilib components. Describe their value briefly and link to dedicated docs or the skill for usage details.
 - Keep public project docs, distributed skills, and shared instructions focused on the reusable tool. Do not copy local task/session artifacts, user data, real external resource IDs, machine-specific paths, live session URLs, or local investigation results into them. Keep those details in local session artifacts; use fictional examples or explicit placeholders in public materials. Check this boundary when reviewing documentation changes.
 - Keep tests in `tests/node` and `tests/browser` folders
 - Keep project supportable for human-developer
@@ -37,5 +38,6 @@
 - Add dedicated automated tests AFTER and IF the implementation issue was found by yourself or reported by user. Do not write the test for every regular single task. Write tests for critical system parts or where it's really make sense only. Do not follow TDD by default.
 - If user ask a question - just answer. Do not implement anything, do not perform a deep investigation without a direct permission or request.
 - Follow KISS and DRY
+- Never hardcode user-facing text in uilib components, including labels, accessible names, hints, statuses, errors, and fallback messages. Supply text through host attributes or native Symbiote bindings. Keep application copy outside uilib and preserve caller-provided text bindings.
 
 Go to `./README.md` for the project description root

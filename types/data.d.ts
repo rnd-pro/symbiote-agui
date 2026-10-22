@@ -83,6 +83,7 @@ export interface DataTransferState {
 
 export interface DataTransferOptions {
   input: HTMLInputElement;
+  texts?: import('./uilib.js').UiTexts;
   targets(): DataTarget[];
   report(state: DataTransferState): void;
   exportTarget?: import('./metadata.js').DataEndpoint;

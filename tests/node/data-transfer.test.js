@@ -16,7 +16,7 @@ test('portable JSON round-trips declared values without worker identities or sha
   assert.equal(changes[0].values.count, 0);
   assert.equal(fileLabel('C:\\fakepath\\contacts.json'), 'contacts.json');
   assert.equal(fileLabel('../../\u0000draft?.json'), 'draft.json');
-  assert.equal(fileLabel('..'), 'agui-data.json');
+  assert.equal(fileLabel('..'), '');
 });
 
 test('JSON imports reject missing, extra, duplicate, reserved, unsafe, and oversized data before publication', () => {

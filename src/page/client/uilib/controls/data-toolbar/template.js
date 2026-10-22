@@ -1,11 +1,11 @@
 export let DATA_TOOLBAR_TEMPLATE = `
   <div ref="bar" class="agui-data-bar">
-    <agui-toolbar label="Data actions">
-      <button type="button" bind="onclick: ^save; disabled: ^saveDisabled; @title: ^saveHint">Save</button>
-      <button type="button" bind="onclick: ^cancel; disabled: ^cancelDisabled">Cancel changes</button>
-      <button type="button" bind="onclick: ^importJson; disabled: ^importDisabled">Import JSON</button>
-      <button type="button" bind="onclick: ^exportJson; disabled: ^exportDisabled">Export JSON</button>
-      <button type="button" bind="onclick: ^checkSave; hidden: !^uncertain; disabled: ^checkDisabled">Check save status</button>
+    <agui-toolbar bind="@aria-label: actionsLabel">
+      <button type="button" bind="textContent: ^saveLabel; onclick: ^save; disabled: ^saveDisabled; @title: ^saveHint"></button>
+      <button type="button" bind="textContent: ^cancelLabel; onclick: ^cancel; disabled: ^cancelDisabled"></button>
+      <button type="button" bind="textContent: ^importLabel; onclick: ^importJson; disabled: ^importDisabled"></button>
+      <button type="button" bind="textContent: ^exportLabel; onclick: ^exportJson; disabled: ^exportDisabled"></button>
+      <button type="button" bind="textContent: ^checkSaveLabel; onclick: ^checkSave; hidden: !^uncertain; disabled: ^checkDisabled"></button>
       <span class="agui-data-marker" bind="textContent: ^roleLabel"></span>
       <span class="agui-data-marker" bind="textContent: ^connectionLabel; @data-connected: ^socketConnected"></span>
     </agui-toolbar>
@@ -18,5 +18,5 @@ export let DATA_TOOLBAR_TEMPLATE = `
     </div>
     <p class="text-agui-danger text-sm" role="alert" bind="textContent: errorMessage; hidden: !errorMessage"></p>
   </div>
-  <input ref="file" type="file" hidden aria-label="Import JSON data">
+  <input ref="file" type="file" hidden bind="@aria-label: fileLabel">
 `;

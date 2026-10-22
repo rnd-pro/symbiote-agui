@@ -45,9 +45,9 @@ AGUI runs locally by default. The CLI is enough to use it; [MCP integrations](./
 
 With a verified [private feedback handler](./docs/reference.md#private-feedback-handlers), explicit Save or Submit actions can deliver consolidated changes to the originating conversation. The agent completes the corresponding authorized external operation and verifies the result before marking it saved. Routine edits stay local, and delivery acknowledgement is separate from external persistence. The [agent workflow](./skills/symbiote-agui/SKILL.md#agent-session-feedback) covers setup and behavior when native delivery is unavailable.
 
-## Reusable UI components
+## UI library
 
-AGUI includes dashboard layouts, panels, floating headers, toolbars, fields, selects, toggles, theme toggles, and content states in its default browser bundle. The floating data toolbar provides Save, Cancel changes, Import/Export JSON, separate save/delivery statuses, and user/viewer and connection indicators. Agents compose these as HTML with primitive attributes, standard Symbiote property/state bindings, and common Tailwind design tokens. A common context provider can hold shared application data; individual fields need no JSON setup. Standard controls handle their own interactions without session-specific initialization scripts. The [AGUI skill](./skills/symbiote-agui/SKILL.md#built-in-ui-foundation) contains the complete usage contract and examples.
+AGUI includes a reusable UI library that lets agents build dynamic applications declaratively with RAT, using only predefined custom HTML tags and attributes, without needing access to the JavaScript runtime. It speeds up UI generation and significantly reduces token consumption. See the [AGUI skill](./skills/symbiote-agui/SKILL.md#built-in-ui-foundation) for usage guidance.
 
 ## Manage sessions in your browser
 

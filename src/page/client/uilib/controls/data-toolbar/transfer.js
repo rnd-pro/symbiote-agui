@@ -23,6 +23,9 @@ export class JsonTransfer {
   /** @param {import('../../../../../../types/data.js').DataTransferState} state */
   report(state) { if (!this.disposed) { this.options.report(state); } return state; }
 
+  /** @param {string} key */
+  text(key) { return this.options.texts?.[`transfer.${key}`] ?? ''; }
+
   /**
    * @param {'import' | 'export'} operation
    * @param {unknown} error
@@ -32,13 +35,14 @@ export class JsonTransfer {
     let fallback = operation === 'import' ? 'READ_FAILED' : 'EXPORT_FAILED';
     let code = error instanceof Error && 'code' in error && Object.hasOwn(TRANSFER_FAILURES, String(error.code))
       ? /** @type {keyof typeof TRANSFER_FAILURES} */ (error.code) : fallback;
-    return this.report({ operation, state: 'error', message: TRANSFER_FAILURES[code], failure: { code, message: TRANSFER_FAILURES[code] } });
+    let message = this.text(code);
+    return this.report({ operation, state: 'error', message, failure: { code, message } });
   }
 
   pickImport() {
     if (this.disposed || this.reading) { return; }
     this.options.input.value = '';
-    this.report({ operation: 'import', state: 'picking', message: 'Choose a JSON file.' });
+    this.report({ operation: 'import', state: 'picking', message: this.text('picking') });
     try { this.options.input.click(); }
     catch (error) { this.failed('import', error); }
   }
@@ -46,7 +50,7 @@ export class JsonTransfer {
   changed = () => { void this.importFile(this.options.input.files?.[0] ?? null); };
   cancelled = () => {
     this.options.input.value = '';
-    this.report({ operation: 'import', state: 'cancelled', message: 'Import cancelled. The draft was not changed.' });
+    this.report({ operation: 'import', state: 'cancelled', message: this.text('cancelled') });
   };
 
   /** @param {File | null} file */
@@ -59,7 +63,7 @@ export class JsonTransfer {
     try {
       let targets = structuredClone(this.options.targets());
       let contexts = draftContexts(targets);
-      this.report({ operation: 'import', state: 'reading', fileName: name, targets, message: 'Reading JSON.' });
+      this.report({ operation: 'import', state: 'reading', fileName: name, targets, message: this.text('reading') });
       let text = await readJsonFile(file);
       if (this.disposed || generation !== this.generation) { return; }
       let document = parseTransfer(text, targets);
@@ -68,8 +72,8 @@ export class JsonTransfer {
       try { replaceDraft(document, targets); }
       catch { throw transferError('APPLY_FAILED'); }
       return this.report({ operation: 'import', state: 'imported', fileName: name, targets,
-        endpoint: { kind: DATA_ENDPOINT_KIND.JSON_FILE, reference: name, description: 'JSON file imported into the current draft.' },
-        message: 'JSON imported. Changes are not saved.' });
+        endpoint: { kind: DATA_ENDPOINT_KIND.JSON_FILE, reference: name, description: this.text('importDescription') },
+        message: this.text('imported') });
     } catch (error) { return this.failed('import', error); }
     finally {
       this.reading = false;
@@ -81,18 +85,19 @@ export class JsonTransfer {
     if (this.disposed) { return; }
     try {
       let targets = structuredClone(this.options.targets());
-      this.report({ operation: 'export', state: 'exporting', targets, message: 'Preparing JSON.' });
+      this.report({ operation: 'export', state: 'exporting', targets, message: this.text('exporting') });
       let text = serializeTransfer(captureDraft(targets), targets);
       let configured = this.options.exportTarget;
       if (configured && configured.kind !== DATA_ENDPOINT_KIND.JSON_FILE && configured.kind !== DATA_ENDPOINT_KIND.MANUAL) {
         throw transferError('INVALID_DESTINATION');
       }
-      let name = fileLabel(configured?.reference);
+      let name = fileLabel(configured?.reference) || fileLabel(this.text('fileName'));
+      if (!name) { throw transferError('INVALID_DESTINATION'); }
       name = downloadJson(text, name, this.options.input.ownerDocument);
       return this.report({ operation: 'export', state: 'download-started', fileName: name, targets,
         endpoint: { kind: DATA_ENDPOINT_KIND.JSON_FILE, reference: name,
-          description: configured?.description || 'JSON download of the current draft.' },
-        message: 'JSON download started.' });
+          description: configured?.description || this.text('exportDescription') },
+        message: this.text('download-started') });
     } catch (error) { return this.failed('export', error); }
   }
 

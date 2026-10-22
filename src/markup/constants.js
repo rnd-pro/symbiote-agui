@@ -2,7 +2,8 @@ import { DATA_CONTEXT } from '../data/constants.js';
 import { FEEDBACK_CONTEXT } from '../feedback/constants.js';
 import { SESSION_CONTEXT } from '../transport/constants.js';
 
-export let RESERVED_PROVIDER_NAMES = Object.freeze([DATA_CONTEXT, FEEDBACK_CONTEXT, SESSION_CONTEXT]);
+export let PAGE_TEXT_CONTEXT = 'AGUI_TEXT';
+export let RESERVED_PROVIDER_NAMES = Object.freeze([DATA_CONTEXT, FEEDBACK_CONTEXT, SESSION_CONTEXT, PAGE_TEXT_CONTEXT]);
 
 export let MAX_HTML_BYTES = 1024 * 1024;
 export let INSERT_TIMEOUT_MS = 20_000;

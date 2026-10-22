@@ -5,6 +5,7 @@ import { AguiComponent } from './component.js';
 import { ContextProvider } from './context-provider.js';
 import { connectSession } from './connection.js';
 import { registerUiLibComponents } from './uilib/index.js';
+import './page-text.js';
 
 Symbiote.mcpToolMode = true;
 AguiComponent.reg(COMPONENT_TAG);

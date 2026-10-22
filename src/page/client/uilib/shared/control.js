@@ -10,7 +10,7 @@ export class Control extends UiComponent {
   control;
   descriptionIds = '';
   init$ = {
-    value: undefined, label: undefined, hint: undefined, error: undefined,
+    value: undefined, label: undefined, hint: undefined, error: undefined, requiredMark: undefined, fieldRequiredMark: '',
     disabled: undefined, readonly: undefined, required: undefined,
     fieldLabel: '', fieldHint: '', fieldError: '', fieldDisabled: false, fieldReadonly: false, fieldRequired: false,
     set_value: new ToolDescriptor({
@@ -45,6 +45,9 @@ export class Control extends UiComponent {
     this.ref.error.id = `${control.id}-error`;
     watchAttribute(this, 'aria-describedby', (value) => { this.descriptionIds = value || ''; this.describe(); });
     this.watchControlState('label', () => this.getAttribute('label') || '', (value) => { this.$.fieldLabel = String(value); });
+    let refreshRequiredMark = () => { this.$.fieldRequiredMark = String(this.$.requiredMark ?? this.getAttribute('required-mark') ?? ''); };
+    this.sub('requiredMark', refreshRequiredMark);
+    watchAttribute(this, 'required-mark', refreshRequiredMark);
     this.watchControlState('hint', () => this.getAttribute('hint') || '', (value) => { this.$.fieldHint = String(value); this.describe(); });
     this.watchControlState('error', () => this.getAttribute('error') || '', (value) => { this.$.fieldError = String(value ?? ''); this.describe(); });
     this.watchControlState('disabled', () => this.hasAttribute('disabled'), (value) => { this.$.fieldDisabled = !!value; this.setAvailability(); });

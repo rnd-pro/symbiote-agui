@@ -1,6 +1,1 @@
-export let STATE_LABELS = Object.freeze({
-  ready: '',
-  loading: 'Loading...',
-  empty: 'No data.',
-  error: 'Could not load data.',
-});
+export let STATE_STATUSES = Object.freeze(['ready', 'loading', 'empty', 'error']);

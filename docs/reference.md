@@ -92,7 +92,7 @@ Metadata lives under the private, library-scoped state root in `.metadata/`, out
 
 ## Local data commits
 
-Declare persistent properties on a named provider with `persist="key otherKey"` and one direct inline JSON script. Each declared key must exist in that JSON. Use one declaration per provider, outside reusable templates; `AGUI_DATA`, `AGUI_FEEDBACK`, and `AGUI_SESSION` are reserved names. Metadata bindings describe intent; they do not enable persistence.
+Declare persistent properties on a named provider with `persist="key otherKey"` and one direct inline JSON script. Each declared key must exist in that JSON. Use one declaration per provider, outside reusable templates; `AGUI_DATA`, `AGUI_FEEDBACK`, `AGUI_SESSION`, and `AGUI_TEXT` are reserved names. Metadata bindings describe intent; they do not enable persistence.
 
 ```html
 <context-provider ctx="APP" persist="records">
@@ -121,7 +121,7 @@ Existing workers need a deliberate stop/start to load upgraded code; they are ne
 
 ### Floating data toolbar
 
-Add one `<agui-data-toolbar></agui-data-toolbar>` last in the dashboard. It targets all declared `persist` keys by default. Optional `provider="APP" keys="records"` selects a subset; `form="FORM_ID"` enables validation when the toolbar is outside the form. The default bundle supplies its actions without session scripts. The bar wraps at narrow widths, reserves its measured height, and includes safe-area padding. Review layout and native file pickers in your browser.
+Add one `<agui-data-toolbar bind="state: AGUI_TEXT/dataToolbar"></agui-data-toolbar>` last in the dashboard. It targets all declared `persist` keys by default. Optional `provider="APP" keys="records"` selects a subset; `form="FORM_ID"` enables validation when the toolbar is outside the form. The default bundle supplies its actions without session scripts. Text comes from the page-owned `AGUI_TEXT/dataToolbar` dictionary through the native `state` binding (`{ texts: { ... } }`); use an application-owned dictionary to customize labels, statuses, and errors. Components have no built-in text fallbacks. The bar wraps at narrow widths, reserves its measured height, and includes safe-area padding. Review layout and native file pickers in your browser.
 
 Save captures the draft and confirms local publication before submitting `agui.data.submitted` feedback containing the commit reference and actual provider bindings when they fit within 4 KiB. Larger selections send `targetCount`; inspect `read_submission_status` for bindings. The agent reads metadata for the intended flow and uses the scoped `read_saved_data` tool to inspect committed values. Local save, agent delivery, external verification, errors, and unsaved edits remain separate. Disabled feedback still permits local saving. A failed cache write sends no feedback and keeps edits. Check save status queries an uncertain receipt without resubmitting; it never automatically forwards a recovered save to the agent.
 

@@ -7,6 +7,7 @@ export interface UiOption {
 export type UiValue = string | boolean;
 export type UiControl = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 export type UiStatus = 'ready' | 'loading' | 'empty' | 'error';
+export type UiTexts = Readonly<Record<string, string>>;
 
 export interface UiControlState {
   value: UiValue;
@@ -16,6 +17,7 @@ export interface UiControlState {
   disabled?: boolean;
   readonly?: boolean;
   required?: boolean;
+  requiredMark?: string;
 }
 
 export interface UiSelectState extends UiControlState {

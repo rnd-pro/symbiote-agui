@@ -13,29 +13,31 @@ export function presentToolbar(toolbar) {
   let uncertain = local?.state === 'unknown';
   let importBusy = toolbar.transferState?.state === 'reading' || toolbar.transferState?.state === 'picking';
   let deliveryBusy = delivery?.state === 'queued';
-  let errors = [toolbar.issue, local?.failure?.message,
-    delivery?.failure?.message, external?.state === 'failed' || external?.state === 'unknown' ? external.message : '',
-    toolbar.transferState?.failure?.message].filter(Boolean);
-  if (data.stale && !viewer) { errors.push('Saved data changed. Export needed edits and reconcile before saving.'); }
+  let text = (/** @type {string} */ key) => toolbar.text(key);
+  let errors = [toolbar.issue ? text(`issue.${toolbar.issue}`) : '', local?.failure ? text(`local.${local.failure.code}`) : '',
+    delivery?.failure ? text(`feedback.${delivery.failure.code}`) : '', external?.state === 'failed' || external?.state === 'unknown' ? external.message : '',
+    toolbar.transferState?.failure ? text(`transfer.${toolbar.transferState.failure.code}`) : ''].filter(Boolean);
+  if (data.stale && !viewer) { errors.push(text('stale')); }
   toolbar.set$({
-    roleLabel: viewer ? 'Viewer' : 'User', socketConnected: String(connected),
-    connectionLabel: connected ? 'Connected' : 'Disconnected',
-    editMessage: viewer ? 'Read-only' : toolbar.$.dirty ? 'Unsaved changes' : 'No unsaved changes',
-    localMessage: saving ? 'Saving locally...' : local?.state === 'committed' ? 'Saved locally' : '',
-    deliveryMessage: delivery ? ({ queued: 'Delivering to agent...', accepted: 'Agent delivery confirmed',
-      rejected: 'Agent delivery unavailable', unknown: 'Agent delivery uncertain' })[delivery.state] : '',
-    externalMessage: external ? ({ verified: 'External write verified', failed: 'External write failed', unknown: 'External write uncertain' })[external.state]
-      : delivery?.state === 'accepted' ? 'External write pending verification' : '',
-    transferMessage: toolbar.transferState?.failure ? '' : toolbar.transferState?.message ?? '',
+    actionsLabel: text('actions'), saveLabel: text('save'), cancelLabel: text('cancel'),
+    importLabel: text('import'), exportLabel: text('export'), checkSaveLabel: text('checkSave'), fileLabel: text('importLabel'),
+    roleLabel: text(viewer ? 'viewer' : 'user'), socketConnected: String(connected),
+    connectionLabel: text(connected ? 'connected' : 'disconnected'),
+    editMessage: text(viewer ? 'readonly' : toolbar.$.dirty ? 'dirty' : 'clean'),
+    localMessage: saving ? text('saving') : local?.state === 'committed' ? text('saved') : '',
+    deliveryMessage: delivery ? text(`delivery.${delivery.state}`) : '',
+    externalMessage: external ? text(`external.${external.state}`) : delivery?.state === 'accepted' ? text('external.pending') : '',
+    transferMessage: toolbar.transferState && !toolbar.transferState.failure ? text(`transfer.${toolbar.transferState.state}`) : '',
     errorMessage: [...new Set(errors)].join(' '),
     saveDisabled: viewer || !toolbar.targets.length || !data.connected || data.stale || saving || uncertain || importBusy || deliveryBusy || !toolbar.$.dirty,
     cancelDisabled: viewer || saving || uncertain || importBusy || !toolbar.$.dirty,
     importDisabled: viewer || !toolbar.targets.length || saving || uncertain || importBusy,
     exportDisabled: viewer || !toolbar.targets.length,
     uncertain, checkDisabled: !data.connected || saving,
-    saveHint: data.current?.dataFlow?.description || 'Save declared data locally, then request agent delivery when available.',
+    saveHint: data.current?.dataFlow?.description || text('saveHint'),
   });
   if (toolbar.transfer) {
+    toolbar.transfer.options.texts = /** @type {import('../../../../../../types/uilib.js').UiTexts | undefined} */ (toolbar.$.texts);
     toolbar.transfer.options.exportTarget = data.current?.dataFlow?.targets.find((target) => ['json-file', 'manual'].includes(target.kind));
   }
 }

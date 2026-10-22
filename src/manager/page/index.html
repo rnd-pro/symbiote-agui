@@ -18,7 +18,7 @@
           <p class="connection mt-1 text-sm" role="status" bind="@data-tone: MANAGER/connectionTone">{{MANAGER/connection}}</p>
         </div>
         <agui-toolbar aria-label="Appearance">
-          <agui-theme-toggle id="manager-theme" ctx="MANAGER"></agui-theme-toggle>
+          <agui-theme-toggle id="manager-theme" ctx="MANAGER" aria-label="Dark theme" light-label="Switch to light theme" dark-label="Switch to dark theme"></agui-theme-toggle>
           <button id="system-theme" type="button" bind="onclick: MANAGER/useSystemTheme; disabled: MANAGER/systemTheme">Use system theme</button>
         </agui-toolbar>
       </agui-header>

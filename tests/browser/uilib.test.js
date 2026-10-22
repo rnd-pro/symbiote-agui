@@ -135,12 +135,17 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#query-control input', (element) => element.value), '');
   await insertStdin('widgets', [
     '<context-provider id="binding-data" ctx="binding-test"><script type="application/json">',
-    '{"nameLabel":"Dynamic name","dynamicValue":"Bound","fieldState":{"label":"From state","value":"State value","disabled":true}}',
+    '{"nameLabel":"Dynamic name","dynamicValue":"Bound","fieldState":{"label":"From state","value":"State value","disabled":true},"theme":"light","lightAction":"Use daylight","darkAction":"Use night mode","themeName":"Color preference","toolbarTexts":{"save":"Keep edits","connected":"Online","clean":"Up to date","transfer.READ_FAILED":"Cannot read this file"}}',
     '</script>',
     '<agui-field id="inner-field" label="Inner" value="Inner"></agui-field>',
     '<agui-field id="outer-field" label="Outer" value="Outer"></agui-field>',
     '<agui-field id="bound-field" ctx="binding-test" bind="$.label: *nameLabel; $.value: *dynamicValue"></agui-field>',
     '<agui-field id="state-field" bind="state: binding-test/fieldState"></agui-field>',
+    '<agui-theme-toggle id="bound-theme" ctx="binding-test" bind="$.lightLabel: binding-test/lightAction; $.darkLabel: binding-test/darkAction; @aria-label: binding-test/themeName"></agui-theme-toggle>',
+    '<agui-theme-toggle id="plain-theme" ctx="binding-test" bind="$.label: binding-test/nameLabel"></agui-theme-toggle>',
+    '<agui-state id="unlabeled-state" status="loading"></agui-state>',
+    '<agui-toolbar id="unlabeled-toolbar"></agui-toolbar>',
+    '<agui-data-toolbar id="custom-data" bind="$.texts: binding-test/toolbarTexts"></agui-data-toolbar>',
     '</context-provider>',
     '<input id="native-input" aria-label="Native input">',
   ].join('\n'));
@@ -155,12 +160,35 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#bound-field input', (element) => element.value), 'Bound');
   assert.equal(await page.$eval('#state-field input', (element) => element.value), 'State value');
   assert.equal(await page.$eval('#state-field input', (element) => element.disabled), true);
+  assert.equal(await page.$eval('#bound-theme label', (element) => element.innerText.trim()), 'Use night mode');
+  assert.equal(await page.$eval('#bound-theme input', (element) => element.getAttribute('aria-label')), 'Color preference');
+  assert.equal(await page.$eval('#plain-theme label', (element) => element.innerText.trim()), 'Dynamic name');
+  assert.equal(await page.$eval('#unlabeled-state', (element) => element.textContent?.trim()), '');
+  assert.equal(await page.$eval('#unlabeled-toolbar', (element) => element.getAttribute('aria-label')), null);
+  assert.equal(await page.$eval('#custom-data button', (element) => element.textContent), 'Keep edits');
+  assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Online/);
+  await page.$eval('#custom-data', (element) => Reflect.get(element, 'transfer').failed('import', new Error('Technical details must not become UI copy.')));
+  assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Cannot read this file/);
+  await page.$eval('#bound-theme', (element) => element.setAttribute('dark-label', 'Attribute fallback'));
+  assert.equal(await page.$eval('#bound-theme label', (element) => element.innerText.trim()), 'Use night mode');
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#binding-data', values: {
     nameLabel: 'Updated label', dynamicValue: 'Updated value', fieldState: { label: 'Updated state', value: 'Enabled', disabled: false },
+    darkAction: 'Dim the interface', toolbarTexts: { save: 'Store changes', connected: 'Available', 'transfer.READ_FAILED': 'Try another file' },
   } }));
   assert.equal(await page.$eval('#bound-field label span span', (element) => element.textContent), 'Updated label');
   assert.equal(await page.$eval('#bound-field input', (element) => element.value), 'Updated value');
   assert.equal(await page.$eval('#state-field input', (element) => element.value), 'Enabled');
   assert.equal(await page.$eval('#state-field input', (element) => element.disabled), false);
+  assert.equal(await page.$eval('#bound-theme label', (element) => element.innerText.trim()), 'Dim the interface');
+  assert.equal(await page.$eval('#custom-data button', (element) => element.textContent), 'Store changes');
+  assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Try another file/);
+  await page.click('#bound-theme input');
+  assert.equal(await page.$eval('#bound-theme label', (element) => element.innerText.trim()), 'Use daylight');
+  assert.equal(await page.$eval('#plain-theme label', (element) => element.innerText.trim()), 'Updated label');
+  await page.$eval('#bound-theme', (element) => {
+    Reflect.get(element, '$').lightLabel = undefined;
+    element.setAttribute('light-label', 'Restore daylight');
+  });
+  await page.waitForFunction(() => document.querySelector('#bound-theme label')?.textContent?.trim() === 'Restore daylight');
   assert.deepEqual(errors, []);
 });

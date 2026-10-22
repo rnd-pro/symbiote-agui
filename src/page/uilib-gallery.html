@@ -27,7 +27,7 @@
   </script>
   <agui-header floating>
     <h1>UI library</h1>
-    <agui-theme-toggle id="theme-toggle" ctx="APP"></agui-theme-toggle>
+    <agui-theme-toggle id="theme-toggle" ctx="APP" aria-label="Dark theme" light-label="Switch to light theme" dark-label="Switch to dark theme"></agui-theme-toggle>
   </agui-header>
   <agui-dashboard layout="split" bind="@density: APP/density">
     <agui-toolbar aria-label="Contact filters">
@@ -36,7 +36,7 @@
     </agui-toolbar>
     <agui-panel slot="main" class="grid gap-5">
       <h2>Native controls</h2>
-      <agui-field id="name-control" bind="$.label: APP/nameLabel" value="Alex" hint="Required field" required name="name" autocomplete="name"></agui-field>
+      <agui-field id="name-control" bind="$.label: APP/nameLabel" value="Alex" hint="Required field" required required-mark="*" name="name" autocomplete="name"></agui-field>
       <agui-field label="Email" hint="Format: name@example.com" type="email" name="email" autocomplete="email"></agui-field>
       <agui-field label="Follow-up date" value="2026-10-21" type="date" name="follow_up"></agui-field>
       <agui-field label="Connected on LinkedIn" type="checkbox" checked name="connected"></agui-field>
@@ -91,6 +91,6 @@
         </dl>
       </agui-component>
     </agui-panel>
-    <agui-data-toolbar id="gallery-data-actions"></agui-data-toolbar>
+    <agui-data-toolbar id="gallery-data-actions" bind="state: AGUI_TEXT/dataToolbar"></agui-data-toolbar>
   </agui-dashboard>
 </context-provider>

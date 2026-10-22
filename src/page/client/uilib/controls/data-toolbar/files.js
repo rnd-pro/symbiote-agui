@@ -4,7 +4,7 @@ import { DOWNLOAD_RELEASE_MS, transferError } from './constants.js';
 /** @param {string} [value] */
 export function fileLabel(value = '') {
   let label = value.split(/[\\/]/).pop()?.replace(/[\u0000-\u001f\u007f<>:"|?*]/g, '').replace(/^[.\s]+|[.\s]+$/g, '').slice(0, 120) || '';
-  return label || 'agui-data.json';
+  return label;
 }
 
 /** @param {File} file */

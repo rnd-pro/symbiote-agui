@@ -1,4 +1,4 @@
-<context-provider id="gallery-data" ctx="APP">
+<context-provider id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications">
   <script type="application/json">
     {
       "nameLabel": "Name",
@@ -10,7 +10,19 @@
       "sharedStatus": "new",
       "notifications": true,
       "statusOptions": [{"value":"new","label":"New"},{"value":"contacted","label":"Contacted"},{"value":"archived","label":"Archived","disabled":true}],
-      "componentState": {"status":"error","message":"The data source is unavailable.","retryLabel":"Retry"}
+      "componentState": {"status":"error","message":"The data source is unavailable.","retryLabel":"Retry"},
+      "submissionExamples": [
+        {"label":"Populated","message":"A sample profile is ready to edit."},
+        {"label":"Imported","message":"JSON imported. Changes are not saved."},
+        {"label":"Dirty","message":"Unsaved changes."},
+        {"label":"Saving","message":"Saving locally. New edits remain separate."},
+        {"label":"Saved locally","message":"The cache write is confirmed. External storage is not confirmed."},
+        {"label":"Agent pending","message":"Waiting for conversation delivery."},
+        {"label":"Externally verified","message":"The agent verified the submitted external operation."},
+        {"label":"Feedback unavailable","message":"Saved locally. Use JSON export for manual transfer."},
+        {"label":"Conflict","message":"Saved data changed. Export needed edits and reconcile."},
+        {"label":"Failure","message":"The cache write failed. The draft is still available."}
+      ]
     }
   </script>
   <agui-header floating>
@@ -60,5 +72,25 @@
       <agui-state id="retry-state" bind="state: APP/componentState"></agui-state>
       <p class="text-sm text-agui-muted">Retry sends an action to the agent. This gallery does not contact an external service.</p>
     </agui-panel>
+    <agui-panel slot="full" class="grid gap-4">
+      <h2>Data workflow</h2>
+      <p class="text-sm text-agui-muted">Edit Shared name, Shared status, or Notifications, then use the floating bar. Save persists those values locally. Import replaces the draft; Cancel restores the saved values. Export includes unsaved edits.</p>
+      <details>
+        <summary class="min-h-10 min-w-10 cursor-pointer py-2">JSON import format</summary>
+        <pre class="mt-3 overflow-auto rounded-md bg-agui-bg p-3 text-sm"><code>{"version":1,"changes":[{"provider":"APP","values":{"sharedName":"Morgan","sharedStatus":"new","notifications":true}}]}</code></pre>
+      </details>
+      <p class="text-sm text-agui-muted">The examples below illustrate status meanings. The floating bar reports actual operations; this gallery does not simulate agent delivery or external writes.</p>
+      <agui-component>
+        <dl id="submission-examples" class="grid gap-3 sm:grid-cols-2" itemize="APP/submissionExamples" item-tag="agui-submission-example">
+          <template>
+            <div class="grid gap-1 rounded-md border border-agui-border p-3">
+              <dt class="font-medium">{{label}}</dt>
+              <dd class="text-sm text-agui-muted">{{message}}</dd>
+            </div>
+          </template>
+        </dl>
+      </agui-component>
+    </agui-panel>
+    <agui-data-toolbar id="gallery-data-actions"></agui-data-toolbar>
   </agui-dashboard>
 </context-provider>

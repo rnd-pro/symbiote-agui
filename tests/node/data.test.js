@@ -12,6 +12,7 @@ import { validateDataCommit } from '../../src/data/validate.js';
 import { DATA_LIMITS } from '../../src/data/constants.js';
 import { temporaryState } from './state-fixture.js';
 import { dataHtml, dataCommit } from './data-fixture.js';
+import { setSessionMetadata, clearSessionMetadata, getSessionMetadata } from '../../src/metadata/service.js';
 
 /** @param {import('node:test').TestContext} t */
 async function setup(t) {
@@ -94,6 +95,17 @@ test('commits escape JSON safely, preserve modules/templates/unrelated state, an
   assert.equal(runtime.data.submit({ ...input, changes: [{ provider: 'APP', values: { records: [] } }] }).failure?.code, 'INVALID_DATA');
   let { commitId, instanceId, markupRevision } = input;
   assert.deepEqual(runtime.data.read({ commitId, instanceId, markupRevision }), result);
+  await setSessionMetadata('data-fixture', { dataFlow: {
+    description: 'Edit fictional records.',
+    initialSource: { kind: 'inline-json', description: 'Original example data.' },
+    bindings: [{ provider: 'APP', keys: ['records'] }],
+    targets: [{ kind: 'agui-cache', description: 'Private committed snapshot.' }],
+  } });
+  await setSessionMetadata('data-fixture', {});
+  assert.ok((await getSessionMetadata('data-fixture')).metadata.dataFlow);
+  await clearSessionMetadata('data-fixture', 'dataFlow');
+  assert.deepEqual((await getSessionMetadata('data-fixture')).metadata, {});
+  assert.deepEqual(await readRuntimeCache('data-fixture'), saved, 'Metadata edits cannot alter committed application data.');
 });
 
 test('stale data, markup, worker instances, and undeclared fields cannot overwrite saved values', async (t) => {

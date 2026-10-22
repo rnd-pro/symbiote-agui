@@ -31,6 +31,9 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
   await page.goto(session.url);
   await page.waitForSelector('#name-control input');
+  await page.waitForFunction(() => document.querySelector('#submission-examples dt')?.textContent === 'Populated');
+  assert.match(await page.$eval('#submission-examples', (element) => element.textContent || ''), /The cache write failed/);
+  assert.equal(await page.$eval('#gallery-data-actions', (element) => Reflect.get(element, '$').roleLabel), 'User');
   assert.equal(await page.$eval('#name-control input', (element) => element.value), 'Alex');
   assert.equal(await page.$eval('#name-control label', (element) => element.control?.getAttribute('name')), 'name');
   assert.equal(await page.$eval('#name-control input', (element) => element.autocomplete), 'name');

@@ -131,6 +131,8 @@ The bar displays the current page's User/Viewer role and Connected/Disconnected 
 
 Discover the toolbar's scoped `read_submission_status`, `read_saved_data`, and `acknowledge_submission` tools normally. Saved reads require `commitId`, `instanceId`, `markupRevision`, `revision`, `provider`, and `key`; optional `path`, `offset`, and `limit` select nested data and bound results to 8 KiB. Expired receipts or superseded revisions fail explicitly. Acknowledgements require the exact four reference fields and `state` (`verified`, `failed`, or `unknown`), with an optional message up to 512 characters. Verify the entire submitted operation before reporting `verified`; the toolbar does not infer record-level database success. Native `bind="$.externalResult: APP/result"` accepts the same acknowledgement object. Older acknowledgements cannot mark newer submissions verified, and successful acknowledgements never clear newer unsaved edits.
 
+The packaged `src/page/uilib-gallery.html` demonstrates this workflow with fictional profile data. Shared name, Shared status, and Notifications are persistent; its other controls are transient. The gallery includes a copyable import document and illustrative status examples, while the actual floating toolbar reports only real operations. Save and reopen the session to review restoration, then export its JSON for a manual backup.
+
 ## Private feedback handlers
 
 The CLI can register a private command for the current worker. Explicit browser submissions can invoke that command; ordinary events are never forwarded automatically. Verify native delivery to the same originating conversation, including idle and busy behavior, before configuring it. Delivery acknowledgement does not confirm an external write.

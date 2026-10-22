@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { randomUUID } from 'node:crypto';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
@@ -12,11 +12,15 @@ import { temporaryState } from '../node/state-fixture.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
+function createRuntime() {
+  return new SessionRuntime({ sessionId: 'toolbar-test', instanceId: randomUUID(), controlToken: '', pid: process.pid, launcherPid: process.pid });
+}
+
 test('declarative data toolbar saves, cancels, imports offline, delivers one bounded reference, and keeps viewer status local', {
   skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.', timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
-  let runtime = new SessionRuntime({ sessionId: 'toolbar-test', instanceId: randomUUID(), controlToken: '', pid: process.pid, launcherPid: process.pid });
+  let runtime = createRuntime();
   /** @type {import('puppeteer-core').Browser | undefined} */
   let browser;
   let release = () => {};
@@ -26,6 +30,10 @@ test('declarative data toolbar saves, cancels, imports offline, delivers one bou
   await runtime.start(new AbortController().signal);
   browser = await puppeteer.launch({ executablePath, headless: true, timeout: 10_000, protocolTimeout: 10_000 });
   let page = await browser.newPage();
+  let cdp = await browser.target().createCDPSession();
+  let downloads = join(state.directory, 'downloads');
+  await mkdir(downloads);
+  await cdp.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: downloads, eventsEnabled: true });
   /** @type {string[]} */
   let errors = [];
   page.on('pageerror', (error) => errors.push(String(error)));
@@ -71,10 +79,17 @@ test('declarative data toolbar saves, cancels, imports offline, delivers one bou
   await page.click('#data button');
   await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, 'submission')?.result === undefined);
   await page.type('#name input', ' newer draft');
+  await page.evaluate(() => {
+    Reflect.set(window, 'originalCreateObjectURL', URL.createObjectURL);
+    URL.createObjectURL = () => { throw new Error('Controlled download failure.'); };
+  });
+  await page.click('#data button:nth-child(4)');
+  await page.evaluate(() => { URL.createObjectURL = Reflect.get(window, 'originalCreateObjectURL'); });
   release();
   await gate;
   await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, 'submission')?.delivery?.state === 'accepted');
   assert.equal(await page.$eval('#data', (element) => Reflect.get(element, '$').dirty), true);
+  assert.match(await page.$eval('#data', (element) => String(Reflect.get(element, '$').errorMessage)), /Could not start the JSON download/);
   let envelope = JSON.parse((await readFile(log, 'utf8')).trim());
   assert.equal(envelope.event.type, 'agui.data.submitted');
   assert.deepEqual(Object.keys(envelope.event.data).sort(), ['commit', 'targets']);
@@ -128,5 +143,37 @@ test('declarative data toolbar saves, cancels, imports offline, delivers one bou
   }), 0);
   await viewer.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pagehide')));
   assert.match(await viewer.$eval('agui-data-toolbar', (element) => element.textContent || ''), /Disconnected/);
+
+  await runtime.close();
+  runtime = createRuntime();
+  await runtime.start(new AbortController().signal);
+  assert.ok(runtime.record.url);
+  await page.bringToFront();
+  await page.goto(runtime.record.url);
+  await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, '$')?.connectionLabel === 'Connected');
+  assert.equal(await page.$eval('#name input', (element) => Reflect.get(element, 'value')), 'First Second');
+  input = await page.$('input[type=file]');
+  assert.ok(input);
+  await input.uploadFile(file);
+  await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, 'transferState')?.state === 'imported');
+  await page.type('#name input', ' changed');
+  await page.click('#data button');
+  await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, 'submission')?.result?.state === 'committed');
+  await runtime.close();
+  runtime = createRuntime();
+  await runtime.start(new AbortController().signal);
+  assert.ok(runtime.record.url);
+  await page.goto(runtime.record.url);
+  await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, '$')?.connectionLabel === 'Connected');
+  assert.equal(await page.$eval('#name input', (element) => Reflect.get(element, 'value')), 'Imported changed');
+  let restoredDownloads = join(state.directory, 'restored-downloads');
+  await mkdir(restoredDownloads);
+  await cdp.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: restoredDownloads, eventsEnabled: true });
+  let downloaded = new Promise((resolve) => cdp.on('Browser.downloadProgress', (event) => { if (event.state === 'completed') { resolve(event.guid); } }));
+  await page.click('#data button:nth-child(4)');
+  await downloaded;
+  assert.deepEqual(JSON.parse(await readFile(join(restoredDownloads, 'agui-data.json'), 'utf8')), {
+    version: 1, changes: [{ provider: 'APP', values: { name: 'Imported changed', email: '' } }],
+  });
   assert.deepEqual(errors, []);
 });

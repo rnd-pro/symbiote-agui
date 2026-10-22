@@ -43,6 +43,8 @@ AGUI exposes UI actions as WebMCP tools and invokes them through Symbiote.js's p
 
 AGUI runs locally by default. The CLI is enough to use it; [MCP integrations](./docs/reference.md#optional-agui-mcp) are available for agent environments that support them.
 
+The CLI also supports [private feedback handler registration](./docs/reference.md#private-feedback-handlers). Browser submission wiring is not connected yet; registration alone does not send UI actions to an agent.
+
 ## Reusable UI components
 
 AGUI includes dashboard layouts, panels, floating headers, toolbars, fields, selects, toggles, theme toggles, and content states in its default browser bundle. Agents compose these as HTML with primitive attributes, standard Symbiote property/state bindings, and common Tailwind design tokens. A common context provider can hold shared application data; individual fields need no JSON setup. Standard controls handle their own interactions without session-specific initialization scripts. The [AGUI skill](./skills/symbiote-agui/SKILL.md#built-in-ui-foundation) contains the complete usage contract and examples.

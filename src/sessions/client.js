@@ -4,7 +4,7 @@ import { CONTROL_TIMEOUT_MS, SESSION_STATE } from './constants.js';
 
 /**
  * @param {import('../../types/session.js').SessionRecord} record
- * @param {'status' | 'stop' | 'insert' | 'update' | 'events' | 'tools' | 'clear' | 'share' | 'tunnel-renew' | 'sync'} action
+ * @param {'status' | 'stop' | 'insert' | 'update' | 'events' | 'tools' | 'clear' | 'share' | 'tunnel-renew' | 'sync' | 'feedback' | 'feedback/configure' | 'feedback/disable'} action
  * @param {number} timeout
  * @param {string} [html]
  * @returns {Promise<import('../../types/session.js').SessionStatus>}
@@ -16,16 +16,19 @@ export async function requestSession(record, action, timeout = CONTROL_TIMEOUT_M
     }
 
     let response = await fetch(`${record.controlUrl}/${action}`, {
-      method: ['status', 'events'].includes(action) ? 'GET' : 'POST',
+      method: ['status', 'events', 'feedback'].includes(action) ? 'GET' : 'POST',
       headers: {
         authorization: `Bearer ${record.controlToken}`,
         ...(action === 'insert' ? { 'content-type': 'text/html; charset=utf-8' } : {}),
-        ...(['update', 'tools'].includes(action) ? { 'content-type': 'application/json' } : {}),
+        ...(['update', 'tools'].includes(action) || action.startsWith('feedback/') ? { 'content-type': 'application/json' } : {}),
       },
       body: html,
       signal: AbortSignal.timeout(timeout),
       redirect: 'error',
     });
+    if (action.startsWith('feedback') && response.status === 404) {
+      throw new CommandError('Feedback is unavailable in this worker.', ERROR_CODE.NOT_IMPLEMENTED, EXIT_CODE.RUNTIME_ERROR);
+    }
     if (action === 'tunnel-renew' && response.status === 404) {
       throw new CommandError('Tunnel renewal is unavailable in this worker. Stop and restart the session.', ERROR_CODE.TUNNEL_FAILED, EXIT_CODE.RUNTIME_ERROR);
     }

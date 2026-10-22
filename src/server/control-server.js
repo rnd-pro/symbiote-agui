@@ -5,6 +5,7 @@ import { SESSION_STATE } from '../sessions/constants.js';
 import { readUtf8Markup } from '../markup/read-input.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
+import { FEEDBACK_CONTROL_ROUTES, handleFeedbackControl } from './feedback-control.js';
 
 /**
  * @param {import('../../types/session.js').SessionRecord} record
@@ -24,7 +25,7 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
 
     let action = `${request.method} ${request.url}`;
 
-    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update', 'POST /tools', 'POST /clear', 'POST /share', 'POST /tunnel-renew', 'POST /sync'].includes(action)) {
+    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update', 'POST /tools', 'POST /clear', 'POST /share', 'POST /tunnel-renew', 'POST /sync', ...FEEDBACK_CONTROL_ROUTES].includes(action)) {
       response.writeHead(404).end();
       return;
     }
@@ -35,6 +36,9 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
 
     try {
       let result = getStatus();
+      if (FEEDBACK_CONTROL_ROUTES.includes(action)) {
+        result = await handleFeedbackControl(action, request, actions);
+      }
       if (action === 'GET /events') {
         result = actions.events ? actions.events() : { ...result, events: [], dropped: 0 };
       }

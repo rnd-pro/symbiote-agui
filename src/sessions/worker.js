@@ -70,6 +70,9 @@ process.once('message', async (message) => {
       sync: () => runtime.sync(),
       share: () => runtime.share(),
       tunnelRenew: () => runtime.share(true),
+      feedbackConfigure: (input) => runtime.configureFeedback(input),
+      feedbackStatus: () => runtime.feedbackStatus(),
+      feedbackDisable: (input) => runtime.disableFeedback(input),
     });
     control = endpoint.server;
     record.controlUrl = endpoint.url;

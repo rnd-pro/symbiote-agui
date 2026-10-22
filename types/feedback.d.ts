@@ -1,4 +1,5 @@
 import type { SessionRecord } from './session.js';
+import type { DELIVERY_STATE, FEEDBACK_STATE, FEEDBACK_FAILURES } from '../src/feedback/constants.js';
 
 export type FeedbackJson = null | boolean | number | string | FeedbackJson[]
   | { [key: string]: FeedbackJson };
@@ -46,8 +47,7 @@ export interface FeedbackRegistration extends FeedbackSessionIdentity {
 }
 
 export interface FeedbackFailure {
-  code: 'DISABLED' | 'UNAVAILABLE' | 'INVALID_SUBMISSION' | 'STALE_INSTANCE'
-    | 'QUEUE_FULL' | 'COMMAND_FAILED' | 'DELIVERY_UNKNOWN';
+  code: keyof typeof FEEDBACK_FAILURES;
   /** AGUI-owned explanation, never raw command output. */
   message: string;
 }
@@ -57,8 +57,15 @@ export type FeedbackHandlerResult =
   | { state: 'accepted'; receiptId?: string }
   | { state: 'unavailable' | 'rejected' | 'unknown' };
 
+export type FeedbackExecution = FeedbackHandlerResult & { failure?: FeedbackFailure };
+
+export interface FeedbackReceipt {
+  fingerprint: string;
+  delivery: FeedbackDelivery;
+}
+
 export interface FeedbackDelivery extends FeedbackReference {
-  state: 'queued' | Exclude<FeedbackHandlerResult['state'], 'unavailable'>;
+  state: typeof DELIVERY_STATE[keyof typeof DELIVERY_STATE];
   receiptId?: string;
   failure?: FeedbackFailure;
 }
@@ -72,7 +79,7 @@ export interface FeedbackPersistence extends FeedbackReference {
 /** Safe for CLI status and page transport. Contains no handler or routing data. */
 export interface FeedbackStatus {
   instanceId: string;
-  state: 'disabled' | 'ready' | 'unavailable';
+  state: typeof FEEDBACK_STATE[keyof typeof FEEDBACK_STATE];
   pending: number;
   lastDelivery?: FeedbackDelivery;
   failure?: FeedbackFailure;

@@ -17,6 +17,7 @@ import { withTimeout } from '../shared/timeout.js';
 import { readCachedMarkup, prepareCachedMarkup, clearCachedMarkup } from './cache.js';
 import { SessionTunnel } from '../tunnel/session-tunnel.js';
 import { recordDirectory } from './store.js';
+import { SessionFeedback } from '../feedback/session-feedback.js';
 
 export class SessionRuntime {
   /** @type {import('node:http').Server | undefined} */
@@ -39,10 +40,12 @@ export class SessionRuntime {
   revision = 0;
   closing = false;
   restored = false;
+  clearing = 0;
 
   /** @param {import('../../types/session.js').SessionRecord} record */
   constructor(record) {
     this.record = record;
+    this.feedback = new SessionFeedback(record);
   }
 
   /** @param {AbortSignal} signal */
@@ -81,6 +84,7 @@ export class SessionRuntime {
       state: this.closing ? SESSION_STATE.STOPPED : clients ? SESSION_STATE.READY : SESSION_STATE.WAITING,
       url: this.record.url,
       clients,
+      feedback: this.feedback.status(),
       ...(this.tunnel ? { tunnel: { ...this.tunnel.status } } : {}),
       ...(this.tunnel?.origin ? {
         publicUrl: `${this.tunnel.origin}${this.access?.path}`,
@@ -106,8 +110,30 @@ export class SessionRuntime {
     return this.replaceMarkup(html, true);
   }
 
-  clear() {
-    return this.replaceMarkup('', false);
+  async clear() {
+    this.clearing += 1;
+    try {
+      await this.feedback.disable(this.feedback.identity);
+      return await this.replaceMarkup('', false);
+    } finally { this.clearing -= 1; }
+  }
+
+  /** @returns {import('../../types/session.js').SessionFeedbackStatus} */
+  feedbackStatus() {
+    return { ...this.status(), feedback: this.feedback.status() };
+  }
+
+  /** @param {unknown} input */
+  async configureFeedback(input) {
+    if (this.closing || this.clearing) { throw new CommandError('Feedback cannot be configured during clear or shutdown.'); }
+    await this.feedback.configure(input);
+    return this.feedbackStatus();
+  }
+
+  /** @param {unknown} input */
+  async disableFeedback(input) {
+    await this.feedback.disable(input);
+    return this.feedbackStatus();
   }
 
   sync() {
@@ -182,7 +208,10 @@ export class SessionRuntime {
 
   async close() {
     this.closing = true;
-    try { await this.pages?.close(); }
+    try {
+      await this.feedback.close();
+      await this.pages?.close();
+    }
     finally {
       await this.tunnel?.close();
       await this.tunnelOperations;

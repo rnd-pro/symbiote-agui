@@ -52,6 +52,40 @@ npx symbiote-agui clear my-workspace
 
 Run `npx symbiote-agui --help` for the command list. Session commands return JSON, except help and version. Exit codes are 0 for success, 1 for runtime failure, and 2 for invalid input.
 
+## Private feedback handlers
+
+The CLI can register a private command for the current worker. Browser submission wiring is not connected yet; configuring a handler does not forward ordinary events or trigger database writes. Verify native delivery to the same originating conversation, including idle and busy behavior, before configuring it.
+
+```sh
+npx symbiote-agui feedback status my-workspace
+npx symbiote-agui feedback configure my-workspace --file /private/path/feedback.json
+npx symbiote-agui feedback disable my-workspace
+```
+
+All three commands require a running session. `configure` accepts JSON from `--file` or stdin:
+
+```json
+{
+  "sessionId": "my-workspace",
+  "instanceId": "CURRENT_INSTANCE_ID_FROM_FEEDBACK_STATUS",
+  "conversationId": "ORIGINATING_CONVERSATION_ID",
+  "command": {
+    "executable": "/absolute/path/to/node",
+    "args": ["/private/path/to/session-feedback.mjs"],
+    "cwd": "/absolute/path/to/workspace",
+    "input": { "channel": "stdin" }
+  }
+}
+```
+
+The executable and optional working directory must exist and use absolute paths. The worker spawns the command with `shell: false`, passing a JSON envelope through stdin with a newline and EOF. For a native command accepting an argument, use `input: { "channel": "argument", "index": 0 }`; `index` inserts the envelope as one argument into the fixed `args` array, from zero through its length. The envelope contains the event, submission ID, application revision when supplied, session instance, session ID, and registered conversation ID. The process receives a limited environment for paths, home/config directories, locale, and temporary files; arbitrary worker variables such as `NODE_OPTIONS` are not inherited.
+
+The handler must report native acknowledgement with one JSON object on stdout: `{ "state": "accepted", "receiptId": "optional-native-id" }`, `{ "state": "unavailable" }`, `{ "state": "rejected" }`, or `{ "state": "unknown" }`. Receipt IDs allow 1-256 letters, digits, underscores, dots, colons, or hyphens. Exit zero alone does not confirm delivery. Raw output and command configuration are excluded from public status. Credentials belong in existing authorized local access, never event payloads or command arguments.
+
+Execution is ordered on a separate queue. Limits are 16 KiB per configuration/submission message, 16 pending submissions, 100 retained receipts, 10 seconds per command, and 8 KiB of combined stdout/stderr. A full queue rejects new work explicitly. Identical submission IDs reuse retained receipts; conflicting payloads are rejected. Timeout, malformed acknowledgement, or a failure after dispatch reports an unknown outcome and never retries automatically. External persistence needs a separate verified acknowledgement from the agent.
+
+Registration stays in memory and is disabled by clear, stop, explicit disable, or a handler reporting the conversation unavailable. Disabling rejects queued work and terminates active commands; publication already accepted by a native harness cannot be undone. POSIX cleanup targets the spawned process group; Windows cleanup targets the direct child. The originating conversation binding lasts for the worker instance, so changing conversations requires a new instance. Restarted workers have feedback disabled. Older workers report unsupported feedback and are not restarted automatically.
+
 ## Saved interfaces and reconnection
 
 The default browser bundle includes the foundation UI components, registered before saved or inserted content mounts. Use the [AGUI skill](../skills/symbiote-agui/SKILL.md#built-in-ui-foundation) for their declarative context contracts, common Tailwind tokens, and HTML-only composition examples. Component state has the same persistence boundaries as other generated interfaces.

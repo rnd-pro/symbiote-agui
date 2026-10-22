@@ -67,11 +67,18 @@ export let ALL_COMMANDS = Object.freeze({
   'clear-all': { usage: 'clear-all', options: [] },
 });
 
+export let FEEDBACK_COMMANDS = Object.freeze({
+  configure: { usage: 'feedback configure <SESSION_ID> [--file <PATH>]', options: ['file'] },
+  status: { usage: 'feedback status <SESSION_ID>', options: [] },
+  disable: { usage: 'feedback disable <SESSION_ID>', options: [] },
+});
+
 export let HELP = [
   'Usage: symbiote-agui <command>',
   '',
   ...Object.values(COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(ALL_COMMANDS).map(({ usage }) => `  ${usage}`),
+  ...Object.values(FEEDBACK_COMMANDS).map(({ usage }) => `  ${usage}`),
   '  manager [--no-open]          Open the built-in local session manager',
   '  manager status              Show the manager URL and storage scope',
   '  manager stop                Stop the manager without stopping sessions',
@@ -92,6 +99,8 @@ export let HELP = [
   'insert replaces the session content; input is limited to 1 MiB.',
   'update reads JSON { selector, values, method?, rewrite? } from file or stdin.',
   'events returns and clears buffered interface events.',
+  'feedback configure reads private JSON from file or stdin; registration lasts only for the current worker.',
+  'feedback status and disable require a running session; page submission support is not enabled yet.',
   'start all restores saved sessions, reuses running workers, and opens their pages unless --no-open.',
   'status all lists running and saved sessions with active flags and current links for running sessions.',
   'pages lists connected tabs; tools discovers one tab (use --page with several tabs).',

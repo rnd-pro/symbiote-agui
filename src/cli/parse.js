@@ -3,6 +3,7 @@ import { assertSessionId } from '../sessions/identity.js';
 import { CommandError } from '../shared/command-error.js';
 import { COMMANDS, ALL_COMMANDS } from './commands.js';
 import { parseLibraryCommand } from './library.js';
+import { parseFeedbackCommand } from './feedback.js';
 
 /**
  * @param {string[]} args
@@ -49,6 +50,8 @@ export function parseCommand(args) {
   }
   let library = parseLibraryCommand(positionals, values);
   if (library) { return library; }
+  let feedback = parseFeedbackCommand(positionals, values);
+  if (feedback) { return feedback; }
 
   let commandLength = positionals[0] === 'tunnel' ? 2 : 1;
   let name = positionals.slice(0, commandLength).join(' ');

@@ -6,9 +6,10 @@ import { MAX_HTML_BYTES } from './constants.js';
 
 /**
  * @param {import('node:stream').Readable} stream
+ * @param {number} [maxBytes]
  * @returns {Promise<string>}
  */
-export async function readUtf8Markup(stream) {
+export async function readUtf8Markup(stream, maxBytes = MAX_HTML_BYTES) {
   /** @type {Buffer[]} */
   let chunks = [];
   let length = 0;
@@ -17,8 +18,8 @@ export async function readUtf8Markup(stream) {
     let bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
     length += bytes.length;
 
-    if (length > MAX_HTML_BYTES) {
-      throw new CommandError(`Input exceeds ${MAX_HTML_BYTES} bytes.`, ERROR_CODE.INPUT_TOO_LARGE, EXIT_CODE.INVALID_INPUT);
+    if (length > maxBytes) {
+      throw new CommandError(`Input exceeds ${maxBytes} bytes.`, ERROR_CODE.INPUT_TOO_LARGE, EXIT_CODE.INVALID_INPUT);
     }
     chunks.push(bytes);
   }
@@ -33,8 +34,9 @@ export async function readUtf8Markup(stream) {
 /**
  * @param {string | undefined} file
  * @param {import('../../types/markup.js').MarkupInput} stdin
+ * @param {number} [maxBytes]
  */
-export async function readMarkup(file, stdin = process.stdin) {
+export async function readMarkup(file, stdin = process.stdin, maxBytes = MAX_HTML_BYTES) {
   if (file === undefined && stdin.isTTY) {
     throw new CommandError('Provide input with --file <PATH> or pipe UTF-8 input to stdin.');
   }
@@ -42,7 +44,7 @@ export async function readMarkup(file, stdin = process.stdin) {
   let stream = file === undefined ? stdin : createReadStream(file);
 
   try {
-    return await readUtf8Markup(stream);
+    return await readUtf8Markup(stream, maxBytes);
   } catch (error) {
     if (error instanceof CommandError) {
       throw error;

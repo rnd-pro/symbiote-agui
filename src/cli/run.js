@@ -16,6 +16,7 @@ import { errorMessage } from '../shared/system-error.js';
 import { checkSessionTunnel, renewSessionTunnel } from '../sessions/tunnel.js';
 import { describeDefinition, saveDefinition, syncDefinition } from '../library/catalog.js';
 import { runLibraryCommand } from './library.js';
+import { runFeedbackCommand } from './feedback.js';
 
 /** @param {import('../../types/cli.js').CommandResult} result */
 function printResult(result) {
@@ -29,6 +30,10 @@ function printResult(result) {
 export async function run(args) {
   try {
     let request = parseCommand(args);
+    if (request.kind === 'feedback') {
+      printResult({ ok: true, ...await runFeedbackCommand(request) });
+      return EXIT_CODE.SUCCESS;
+    }
     if (request.kind === 'manager') {
       let { startManager, statusManager, stopManager } = await import('../manager/lifecycle.js');
       let operations = { start: () => startManager(request.open), status: statusManager, stop: stopManager };

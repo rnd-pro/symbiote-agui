@@ -1,5 +1,4 @@
 import { UiComponent } from '../../shared/component.js';
-import { watchAttribute } from '../../shared/control-attributes.js';
 import { ICON_NAMES } from './collection.js';
 import { ICON_TEMPLATE } from './template.js';
 import styles from './styles.js';
@@ -11,10 +10,10 @@ export class Icon extends UiComponent {
     let semantics = this.attachInternals();
     semantics.role = 'img';
     let describe = () => { semantics.ariaHidden = String(!this.getAttribute('aria-label') && !this.getAttribute('aria-labelledby')); };
-    watchAttribute(this, 'aria-label', describe);
-    watchAttribute(this, 'aria-labelledby', describe);
+    this.sub('attribute-aria-label', describe);
+    this.sub('attribute-aria-labelledby', describe);
     this.sub('name', this.refreshGlyph);
-    watchAttribute(this, 'name', this.refreshGlyph);
+    this.sub('attribute-name', this.refreshGlyph);
   }
 
   refreshGlyph = () => {
@@ -23,5 +22,10 @@ export class Icon extends UiComponent {
   };
 }
 
+Icon.bindAttributes({
+  name: 'attribute-name',
+  'aria-label': 'attribute-aria-label',
+  'aria-labelledby': 'attribute-aria-labelledby',
+});
 Icon.template = ICON_TEMPLATE;
 Icon.rootStyles = styles;

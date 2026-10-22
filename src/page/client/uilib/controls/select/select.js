@@ -1,4 +1,5 @@
 import { Control } from '../../shared/control.js';
+import { CONTROL_ATTRIBUTE_BINDINGS } from '../../shared/constants.js';
 import { SELECT_TEMPLATE } from './template.js';
 
 export class Select extends Control {
@@ -44,4 +45,8 @@ export class Select extends Control {
   }
 }
 
+Select.bindAttributes({
+  ...CONTROL_ATTRIBUTE_BINDINGS,
+  placeholder: 'attribute-placeholder',
+});
 Select.template = SELECT_TEMPLATE;

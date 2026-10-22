@@ -1,43 +1,45 @@
-- Use modern JavaScript syntax + JSDoc type definition format + `./types/*.d.ts` files for global/complex types connection, TS-utils, ets. + `"checkJs": true, "noEmit": true`
-- Split JSDoc blocks into separate lines for multi-parameter definitions
-- Centralize types where it makes sense, try not to spread them over the code and not duplicate it in separate modules
-- Centralize data models definitions and their type definitions
-- Check for existing entities before create new ones
-- Split modules and large code blocks onto separate files by functional responsibility and hierarchy
-- Keep files and classes compact and readable, do not create super-all-in-one modules, functions or classes with 500+ LOC
-- Extract important ENUMs and dictionaries into separate files, reuse them instead of duplicate
-- Use ESM standard, do not use CJS
-- Use `*.js` file extensions for ESM
-- Use single quotes
-- Use `;`
-- Prefer `let` for variables. Use `const` when override error handling explicitly expected and this kind of marking is needed for better logic understanding.
-- Prefer `Object` lookup instead of `switch`-`case`. Use `switch`-`case` for noticeable performance optimization only.
-- Use logical line breaks, keep it for better readability, for example, "array item per line"
-- Do not use build phase for Node.js runtime code
-- Prefer clear entity names and function signatures over the excess/verbose code comments
-- Use modern standard Node test runner for tests, do not add external libs for what we already have
-- Use Puppeteer project dependency for in-browser tests
-- Keep plans as `*.md` files in `planning` folder
-- Try not to use tables in markdown because it's difficult for human to review and edit them in source files.
-- Try not to use special symbols that doesn't persist on standard keyboard, such as arrows, long tire, dot markers, etc. in project markdown.
-- Keep git (commit/review/add/push) as user responsibility
-- Try to keep review phase simpler to human developer, split big tasks for smaller stages
-- Do not add project dependencies without user confirmation
-- Add README.md files for project nested folders IF they contain a bunch of files and requires additional explanation for better project navigation and source understanding
-- Use those README files to collect really significant information only: clear step-by-step instructions, important settings, major decisions made. Do not mention any regular update. Do not just list folder content.
-- Create brief descriptions in project docs, try not to be too verbose
-- Try to keep the whole project context compact for less token consumption and better focusing for AI-agents
-- Update the root README and shared instructions in place. Do not create per-stage documentation or planning delivery files.
-- Keep the root README abstract and focused on project purpose, benefits, and main user workflows. Do not include implementation details, API contracts, or inventories of evolving features such as uilib components. Describe their value briefly and link to dedicated docs or the skill for usage details.
-- Keep public project docs, distributed skills, and shared instructions focused on the reusable tool. Do not copy local task/session artifacts, user data, real external resource IDs, machine-specific paths, live session URLs, or local investigation results into them. Keep those details in local session artifacts; use fictional examples or explicit placeholders in public materials. Check this boundary when reviewing documentation changes.
-- Keep tests in `tests/node` and `tests/browser` folders
-- Keep project supportable for human-developer
-- Do not start plan implementation without explicit user approvement
-- After each task finish, ask for review and suggest corresponding commit message
-- Prefer user's manual testing instead run tests by yourself, to save tokens and to efficiently check cases that difficult to reproduce without access to exact environment: mobile phone, external browser with active session, dynamic/animated UI, etc.
-- Add dedicated automated tests AFTER and IF the implementation issue was found by yourself or reported by user. Do not write the test for every regular single task. Write tests for critical system parts or where it's really make sense only. Do not follow TDD by default.
-- If user ask a question - just answer. Do not implement anything, do not perform a deep investigation without a direct permission or request.
-- Follow KISS and DRY
+# Project instructions
+
+Read [README.md](./README.md) for the project purpose and main workflows.
+
+## Workflow
+
+- When the user asks a question, answer it. Make code changes or perform a deeper investigation only when requested.
+- Implement only the authorized scope. A direct request to implement a task or named stage authorizes that work. Proposed multi-stage plans need explicit approval before implementation; do not ask again for approval already given.
+- Split large tasks into small, reviewable stages. Maintain the task's authoritative plan as a Markdown file in `planning/`, updating it in place. Do not create separate stage completion reports or duplicate planning documents.
+- Do not add project dependencies without explicit user confirmation. Reuse existing dependencies and platform capabilities.
+- Leave Git mutations, including staging, commits, merges, and pushes, to the user. Read-only Git inspection is allowed; the user performs the final Git review.
+- At task completion, ask for review and suggest a commit message for any changes made.
+
+## Code conventions
+
+- Use modern JavaScript, ESM, `.js` file extensions, single-quoted JavaScript strings, and semicolons. Do not use CommonJS or introduce a build phase for Node.js runtime code.
+- Use JSDoc for JavaScript types, with `checkJs: true` and `noEmit: true`. Put shared or complex type definitions in `types/*.d.ts`. Put each JSDoc parameter on its own line.
+- Define each shared data model and its types in one authoritative location. Keep definitions with a single consumer near that consumer. Reuse shared types, enums, and dictionaries instead of duplicating them across modules.
+- Search for existing components, utilities, models, and definitions before creating equivalents.
+- Split code by functional responsibility and keep the hierarchy easy to navigate. Keep source files, classes, and functions under 500 lines; split earlier when responsibilities or readability require it.
+- Prefer `let`. Use `const` when preventing reassignment expresses an intentional invariant in the logic.
+- Prefer object lookups for mapping known keys to values or handlers. Use `switch` only when it provides a demonstrated, noticeable performance benefit.
+- Format array and object literals across multiple lines, even when short. Put each item or property on its own line and closing brackets/braces on separate lines. Apply the same rule to destructuring patterns and named import/export lists.
+- Format CSS rules across multiple lines, with each declaration and closing brace on its own line. Put declarations in inline style attributes on separate lines when there is more than one. JavaScript style objects follow the object formatting rule.
+- Prefer clear names and function signatures. Use comments to explain non-obvious intent or constraints, and keep the implementation simple enough for a human developer to maintain. Follow KISS and DRY.
+
+## Symbiote and uilib
+
+- Before implementing component behavior, consult `node_modules/@symbiotejs/symbiote/llms.txt` and the relevant documentation in that package. Prefer native Symbiote APIs. Before adding a helper or wrapper, verify that Symbiote does not already provide that capability. If the contract is unclear, inspect its implementation before proceeding.
 - Never hardcode user-facing text in uilib components, including labels, accessible names, hints, statuses, errors, and fallback messages. Supply text through host attributes or native Symbiote bindings. Keep application copy outside uilib and preserve caller-provided text bindings.
 
-Go to `./README.md` for the project description root
+## Validation
+
+- Run existing checks that directly cover the changed behavior. For JavaScript or type changes, run `npm run types`. Keep validation proportional to the task; avoid unrelated or repeated checks without a new reason.
+- Prefer user manual review for appearance, layout, animation, mobile behavior, and external browsers with active sessions. State what needs manual verification. Do not create automated style tests.
+- Add automated tests for a concrete bug found during implementation or reported by the user, or for critical system behavior. Do not add tests for every routine change or follow TDD by default.
+- Use Node.js's built-in test runner and the existing Puppeteer dependency for browser tests. Keep tests in `tests/node` and `tests/browser`; do not add another test library for capabilities already available.
+
+## Documentation
+
+- Keep project documentation and shared instructions concise and update them in place. Avoid duplicate explanations and routine progress notes so the project context stays compact for people and agents.
+- Add a nested `README.md` when a folder needs navigation guidance, setup instructions, important settings, or an explanation of architectural decisions. File count alone is not a reason. Do not write a folder inventory or update log.
+- Keep the root README abstract and focused on project purpose, benefits, and main user workflows. Do not include implementation details, API contracts, or inventories of evolving features such as uilib components. Describe their value briefly and link to dedicated docs or the skill for usage details.
+- Keep public project docs, distributed skills, and shared instructions focused on the reusable tool. Do not copy local task/session artifacts, user data, real external resource IDs, machine-specific paths, live session URLs, or local investigation results into them. Keep those details in local session artifacts; use fictional examples or explicit placeholders in public materials. Check this boundary when reviewing documentation changes.
+- Prefer lists and short prose over Markdown tables for easier source review. Prefer standard keyboard punctuation; avoid decorative Unicode arrows, typographic dashes, or bullet symbols in project Markdown prose.

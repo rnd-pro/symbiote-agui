@@ -7,7 +7,7 @@ export default css`
       min-width: 0;
       flex-wrap: wrap;
       align-items: start;
-      gap: calc(var(--spacing, .25rem) * 3);
+      gap: calc(var(--spacing, .25rem) * 2);
     }
     agui-toolbar > agui-field,
     agui-toolbar > agui-select {

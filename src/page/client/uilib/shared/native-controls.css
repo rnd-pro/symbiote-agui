@@ -92,7 +92,7 @@
   }
   button,
   .agui-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-agui-text px-3 py-1.5 text-sm font-semibold text-agui-surface shadow-sm;
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-agui-text px-3 py-1.5 text-sm font-normal text-agui-surface shadow-sm;
     height: var(--agui-control-height);
     min-width: var(--agui-control-height);
   }
@@ -101,6 +101,8 @@
   .agui-button-primary { @apply border-agui-accent bg-agui-accent text-agui-on-accent; }
   .agui-button-primary:hover:enabled { @apply bg-agui-accent opacity-90; }
   .agui-button-danger { @apply border-agui-danger bg-transparent text-agui-danger shadow-none; }
-  .agui-label { @apply text-sm font-medium text-agui-text; }
+  .agui-label {
+    @apply text-sm text-agui-text;
+  }
   .agui-hint { @apply text-sm text-agui-muted; }
 }

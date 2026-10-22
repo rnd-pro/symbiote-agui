@@ -165,7 +165,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#plain-theme label', (element) => element.innerText.trim()), 'Dynamic name');
   assert.equal(await page.$eval('#unlabeled-state', (element) => element.textContent?.trim()), '');
   assert.equal(await page.$eval('#unlabeled-toolbar', (element) => element.getAttribute('aria-label')), null);
-  assert.equal(await page.$eval('#custom-data button', (element) => element.textContent), 'Keep edits');
+  assert.equal(await page.$eval('#custom-data button > span', (element) => element.textContent), 'Keep edits');
   assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Online/);
   await page.$eval('#custom-data', (element) => Reflect.get(element, 'transfer').failed('import', new Error('Technical details must not become UI copy.')));
   assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Cannot read this file/);
@@ -180,7 +180,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#state-field input', (element) => element.value), 'Enabled');
   assert.equal(await page.$eval('#state-field input', (element) => element.disabled), false);
   assert.equal(await page.$eval('#bound-theme label', (element) => element.innerText.trim()), 'Dim the interface');
-  assert.equal(await page.$eval('#custom-data button', (element) => element.textContent), 'Store changes');
+  assert.equal(await page.$eval('#custom-data button > span', (element) => element.textContent), 'Store changes');
   assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Try another file/);
   await page.click('#bound-theme input');
   assert.equal(await page.$eval('#bound-theme label', (element) => element.innerText.trim()), 'Use daylight');

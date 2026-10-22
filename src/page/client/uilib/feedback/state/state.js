@@ -3,7 +3,6 @@ import { UiComponent } from '../../shared/component.js';
 import { STATE_STATUSES } from './constants.js';
 import { STATE_TEMPLATE } from './template.js';
 import styles from './styles.js';
-import { watchAttribute } from '../../shared/control-attributes.js';
 
 export class State extends UiComponent {
   init$ = {
@@ -20,7 +19,7 @@ export class State extends UiComponent {
   renderCallback() {
     for (let [key, attribute] of [['status', 'status'], ['message', 'message'], ['retryLabel', 'retry-label']]) {
       this.sub(key, () => this.refresh());
-      watchAttribute(this, attribute, () => this.refresh());
+      this.sub(`attribute-${attribute}`, () => this.refresh());
     }
   }
 
@@ -39,5 +38,10 @@ export class State extends UiComponent {
   }
 }
 
+State.bindAttributes({
+  status: 'attribute-status',
+  message: 'attribute-message',
+  'retry-label': 'attribute-retry-label',
+});
 State.template = STATE_TEMPLATE;
 State.rootStyles = styles;

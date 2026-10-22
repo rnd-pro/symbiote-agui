@@ -11,6 +11,7 @@ export let dataToolbarTexts = Object.freeze({
   import: 'Import JSON',
   export: 'Export JSON',
   checkSave: 'Check save status',
+  closeMessage: 'Dismiss message',
   importLabel: 'Import JSON data',
   user: 'User',
   viewer: 'Viewer',

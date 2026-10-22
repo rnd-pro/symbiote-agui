@@ -10,7 +10,7 @@ export default css`
       padding: var(--agui-panel-padding);
       box-shadow: 0 1px 3px rgb(0 0 0 / .06);
 
-      > agui-panel {
+      agui-panel {
         border: 1px solid var(--agui-border);
         border-radius: var(--radius-lg, .5rem);
         box-shadow: none;

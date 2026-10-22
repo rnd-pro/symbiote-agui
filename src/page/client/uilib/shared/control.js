@@ -1,7 +1,7 @@
 import { ToolDescriptor } from '@symbiotejs/symbiote/webmcp';
 import { UiComponent } from './component.js';
-import { CONTROL_ATTRIBUTES } from './constants.js';
-import { bindControlAttributes, watchAttribute } from './control-attributes.js';
+import { CONTROL_ATTRIBUTES, CONTROL_ATTRIBUTE_BINDINGS } from './constants.js';
+import { bindControlAttributes } from './control-attributes.js';
 
 let nextFieldId = 0;
 
@@ -43,11 +43,11 @@ export class Control extends UiComponent {
     this.ref.label.parentElement.htmlFor = control.id;
     this.ref.hint.id = `${control.id}-hint`;
     this.ref.error.id = `${control.id}-error`;
-    watchAttribute(this, 'aria-describedby', (value) => { this.descriptionIds = value || ''; this.describe(); });
+    this.sub('attribute-aria-describedby', () => { this.descriptionIds = this.getAttribute('aria-describedby') || ''; this.describe(); });
     this.watchControlState('label', () => this.getAttribute('label') || '', (value) => { this.$.fieldLabel = String(value); });
     let refreshRequiredMark = () => { this.$.fieldRequiredMark = String(this.$.requiredMark ?? this.getAttribute('required-mark') ?? ''); };
     this.sub('requiredMark', refreshRequiredMark);
-    watchAttribute(this, 'required-mark', refreshRequiredMark);
+    this.sub('attribute-required-mark', refreshRequiredMark);
     this.watchControlState('hint', () => this.getAttribute('hint') || '', (value) => { this.$.fieldHint = String(value); this.describe(); });
     this.watchControlState('error', () => this.getAttribute('error') || '', (value) => { this.$.fieldError = String(value ?? ''); this.describe(); });
     this.watchControlState('disabled', () => this.hasAttribute('disabled'), (value) => { this.$.fieldDisabled = !!value; this.setAvailability(); });
@@ -71,7 +71,7 @@ export class Control extends UiComponent {
   watchControlState(key, fallback, handler) {
     let refresh = () => handler(this.$[key] ?? fallback());
     this.sub(key, refresh);
-    watchAttribute(this, key, refresh);
+    this.sub(`attribute-${key}`, refresh);
   }
 
   setAvailability() {
@@ -130,3 +130,5 @@ export class Control extends UiComponent {
     this.control?.removeEventListener('invalid', this.onValidity);
   }
 }
+
+Control.bindAttributes(CONTROL_ATTRIBUTE_BINDINGS);

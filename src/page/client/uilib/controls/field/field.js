@@ -1,9 +1,11 @@
 import { Control } from '../../shared/control.js';
-import { bindControlAttributes, watchAttribute } from '../../shared/control-attributes.js';
-import { FIELD_ATTRIBUTES, FIELD_INPUT_TYPES } from '../../shared/constants.js';
+import { bindControlAttributes } from '../../shared/control-attributes.js';
+import { CONTROL_ATTRIBUTE_BINDINGS, FIELD_ATTRIBUTES, FIELD_INPUT_TYPES } from '../../shared/constants.js';
 import { FIELD_TEMPLATE, TEXTAREA_TEMPLATE } from './template.js';
 
 export class Field extends Control {
+  static observedAttributes = ['type', 'checked'];
+
   /**
    * @param {string | DocumentFragment} [template]
    * @param {boolean} [shadow]
@@ -18,8 +20,8 @@ export class Field extends Control {
       throw new Error('agui-field requires its template control.');
     }
     bindControlAttributes(this, control, FIELD_ATTRIBUTES);
-    watchAttribute(this, 'value', (value) => { control.defaultValue = value ?? ''; });
-    watchAttribute(this, 'type', (value) => {
+    this.sub('attribute-value', () => { control.defaultValue = this.getAttribute('value') ?? ''; });
+    this.defineAccessor('type', (/** @type {string | null | undefined} */ value) => {
       let type = value || 'text';
       if (control instanceof HTMLTextAreaElement) {
         if (type !== 'textarea') { throw new Error('Recreate the field to change between textarea and input.'); }
@@ -29,9 +31,14 @@ export class Field extends Control {
       control.type = type;
     });
     if (control instanceof HTMLInputElement) {
-      watchAttribute(this, 'checked', (value) => { control.defaultChecked = value !== null; });
+      this.defineAccessor('checked', (/** @type {string | null | undefined} */ value) => { control.defaultChecked = value != null; });
     }
     super.renderCallback();
   }
 }
+
+Field.bindAttributes({
+  ...CONTROL_ATTRIBUTE_BINDINGS,
+  ...Object.fromEntries(FIELD_ATTRIBUTES.map((name) => [name, `attribute-${name}`])),
+});
 

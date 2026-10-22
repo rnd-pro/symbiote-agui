@@ -26,6 +26,19 @@ export let FIELD_ATTRIBUTES = Object.freeze([
   'autocapitalize',
 ]);
 
+export let CONTROL_ATTRIBUTE_BINDINGS = Object.freeze(Object.fromEntries([
+  ...CONTROL_ATTRIBUTES,
+  'aria-describedby',
+  'required-mark',
+  'label',
+  'hint',
+  'error',
+  'disabled',
+  'readonly',
+  'required',
+  'value',
+].map((name) => [name, `attribute-${name}`])));
+
 export let FIELD_INPUT_TYPES = Object.freeze([
   'text',
   'search',

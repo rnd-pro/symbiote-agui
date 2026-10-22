@@ -40,10 +40,20 @@ test('declarative data toolbar saves, cancels, imports offline, delivers one bou
   assert.ok(runtime.record.url);
   await page.goto(runtime.record.url);
   await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, '$')?.connectionLabel === 'Connected');
+  await page.$eval('#data', (element) => element.setAttribute('message-timeout', '150'));
   await page.type('#name input', 'First');
+  await page.waitForFunction(() => document.querySelector('#data .agui-data-messages')?.matches(':popover-open'));
+  await page.waitForFunction(() => document.querySelector('#data .agui-data-messages')?.hasAttribute('hidden'));
+  assert.equal(await page.$eval('#data', (element) => Reflect.get(element, '$').dirty), true);
+  assert.equal(await page.$eval('#name input', (element) => Reflect.get(element, 'value')), 'First');
+  await page.$eval('#data', (element) => element.setAttribute('message-timeout', '5000'));
   await page.type('#email input', 'bad-address');
   await page.click('#data button');
   assert.equal(await readRuntimeCache('toolbar-test'), undefined);
+  await page.click('#data .agui-data-dismiss');
+  await page.waitForFunction(() => document.querySelector('#data .agui-data-messages')?.hasAttribute('hidden'));
+  await page.click('#data button');
+  assert.equal(await page.$eval('#data .agui-data-messages', (element) => element.matches(':popover-open')), true);
   await page.$eval('#email input', (element) => { Reflect.set(element, 'value', ''); element.dispatchEvent(new Event('input', { bubbles: true })); });
   await page.click('#data button');
   await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, 'submission')?.delivery?.failure?.code === 'DISABLED');
@@ -136,7 +146,7 @@ test('declarative data toolbar saves, cancels, imports offline, delivers one bou
   await viewer.goto(runtime.record.url + '?mode=viewer');
   await viewer.waitForFunction(() => document.querySelector('agui-data-toolbar')?.textContent?.includes('Viewer'));
   assert.match(await viewer.$eval('agui-data-toolbar', (element) => element.textContent || ''), /Connected/);
-  assert.equal(await viewer.$$eval('agui-data-toolbar button:not([hidden])', (buttons) => buttons.every((button) => Reflect.get(button, 'disabled'))), true);
+  assert.equal(await viewer.$$eval('agui-data-toolbar agui-toolbar button:not([hidden])', (buttons) => buttons.every((button) => Reflect.get(button, 'disabled'))), true);
   assert.equal(await viewer.evaluate(() => {
     let frame = /** @type {HTMLIFrameElement | null} */ (document.querySelector('iframe'));
     return frame?.contentDocument?.querySelectorAll('agui-data-toolbar').length;

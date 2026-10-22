@@ -1,5 +1,5 @@
 import { Toggle } from '../toggle/toggle.js';
-import { watchAttribute } from '../../shared/control-attributes.js';
+import { CONTROL_ATTRIBUTE_BINDINGS } from '../../shared/constants.js';
 
 export class ThemeToggle extends Toggle {
   /** @type {MediaQueryList | undefined} */
@@ -19,7 +19,7 @@ export class ThemeToggle extends Toggle {
     super.renderCallback();
     for (let [key, attribute] of [['lightLabel', 'light-label'], ['darkLabel', 'dark-label'], ['label', 'label']]) {
       this.sub(key, this.refreshLabel);
-      watchAttribute(this, attribute, this.refreshLabel);
+      this.sub(`attribute-${attribute}`, this.refreshLabel);
     }
     this.schemeQuery.addEventListener('change', this.refreshChecked);
     this.sub('*theme', this.refreshChecked);
@@ -49,4 +49,10 @@ export class ThemeToggle extends Toggle {
     this.schemeQuery?.removeEventListener('change', this.refreshChecked);
   }
 }
+
+ThemeToggle.bindAttributes({
+  ...CONTROL_ATTRIBUTE_BINDINGS,
+  'light-label': 'attribute-light-label',
+  'dark-label': 'attribute-dark-label',
+});
 

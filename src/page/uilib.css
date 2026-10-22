@@ -1,6 +1,7 @@
 @import './client/uilib/shared/native-controls.css';
 
 @theme inline {
+  --font-sans: 'Roboto', sans-serif;
   --color-agui-bg: var(--agui-bg);
   --color-agui-surface: var(--agui-surface);
   --color-agui-raised: var(--agui-raised);
@@ -19,11 +20,11 @@
     --agui-raised: light-dark(#e5e5e5, #303030);
     --agui-text: light-dark(#171717, #f5f5f5);
     --agui-muted: light-dark(#595959, #a3a3a3);
-    --agui-border: light-dark(#b8b8b8, #5c5c5c);
+    --agui-border: light-dark(#b8b8b8, #3a3a3a);
     --agui-accent: light-dark(#1d4ed8, #60a5fa);
     --agui-on-accent: light-dark(#ffffff, #111111);
     --agui-danger: light-dark(#b91c1c, #f87171);
-    --agui-control-height: 2.5rem;
+    --agui-control-height: 2.4rem;
     --agui-toggle-height: 1.5rem;
     --agui-panel-padding: 1.25rem;
     --agui-header-offset: 0px;
@@ -36,6 +37,11 @@
     background-color: var(--agui-bg);
     color: var(--agui-text);
     font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    font-optical-sizing: auto;
+    font-size-adjust: from-font;
+    font-weight: 300;
+    font-style: normal;
+    font-variation-settings: 'wdth' 100;
   }
   body[data-theme='light'] { color-scheme: light; }
   body[data-theme='dark'] { color-scheme: dark; }

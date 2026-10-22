@@ -16,11 +16,7 @@ let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
  * @param {string} name
  */
 async function action(page, name) {
-  let buttons = await page.$$('[data-session="desk"] button');
-  for (let button of buttons) {
-    if (await button.evaluate((element) => element.textContent) === name) { await button.click(); return; }
-  }
-  throw new Error(`Missing action: ${name}`);
+  await page.locator(`[data-session="desk"] ::-p-aria([name="${name}"][role="button"])`).click();
 }
 
 /**
@@ -94,8 +90,9 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.waitForFunction(() => document.body.dataset.theme === 'light');
   assert.equal(await page.$eval('#manager-theme input', (element) => element.checked), false, 'Changes in another tab update the selection.');
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
-  await page.click('#system-theme');
-  assert.equal(await page.evaluate(() => localStorage.getItem('agui-manager-theme')), null);
+  assert.equal(await page.$('#system-theme'), null);
+  assert.equal(await page.evaluate(() => localStorage.getItem('agui-manager-theme')), 'light');
+  assert.equal(await page.$eval('#manager-theme input', (element) => element.checked), false, 'An explicit theme remains selected when the OS preference changes.');
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
   await page.reload();
   await page.waitForSelector('[data-session="desk"]');
@@ -122,13 +119,13 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await fixture.setMode('fail');
   await action(page, 'Attach tunnel');
   await notice(page, 'Expected tunnel fixture failure');
-  await page.waitForFunction(() => [...document.querySelectorAll('[data-session="desk"] button')].some((button) => button.textContent === 'Retry tunnel' && !button.hasAttribute('disabled')));
+  await page.locator('[data-session="desk"] ::-p-aria([name="Retry tunnel"][role="button"])').filter((button) => !button.hasAttribute('disabled')).wait();
   assert.equal((await cli('status', 'desk')).pid, pid);
   await fixture.setMode('ready');
   await action(page, 'Retry tunnel');
   await notice(page, 'share completed');
   await page.waitForSelector('[data-session="desk"] a[href*="trycloudflare.com"]');
-  await page.waitForFunction(() => [...document.querySelectorAll('[data-session="desk"] button')].some((button) => button.textContent === 'Tunnel attached' && button.hasAttribute('disabled')));
+  await page.locator('[data-session="desk"] ::-p-aria([name="Tunnel attached"][role="button"])').filter((button) => button.hasAttribute('disabled')).wait();
   let shared = await cli('status', 'desk');
   assert.equal(shared.pid, pid, 'Attaching a tunnel preserves the running worker.');
   assert.equal(shared.url, running.url, 'The local session URL does not change.');
@@ -167,7 +164,7 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
     await page.screenshot({ path: `${process.env.AGUI_MANAGER_SCREENSHOT}.light.png`, fullPage: true });
-    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
+    await page.click('#manager-theme input');
     await page.screenshot({ path: process.env.AGUI_MANAGER_SCREENSHOT, fullPage: true });
   }
   await page.setViewport({ width: 390, height: 844 });

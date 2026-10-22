@@ -14,18 +14,17 @@
     <agui-session-manager ctx="MANAGER" class="block">
       <agui-header floating>
         <div class="min-w-0">
-          <h1>AGUI Manager</h1>
+          <h1 class="flex items-center gap-2"><agui-icon name="dashboard"></agui-icon>AGUI Manager</h1>
           <p class="connection mt-1 text-sm" role="status" bind="@data-tone: MANAGER/connectionTone">{{MANAGER/connection}}</p>
         </div>
         <agui-toolbar aria-label="Appearance">
           <agui-theme-toggle id="manager-theme" ctx="MANAGER" aria-label="Dark theme" light-label="Switch to light theme" dark-label="Switch to dark theme"></agui-theme-toggle>
-          <button id="system-theme" type="button" bind="onclick: MANAGER/useSystemTheme; disabled: MANAGER/systemTheme">Use system theme</button>
         </agui-toolbar>
       </agui-header>
       <agui-dashboard role="main">
         <agui-panel class="grid gap-3" aria-label="Storage scope">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2>Storage scope</h2>
+            <h2 class="flex items-center gap-2"><agui-icon name="home"></agui-icon>Storage scope</h2>
             <small class="text-xs text-agui-muted">{{MANAGER/checkedAt}}</small>
           </div>
           <p class="break-all text-sm text-agui-muted">{{MANAGER/scope}}</p>
@@ -35,11 +34,11 @@
           <agui-toolbar class="toolbar items-end" aria-label="Session filters">
             <agui-field label="Search sessions" type="search" name="query" placeholder="Name or description..." pub-to="MANAGER/query" bind="$.value: MANAGER/query"></agui-field>
             <agui-select label="Status" name="status" pub-to="MANAGER/statusFilter" bind="$.options: MANAGER/statusOptions; $.value: MANAGER/statusFilter"></agui-select>
-            <button type="button" bind="onclick: MANAGER/refresh; disabled: MANAGER/refreshDisabled">Refresh</button>
+            <button type="button" bind="onclick: MANAGER/refresh; disabled: MANAGER/refreshDisabled"><agui-icon name="refresh"></agui-icon>Refresh</button>
           </agui-toolbar>
           <agui-toolbar class="bulk items-end" aria-label="Bulk session actions">
             <agui-select label="All sessions in this scope" name="operation" pub-to="MANAGER/bulkOperation" bind="$.options: MANAGER/bulkOptions; $.value: MANAGER/bulkOperation; $.disabled: MANAGER/controlsDisabled"></agui-select>
-            <button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; disabled: MANAGER/controlsDisabled">Apply to all</button>
+            <button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; disabled: MANAGER/controlsDisabled"><agui-icon name="check"></agui-icon>Apply to all</button>
           </agui-toolbar>
           <pre class="notice rounded-md border border-agui-border bg-agui-raised p-3 text-sm" role="status" aria-live="polite">{{MANAGER/notice}}</pre>
         </agui-panel>
@@ -52,7 +51,7 @@
       <dialog ref="description" aria-labelledby="description-heading">
         <h2 id="description-heading" class="text-lg font-semibold">Session description</h2>
         <pre ref="descriptionText" class="my-5"></pre>
-        <form method="dialog"><button autofocus>Close</button></form>
+        <form method="dialog"><button autofocus><agui-icon name="close"></agui-icon>Close</button></form>
       </dialog>
     </agui-session-manager>
   </body>

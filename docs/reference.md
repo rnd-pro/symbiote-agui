@@ -11,7 +11,7 @@ npx symbiote-agui manager status
 npx symbiote-agui manager stop
 ```
 
-The built-in Symbiote page calls AGUI functions directly over its own authenticated WebSocket. It does not need an agent, MCP setup, or browser debugging. It lists running and saved sessions, descriptions, clients, process IDs, and current links. Search, status filters, individual controls, and scoped bulk actions use the shared UI library. The theme toggle selects light/dark, and Use system theme restores your operating system preference. Your choice is remembered across reloads and synchronized between tabs in the same browser at the manager URL.
+The built-in Symbiote page calls AGUI functions directly over its own authenticated WebSocket. It does not need an agent, MCP setup, or browser debugging. It lists running and saved sessions, descriptions, clients, process IDs, and current links. Search, status filters, individual controls, and scoped bulk actions use the shared UI library. The theme toggle selects light/dark; the initial theme follows your operating system when no preference is saved. Your choice is remembered across reloads and synchronized between tabs in the same browser at the manager URL.
 
 One detached manager runs per private state directory and resolved library folder. Repeating `manager` reuses it. Its storage scope is fixed at startup; changing the project folder setting selects a separate manager on the next launch. Session stop/clear-all commands leave the manager running. `manager stop` stops only the manager and waits for accepted operations to finish.
 

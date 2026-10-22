@@ -13,8 +13,6 @@ class SessionManager extends ContextProvider {
     counts: '', empty: 'Loading sessions...', emptyStatus: 'loading', notice: '',
     rows: {}, controlsDisabled: true, refreshDisabled: true,
     theme: getTheme(),
-    systemTheme: getTheme() === 'system',
-    useSystemTheme: () => { this.$.theme = 'system'; },
     statusOptions: STATUS_OPTIONS, bulkOptions: BULK_OPTIONS,
     query: '', statusFilter: 'all', bulkOperation: 'start',
     refresh: () => { void this.refresh(); },
@@ -36,10 +34,7 @@ class SessionManager extends ContextProvider {
   stopThemeSync;
 
   renderCallback() {
-    this.sub('theme', (theme) => {
-      setTheme(String(theme));
-      this.$.systemTheme = theme === 'system';
-    });
+    this.sub('theme', (theme) => setTheme(String(theme)));
     this.stopThemeSync = watchTheme((theme) => { this.$.theme = theme; });
     this.sub('query', () => this.renderRows(), false);
     this.sub('statusFilter', () => this.renderRows(), false);

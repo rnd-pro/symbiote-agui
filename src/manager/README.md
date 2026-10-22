@@ -8,4 +8,4 @@ The operation dictionary restricts requests to named session functions. Session 
 
 The manager uses uilib layouts, controls, and shared design tokens. JSDA bundles the browser client with one Symbiote instance; Tailwind compiles the page, row, and library templates at startup. Register the manager's context provider before library components so shared bindings connect to the populated context. Session rows use Itemize, descriptions remain plain text, and state refreshes on connection and while visible. Ordinary refreshes avoid public-network tunnel probes; explicit checks retain health only for the matching public URL.
 
-The shared theme toggle selects light/dark, and Use system theme restores the OS preference. Preferences use origin-scoped browser storage and synchronize across tabs. Restart the manager after template or style changes to rebuild its assets.
+The shared theme toggle selects light/dark. The initial theme follows the OS when no preference is saved. Preferences use origin-scoped browser storage and synchronize across tabs. Restart the manager after template or style changes to rebuild its assets.

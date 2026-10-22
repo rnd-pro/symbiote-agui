@@ -20,7 +20,7 @@ export async function requestSession(record, action, timeout = CONTROL_TIMEOUT_M
       headers: {
         authorization: `Bearer ${record.controlToken}`,
         ...(action === 'insert' ? { 'content-type': 'text/html; charset=utf-8' } : {}),
-        ...(['update', 'tools'].includes(action) || action.startsWith('feedback/') ? { 'content-type': 'application/json' } : {}),
+        ...(['update', 'tools', 'sync'].includes(action) || action.startsWith('feedback/') ? { 'content-type': 'application/json' } : {}),
       },
       body: html,
       signal: AbortSignal.timeout(timeout),

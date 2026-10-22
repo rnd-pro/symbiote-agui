@@ -60,7 +60,14 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
       }
       if (action === 'POST /sync') {
         if (!actions.sync) { throw new CommandError('Sync is unavailable in this worker. Stop and restart the session.', ERROR_CODE.UPDATE_FAILED, EXIT_CODE.RUNTIME_ERROR); }
-        result = await actions.sync();
+        let source = await readUtf8Markup(request, 1024);
+        let input;
+        try { input = source ? JSON.parse(source) : {}; }
+        catch { throw new CommandError('Sync options must be JSON.'); }
+        if (!input || typeof input !== 'object' || Array.isArray(input)
+          || Object.keys(input).some((key) => key !== 'resetData')
+          || (input.resetData !== undefined && typeof input.resetData !== 'boolean')) { throw new CommandError('Invalid sync options.'); }
+        result = await actions.sync(input.resetData === true);
       }
       if (action === 'POST /share') {
         if (!actions.share) { throw new CommandError('Sharing is unavailable in this worker. Stop and restart the session.', ERROR_CODE.TUNNEL_FAILED, EXIT_CODE.RUNTIME_ERROR); }

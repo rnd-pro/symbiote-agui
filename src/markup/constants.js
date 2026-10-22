@@ -1,3 +1,8 @@
+import { DATA_CONTEXT } from '../data/constants.js';
+import { FEEDBACK_CONTEXT } from '../feedback/constants.js';
+
+export let RESERVED_PROVIDER_NAMES = Object.freeze([DATA_CONTEXT, FEEDBACK_CONTEXT]);
+
 export let MAX_HTML_BYTES = 1024 * 1024;
 export let INSERT_TIMEOUT_MS = 20_000;
 export let STYLESHEET_TIMEOUT_MS = 5_000;

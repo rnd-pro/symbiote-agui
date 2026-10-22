@@ -1,4 +1,5 @@
 import { PubSub } from '@symbiotejs/symbiote';
+import { RESERVED_PROVIDER_NAMES } from '../../markup/constants.js';
 
 /** @type {Map<string, PubSub<import('../../../types/components.js').ComponentState>>} */
 let contexts = new Map();
@@ -14,6 +15,7 @@ export function resetContexts() {
  * @param {import('../../../types/components.js').ComponentState} data
  */
 export function createContext(name, data) {
+  if (RESERVED_PROVIDER_NAMES.includes(name)) { throw new Error('This context name is reserved by AGUI.'); }
   PubSub.deleteCtx(name);
   let context = PubSub.registerCtx(data, name);
   contexts.set(name, context);
@@ -25,6 +27,7 @@ export function createContext(name, data) {
  * @param {import('../../../types/components.js').ComponentState} data
  */
 export function initializeContext(name, data) {
+  if (RESERVED_PROVIDER_NAMES.includes(name)) { throw new Error('This context name is reserved by AGUI.'); }
   let context = PubSub.getCtx(name, false);
   if (!context) {
     return createContext(name, data);

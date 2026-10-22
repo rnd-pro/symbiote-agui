@@ -1,0 +1,19 @@
+<context-provider id="editor" ctx="APP" persist="name">
+  <script type="application/json">{"name":""}</script>
+  <agui-field id="name" label="Name" name="name" pub-to="APP/name" bind="$.value: APP/name"></agui-field>
+  <button id="save" type="button">Save</button>
+</context-provider>
+<script type="module" data-agui>
+let { commitData, getDataState, readDataCommit, PubSub } = await import(new URL('/client/index.js', location.href).href);
+export default async () => {
+  window.dataTest = { commitData, getDataState, readDataCommit, PubSub };
+  window.restoreAttempt = await commitData([{ provider: 'APP', keys: ['name'] }]);
+  let button = document.querySelector('#save');
+  let save = async () => {
+    window.saveResult = null;
+    window.saveResult = await commitData([{ provider: 'APP', keys: ['name'] }]);
+  };
+  button.addEventListener('click', save);
+  return () => button.removeEventListener('click', save);
+};
+</script>

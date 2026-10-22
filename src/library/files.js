@@ -37,11 +37,11 @@ export async function removeFile(path) {
 /**
  * @param {string} path
  * @param {string} text
- * @param {{ text: string | undefined }} [expected]
+ * @param {{ text: string | undefined; maxBytes?: number }} [expected]
  * @returns {Promise<import('../../types/session.js').PreparedCache>}
  */
 export async function prepareTextFile(path, text, expected) {
-  let before = await readOptional(path);
+  let before = await readOptional(path, expected?.maxBytes);
   if (expected && expected.text !== before) {
     throw storageError(path, new Error('The file changed while preparing this save. Review the changes and retry.'));
   }
@@ -55,7 +55,7 @@ export async function prepareTextFile(path, text, expected) {
   }
   return {
     async commit() {
-      if (await readOptional(path) !== before) {
+      if (await readOptional(path, expected?.maxBytes) !== before) {
         throw storageError(path, new Error('The file changed while preparing this save. Review the changes and retry.'));
       }
       try { await rename(temporary, path); }

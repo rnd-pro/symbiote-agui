@@ -1,4 +1,4 @@
-import { CONNECTION_STATUS_ID, MAX_EVENT_BYTES, RECONNECT_MIN_MS, RECONNECT_MAX_MS, SOCKET_PATH, PAGE_ROLE } from '../../transport/constants.js';
+import { CONNECTION_STATUS_ID, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, RECONNECT_MIN_MS, RECONNECT_MAX_MS, SOCKET_PATH, PAGE_ROLE } from '../../transport/constants.js';
 import { executePageCommand, sendPageResult } from './commands.js';
 import { setEventSender } from './events.js';
 import { disposeModules } from './modules.js';
@@ -8,6 +8,7 @@ import { SharedView } from './shared-view.js';
 import { syncPageIdentity } from './identity.js';
 import { setFeedbackSender, setFeedbackConnected, setFeedbackRole, receiveFeedback } from './feedback.js';
 import { withoutFeedback } from './feedback-guard.js';
+import { setDataSender, setDataConnected, setDataRole, setDataRendered, receiveData } from './data.js';
 
 export function connectSession() {
   syncPageIdentity();
@@ -44,6 +45,12 @@ export function connectSession() {
   };
   setEventSender(send);
   setFeedbackSender(send);
+  setDataSender((message) => {
+    if (shared.role === PAGE_ROLE.VIEWER || socket?.readyState !== WebSocket.OPEN
+      || socket.bufferedAmount > MAX_PAGE_MESSAGE_BYTES) { return false; }
+    socket.send(message);
+    return true;
+  });
 
   function connect() {
     if (ended || paused) { return; }
@@ -60,6 +67,7 @@ export function connectSession() {
     showStatus('Connecting...');
     current.onopen = () => {
       setFeedbackConnected(true);
+      setDataConnected(true);
       delay = RECONNECT_MIN_MS;
       syncPageIdentity();
       current.send(JSON.stringify({ type: 'hello', title: document.title }));
@@ -74,10 +82,15 @@ export function connectSession() {
         withoutFeedback(() => receiveFeedback(message));
         return;
       }
+      if (message.type === 'data-status' || message.type === 'data-result') {
+        withoutFeedback(() => receiveData(message));
+        return;
+      }
       updates = updates.then(async () => {
         if (current !== socket || attempt !== generation) { return; }
         if (message.type === 'role') {
           setFeedbackRole(message.role);
+          setDataRole(message.role);
           await shared.setRole(message);
           showStatus('');
           return;
@@ -88,6 +101,7 @@ export function connectSession() {
         }
         if (message.type === 'stop') {
           setFeedbackConnected(false);
+          setDataConnected(false);
           ended = true;
           shared.disconnect();
           clearTimeout(timer);
@@ -105,7 +119,7 @@ export function connectSession() {
           if (shared.role === PAGE_ROLE.VIEWER) { throw new Error('This page is a read-only viewer.'); }
           if (message.type === 'render') { shared.rendered = true; }
           let result = await executePageCommand(message);
-          if (message.type === 'render') { shared.revision = message.revision; }
+          if (message.type === 'render') { shared.revision = message.revision; setDataRendered(message.revision); }
           shared.publish();
           sendPageResult(current, message.id, result);
           showStatus('');
@@ -117,7 +131,7 @@ export function connectSession() {
       }).catch((error) => showStatus(`Connection error: ${error.message}`));
     };
     current.onclose = (event) => {
-      if (current === socket) { shared.disconnect(); setFeedbackConnected(false); }
+      if (current === socket) { shared.disconnect(); setFeedbackConnected(false); setDataConnected(false); }
       if (event.code === 1000 && event.reason === 'Session ended') { ended = true; }
       if (ended) { showStatus('Session ended.'); return; }
       if (paused || attempt !== generation) { return; }
@@ -133,6 +147,7 @@ export function connectSession() {
 
   window.addEventListener('pagehide', () => {
     setFeedbackConnected(false);
+    setDataConnected(false);
     paused = true;
     generation += 1;
     clearTimeout(timer);

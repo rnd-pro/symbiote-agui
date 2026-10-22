@@ -86,7 +86,7 @@ export async function run(args) {
     let handlers = {
       save: () => saveDefinition(request.sessionId, request.file),
       describe: () => describeDefinition(request.sessionId, request.file),
-      sync: () => syncDefinition(request.sessionId),
+      sync: () => syncDefinition(request.sessionId, request.resetData),
       start: async () => {
         let local = await startSession(request.sessionId);
         if (!request.tunnel) { return local; }

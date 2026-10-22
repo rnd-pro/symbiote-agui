@@ -1,8 +1,7 @@
 import type { SessionRecord } from './session.js';
 import type { DELIVERY_STATE, FEEDBACK_STATE, FEEDBACK_FAILURES } from '../src/feedback/constants.js';
 
-export type FeedbackJson = null | boolean | number | string | FeedbackJson[]
-  | { [key: string]: FeedbackJson };
+export type FeedbackJson = import('./json.js').JsonValue;
 
 export type FeedbackSessionIdentity = Pick<SessionRecord, 'sessionId' | 'instanceId'>;
 export type FeedbackRevision = string | number;

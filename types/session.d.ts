@@ -24,6 +24,7 @@ export interface SessionStatus {
   dropped?: number;
   toolResponse?: import('./tools.js').ToolResponse;
   feedback?: import('./feedback.js').FeedbackStatus;
+  data?: import('./data.js').DataStatus;
 }
 
 export type SessionFeedbackStatus = SessionStatus & {
@@ -77,7 +78,7 @@ export interface ControlActions {
   events?(): SessionStatus;
   tools?(input: unknown): Promise<SessionStatus>;
   clear?(): Promise<SessionStatus>;
-  sync?(): Promise<SessionStatus>;
+  sync?(resetData?: boolean): Promise<SessionStatus>;
   share?(): Promise<SessionStatus>;
   tunnelRenew?(): Promise<SessionStatus>;
   feedbackConfigure?(input: unknown): Promise<SessionFeedbackStatus>;

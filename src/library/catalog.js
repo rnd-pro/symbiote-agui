@@ -60,11 +60,17 @@ export async function saveDefinition(sessionId, file) {
   return definitionInfo(sessionId);
 }
 
-/** @param {string} sessionId */
-export async function syncDefinition(sessionId) {
+/**
+ * @param {string} sessionId
+ * @param {boolean} [resetData]
+ */
+export async function syncDefinition(sessionId, resetData = false) {
   let record = await readSession(sessionId);
   if (!record || !isProcessAlive(record.pid)) {
     throw new CommandError(`Start ${sessionId} to load its saved definition. Sync applies to running sessions.`, ERROR_CODE.SESSION_STOPPED, EXIT_CODE.RUNTIME_ERROR);
   }
-  return requestSession(record, 'sync', INSERT_TIMEOUT_MS);
+  if (resetData && !(await requestSession(record, 'status')).data) {
+    throw new CommandError('Data reset is unavailable in this worker.', ERROR_CODE.NOT_IMPLEMENTED, EXIT_CODE.RUNTIME_ERROR);
+  }
+  return requestSession(record, 'sync', INSERT_TIMEOUT_MS, resetData ? JSON.stringify({ resetData: true }) : undefined);
 }

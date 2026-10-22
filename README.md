@@ -75,7 +75,7 @@ Anyone with a public link can open it. Links are temporary, and your computer an
 
 Browser tabs show the session ID as their title and use a stable colored emoji favicon to help distinguish interfaces.
 
-Ask your agent to reopen a session by name, stop it when you are finished, or clear it when you want to discard the saved interface. Reopening restores the interface definition; previous inputs and task progress are not saved automatically.
+Ask your agent to reopen a session by name, stop it when you are finished, or clear it when you want to discard the saved interface and data. Reopening restores the interface and explicitly committed data. Ordinary edits remain unsaved until a Save action commits declared provider properties to the [private data cache](./docs/reference.md#local-data-commits).
 
 List all sessions with active/inactive status and current links for running sessions, check one session, or stop it yourself:
 

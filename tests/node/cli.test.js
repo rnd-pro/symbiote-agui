@@ -59,3 +59,11 @@ test('start all opens pages by default and accepts only the no-open option', () 
   }
   assert.partialDeepStrictEqual(parseCommand(['start', 'desk']), { kind: 'command', command: 'start', sessionId: 'desk' });
 });
+
+test('committed-data reset must explicitly target one sync operation', () => {
+  assert.partialDeepStrictEqual(parseCommand(['sync', 'desk', '--reset-data']), { command: 'sync', sessionId: 'desk', resetData: true });
+  assert.equal(Reflect.get(parseCommand(['sync', 'desk']), 'resetData'), undefined);
+  for (let args of [['sync', 'all', '--reset-data'], ['start', 'desk', '--reset-data'], ['insert', 'desk', '--reset-data']]) {
+    assert.throws(() => parseCommand(args), { code: 'INVALID_INPUT' });
+  }
+});

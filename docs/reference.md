@@ -21,7 +21,7 @@ The manager binds only to loopback, validates Host/Origin and operation inputs, 
 
 Use Attach tunnel on a running local session to create public user and viewer links without restarting its worker or resetting its live interface. Failed attachment leaves the session available and exposes Retry tunnel. Tunnel attached identifies an existing connector; use the public links to share it, Check tunnel to verify reachability, or Renew tunnel to replace inactive links. The CLI equivalent is `npx symbiote-agui share <SESSION_ID>`.
 
-Every connection loads fresh backend state. While visible, the page refreshes roughly every five seconds and after operations, including changes made through the CLI or Git. Tunnel reachability is checked separately with Check tunnel; check times and stale/unchecked health are shown. Renew replaces public links. Sync resets live interface state. Clear requires confirmation and deletes saved HTML and Markdown, including files in a configured Git library.
+Every connection loads fresh backend state. While visible, the page refreshes roughly every five seconds and after operations, including changes made through the CLI or Git. Tunnel reachability is checked separately with Check tunnel; check times and stale/unchecked health are shown. Renew replaces public links. Sync discards unsaved edits and retains compatible committed data. Clear requires confirmation and deletes saved HTML, Markdown, private data, and metadata, including definition files in a configured Git library.
 
 Operation results include individual bulk failures. Repeated mutation request IDs reuse their result for ten minutes; conflicting operations on a session run in sequence. A disconnect or timeout can leave an unknown outcome. The page refreshes after reconnecting and never automatically replays an action. Review current status before deliberately submitting it again.
 
@@ -89,6 +89,35 @@ Example `metadata.json` using fictional data:
 `describe` returns full metadata when present. `list --query` searches it and returns a data-flow summary; the local manager displays that summary and includes the full flow in its Description dialog. Metadata describes intended behavior, not proof of synchronization or authorization to perform it. Editing it does not read a source, write a target, change initial application values, or trigger feedback. Preserve the original source description when a cache restores the same data.
 
 Metadata lives under the private, library-scoped state root in `.metadata/`, outside shared definitions and worker instance directories. Stop/start, insert, sync, and Markdown edits retain it; clearing the session removes it. Copying HTML/Markdown or importing a private definition into a team folder does not copy metadata. To transfer it intentionally, prepare a file containing the desired `metadata` object from `get` and run `set` in the destination scope. Review local references before sharing that file. Reloading an existing manager does not update its running code; restart the manager after upgrading to load the new metadata UI.
+
+## Local data commits
+
+Declare persistent properties on a named provider with `persist="key otherKey"` and one direct inline JSON script. Each declared key must exist in that JSON. Use one declaration per provider, outside reusable templates; `AGUI_DATA` and `AGUI_FEEDBACK` are reserved names. Metadata bindings describe intent; they do not enable persistence.
+
+```html
+<context-provider ctx="APP" persist="records">
+  <script type="application/json">{"records":[],"filter":""}</script>
+  <!-- Bind controls to APP/records using native Symbiote APIs. -->
+</context-provider>
+```
+
+Marked modules receive `commitData`; it is also exported from `/client/index.js`. Call it from an explicit Save handler after application validation:
+
+```js
+let saved = await commitData([{ provider: 'APP', keys: ['records'] }]);
+```
+
+The call captures an immutable JSON snapshot from native named contexts. The worker patches only those declared properties in the accepted HTML's inline JSON and atomically publishes a private `.runtime/` snapshot before returning `committed`. It leaves the authored definition, unrelated JSON, modules, and templates intact and does not rerender the page or replace newer draft values. Nothing automatically saves ordinary input, `update`, or tool changes. Restoration and pending agent page commands reject commits with `PAGE_BUSY` to avoid loops and command-queue deadlocks. Viewers cannot commit or query receipts.
+
+Results contain `commitId`, `instanceId`, `markupRevision`, `state`, and, on success, the new data `revision`. States are `committed`, `rejected`, or `unknown`; `queued` is intermediate. Failures carry a stable `failure.code` and safe message. Reject stale workers, replaced markup, and stale data revisions before changing the cache. Another tab's successful save makes an older draft stale; reconcile it before submitting. A known failure retains both the previous snapshot and current draft. An uncertain outcome requires checking the saved data before retrying.
+
+The reserved native context `AGUI_DATA` exposes `connected`, `current` (worker/markup/data revisions and declared `targets`), `baseRevision`, `stale`, `pending`, and the latest `result`. Treat it as read-only; use standard bindings or the exported `getDataState()`. Application dirty state and committed baselines remain separate from transport status. Saving locally does not notify the agent or confirm an external write; call `submitFeedback` separately after a successful commit, retaining the original native event.
+
+Optional `{ commitId }` accepts a UUID. Identical IDs and payloads reuse retained worker receipts; conflicting payloads are rejected. `readDataCommit({ commitId, instanceId, markupRevision })` queries an outcome without submitting. Reconnection queries uncertain references automatically within the same page and worker, never replaying a write. Limits are 1 MiB per commit message and final HTML, JSON depth 32, 32 providers, 64 keys per provider, 16 pending requests, 100 retained worker receipts, and a 20-second browser wait. Timeout/disconnect yields `unknown` if dispatch might have occurred. Full reload loses in-memory recovery references; worker restart loses receipts while preserving saved HTML and its data revision. Missing, expired, or previous-instance receipts remain unknown.
+
+Reload, reconnect, and stop/start initialize declared values from committed inline JSON. Keep handlers and transient state outside `persist`, and do not overwrite restored properties with module defaults. Compatible definition replacements retain saved values and use defaults for newly added keys. Removed/renamed declarations or changed non-null top-level types cause `DATA_CONFLICT` on insert/sync. This checks declaration compatibility, not business schemas. An incompatible source found at startup restores the previous saved interface with a warning and blocks commits until reconciled. After backing up needed data, `npx symbiote-agui sync my-workspace --reset-data` explicitly discards that snapshot and loads source defaults. `sync all` cannot reset data. Clear removes the snapshot; stop retains it. Private snapshots are scoped to session/library identity and do not accompany copied team definitions.
+
+Existing workers need a deliberate stop/start to load upgraded code; they are never restarted automatically. The common data toolbar and JSON transfer controls are not included yet.
 
 ## Private feedback handlers
 
@@ -158,11 +187,11 @@ Read the current application record and match its submission reference before wr
 
 The default browser bundle includes the foundation UI components, registered before saved or inserted content mounts. Use the [AGUI skill](../skills/symbiote-agui/SKILL.md#built-in-ui-foundation) for their declarative context contracts, common Tailwind tokens, and HTML-only composition examples. Component state has the same persistence boundaries as other generated interfaces.
 
-AGUI saves accepted HTML and inline modules by session ID. Restarting rebuilds styles and restores that definition, even if the original input file was deleted. It does not save live component state, user progress, timers, or state updates.
+AGUI saves accepted HTML and inline modules by session ID. Restarting rebuilds styles and restores that definition, even if the original input file was deleted. Explicit [local data commits](#local-data-commits) restore declared provider values from private cached HTML. Other live component state, timers, and unsaved state updates are not persisted.
 
-Local-only tabs are independently interactive. Reloading or reconnecting a local tab or shared user page restores the definition's initial state. Viewers reconnect to the current mirrored view instead.
+Local-only tabs are independently interactive. Reloading or reconnecting a local tab or shared user page restores committed values when present, using source defaults for other properties. Viewers reconnect to the current mirrored view instead.
 
-Interaction events are temporary: reading them drains the queue, which retains at most 100 events. AGUI is not a database for application data; the agent must arrange durable storage when the task needs it.
+Interaction events are temporary: reading them drains the queue, which retains at most 100 events. Local cache commits are separate from external persistence; use an authorized database or API when the task needs external storage.
 
 By default, session metadata, logs, and saved definitions live under `~/.symbiote-agui/sessions/`. Set `AGUI_STATE_DIR` to an absolute directory to use another private storage root. A configured library folder holds HTML and Markdown separately; runtime metadata stays private. Use the same storage settings for CLI commands and optional MCP integration.
 

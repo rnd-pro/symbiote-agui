@@ -1,7 +1,9 @@
 import { DICT } from '@symbiotejs/symbiote/core/dictionary.js';
-import { PROVIDER_TAG } from './constants.js';
+import { PROVIDER_TAG, RESERVED_PROVIDER_NAMES } from './constants.js';
 import { readInitialData } from './data.js';
 import { MODULE_SELECTOR } from '../transport/constants.js';
+import { dataTargets } from '../data/targets.js';
+import { PERSIST_ATTRIBUTE } from '../data/constants.js';
 
 /**
  * @param {DocumentFragment} fragment
@@ -16,6 +18,7 @@ function templateFragments(fragment) {
  * @returns {import('../../types/transport.js').FragmentAnalysis}
  */
 export function analyzeFragment(fragment) {
+  dataTargets(fragment);
   let fragments = templateFragments(fragment);
   /** @type {Set<string>} */
   let classes = new Set();
@@ -24,6 +27,9 @@ export function analyzeFragment(fragment) {
   /** @type {import('../../types/transport.js').FragmentAnalysis['providers']} */
   let providers = new Map();
   for (let part of fragments) {
+    if (part !== fragment && part.querySelector(`[${PERSIST_ATTRIBUTE}]`)) {
+      throw new Error('Persisted providers must be declared outside reusable templates.');
+    }
     for (let element of part.querySelectorAll('*')) {
       if (element.matches(MODULE_SELECTOR) && element.hasAttribute('src')) {
         throw new Error('AGUI modules must be inline.');
@@ -50,6 +56,7 @@ export function analyzeFragment(fragment) {
       if (element.localName === PROVIDER_TAG) {
         let data = readInitialData(element);
         let name = element.getAttribute(DICT.CTX_NAME_ATTR)?.trim();
+        if (name && RESERVED_PROVIDER_NAMES.includes(name)) { throw new Error('This provider name is reserved by AGUI.'); }
         if (part === fragment && name) {
           if (providers.has(name)) {
             throw new Error(`Only one context-provider per named context is allowed: ${name}.`);

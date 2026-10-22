@@ -38,6 +38,7 @@ export type CliRequest =
     file?: string;
     pageId?: string;
     tunnel: boolean;
+    resetData?: boolean;
   };
 
 export interface CommandFailure {

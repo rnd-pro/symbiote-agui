@@ -215,6 +215,27 @@ An anonymous `<context-provider>` exposes local fields to descendants through `^
 
 For custom reusable markup, include `<template id="card-template">...</template>` and a custom tag with `use-template="template#card-template"` in the same insertion. Unknown tags using `use-template` become generic components. Register custom subclasses through `YourComponent.reg('your-component')` to preserve Symbiote's WebMCP tag identity; registrations persist until page reload. Prefer the built-in foundation components above when they cover the task.
 
+## Local data commits
+
+For data that must survive reload and stop/start, declare JSON-backed properties on one named provider. Use space-separated plain keys in `persist`; every key must exist in its direct JSON script. Keep handlers, credentials, filters, and other transient values outside this declaration. Providers inside reusable templates cannot declare persistence.
+
+```html
+<context-provider ctx="APP" persist="records">
+  <script type="application/json">{"records":[],"filter":""}</script>
+  <!-- Native APP/records bindings and controls. -->
+</context-provider>
+```
+
+Marked modules receive `commitData`; it is also exported from the fully resolved `/client/index.js` URL. In an explicit Save handler, validate the application, then await `commitData([{ provider: 'APP', keys: ['records'] }])`. This captures native context values synchronously and resolves only after the worker publishes private cached HTML. It does not rerender or overwrite newer edits. Local `committed` confirms only cache persistence; call `submitFeedback` separately with the original native event if needed. Retain the submitted snapshot for acknowledgements; do not substitute newer draft values after awaiting Save.
+
+Results identify `commitId`, `instanceId`, `markupRevision`, `state`, and a successful data `revision`; failures include `failure.code` and `message`. Treat `unknown` as uncertain and reconcile saved data before retrying. Use `readDataCommit({ commitId, instanceId, markupRevision })` to query a prior outcome without replay. Optional `{ commitId }` supplies a UUID. Reconnect recovers retained receipts without resubmission; reload loses recovery references, and restart retains data but loses receipts.
+
+Treat native `AGUI_DATA` as read-only. It exposes `connected`, `current` (revisions and declared targets), `baseRevision`, `stale`, `pending`, and latest `result`; `getDataState()` returns a snapshot. Use native bindings for status. Keep the submitted baseline and dirty state in application state. `AGUI_DATA` and `AGUI_FEEDBACK` are reserved provider names. Limits: 1 MiB per message/final HTML, JSON depth 32, 32 providers, 64 keys each, 16 pending commits, 100 worker receipts, 20-second browser wait.
+
+Ordinary edits and state/tool updates do not save automatically. Restoration and pending agent commands reject commits with `PAGE_BUSY`; do not save from module initialization or subscriptions. Stale tabs, replaced markup, and changed workers cannot overwrite newer data. Reload/reconnect restores committed values; modules must not replace them with fresh defaults. Viewers cannot save or query receipts.
+
+Private snapshots remain outside shared source definitions and are scoped to this session/library. Compatible insert/sync retains saved values and initializes added keys from source. Removing/renaming persisted declarations or changing a non-null top-level type causes `DATA_CONFLICT`; reconcile before replacing. An incompatible source at startup restores the previous interface with a warning and blocks Save. After backing up needed data, `sync <SESSION_ID> --reset-data` explicitly loads source defaults and discards the snapshot. Clear deletes saved data; stop preserves it. Data-flow metadata alone does not enable persistence. Existing workers need a deliberate restart to load upgraded code; do not restart a user's active worker silently. JSON transfer helpers and the standard data toolbar are not available yet.
+
 ## Repeating items with Itemize
 
 Generate repeating rows from data with Symbiote's `itemize` API. Put one row template inside the list container; avoid copying rows or building them with DOM loops. Use a keyed object for task IDs: Symbiote supplies `_KEY_` to each item and includes it in automatic tool names. Array items use their current index when no item key is available.
@@ -325,7 +346,7 @@ let delivery = await submitFeedback({
 });
 ```
 
-The complete submission is limited to 16 KiB of JSON. The API requires a trusted native click/submit, once per event, and rejects agent-invoked events. Do not synthesize clicks, cache events, or submit from subscriptions, restoration, value tools, or agent updates. A tool may save a local draft without forwarding it. Delivery suppression is an additional guard, not a substitute for explicit domain actions.
+The complete submission is limited to 16 KiB of JSON. The API requires a trusted native click/submit, once per event, and rejects agent-invoked events. Do not synthesize clicks, cache events, or submit from subscriptions, restoration, value tools, or agent updates. Tool edits remain local until an explicit Save; the cache commit API rejects pending agent commands. Delivery suppression is an additional guard, not a substitute for explicit domain actions.
 
 The promise resolves with `{ submissionId, instanceId, revision?, state, receiptId?, failure? }`. States are `accepted`, `rejected`, or `unknown`; `queued` is intermediate. None confirms external persistence. The reserved native context `AGUI_FEEDBACK` exposes `connected`, `availability` (`disabled`, `ready`, `unavailable`), `pending`, `delivery`, `status`, and `message`. Bind an `agui-state` with `bind="$.status: AGUI_FEEDBACK/status; $.message: AGUI_FEEDBACK/message"` when useful. Keep record-level persistence and errors in application state; never replace the reserved context.
 
@@ -356,7 +377,7 @@ For native browser WebMCP or browser inspection, follow the [Chrome MCP setup](h
 
 ## Reconnection and recovery
 
-Pages reconnect automatically. Local-only tabs and shared user pages restore the latest accepted markup with its initial values and rerun its marked modules; state commands are not replayed. Viewers reconnect to the current mirrored view. Multiple tabs receive the same insertions and state commands. Local-only tabs have independent interactions. Shared sessions mirror the user's view to read-only viewers. Stopping discards live state and events while retaining the cached interface. An empty insertion saves a blank definition; `clear` removes it.
+Pages reconnect automatically. Local-only tabs and shared user pages restore the latest accepted markup with committed provider values when present and rerun its marked modules; state commands are not replayed. Other properties use source defaults. Viewers reconnect to the current mirrored view. Multiple tabs receive the same insertions and state commands; their unsaved edits remain independent. Shared sessions mirror the user's view to read-only viewers. Stopping discards unsaved live state and events while retaining the interface and committed data. An empty insertion saves a blank definition when it does not conflict with saved data; `clear` discards both.
 
 - `SESSION_EXISTS`: check `status`; reuse a session belonging to this task or choose another ID. Do not stop an unrelated session to resolve a name collision.
 - `SESSION_STOPPED`: start the intended session before inserting.
@@ -367,6 +388,7 @@ Pages reconnect automatically. Local-only tabs and shared user pages restore the
 - `INSERT_FAILED`: fix the reported JSON, template, stylesheet, or module error. Validation and stylesheet failures preserve prior content. Read `agui:error` events for failures while restoring queued markup. Modules may already have run or changed content; reload the session URL to restore the last accepted markup when needed.
 - `UPDATE_FAILED`: check the selector and component fields. Commands and multi-tab delivery are not transactions; inspect affected pages before retrying after partial failure or timeout.
 - `CACHE_ERROR`: resolve the reported storage problem. Failed insertions preserve the previous accepted cache, but browser delivery may already have changed a page. Reload to restore the last accepted interface. Startup cache failures retain the saved definition; discard it with `clear` only when intended.
+- `DATA_CONFLICT`: reconcile changed persistence declarations with saved data. Keep a backup before explicitly discarding it with `sync <SESSION_ID> --reset-data`.
 - `CLEAR_FAILED`: clearing could not finish on every page. Check the reported error before retrying; the saved definition is retained unless clearing succeeds.
 - `START_FAILED`, `START_TIMEOUT`, or persistent `SESSION_UNREACHABLE`: inspect the message and private `worker.log`; report a persistent blocker rather than repeatedly retrying or killing a stored PID.
 

@@ -27,6 +27,7 @@ export function parseCommand(args) {
         tunnel: { type: 'boolean' },
         query: { type: 'string' },
         key: { type: 'string' },
+        'reset-data': { type: 'boolean' },
       },
     });
   } catch (error) {
@@ -108,5 +109,6 @@ export function parseCommand(args) {
     file: values.file,
     pageId: values.page,
     tunnel: !!values.tunnel,
+    ...(values['reset-data'] ? { resetData: true } : {}),
   };
 }

@@ -20,3 +20,5 @@ export { listPageTools, executePageTool } from './tools.js';
 export { ToolDescriptor, getActiveWebMCPTools, webMCPRegistry } from '@symbiotejs/symbiote/webmcp';
 export { executeWebMCPTool } from './tools.js';
 export { FEEDBACK_CONTEXT } from '../../feedback/constants.js';
+export { commitData, readDataCommit, getDataState } from './data.js';
+export { DATA_CONTEXT } from '../../data/constants.js';

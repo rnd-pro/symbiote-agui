@@ -18,6 +18,7 @@ import { readCachedMarkup, prepareCachedMarkup, clearCachedMarkup } from './cach
 import { SessionTunnel } from '../tunnel/session-tunnel.js';
 import { recordDirectory } from './store.js';
 import { SessionFeedback } from '../feedback/session-feedback.js';
+import { SessionData } from '../data/commits.js';
 
 export class SessionRuntime {
   /** @type {import('node:http').Server | undefined} */
@@ -46,12 +47,13 @@ export class SessionRuntime {
   constructor(record) {
     this.record = record;
     this.feedback = new SessionFeedback(record);
+    this.data = new SessionData(this);
   }
 
   /** @param {AbortSignal} signal */
   async start(signal) {
     let cached = await readCachedMarkup(this.record.sessionId);
-    let html = cached ?? '<h1>AGUI</h1><p>Waiting for generated content.</p>';
+    let html = await this.data.restore(cached ?? '<h1>AGUI</h1><p>Waiting for generated content.</p>');
     let { classes } = analyzeMarkup(html);
     let access = createPageAccess(this.record);
     this.access = access;
@@ -59,7 +61,7 @@ export class SessionRuntime {
     this.server = server;
     this.styles = styles;
     publishStyles(styles.build(classes));
-    this.restored = cached !== undefined;
+    this.restored = cached !== undefined || this.data.raw !== undefined;
     this.record.url = url;
     this.latest = {
       html,
@@ -73,7 +75,7 @@ export class SessionRuntime {
           await this.pages.request(socket, { type: 'render', ...this.latest });
         }
       }),
-      (message) => this.events.add(message), this.feedback);
+      (message) => this.events.add(message), this.feedback, this.data);
   }
 
   /** @returns {import('../../types/session.js').SessionStatus} */
@@ -85,6 +87,8 @@ export class SessionRuntime {
       url: this.record.url,
       clients,
       feedback: this.feedback.status(),
+      data: this.data.status(),
+      ...(this.data.warning ? { warning: this.data.warning } : {}),
       ...(this.tunnel ? { tunnel: { ...this.tunnel.status } } : {}),
       ...(this.tunnel?.origin ? {
         publicUrl: `${this.tunnel.origin}${this.access?.path}`,
@@ -136,16 +140,18 @@ export class SessionRuntime {
     return this.feedbackStatus();
   }
 
-  sync() {
-    return this.replaceMarkup('', true, true);
+  /** @param {boolean} [resetData] */
+  sync(resetData = false) {
+    return this.replaceMarkup('', true, true, resetData);
   }
 
   /**
    * @param {string} html
    * @param {boolean} persist
    * @param {boolean} [fromSaved]
+   * @param {boolean} [resetData]
    */
-  replaceMarkup(html, persist, fromSaved = false) {
+  replaceMarkup(html, persist, fromSaved = false, resetData = false) {
     return this.enqueue(async () => {
       if (this.closing || !this.styles || !this.pages || !this.latest) {
         throw new CommandError('The session is stopped.', ERROR_CODE.SESSION_STOPPED, EXIT_CODE.RUNTIME_ERROR);
@@ -153,15 +159,20 @@ export class SessionRuntime {
       let previous = getStyles();
       /** @type {import('../../types/session.js').PreparedCache | undefined} */
       let cache;
+      /** @type {Awaited<ReturnType<SessionData['prepareReplacement']>> | undefined} */
+      let data;
       try {
         if (fromSaved) {
           let saved = await readCachedMarkup(this.record.sessionId);
           if (saved === undefined) { throw new CommandError('No saved definition to sync.', ERROR_CODE.CACHE_ERROR, EXIT_CODE.RUNTIME_ERROR); }
           html = saved;
         }
+        let source = html;
+        data = await this.data.prepareReplacement(source, resetData, persist);
+        html = data.html;
         let { classes } = analyzeMarkup(html);
         let stylesheet = this.styles.build(classes);
-        if (persist && !fromSaved) { cache = await prepareCachedMarkup(this.record.sessionId, html); }
+        if (persist && !fromSaved) { cache = await prepareCachedMarkup(this.record.sessionId, source); }
         publishStyles(stylesheet);
         this.revision += 1;
         let update = {
@@ -172,15 +183,18 @@ export class SessionRuntime {
         let applied = await this.pages.broadcast({ type: 'render', ...update });
         if (cache) { await cache.commit(); }
         else if (!persist) { await clearCachedMarkup(this.record.sessionId); }
+        await data.cache?.commit();
         this.latest = update;
+        this.data.acceptReplacement(source, data.revision, data.cache?.raw);
         return { ...this.status(), delivery: applied ? 'applied' : 'queued', ...(fromSaved ? { synced: true } : {}), ...(!persist ? { cleared: true } : {}) };
       } catch (error) {
         publishStyles(previous);
-        if (error instanceof CommandError && error.code === ERROR_CODE.CACHE_ERROR) { throw error; }
+        if (error instanceof CommandError && (error.code === ERROR_CODE.CACHE_ERROR || error.code === ERROR_CODE.DATA_CONFLICT)) { throw error; }
         let operation = persist ? 'insert markup' : 'clear the interface';
         throw new CommandError(`Could not ${operation}: ${errorMessage(error)}`, persist ? ERROR_CODE.INSERT_FAILED : ERROR_CODE.CLEAR_FAILED, EXIT_CODE.RUNTIME_ERROR);
       } finally {
         await cache?.discard();
+        await data?.cache?.discard();
       }
     });
   }

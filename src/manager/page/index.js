@@ -100,7 +100,7 @@ class SessionManager extends ContextProvider {
     let target = sessionId || 'all sessions in this scope';
     let confirmations = {
       clear: `Clear ${target}? This deletes saved HTML and Markdown, including files in your Git library, and clears live content.`,
-      sync: `Sync ${target}? Running interfaces reload their saved definition and current form state is reset.`,
+      sync: `Sync ${target}? Running interfaces reload their saved definition. Unsaved edits are discarded; committed data is retained.`,
       'tunnel renew': `Renew tunnels for ${target}? Current public links will be replaced.`,
     };
     let warning = confirmations[/** @type {keyof typeof confirmations} */ (operation)];

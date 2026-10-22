@@ -50,7 +50,9 @@ npx symbiote-agui sync leads
 npx symbiote-agui sync all
 ```
 
-`sync` reads the latest saved HTML and applies it without rewriting the source or description. It rebuilds styles, resets browser component state, reruns marked modules, and refreshes tool registrations. Rediscover tools before invoking them again. Live form values, user progress, and `update` changes are not saved definitions; arrange durable storage when a task needs it.
+`sync` reads the latest saved HTML and applies it without rewriting the source or description. It rebuilds styles, reruns marked modules, and refreshes tool registrations. Rediscover tools before invoking them again. Unsaved form values and `update` changes reset; explicitly committed provider data is retained when declarations remain compatible.
+
+[Local data commits](./reference.md#local-data-commits) update private cached HTML under `.runtime/`, scoped to this library on this machine. They never write application records into shared source definitions. Copying or importing HTML/Markdown does not transfer those snapshots. Adding providers or keys preserves existing committed values; removing or renaming them, or changing a non-null top-level type, requires reconciliation. Conflicting sync fails without discarding the previous snapshot. After backing up any needed data, `npx symbiote-agui sync leads --reset-data` explicitly resets committed data to the saved source defaults. Reset applies to one running session at a time.
 
 `sync all` targets running sessions with saved definitions in the selected storage scope. It does not open or start other sessions. Results report per-session success or failure; other sessions continue after a failure. Nothing is watched or synced in the background.
 

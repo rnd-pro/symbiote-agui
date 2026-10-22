@@ -1,5 +1,14 @@
 import type { ComponentState } from './components.js';
 import type { FeedbackDelivery, FeedbackStatus, FeedbackSubmission, FeedbackReference, FeedbackEvent, FeedbackSubmitOptions } from './feedback.js';
+import type { DataCommit, DataReference, DataResult, DataStatus, DataTarget } from './data.js';
+
+export type DataPageMessage =
+  | { type: 'data-commit'; commit: DataCommit }
+  | { type: 'data-read'; references: DataReference[] };
+
+export type DataServerMessage =
+  | { type: 'data-status'; data: DataStatus }
+  | { type: 'data-result'; result: DataResult };
 
 export type FeedbackPageMessage =
   | { type: 'feedback-submit'; submission: FeedbackSubmission }
@@ -44,10 +53,11 @@ export type PageCommand =
   | { type: 'call'; discoveryId: string; name: string; input: Record<string, unknown>; deadline: number };
 
 export type ServerMessage = (PageCommand & { id: string }) | { type: 'stop' }
-  | PageRoleMessage | ({ type: 'snapshot' } & MirrorSnapshot) | FeedbackServerMessage;
+  | PageRoleMessage | ({ type: 'snapshot' } & MirrorSnapshot) | FeedbackServerMessage | DataServerMessage;
 
 export type PageMessage =
   | FeedbackPageMessage
+  | DataPageMessage
   | ({ type: 'snapshot' } & MirrorSnapshot)
   | { type: 'result'; id: string; result?: unknown; error?: string }
   | { type: 'hello'; title: string }
@@ -74,6 +84,7 @@ export interface FragmentAnalysis {
 export interface PageApi {
   emit(name: string, data?: unknown): boolean;
   submitFeedback(event: FeedbackEvent, options: FeedbackSubmitOptions): Promise<FeedbackDelivery>;
+  commitData(targets: DataTarget[], options?: { commitId?: string }): Promise<DataResult>;
 }
 
 export type ModuleCleanup = () => void | Promise<void>;

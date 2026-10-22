@@ -87,3 +87,23 @@ test('control requires authentication, verifies identity, and acknowledges clean
   assert.equal((await requestSession(record, 'stop')).state, 'stopped');
   assert.equal(stopped, true);
 });
+
+test('sync reset validates its bounded explicit option before invoking the worker', async (t) => {
+  let state = await temporaryState();
+  t.after(() => state.close());
+  let record = await reserveSession('sync-options');
+  /** @type {(boolean | undefined)[]} */
+  let calls = [];
+  let control = await startControlServer(record,
+    () => ({ sessionId: record.sessionId, state: 'ready' }), async () => {},
+    { sync: async (reset) => { calls.push(reset); return { sessionId: record.sessionId, state: 'ready' }; } });
+  t.after(() => closeServer(control.server));
+  record.controlUrl = control.url;
+  await requestSession(record, 'sync');
+  await requestSession(record, 'sync', 2_000, JSON.stringify({ resetData: true }));
+  for (let body of ['null', '[]', '{"resetData":"true"}', '{"resetData":true,"other":true}']) {
+    await assert.rejects(requestSession(record, 'sync', 2_000, body), { code: 'INVALID_INPUT' });
+  }
+  await assert.rejects(requestSession(record, 'sync', 2_000, ' '.repeat(1025)), { code: 'INPUT_TOO_LARGE' });
+  assert.deepEqual(calls, [false, true]);
+});

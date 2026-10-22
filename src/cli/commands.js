@@ -1,7 +1,7 @@
 export let COMMANDS = Object.freeze({
   save: { usage: 'save <SESSION_ID> [--file <HTML_PATH>]', options: ['file'] },
   describe: { usage: 'describe <SESSION_ID> [--file <MARKDOWN_PATH>]', options: ['file'] },
-  sync: { usage: 'sync <SESSION_ID>', options: [] },
+  sync: { usage: 'sync <SESSION_ID> [--reset-data]', options: ['reset-data'] },
   start: {
     usage: 'start <SESSION_ID> [--no-open] [--tunnel]',
     options: ['no-open', 'tunnel'],

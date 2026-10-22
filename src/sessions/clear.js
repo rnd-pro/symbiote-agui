@@ -7,6 +7,7 @@ import { requestSession } from './client.js';
 import { SESSION_STATE } from './constants.js';
 import { isProcessAlive, readSession, releaseSession, reserveSession } from './store.js';
 import { clearMetadata } from '../metadata/store.js';
+import { clearRuntimeCache } from '../data/cache.js';
 
 /** @param {string} sessionId */
 export async function clearSession(sessionId) {
@@ -14,6 +15,7 @@ export async function clearSession(sessionId) {
   if (record && isProcessAlive(record.pid)) {
     let result = await requestSession(record, 'clear', INSERT_TIMEOUT_MS);
     await clearMetadata(sessionId);
+    await clearRuntimeCache(sessionId);
     return result;
   }
   if (record) { await releaseSession(record); }

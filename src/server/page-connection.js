@@ -4,6 +4,7 @@ import { HEARTBEAT_MS, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, PAGE_REQUEST_TIM
 import { isPageOrigin } from './page-access.js';
 import { SharedPages } from './shared-pages.js';
 import { PageFeedback } from './page-feedback.js';
+import { PageData } from './page-data.js';
 
 export class PageConnection {
   /** @type {Set<WebSocket>} */
@@ -21,9 +22,11 @@ export class PageConnection {
    * @param {(socket: WebSocket) => Promise<void>} initialize
    * @param {(message: Extract<import('../../types/transport.js').PageMessage, { type: 'event' }>) => void} onEvent
    * @param {import('../feedback/session-feedback.js').SessionFeedback} [feedback]
+   * @param {import('../data/commits.js').SessionData} [data]
    */
-  constructor(server, origin, access, initialize, onEvent, feedback) {
+  constructor(server, origin, access, initialize, onEvent, feedback, data) {
     this.feedback = feedback ? new PageFeedback(feedback, this.pages, this.pending) : undefined;
+    this.data = data ? new PageData(data, this.pages, this.pending) : undefined;
     this.server = new WebSocketServer({ noServer: true, maxPayload: MAX_PAGE_MESSAGE_BYTES });
     server.on('upgrade', (request, socket, head) => {
       let endpoint;
@@ -60,6 +63,7 @@ export class PageConnection {
         this.clients.delete(socket);
         this.pages.delete(pageId);
         this.feedback?.disconnect(socket);
+        this.data?.disconnect(socket);
         this.shared.notify();
         alive.delete(socket);
         for (let [id, pending] of this.pending) {
@@ -77,6 +81,11 @@ export class PageConnection {
             return;
           }
           if (page.role === PAGE_ROLE.VIEWER) { throw new Error('Viewers cannot send actions or state.'); }
+          if (message.type === 'data-commit' || message.type === 'data-read') {
+            if (!this.data) { throw new Error('Data commits are unavailable.'); }
+            this.data.receive(socket, message, Buffer.byteLength(data.toString()));
+            return;
+          }
           if (message.type === 'feedback-submit' || message.type === 'feedback-read') {
             if (!this.feedback) { throw new Error('Feedback transport is unavailable.'); }
             this.feedback.receive(socket, message, Buffer.byteLength(data.toString()));
@@ -96,6 +105,7 @@ export class PageConnection {
         }
       });
       this.feedback?.connect(socket);
+      this.data?.connect(socket);
       let initialized = page.role === PAGE_ROLE.VIEWER ? Promise.resolve() : initialize(socket);
       void initialized.then(() => { page.ready = true; this.shared.notify(); }).catch((error) => {
         page.error = String(error.message);
@@ -164,6 +174,7 @@ export class PageConnection {
 
   async close() {
     this.feedback?.close();
+    this.data?.close();
     clearInterval(this.heartbeat);
     for (let id of this.pending.keys()) {
       this.finish(id, new Error('The session ended.'));

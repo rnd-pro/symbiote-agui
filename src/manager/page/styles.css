@@ -2,7 +2,11 @@
 @import '../../page/uilib.css';
 
 @layer base {
-  body { @apply antialiased; }
+  body {
+    @apply antialiased;
+    --agui-icon-size: 1.25rem;
+    --agui-icon-optical-size: 20;
+  }
   pre { @apply whitespace-pre-wrap break-words text-sm leading-6; }
   a { @apply text-agui-accent underline underline-offset-4; }
   a:focus-visible { @apply outline-2 outline-offset-2 outline-agui-accent; }

@@ -26,6 +26,7 @@ The default JSDA page bundle includes and registers every available library comp
 - `agui-table`: provider-bound `rows`, typed `columns`, and caller-owned `texts`, with sorting, ID selection, and local pagination. Optional `filteredIds` consumes a filter's matching IDs; `null` shows all rows and `[]` shows none. `value` is always a string ID array; `selection="none|single|multiple"` defaults to none. Pair selection with `pub-to` and sort with `sort-pub-to`. Supply `label`, optional `locale`, and `page-size` (default 20, maximum 100). Every source row needs a unique nonempty string ID. Disabled/read-only blocks changes; `loading` and `error` show caller-owned states. The table does not edit records.
 - `agui-kanban`: status editor over a provider-bound records array in `value`, with `columns: [{ value, label, disabled?, tone? }]`. Pair `pub-to` with the same provider binding; cards move between columns through native drag-and-drop or Alt+Left/Right while focused. Configure `id-key`, `status-key`, `title-key`, and optional `description-key`. Unknown statuses remain in a caller-labeled unassigned group. Provide `label` and caller-owned `texts`; disabled/read-only, loading, and errors block edits. Declare records in `persist` and use the data toolbar for Save/Cancel.
 - `agui-chart`: prepared `rows` and declarative `series` for `type="line|bar|donut"`, rendered as SVG. Supply `id-key`, `x-key`, `x-label`, `label`, optional `description`, and caller-owned `texts`. Optional `value` is a selected ID array with `selection="none|single|multiple"` and `pub-to`. A built-in data disclosure supports keyboard reading/selection. The heavy runtime loads automatically on element initialization; do not add imports or engine configuration to sessions.
+- `agui-map`: prepared location `rows`, selected IDs in `value`, and `view: { center: [latitude, longitude], zoom }`. Use `pub-to` for selection and `view-pub-to` for viewport publication. Supply caller-owned labels/texts and optional raster `tiles` with visible attribution. Leaflet and CSS load automatically on initialization; a coordinate table provides keyboard selection. Viewers receive the user's inert map viewport without Leaflet.
 - `agui-dashboard`: responsive workspace. `layout="single"` (default), `split`, `equal`, or `grid`; `density="comfortable"` (default) or `compact`. In split mode, direct children with `slot="main"` use two columns and `slot="side"` one. Toolbars and `slot="full"` span all columns. These layout slot attributes do not require Shadow DOM.
 - `agui-panel`: content container; supply ordinary child markup and optional headings/actions.
 - `agui-header`: header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` under the same application provider or viewport, or directly in `agui-app` for a fixed header row. Add `floating` for sticky positioning within the scroll region; use `--agui-header-offset` if another sticky element is above it.
@@ -239,6 +240,32 @@ Use `bar` for category comparisons and `donut` for a single nonnegative series. 
 Point clicks, the native data table, and `set_selection` (`ids`) select source IDs through one guarded path. Incoming updates and equivalent selections emit no changes; removed records are ignored without rewriting provider selection. Discover tools by `ownerName="agui-chart"` and authored ID. `read_view` returns formatted X/series fields, and `read_selection` returns IDs; use `offset` and `limit` (default 20, maximum 100) and follow `nextOffset` within 8 KiB. Oversized points return ID and `truncated: true`. Notifications contain only chart ID/context and counts. Selection stays transient by default; charts never edit records.
 
 The packaged runtime loads once per page when the first chart initializes, with caller-owned loading/error states. Chart-free pages and viewers do not fetch it. Charts react to container size, theme, and reduced motion; hidden charts update when revealed. Do not supply ECharts options, callbacks, HTML tooltips, imports, or initialization scripts. Shared viewers receive inert SVG and data. See the [chart contract](../../src/page/client/uilib/widgets/chart/README.md) for complete attributes, copy, and lifecycle behavior.
+
+### Maps
+
+Share provider records and selected IDs with a table or other views. Use finite numeric coordinates; invalid coordinates are skipped and counted without rewriting records. IDs must be unique nonempty strings. This example requires no JavaScript:
+
+```html
+<context-provider ctx="LOCATIONS">
+  <script type="application/json">
+    {
+      "rows":[{"id":"studio","label":"Example studio","latitude":51.505,"longitude":-0.09},{"id":"office","label":"Example office","latitude":51.51,"longitude":-0.12}],
+      "selected":[],"view":{"center":[51.505,-0.09],"zoom":12},
+      "tiles":{"url":"https://tile.openstreetmap.org/{z}/{x}/{y}.png","attribution":"OpenStreetMap contributors","attributionUrl":"https://www.openstreetmap.org/copyright"},
+      "texts":{"data":"Explore locations","point":"Location","latitude":"Latitude","longitude":"Longitude","skipped":"Skipped coordinates","fit":"Fit locations","zoomIn":"Zoom in","zoomOut":"Zoom out","loading":"Loading map...","empty":"No locations.","loadFailed":"Map library could not load. Reload to retry.","renderFailed":"Map could not be rendered.","tileFailed":"Map tiles are unavailable.","invalidRows":"Review record IDs.","invalidTiles":"Review the tile provider.","invalidState":"Review map settings.","unavailable":"Map is unavailable.","results":"Results","selected":"Selected","selection":"Selection","selectRow":"Select location","selectAll":"Select all locations","page":"Page","pagination":"Location pages","previous":"Previous page","next":"Next page"}
+    }
+  </script>
+  <agui-map id="locations-map" label="Team locations" description="Prepared example locations."
+    pub-to="LOCATIONS/selected" view-pub-to="LOCATIONS/view"
+    bind="$.rows: LOCATIONS/rows; $.value: LOCATIONS/selected; $.view: LOCATIONS/view; $.tiles: LOCATIONS/tiles; $.texts: LOCATIONS/texts"></agui-map>
+</context-provider>
+```
+
+Field attributes `id-key`, `latitude-key`, `longitude-key`, and `label-key` default to `id`, `latitude`, `longitude`, and `label`. `selection="none|single|multiple"` defaults to `multiple`. Limits are 500 records, latitude +/-85.05112878, longitude +/-180, and integer zoom 0-22. Keep selection and viewport transient unless saving them is explicitly required. Map clicks, coordinate-table selection, and tools use the same guarded mutations. Incoming changes and no-ops do not publish; removed/unmappable IDs are ignored locally without pruning the provider.
+
+`tiles` defaults to `null` (markers without a basemap). Configure an HTTPS raster URL with `{z}`, `{x}`, `{y}`, required plain-text attribution, optional HTTPS `attributionUrl`, and optional native `minZoom`/`maxZoom` (default 0-19). Follow the [tile provider policy](https://operations.osmfoundation.org/policies/tiles/); do not prefetch or bulk-download tiles. Images send only the page origin as referrer, including in viewers. Tile URLs are public to page viewers; do not put private credentials in them. No CDN scripts, Leaflet options, popup HTML, imports, or session initialization code are needed.
+
+Discover by `ownerName="agui-map"` and authored ID. `set_selection` accepts `ids`; `set_view` accepts `center` and `zoom`; `fit_records` fits valid locations. `read_view` returns viewport/counts and visible IDs, with `offset`/`limit` (default 20, maximum 100), `nextOffset`, and an 8 KiB bound. Notifications use `map-selection-change` or `map-view-change` and counts, never records. Disabled/read-only blocks selection and navigation. Tile failure shows caller text while markers remain usable. Viewers see the user's scaled, inert viewport and do not run Leaflet. See the [map contract](../../src/page/client/uilib/widgets/map/README.md) for configuration, copy, lifecycle, and sharing behavior.
 
 ### Styling and tools
 

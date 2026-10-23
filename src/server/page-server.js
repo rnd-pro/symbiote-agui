@@ -3,6 +3,8 @@ import { closeServer, waitForServer } from '../shared/server.js';
 import { createStyles } from '../markup/styles.js';
 import { STYLESHEET_PATH, CLIENT_SCRIPT_PATH } from '../markup/constants.js';
 import { CHART_RUNTIME_PATH } from '../page/client/uilib/widgets/chart/constants.js';
+import { MAP_RUNTIME_PATH, MAP_CSS_PATH, MAP_ASSET_PREFIX } from '../page/client/uilib/widgets/map/constants.js';
+import { serveMapAsset } from './map-assets.js';
 import { TUNNEL_HEALTH_PATH } from '../tunnel/constants.js';
 
 /** @param {import('../../types/session.js').PageAccess} access */
@@ -42,11 +44,18 @@ export async function startPageServer(access) {
       response.writeHead(308, { location: access.path }).end();
       return;
     }
+    if (request.method === 'GET' && (pathname === MAP_CSS_PATH || pathname?.startsWith(MAP_ASSET_PREFIX))) {
+      serveMapAsset(pathname, response).then((served) => {
+        if (!served) { response.writeHead(404).end(); }
+      }).catch(() => response.writeHead(500).end());
+      return;
+    }
     if (request.method !== 'GET' || ![
       access.path,
       STYLESHEET_PATH,
       CLIENT_SCRIPT_PATH,
       CHART_RUNTIME_PATH,
+      MAP_RUNTIME_PATH,
     ].includes(pathname || '')) {
       response.writeHead(404).end();
       return;

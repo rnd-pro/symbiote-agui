@@ -1,0 +1,16 @@
+<context-provider id="map-data" ctx="MAPS">
+  <script type="application/json">
+    {
+      "rows":[{"id":"a","label":"<b>Alpha</b>","latitude":51.5,"longitude":-0.1},{"id":"b","label":"Beta","latitude":51.51,"longitude":-0.12},{"id":"invalid","label":"Invalid","latitude":"51","longitude":0}],
+      "ids":[],"view":{"center":[51.5,-0.1],"zoom":12},"readonly":false,"loading":false,
+      "tiles":{"url":"https://tiles.example.test/{z}/{x}/{y}.png","attribution":"Example map tiles","attributionUrl":"https://example.test/"},
+      "texts":{"data":"Explore locations","point":"Location","latitude":"Latitude","longitude":"Longitude","skipped":"Skipped coordinates","fit":"Fit locations","zoomIn":"Zoom in","zoomOut":"Zoom out","loading":"Loading map","empty":"No locations","loadFailed":"Map dependency failed","renderFailed":"Map rendering failed","tileFailed":"Map tiles failed","invalidRows":"Invalid map records","invalidTiles":"Invalid tiles","invalidState":"Invalid map settings","unavailable":"Map unavailable","results":"Results","selected":"Selected","selection":"Selection","selectRow":"Select location","selectAll":"Select all locations","page":"Page","pagination":"Location pages","previous":"Previous page","next":"Next page"}
+    }
+  </script>
+  <agui-map id="first-map" label="Locations" description="Prepared locations" pub-to="MAPS/ids" view-pub-to="MAPS/view"
+    bind="$.rows: MAPS/rows; $.texts: MAPS/texts; $.tiles: MAPS/tiles; $.value: MAPS/ids; $.view: MAPS/view; $.readonly: MAPS/readonly; $.loading: MAPS/loading"></agui-map>
+  <agui-map id="second-map" label="Independent viewport" pub-to="MAPS/ids"
+    bind="$.rows: MAPS/rows; $.texts: MAPS/texts; $.value: MAPS/ids"></agui-map>
+  <agui-map id="late-map" label="Removed while loading"
+    bind="$.rows: MAPS/rows; $.texts: MAPS/texts"></agui-map>
+</context-provider>

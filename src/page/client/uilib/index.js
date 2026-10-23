@@ -18,6 +18,8 @@ import { Icon } from './content/icon/icon.js';
 import { Dialog } from './feedback/dialog/dialog.js';
 import { Chart } from './widgets/chart/chart.js';
 import { ChartDataTable } from './widgets/chart/data-table.js';
+import { AguiMap } from './widgets/map/map.js';
+import { MapDataTable } from './widgets/map/data-table.js';
 import { Kanban } from './widgets/kanban/kanban.js';
 import { KanbanColumn } from './widgets/kanban/column.js';
 import { KanbanCard } from './widgets/kanban/card.js';
@@ -59,6 +61,8 @@ export function registerUiLibComponents() {
   Table.reg('agui-table');
   ChartDataTable.reg('agui-chart-data');
   Chart.reg('agui-chart');
+  MapDataTable.reg('agui-map-data');
+  AguiMap.reg('agui-map');
   KanbanCard.reg('agui-kanban-card');
   KanbanColumn.reg('agui-kanban-column');
   Kanban.reg('agui-kanban');

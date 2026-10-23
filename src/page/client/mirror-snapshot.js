@@ -1,6 +1,7 @@
 import { CONTENT_ROOT_ID, STYLESHEET_ID } from '../../markup/constants.js';
 import { mirrorOverlays, MIRROR_OVERLAY_STYLES } from './mirror-overlays.js';
 import { TABLE_ITEM_TAGS } from './uilib/widgets/table/constants.js';
+import { mirrorMaps } from './mirror-maps.js';
 
 /** @param {number} revision */
 export function captureSnapshot(revision) {
@@ -23,6 +24,7 @@ export function captureSnapshot(revision) {
     }
   });
   mirrorOverlays(root, copy);
+  mirrorMaps(root, copy);
   // Itemize hosts are transparent in the live table. Unwrap them so reparsing
   // a snapshot preserves native table structure instead of foster-parenting.
   for (let element of copy.querySelectorAll(TABLE_ITEM_TAGS.join(','))) {

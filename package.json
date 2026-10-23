@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.3.1",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^24.19.2",
     "@types/ws": "^8.18.2",
     "puppeteer-core": "^25.14.0",
@@ -64,6 +65,7 @@
     "@tailwindcss/node": "^4.3.3",
     "echarts": "^6.1.0",
     "jsda-kit": "1.6.4",
+    "leaflet": "^1.9.4",
     "linkedom": "^0.18.13",
     "tailwindcss": "^4.3.3",
     "ws": "^8.22.0"

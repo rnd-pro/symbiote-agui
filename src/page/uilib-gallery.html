@@ -24,6 +24,12 @@
       "monthlyRows": [{"id":"jan","month":"2026-01-01","actual":0,"target":1200},{"id":"feb","month":"2026-02-01","actual":1800,"target":1600},{"id":"mar","month":"2026-03-01","actual":null,"target":2000},{"id":"apr","month":"2026-04-01","actual":2600,"target":2400}],
       "monthlySeries": [{"key":"actual","valueKey":"actual","label":"Actual","color":"success","format":"currency","currency":"USD"},{"key":"target","valueKey":"target","label":"Target","color":"accent","format":"currency","currency":"USD"}],
       "monthlySelected": [],
+      "mapRows": [{"id":"studio","label":"Example studio","latitude":51.505,"longitude":-0.09},{"id":"office","label":"Example office","latitude":51.51,"longitude":-0.12},{"id":"warehouse","label":"Example warehouse","latitude":51.49,"longitude":-0.11},{"id":"unmapped","label":"Coordinates pending","latitude":null,"longitude":null}],
+      "mapSelection": [],
+      "mapView": {"center":[51.505,-0.09],"zoom":12},
+      "mapTiles": {"url":"https://tile.openstreetmap.org/{z}/{x}/{y}.png","attribution":"OpenStreetMap contributors","attributionUrl":"https://www.openstreetmap.org/copyright"},
+      "mapTexts": {"data":"Explore coordinates","point":"Location","latitude":"Latitude","longitude":"Longitude","skipped":"Locations without valid coordinates","fit":"Fit locations","zoomIn":"Zoom in","zoomOut":"Zoom out","loading":"Loading map...","empty":"No mapped locations.","loadFailed":"The map library could not load. Reload to retry.","renderFailed":"The map could not be rendered.","tileFailed":"Map tiles are unavailable. You can still use the locations.","invalidRows":"Review record IDs.","invalidTiles":"Review the tile provider.","invalidState":"Review map settings.","unavailable":"The map is unavailable.","results":"Locations","selected":"Selected","selection":"Selection","selectRow":"Select location","selectAll":"Select all locations","page":"Page","pagination":"Location pages","previous":"Previous page","next":"Next page"},
+      "mapColumns": [{"key":"label","label":"Location","type":"text"},{"key":"latitude","label":"Latitude","type":"number"},{"key":"longitude","label":"Longitude","type":"number"}],
       "tableRows": [
         {"id":"lead-01","name":"Northstar Studio","amount":0,"status":"new","active":true,"followUp":"2026-11-02","notes":"Prepare an introductory proposal."},
         {"id":"lead-02","name":"Orbit Works","amount":2400,"status":"contacted","active":false,"followUp":"2026-11-04"},
@@ -79,6 +85,7 @@
         <a href="#gallery-table-panel">Filters and table</a>
         <a href="#gallery-kanban-panel">Kanban</a>
         <a href="#gallery-charts-panel">Charts</a>
+        <a href="#gallery-map-panel">Map</a>
         <a href="#gallery-workflow">Data workflow</a>
       </nav>
     </agui-sidebar>
@@ -224,6 +231,16 @@
           <agui-chart id="gallery-share-chart" type="donut" label="Opportunity share" description="One nonnegative amount per company, without inferred aggregation."
             x-key="name" x-label="Company" selection="multiple" locale="en-US"
             pub-to="APP/tableSelection" bind="$.rows: APP/tableRows; $.series: APP/opportunitySeries; $.texts: APP/chartTexts; $.value: APP/tableSelection; $.readonly: APP/tableReadonly; $.loading: APP/tableLoading"></agui-chart>
+        </agui-panel>
+        <agui-panel slot="full" class="grid gap-4">
+          <h2 id="gallery-map-panel">Map</h2>
+          <p class="text-sm text-agui-muted">Select a marker or table row to share selection. Drag to pan, use the zoom buttons, or fit all mapped locations. Locations without coordinates remain in the table and are counted below the map. Tile requests go directly to OpenStreetMap; shared viewers see this viewport without interactive map controls.</p>
+          <agui-map id="gallery-locations-map" label="Example team locations" description="Fictional locations around London, with one record awaiting coordinates."
+            pub-to="APP/mapSelection" view-pub-to="APP/mapView"
+            bind="$.rows: APP/mapRows; $.value: APP/mapSelection; $.view: APP/mapView; $.tiles: APP/mapTiles; $.texts: APP/mapTexts"></agui-map>
+          <agui-table id="gallery-locations-table" label="All locations" selection="multiple"
+            pub-to="APP/mapSelection"
+            bind="$.rows: APP/mapRows; $.columns: APP/mapColumns; $.value: APP/mapSelection; $.texts: APP/mapTexts"></agui-table>
         </agui-panel>
         <agui-panel slot="full" class="grid gap-4">
           <h2>Theme tokens</h2>

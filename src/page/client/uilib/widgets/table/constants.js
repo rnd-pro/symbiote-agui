@@ -1,6 +1,6 @@
 import { DATA_LIMITS } from '../../shared/data/constants.js';
 
-export let TABLE_HOST_SELECTOR = 'agui-table, agui-chart-data';
+export let TABLE_HOST_SELECTOR = 'agui-table, agui-chart-data, agui-map-data';
 
 export let TABLE_LIMITS = Object.freeze({
   ...DATA_LIMITS,

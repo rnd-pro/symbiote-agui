@@ -1,4 +1,6 @@
-import { css } from '@symbiotejs/symbiote';
+import {
+  css,
+} from '@symbiotejs/symbiote';
 
 export default css`
   @layer components {
@@ -12,9 +14,7 @@ export default css`
       justify-content: space-between;
       gap: calc(var(--spacing, .25rem) * 3);
       padding-block: calc(var(--spacing, .25rem) * 3);
-      padding-inline: max(var(--agui-header-gutter), calc((100% - var(--container-7xl, 80rem)) / 2 + var(--agui-header-gutter)));
-      /** background-color: var(--agui-bg);*/
-      backdrop-filter: blur(14px);
+      padding-inline: max(var(--agui-header-gutter), calc((100% - var(--agui-content-width)) / 2 + var(--agui-header-gutter)));
     }
     agui-header h1 {
       font-size: var(--text-xl, 1.25rem);
@@ -25,10 +25,12 @@ export default css`
       position: sticky;
       z-index: 20;
       top: var(--agui-header-offset);
-      border-bottom: 1px solid var(--agui-border);
+      border-bottom: 1px solid var(--agui-divider);
     }
     @media (width >= 40rem) {
-      agui-header { --agui-header-gutter: calc(var(--spacing, .25rem) * 6); }
+      agui-header {
+        --agui-header-gutter: calc(var(--spacing, .25rem) * 6);
+      }
       agui-header h1 {
         font-size: var(--text-2xl, 1.5rem);
         line-height: var(--text-2xl--line-height, 1.3333333333);

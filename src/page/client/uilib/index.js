@@ -9,6 +9,9 @@ import { Toggle } from './controls/toggle/toggle.js';
 import { State } from './feedback/state/state.js';
 import { DataToolbar } from './controls/data-toolbar/data-toolbar.js';
 import { Icon } from './content/icon/icon.js';
+import {
+  Message,
+} from './feedback/message/message.js';
 
 export function registerUiLibComponents() {
   Dashboard.reg('agui-dashboard');
@@ -20,6 +23,7 @@ export function registerUiLibComponents() {
   Toggle.reg('agui-toggle');
   ThemeToggle.reg('agui-theme-toggle');
   State.reg('agui-state');
+  Message.reg('agui-message');
   DataToolbar.reg('agui-data-toolbar');
   Icon.reg('agui-icon');
 }

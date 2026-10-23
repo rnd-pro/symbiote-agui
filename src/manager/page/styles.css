@@ -5,7 +5,6 @@
 @layer base {
   body {
     @apply antialiased;
-    --agui-icon-size: 1.25rem;
     --agui-icon-optical-size: 20;
   }
   pre { @apply whitespace-pre-wrap break-words text-sm leading-6; }
@@ -17,13 +16,11 @@
 
 @layer components {
   agui-session-row { @apply block min-w-0; }
-  .connection { @apply max-w-prose break-words text-agui-muted; }
-  .connection[data-tone='live'] { @apply text-agui-text; }
-  .session-status {
-    @apply rounded-full bg-agui-raised px-3 py-1 text-xs text-agui-muted;
+  [data-state='running'] .session-status {
+    @apply bg-agui-success text-agui-on-success;
   }
-  [data-state='running'] .session-status { @apply bg-agui-accent text-agui-on-accent; }
-  [data-state='unknown'] .session-status { @apply text-agui-danger; }
-  .notice:empty,
+  [data-state='unknown'] .session-status {
+    @apply bg-agui-warning text-agui-on-warning;
+  }
   .error:empty { display: none; }
 }

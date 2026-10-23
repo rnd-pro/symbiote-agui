@@ -2,37 +2,90 @@
   agui-field,
   agui-select,
   agui-toggle,
-  agui-theme-toggle { @apply grid min-w-0 gap-1 text-agui-text; }
-  .agui-control-label { @apply grid gap-2; }
+  agui-theme-toggle {
+    @apply grid min-w-0 gap-1 text-agui-text;
+  }
+  .agui-control-label {
+    @apply grid gap-2;
+  }
 
   input:not([type='checkbox'], [type='radio']),
   textarea,
   select,
   .agui-input {
-    @apply w-full rounded-md border border-agui-border bg-agui-bg px-3 py-1.5 text-base text-agui-text;
+    @apply w-full rounded-agui-control border border-agui-border bg-agui-bg px-3 py-1.5 text-base text-agui-text;
     height: var(--agui-control-height);
     min-width: var(--agui-control-height);
   }
-  textarea { @apply h-auto min-h-24 resize-y; }
-  select { @apply appearance-none pe-10; }
-  .agui-select-control { @apply relative block min-w-0; }
+  input:not([type='checkbox'], [type='radio']):enabled:hover:not([readonly]):not(:user-invalid):not([aria-invalid='true']),
+  textarea:enabled:hover:not([readonly]):not(:user-invalid):not([aria-invalid='true']),
+  select:enabled:hover:not(:user-invalid):not([aria-invalid='true']) {
+    @apply border-agui-border-hover;
+  }
+  input[readonly],
+  textarea[readonly] {
+    @apply cursor-default border-agui-divider bg-agui-raised;
+  }
+  textarea {
+    @apply h-auto min-h-24 resize-y;
+  }
+  select {
+    @apply appearance-none pe-10;
+  }
+  .agui-select-control {
+    @apply relative block min-w-0;
+  }
   .agui-select-chevron {
     @apply pointer-events-none absolute inset-y-0 my-auto size-4 text-agui-muted;
     inset-inline-end: .75rem;
     rotate: 0deg;
   }
-  select:open + .agui-select-chevron { rotate: 180deg; }
-  select:disabled + .agui-select-chevron { @apply opacity-50; }
+  select:open + .agui-select-chevron {
+    rotate: 180deg;
+  }
+  select:disabled + .agui-select-chevron {
+    @apply opacity-50;
+  }
   @supports (appearance: base-select) {
     select,
-    ::picker(select) { appearance: base-select; }
-    select::picker-icon { display: none; }
-    ::picker(select) { @apply rounded-md border border-agui-border bg-agui-surface text-agui-text shadow-lg; }
+    ::picker(select) {
+      appearance: base-select;
+    }
+    select::picker-icon {
+      display: none;
+    }
+    ::picker(select) {
+      @apply agui-popover rounded-agui-control border border-agui-border text-agui-text shadow-agui-floating;
+      margin-block: .25rem;
+      margin-inline: 0;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      ::picker(select) {
+        opacity: 0;
+        transition-property: opacity, display, overlay;
+        transition-duration: var(--agui-motion-fast);
+        transition-timing-function: var(--agui-motion-ease);
+        transition-behavior: allow-discrete;
+      }
+      select:open::picker(select) {
+        opacity: 1;
+      }
+      @starting-style {
+        select:open::picker(select) {
+          opacity: 0;
+        }
+      }
+    }
     option {
       @apply px-3 py-2;
       min-height: var(--agui-control-height);
     }
-    option:enabled:hover { @apply bg-agui-raised; }
+    option:enabled:hover {
+      @apply bg-agui-hover;
+    }
+    option:checked {
+      @apply bg-agui-accent-soft;
+    }
   }
   label:has(> input[type='checkbox'], > input[type='radio']) {
     @apply flex flex-row-reverse items-center justify-end gap-2;
@@ -40,7 +93,9 @@
     min-width: var(--agui-control-height);
   }
   input[type='checkbox'],
-  input[type='radio'] { @apply m-0 size-5 shrink-0 accent-agui-accent; }
+  input[type='radio'] {
+    @apply m-0 size-5 shrink-0 accent-agui-accent;
+  }
   input[switch] {
     @apply appearance-none rounded-full border border-agui-border bg-agui-raised p-[.1875rem];
     width: calc(var(--agui-toggle-height) * 1.75);
@@ -52,36 +107,42 @@
     height: calc(var(--agui-toggle-height) - .5rem);
     content: '';
   }
-  input[switch]:enabled { @apply cursor-pointer; }
-  input[switch]:checked { @apply border-agui-accent bg-agui-accent; }
+  input[switch]:enabled {
+    @apply cursor-pointer;
+  }
+  input[switch]:checked {
+    @apply border-agui-accent bg-agui-accent;
+  }
   input[switch]:checked::before {
     @apply bg-agui-on-accent;
     transform: translateX(calc(var(--agui-toggle-height) * .75));
   }
-  @media (prefers-reduced-motion: no-preference) {
-    input[switch]::before { transition: transform 150ms ease; }
-    .agui-select-chevron { transition: rotate 150ms ease; }
-  }
-  @media (forced-colors: active) {
-    input[switch] { appearance: auto; }
-    input[switch]::before { content: none; }
-  }
   input::placeholder,
-  textarea::placeholder { @apply text-agui-muted; }
+  textarea::placeholder {
+    @apply text-agui-muted;
+  }
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible,
-  button:focus-visible { @apply outline-2 outline-offset-2 outline-agui-accent; }
+  button:focus-visible,
+  .agui-button:focus-visible {
+    @apply outline-2 outline-offset-2 outline-agui-accent;
+  }
   input:disabled,
   textarea:disabled,
   select:disabled,
-  button:disabled { @apply cursor-not-allowed opacity-50; }
+  button:disabled,
+  .agui-button[aria-disabled='true'] {
+    @apply cursor-not-allowed opacity-50;
+  }
   input:user-invalid,
   textarea:user-invalid,
   select:user-invalid,
   input[aria-invalid='true'],
   textarea[aria-invalid='true'],
-  select[aria-invalid='true'] { @apply border-agui-danger; }
+  select[aria-invalid='true'] {
+    @apply border-agui-danger outline-agui-danger;
+  }
   input,
   select,
   textarea,
@@ -92,17 +153,75 @@
   }
   button,
   .agui-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-agui-text px-3 py-1.5 text-sm font-normal text-agui-surface shadow-sm;
+    @apply inline-flex items-center justify-center gap-2 rounded-agui-control border border-agui-border bg-agui-surface px-3 py-1.5 text-sm font-normal text-agui-text;
     height: var(--agui-control-height);
     min-width: var(--agui-control-height);
   }
-  button:enabled { @apply cursor-pointer; }
-  button:hover:enabled { @apply opacity-90; }
-  .agui-button-primary { @apply border-agui-accent bg-agui-accent text-agui-on-accent; }
-  .agui-button-primary:hover:enabled { @apply bg-agui-accent opacity-90; }
-  .agui-button-danger { @apply border-agui-danger bg-transparent text-agui-danger shadow-none; }
+  button:enabled {
+    @apply cursor-pointer;
+  }
+  button:hover:enabled,
+  .agui-button:hover:not([aria-disabled='true']):not(:disabled) {
+    @apply border-agui-border-hover bg-agui-hover;
+  }
+  button:active:enabled,
+  .agui-button:active:not([aria-disabled='true']):not(:disabled) {
+    @apply bg-agui-raised;
+  }
+  .agui-button-primary {
+    @apply border-agui-accent bg-agui-accent text-agui-on-accent;
+  }
+  .agui-button-icon {
+    @apply shrink-0 rounded-full p-0;
+    width: var(--agui-control-height);
+  }
+  .agui-button-primary:hover:not(:disabled):not([aria-disabled='true']),
+  .agui-button-primary:active:not(:disabled):not([aria-disabled='true']) {
+    @apply border-agui-accent-hover bg-agui-accent-hover;
+  }
+  .agui-button-danger {
+    @apply border-agui-danger bg-transparent text-agui-danger;
+  }
+  .agui-button-danger:hover:not(:disabled):not([aria-disabled='true']),
+  .agui-button-danger:active:not(:disabled):not([aria-disabled='true']) {
+    @apply border-agui-danger bg-agui-danger-soft;
+  }
+  .agui-button-ghost {
+    @apply border-transparent bg-transparent;
+  }
+  .agui-button-ghost:hover:not(:disabled):not([aria-disabled='true']),
+  .agui-button-ghost:active:not(:disabled):not([aria-disabled='true']) {
+    @apply border-transparent bg-agui-hover;
+  }
   .agui-label {
     @apply text-sm text-agui-text;
   }
-  .agui-hint { @apply text-sm text-agui-muted; }
+  .agui-hint {
+    @apply text-sm text-agui-muted;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    input,
+    textarea,
+    select,
+    button,
+    .agui-button {
+      transition-property: background-color, border-color, color, outline-color;
+      transition-duration: var(--agui-motion-fast);
+      transition-timing-function: var(--agui-motion-ease);
+    }
+    input[switch]::before {
+      transition: transform var(--agui-motion-fast) var(--agui-motion-ease);
+    }
+    .agui-select-chevron {
+      transition: rotate var(--agui-motion-fast) var(--agui-motion-ease);
+    }
+  }
+  @media (forced-colors: active) {
+    input[switch] {
+      appearance: auto;
+    }
+    input[switch]::before {
+      content: none;
+    }
+  }
 }

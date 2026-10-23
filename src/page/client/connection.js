@@ -27,14 +27,17 @@ export function connectSession() {
     if (socket?.readyState !== WebSocket.OPEN || socket.bufferedAmount > MAX_EVENT_BYTES) { return false; }
     socket.send(message);
     return true;
-  }, (message) => showStatus(message));
+  }, (message) => showStatus(message, 'alert'));
 
-  /** @param {string} message */
-  function showStatus(message) {
-    message ||= shared.label();
+  /**
+   * @param {string} message
+   * @param {'info' | 'alert'} [tone]
+   */
+  function showStatus(message, tone = 'info') {
+    message ||= shared.label() ? `Connected. ${shared.label()}` : 'Connected.';
     if (status) {
-      status.textContent = message;
-      status.hidden = !message;
+      status.setAttribute('tone', tone);
+      status.setAttribute('message', message);
     }
   }
 
@@ -79,7 +82,7 @@ export function connectSession() {
       if (current !== socket || attempt !== generation) { return; }
       let message;
       try { message = /** @type {import('../../../types/transport.js').ServerMessage} */ (JSON.parse(event.data)); }
-      catch { showStatus('Connection error: invalid server message.'); return; }
+      catch { showStatus('Connection error: invalid server message.', 'alert'); return; }
       if (message.type === 'feedback-status' || message.type === 'feedback-result') {
         withoutFeedback(() => receiveFeedback(message));
         return;
@@ -129,17 +132,17 @@ export function connectSession() {
           showStatus('');
         } catch (error) {
           let detail = error instanceof Error ? error.message : String(error);
-          showStatus(`Could not update interface: ${detail}`);
+          showStatus(`Could not update interface: ${detail}`, 'alert');
           sendPageResult(current, message.id, undefined, detail);
         }
-      }).catch((error) => showStatus(`Connection error: ${error.message}`));
+      }).catch((error) => showStatus(`Connection error: ${error.message}`, 'alert'));
     };
     current.onclose = (event) => {
       if (current === socket) { updateSessionContext({ connected: false }); shared.disconnect(); setFeedbackConnected(false); setDataConnected(false); }
       if (event.code === 1000 && event.reason === 'Session ended') { ended = true; }
       if (ended) { showStatus('Session ended.'); return; }
       if (paused || attempt !== generation) { return; }
-      showStatus('Connection lost. Reconnecting...');
+      showStatus('Connection lost. Reconnecting...', 'alert');
       scheduleReconnect();
     };
   }

@@ -9,6 +9,7 @@
       "sharedName": "Alex",
       "sharedStatus": "new",
       "notifications": true,
+      "notificationMessage": "",
       "statusOptions": [{"value":"new","label":"New"},{"value":"contacted","label":"Contacted"},{"value":"archived","label":"Archived","disabled":true}],
       "componentState": {"status":"error","message":"The data source is unavailable.","retryLabel":"Retry"},
       "iconName": "search",
@@ -52,9 +53,18 @@
       <div class="flex flex-wrap gap-3" aria-label="Button style samples">
         <button class="agui-button-primary" type="button">Primary</button>
         <button type="button">Default</button>
+        <button class="agui-button-ghost" type="button">Ghost</button>
         <button class="agui-button-danger" type="button">Danger</button>
         <button type="button" disabled>Disabled</button>
       </div>
+      <agui-panel class="grid gap-2">
+        <h3 class="text-base">Nested panel</h3>
+        <p class="text-sm text-agui-muted">A recessed group for related fields and actions.</p>
+        <agui-toolbar aria-label="Nested panel actions">
+          <button type="button"><agui-icon name="edit"></agui-icon>Edit</button>
+          <button class="agui-button-ghost" type="button">Cancel</button>
+        </agui-toolbar>
+      </agui-panel>
     </agui-panel>
     <agui-panel slot="side" class="grid content-start gap-5">
       <h2>Application bindings</h2>
@@ -73,6 +83,36 @@
       <agui-state status="empty" message="No contacts match the current filters."></agui-state>
       <agui-state id="retry-state" bind="state: APP/componentState"></agui-state>
       <p class="text-sm text-agui-muted">Retry sends an action to the agent. This gallery does not contact an external service.</p>
+      <agui-field label="Notification message" name="notification_message" placeholder="Type a message to preview" pub-to="APP/notificationMessage" bind="$.value: APP/notificationMessage"></agui-field>
+      <agui-message bind="$.message: APP/notificationMessage" close-label="Dismiss message"></agui-message>
+    </agui-panel>
+    <agui-panel slot="full" class="grid gap-4">
+      <h2>Theme tokens</h2>
+      <div class="flex flex-wrap gap-2">
+        <span class="agui-chip">Neutral</span>
+        <span class="agui-chip" data-tone="info">Information</span>
+        <span class="agui-chip" data-tone="success">Success</span>
+        <span class="agui-chip" data-tone="warning">Warning</span>
+        <span class="agui-chip" data-tone="danger">Error</span>
+      </div>
+      <dl class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-bg p-3">
+          <dt>Page background</dt>
+          <dd class="text-sm text-agui-muted">agui-bg</dd>
+        </div>
+        <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-surface p-3 shadow-agui-panel">
+          <dt>Content surface</dt>
+          <dd class="text-sm text-agui-muted">agui-surface</dd>
+        </div>
+        <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-raised p-3">
+          <dt>Read-only surface</dt>
+          <dd class="text-sm text-agui-muted">agui-raised</dd>
+        </div>
+        <div class="grid gap-2 rounded-agui-inset border border-agui-accent bg-agui-accent-soft p-3">
+          <dt>Selected state</dt>
+          <dd class="text-sm text-agui-muted">agui-accent-soft</dd>
+        </div>
+      </dl>
     </agui-panel>
     <agui-panel slot="full" class="grid gap-4">
       <h2>Icons</h2>
@@ -83,7 +123,7 @@
         <agui-icon name="check_circle" aria-label="Complete" class="text-agui-accent"></agui-icon>
         <agui-icon name="warning" aria-label="Warning" class="text-agui-danger"></agui-icon>
         <button type="button"><agui-icon name="download"></agui-icon>Download</button>
-        <button type="button" aria-label="Settings"><agui-icon name="settings"></agui-icon></button>
+        <button class="agui-button-icon" type="button" aria-label="Settings"><agui-icon name="settings"></agui-icon></button>
       </agui-toolbar>
       <agui-toolbar aria-label="Dynamic icon">
         <agui-select label="Icon" pub-to="APP/iconName" bind="$.value: APP/iconName; $.options: APP/iconOptions"></agui-select>

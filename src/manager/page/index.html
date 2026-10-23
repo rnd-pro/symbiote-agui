@@ -15,7 +15,6 @@
       <agui-header floating>
         <div class="min-w-0">
           <h1 class="flex items-center gap-2"><agui-icon name="dashboard"></agui-icon>AGUI Manager</h1>
-          <p class="connection mt-1 text-sm" role="status" bind="@data-tone: MANAGER/connectionTone">{{MANAGER/connection}}</p>
         </div>
         <agui-toolbar aria-label="Appearance">
           <agui-theme-toggle id="manager-theme" ctx="MANAGER" aria-label="Dark theme" light-label="Switch to light theme" dark-label="Switch to dark theme"></agui-theme-toggle>
@@ -40,7 +39,7 @@
             <agui-select label="All sessions in this scope" name="operation" pub-to="MANAGER/bulkOperation" bind="$.options: MANAGER/bulkOptions; $.value: MANAGER/bulkOperation; $.disabled: MANAGER/controlsDisabled"></agui-select>
             <button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; disabled: MANAGER/controlsDisabled"><agui-icon name="check"></agui-icon>Apply to all</button>
           </agui-toolbar>
-          <pre class="notice rounded-md border border-agui-border bg-agui-raised p-3 text-sm" role="status" aria-live="polite">{{MANAGER/notice}}</pre>
+          <agui-message class="notice" close-label="Dismiss message" bind="$.tone: MANAGER/noticeTone; $.message: MANAGER/notice" hidden></agui-message>
         </agui-panel>
         <section class="grid min-w-0 gap-4" aria-labelledby="sessions-heading">
           <h2 id="sessions-heading" class="text-lg font-semibold">Sessions</h2>
@@ -48,6 +47,7 @@
           <div class="sessions grid gap-4" itemize="MANAGER/rows" item-tag="agui-session-row"></div>
         </section>
       </agui-dashboard>
+      <agui-message class="connection" close-label="Dismiss message" bind="$.tone: MANAGER/connectionTone; $.message: MANAGER/connection" hidden></agui-message>
       <dialog ref="description" aria-labelledby="description-heading">
         <h2 id="description-heading" class="text-lg font-semibold">Session description</h2>
         <pre ref="descriptionText" class="my-5"></pre>

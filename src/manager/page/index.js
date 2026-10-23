@@ -9,12 +9,25 @@ import { formatDataFlow } from '../../metadata/format.js';
 
 class SessionManager extends ContextProvider {
   init$ = {
-    connection: 'Connecting...', connectionTone: 'offline', scope: '', checkedAt: 'Waiting for a snapshot',
-    counts: '', empty: 'Loading sessions...', emptyStatus: 'loading', notice: '',
-    rows: {}, controlsDisabled: true, refreshDisabled: true,
+    connection: 'Connecting...',
+    connectionTone: 'info',
+    scope: '',
+    checkedAt: 'Waiting for a snapshot',
+    counts: '',
+    empty: 'Loading sessions...',
+    emptyStatus: 'loading',
+    notice: '',
+    noticeTone: 'info',
+    rows: {
+    },
+    controlsDisabled: true,
+    refreshDisabled: true,
     theme: getTheme(),
-    statusOptions: STATUS_OPTIONS, bulkOptions: BULK_OPTIONS,
-    query: '', statusFilter: 'all', bulkOperation: 'start',
+    statusOptions: STATUS_OPTIONS,
+    bulkOptions: BULK_OPTIONS,
+    query: '',
+    statusFilter: 'all',
+    bulkOperation: 'start',
     refresh: () => { void this.refresh(); },
     bulk: () => {
       void this.act(/** @type {import('../../../types/manager.js').ManagerOperation} */ (this.$.bulkOperation));
@@ -39,8 +52,8 @@ class SessionManager extends ContextProvider {
     this.sub('query', () => this.renderRows(), false);
     this.sub('statusFilter', () => this.renderRows(), false);
     this.connection = new ManagerConnection((ready, message) => {
+      this.$.connectionTone = ready ? 'info' : 'alert';
       this.$.connection = message;
-      this.$.connectionTone = ready ? 'live' : 'offline';
       this.$.refreshDisabled = !ready;
       this.renderRows();
     }, () => { void this.refresh(); });
@@ -63,6 +76,7 @@ class SessionManager extends ContextProvider {
       this.$.checkedAt = `Updated ${new Date(result.snapshot.checkedAt).toLocaleTimeString()}`;
       this.renderRows();
     } catch (error) {
+      this.$.noticeTone = 'alert';
       this.$.notice = String(error instanceof Error ? error.message : error);
       this.$.empty = 'Session discovery failed. Refresh to try again.';
       this.$.emptyStatus = 'error';
@@ -101,6 +115,7 @@ class SessionManager extends ContextProvider {
     let warning = confirmations[/** @type {keyof typeof confirmations} */ (operation)];
     if (warning && !confirm(warning)) { return; }
     this.busy = true;
+    this.$.noticeTone = 'info';
     this.$.notice = `${operation}: working on ${target}...`;
     this.renderRows();
     try {
@@ -111,10 +126,14 @@ class SessionManager extends ContextProvider {
           formatDataFlow(result.description.metadata?.dataFlow)].filter(Boolean).join('\n\n');
         dialog.showModal();
       }
+      this.$.noticeTone = !result.ok || result.sessions?.some((row) => !row.ok) ? 'alert' : 'info';
       this.$.notice = (result.description ? `Description loaded for ${sessionId}.` : result.sessions?.map((row) => `${row.sessionId}: ${row.ok ? `${operation} completed` : row.error.message}`).join('\n'))
         || result.error?.message || 'No matching sessions for this operation.';
       await this.refresh();
-    } catch (error) { this.$.notice = error instanceof Error ? error.message : String(error); }
+    } catch (error) {
+      this.$.noticeTone = 'alert';
+      this.$.notice = error instanceof Error ? error.message : String(error);
+    }
     finally { this.busy = false; this.renderRows(); }
   }
 

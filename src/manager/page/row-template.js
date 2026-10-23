@@ -7,7 +7,7 @@ export let SESSION_ROW_TEMPLATE = html`
         <h3 class="font-semibold">{{^title}}</h3>
         <code class="text-xs text-agui-muted">/{{^sessionId}}</code>
       </div>
-      <span class="session-status">{{^status}}</span>
+      <span class="session-status agui-chip">{{^status}}</span>
     </div>
     <p class="break-words text-sm [overflow-wrap:anywhere]">{{^summary}}</p>
     <p class="data-flow break-words text-sm text-agui-muted empty:hidden [overflow-wrap:anywhere]">{{^dataFlow}}</p>

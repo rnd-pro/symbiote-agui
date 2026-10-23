@@ -44,7 +44,7 @@ import {
 } from './messages.js';
 import {
   MESSAGE_TIMEOUT_MS,
-} from './constants.js';
+} from '../../feedback/message/constants.js';
 import styles from './styles.js';
 
 export class DataToolbar extends UiComponent {
@@ -73,6 +73,7 @@ export class DataToolbar extends UiComponent {
     roleLabel: '',
     socketConnected: 'false',
     connectionLabel: '',
+    connectionTone: 'warning',
     editMessage: '',
     actionsLabel: '',
     saveLabel: '',
@@ -88,9 +89,7 @@ export class DataToolbar extends UiComponent {
     transferMessage: '',
     errorMessage: '',
     saveHint: '',
-    messagesVisible: false,
     messageTimeout: MESSAGE_TIMEOUT_MS,
-    closeMessages: () => this.messages?.hide(),
     saveDisabled: true,
     cancelDisabled: true,
     importDisabled: true,

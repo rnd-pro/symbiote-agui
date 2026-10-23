@@ -61,7 +61,7 @@ test('public links elect one user and deliver a live read-only mirror to other b
   let spectatorContext = await browser.createBrowserContext();
   let viewer = await spectatorContext.newPage();
   await viewer.goto(session.publicViewerUrl);
-  await viewer.waitForFunction(() => document.getElementById('agui-connection')?.textContent?.includes('waiting for the user'));
+  await viewer.waitForFunction(() => document.querySelector('#agui-connection .agui-message-text')?.textContent?.includes('waiting for the user'));
   assert.equal(await viewer.evaluate(() => Reflect.get(window, 'aguiRuns')), undefined);
   let page = await browser.newPage();
   /** @type {string[]} */
@@ -147,7 +147,7 @@ test('public links elect one user and deliver a live read-only mirror to other b
   assert.equal((await cli('pages', 'tunnel-ui')).pages.filter((/** @type {import('../../types/tools.js').ConnectedPage} */ item) => item.role === 'user').length, 1);
   assert.equal(await page.evaluate(async () => (await fetch('/status')).status), 404);
   await page.goto('about:blank');
-  await viewer.waitForFunction(() => document.getElementById('agui-connection')?.textContent?.includes('waiting for the user'));
+  await viewer.waitForFunction(() => document.querySelector('#agui-connection .agui-message-text')?.textContent?.includes('waiting for the user'));
   await late.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pagehide')));
   await late.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow')));
   await late.waitForSelector('#counter button');
@@ -168,7 +168,7 @@ test('public links elect one user and deliver a live read-only mirror to other b
     return iframe?.contentDocument?.getElementById('mirror-content')?.childElementCount === 0;
   });
   await cli('stop-all');
-  await viewer.waitForFunction(() => document.getElementById('agui-connection')?.textContent === 'Session ended.');
+  await viewer.waitForFunction(() => document.querySelector('#agui-connection .agui-message-text')?.textContent === 'Session ended.');
   assert.equal(isProcessAlive(pid), false);
   assert.deepEqual(errors, []);
 });
@@ -215,7 +215,7 @@ test('sharing existing local tabs retires viewer modules and releases the user s
   assert.equal(await viewer.evaluate(() => Reflect.get(window, 'aguiRuns')), undefined);
   assert.equal(await viewer.$('#counter'), null);
   await user.close();
-  await viewer.waitForFunction(() => document.getElementById('agui-connection')?.textContent?.includes('waiting for the user'));
+  await viewer.waitForFunction(() => document.querySelector('#agui-connection .agui-message-text')?.textContent?.includes('waiting for the user'));
   await waitForMirror(viewer, 1);
   await assert.rejects(cli('tools', 'local-share'), (error) => hasCliError(error, 'PAGE_UNAVAILABLE'));
   await assert.rejects(sendStdin('update', 'local-share', JSON.stringify({ selector: '#counter', values: { count: 4 } })), (error) => hasCliError(error, 'PAGE_UNAVAILABLE'));

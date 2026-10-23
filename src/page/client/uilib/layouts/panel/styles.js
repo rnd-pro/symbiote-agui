@@ -1,18 +1,22 @@
-import { css } from '@symbiotejs/symbiote';
+import {
+  css,
+} from '@symbiotejs/symbiote';
 
 export default css`
   @layer components {
     agui-panel {
       display: block;
       min-width: 0;
-      border-radius: var(--radius-xl, .75rem);
+      border: 1px solid var(--agui-divider);
+      border-radius: var(--agui-radius-panel);
       background-color: var(--agui-surface);
       padding: var(--agui-panel-padding);
-      box-shadow: 0 1px 3px rgb(0 0 0 / .06);
+      box-shadow: var(--agui-shadow-panel);
 
       agui-panel {
-        border: 1px solid var(--agui-border);
-        border-radius: var(--radius-lg, .5rem);
+        border-color: var(--agui-divider);
+        border-radius: var(--agui-radius-inset);
+        background-color: var(--agui-bg);
         box-shadow: none;
       }
     }

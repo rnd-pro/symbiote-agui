@@ -111,7 +111,7 @@ test('regular pages receive markup independently and remain open after stop', {
   assert.equal(await firstPage.$eval('main', (element) => element.childElementCount), 0);
   assert.equal((await cli('stop', 'demo')).state, 'stopped');
   assert.equal(firstPage.isClosed(), false);
-  await firstPage.waitForFunction(() => document.getElementById('agui-connection')?.textContent === 'Session ended.');
+  await firstPage.waitForFunction(() => document.querySelector('#agui-connection .agui-message-text')?.textContent === 'Session ended.');
   assert.equal((await cli('status', 'Demo')).state, 'ready');
   await secondPage.close();
   await waitForSession('Demo', 'waiting');
@@ -191,7 +191,7 @@ test('inline modules, state commands, events, reload, and reconnect work in ordi
   await waitForSession('interactive', 'waiting');
   await insertStdin('interactive', '<script type="module" data-agui>throw new Error("Broken module");</script>');
   await page.goto(session.url);
-  await page.waitForFunction(() => document.getElementById('agui-connection')?.textContent?.includes('Broken module'));
+  await page.waitForFunction(() => document.querySelector('#agui-connection .agui-message-text')?.textContent?.includes('Broken module'));
   let failures = /** @type {import('../../types/transport.js').EventBatch} */ (await cli('events', 'interactive'));
   assert.equal(failures.events[0]?.name, 'agui:error');
   assert.deepEqual(failures.events[0]?.data, { message: 'Broken module' });

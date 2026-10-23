@@ -1,4 +1,10 @@
 @import './client/uilib/shared/native-controls.css';
+@import './client/uilib/shared/chips.css';
+
+@utility agui-popover {
+  background-color: var(--agui-popover-bg);
+  backdrop-filter: blur(14px);
+}
 
 @theme inline {
   --font-sans: 'Roboto', sans-serif;
@@ -8,22 +14,60 @@
   --color-agui-text: var(--agui-text);
   --color-agui-muted: var(--agui-muted);
   --color-agui-border: var(--agui-border);
+  --color-agui-divider: var(--agui-divider);
+  --color-agui-border-hover: var(--agui-border-hover);
+  --color-agui-hover: var(--agui-hover);
   --color-agui-accent: var(--agui-accent);
+  --color-agui-accent-hover: var(--agui-accent-hover);
+  --color-agui-accent-soft: var(--agui-accent-soft);
   --color-agui-on-accent: var(--agui-on-accent);
   --color-agui-danger: var(--agui-danger);
+  --color-agui-danger-soft: var(--agui-danger-soft);
+  --color-agui-success: var(--agui-success);
+  --color-agui-success-soft: var(--agui-success-soft);
+  --color-agui-on-success: var(--agui-on-success);
+  --color-agui-warning: var(--agui-warning);
+  --color-agui-warning-soft: var(--agui-warning-soft);
+  --color-agui-on-warning: var(--agui-on-warning);
+  --radius-agui-control: var(--agui-radius-control);
+  --radius-agui-panel: var(--agui-radius-panel);
+  --radius-agui-inset: var(--agui-radius-inset);
+  --shadow-agui-panel: var(--agui-shadow-panel);
+  --shadow-agui-floating: var(--agui-shadow-floating);
 }
 
 @layer base {
   :root {
     --agui-bg: light-dark(#f5f5f5, #111111);
+    --agui-popover-bg: color-mix(in srgb, var(--agui-bg) 20%, transparent);
     --agui-surface: light-dark(#ffffff, #1c1c1c);
     --agui-raised: light-dark(#e5e5e5, #303030);
     --agui-text: light-dark(#171717, #f5f5f5);
     --agui-muted: light-dark(#595959, #a3a3a3);
-    --agui-border: light-dark(#b8b8b8, #3a3a3a);
-    --agui-accent: light-dark(#1d4ed8, #60a5fa);
-    --agui-on-accent: light-dark(#ffffff, #111111);
-    --agui-danger: light-dark(#b91c1c, #f87171);
+    --agui-border: light-dark(#d4d4d4, #404040);
+    --agui-divider: light-dark(#e8e8e8, #2c2c2c);
+    --agui-border-hover: light-dark(#a3a3a3, #525252);
+    --agui-hover: light-dark(#ededed, #292929);
+    --agui-accent: #3e6afb;
+    --agui-accent-hover: #366bfc;
+    --agui-accent-soft: light-dark(#eff6ff, #172338);
+    --agui-on-accent: #ffffff;
+    --agui-danger: #e63232;
+    --agui-danger-soft: light-dark(#fef2f2, #301c1c);
+    --agui-success: #15803d;
+    --agui-success-soft: light-dark(#f0fdf4, #14291b);
+    --agui-on-success: #ffffff;
+    --agui-warning: #facc15;
+    --agui-warning-soft: light-dark(#fefce8, #302812);
+    --agui-on-warning: #422006;
+    --agui-radius-control: .375rem;
+    --agui-radius-panel: .75rem;
+    --agui-radius-inset: .5rem;
+    --agui-shadow-panel: 0 1px 3px light-dark(rgb(0 0 0 / .05), rgb(0 0 0 / .2));
+    --agui-shadow-floating: 0 .25rem 1rem light-dark(rgb(0 0 0 / .12), rgb(0 0 0 / .35));
+    --agui-motion-fast: 150ms;
+    --agui-motion-ease: ease-out;
+    --agui-content-width: var(--container-7xl, 80rem);
     --agui-control-height: 2.4rem;
     --agui-toggle-height: 1.5rem;
     --agui-panel-padding: 1.25rem;
@@ -43,6 +87,16 @@
     font-style: normal;
     font-variation-settings: 'wdth' 100;
   }
-  body[data-theme='light'] { color-scheme: light; }
-  body[data-theme='dark'] { color-scheme: dark; }
+  body[data-theme='light'] {
+    color-scheme: light;
+  }
+  body[data-theme='dark'] {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  agui-header {
+    @apply agui-popover;
+  }
 }

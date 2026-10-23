@@ -225,7 +225,7 @@ test('manager disconnects reconcile status without replaying a mutation; generat
   await page.waitForFunction(() => document.querySelector('.connection')?.textContent?.includes('Disconnected'));
   await cli('stop', 'desk');
   await protocol.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
-  await page.waitForFunction(() => document.querySelector('.connection')?.textContent === 'Connected', { timeout: 12_000 });
+  await page.waitForFunction(() => document.querySelector('.connection .agui-message-text')?.textContent === 'Connected', { timeout: 12_000 });
   await page.waitForFunction(() => document.querySelector('.counts')?.textContent?.includes('1 stopped'));
   await action(page, 'Start');
   await notice(page, 'start completed');

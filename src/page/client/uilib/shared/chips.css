@@ -1,0 +1,17 @@
+@layer components {
+  .agui-chip {
+    @apply inline-flex items-center gap-1 rounded-full bg-agui-raised px-3 py-1 text-xs text-agui-muted;
+  }
+  .agui-chip[data-tone='info'] {
+    @apply bg-agui-accent text-agui-on-accent;
+  }
+  .agui-chip[data-tone='success'] {
+    @apply bg-agui-success text-agui-on-success;
+  }
+  .agui-chip[data-tone='warning'] {
+    @apply bg-agui-warning text-agui-on-warning;
+  }
+  .agui-chip[data-tone='danger'] {
+    @apply bg-agui-danger text-agui-on-accent;
+  }
+}

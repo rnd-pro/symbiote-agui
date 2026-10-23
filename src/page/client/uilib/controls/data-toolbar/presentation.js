@@ -35,6 +35,7 @@ export function presentToolbar(toolbar) {
     closeLabel: text('closeMessage'),
     roleLabel: text(viewer ? 'viewer' : 'user'),
     socketConnected: String(connected),
+    connectionTone: connected ? 'success' : 'warning',
     connectionLabel: text(connected ? 'connected' : 'disconnected'),
     editMessage: text(viewer ? 'readonly' : toolbar.$.dirty ? 'dirty' : 'clean'),
     localMessage: saving ? text('saving') : local?.state === 'committed' ? text('saved') : '',

@@ -37,6 +37,13 @@ export interface UiFeedbackState {
   retryLabel?: string;
 }
 
+export interface UiMessageState {
+  message: string;
+  tone?: 'info' | 'alert';
+  timeout?: number;
+  closeLabel?: string;
+}
+
 export interface UiAction {
   widgetId: string;
   context: string | null;

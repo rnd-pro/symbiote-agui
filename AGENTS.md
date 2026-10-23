@@ -20,7 +20,7 @@ Read [README.md](./README.md) for the project purpose and main workflows.
 - Split code by functional responsibility and keep the hierarchy easy to navigate. Keep source files, classes, and functions under 500 lines; split earlier when responsibilities or readability require it.
 - Prefer `let`. Use `const` when preventing reassignment expresses an intentional invariant in the logic.
 - Prefer object lookups for mapping known keys to values or handlers. Use `switch` only when it provides a demonstrated, noticeable performance benefit.
-- Format array and object literals across multiple lines, even when short. Put each item or property on its own line and closing brackets/braces on separate lines. Apply the same rule to destructuring patterns and named import/export lists.
+- Format array and object literals and destructuring patterns across multiple lines, even when short. Put each item or property on its own line and closing brackets/braces on separate lines. Import/export declarations are exempt from this rule; named import/export lists may stay on one line. Exported array and object values still follow the multiline rule.
 - Format CSS rules across multiple lines, with each declaration and closing brace on its own line. Put declarations in inline style attributes on separate lines when there is more than one. JavaScript style objects follow the object formatting rule.
 - Prefer clear names and function signatures. Use comments to explain non-obvious intent or constraints, and keep the implementation simple enough for a human developer to maintain. Follow KISS and DRY.
 

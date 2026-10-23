@@ -15,12 +15,12 @@ export default css`
       align-items: center;
       justify-content: center;
       flex: none;
-      width: 1em;
-      height: 1em;
       vertical-align: middle;
       overflow: hidden;
       font-family: 'AGUI Material Symbols';
-      font-size: var(--agui-icon-size, 1.5rem);
+      width: 1em;
+      height: 1em;
+      font-size: var(--agui-icon-size, 1.5em);
       font-style: normal;
       font-weight: normal;
       font-variant-ligatures: discretionary-ligatures;

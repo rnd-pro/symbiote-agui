@@ -16,6 +16,10 @@ Portable files contain `{ "version": 1, "changes": [{ "provider": "APP", "values
 
 Place the page-wide `agui-header` immediately before `agui-dashboard` under the same application provider. Its content uses the dashboard's maximum width and responsive gutters. A floating header reports its height to the following dashboard for focus scroll spacing.
 
+Use `agui-popover` for floating surfaces with the shared translucent background and backdrop blur. Headers, select pickers, and data toolbars use it by default; message balloons keep a solid background.
+
+Use `agui-message` for transient notifications. Supply `message`, `tone="info|alert"`, `timeout` in milliseconds (default 5000), and `close-label`, or bind `message`, `tone`, `timeout`, and `closeLabel` through native component state. A changed nonempty message opens automatically; clearing it dismisses it. Notifications stack above the floating data bar, animate, and expire. Accent and alert backgrounds keep white text in both themes. The data toolbar and page connection status reuse this component; text stays outside it.
+
 Keep native rendering defaults in the shared base. Only layout components enable `processInnerHtml` to process bindings in authored children; controls and feedback components render their own templates.
 
 Keep all user-facing copy outside uilib and pass it through host attributes or native bindings, including accessible names, statuses, errors, and fallback messages. Missing text renders empty. Theme toggles accept `light-label`/`dark-label` attributes or `lightLabel`/`darkLabel` property bindings for proposed actions; plain `label` is the fallback. Required markers use `required-mark` or `requiredMark`. Data toolbar `texts` is a string dictionary; its keys and standard page copy live in `../page-text.js`, with no component defaults or per-component JSON parsing.

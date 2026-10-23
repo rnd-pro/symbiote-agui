@@ -153,7 +153,6 @@ export class AguiMap extends UiComponent {
       this.issue = code === 'invalidRows' || code === 'invalidTiles' ? code : 'invalidState';
     }
     presentMap(this);
-    this.syncWebMCPTools();
     this.schedulePaint();
   }
 
@@ -172,15 +171,14 @@ export class AguiMap extends UiComponent {
       this.renderer = undefined;
       this.$.rendererReady = false;
       presentMap(this);
-      this.syncWebMCPTools();
       return;
     }
     let canvas = /** @type {HTMLElement} */ (this.ref.canvas);
     if (!canvas.clientWidth || !canvas.clientHeight) { return; }
     try {
       this.renderer ??= this.runtime.createMapRenderer(canvas, {
-        select: (id) => { if (!this.$.selectionUnavailable) { this.selectPoint(id); } },
-        view: (view) => { if (!this.$.unavailable) { this.setView(view); } },
+        select: (id) => { if (!this.disposed && this.isConnected && !this.$.selectionUnavailable) { this.selectPoint(id); } },
+        view: (view) => { if (!this.disposed && this.isConnected && !this.$.unavailable) { this.setView(view); } },
         tileError: (failed) => {
           if (this.disposed) { return; }
           this.tileError = failed;
@@ -189,7 +187,6 @@ export class AguiMap extends UiComponent {
       });
       this.$.rendererReady = true;
       presentMap(this);
-      this.syncWebMCPTools();
       this.renderer.render(this.model, !!this.$.unavailable);
     } catch {
       this.renderer?.dispose();
@@ -197,7 +194,6 @@ export class AguiMap extends UiComponent {
       this.$.rendererReady = false;
       this.runtimeError = 'renderFailed';
       presentMap(this);
-      this.syncWebMCPTools();
     }
   }
 

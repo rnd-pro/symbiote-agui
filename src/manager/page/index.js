@@ -9,6 +9,9 @@ import { getTheme, setTheme, watchTheme } from './theme.js';
 import { BULK_OPTIONS } from './options.js';
 import { SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, DESCRIPTION_TEXTS, sessionRecords } from './view.js';
 import { formatDataFlow } from '../../metadata/format.js';
+import { guardNativeRegistrations } from '../../page/client/native-webmcp.js';
+
+guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
 class SessionManager extends ContextProvider {
   init$ = {

@@ -6,7 +6,9 @@ import { ContextProvider } from './context-provider.js';
 import { connectSession } from './connection.js';
 import { registerUiLibComponents } from './uilib/index.js';
 import './page-text.js';
+import { guardNativeRegistrations } from './native-webmcp.js';
 
+guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 Symbiote.mcpToolMode = true;
 AguiComponent.reg(COMPONENT_TAG);
 ContextProvider.reg(PROVIDER_TAG);

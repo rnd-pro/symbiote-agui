@@ -86,6 +86,7 @@ export function mapTools(map) {
       description: 'Read the viewport, skipped count, and a bounded page of visible marker IDs. Follow nextOffset.',
       deps: [
         'viewReady',
+        'mapLabel',
       ],
       when: () => !!map.$.viewReady,
       inputSchema: {

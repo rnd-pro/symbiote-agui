@@ -60,7 +60,18 @@ export function chartOption(model, theme) {
     },
     legend: {
       show: state.type !== 'donut',
+      type: 'scroll',
+      top: 0,
+      bottom: 'auto',
+      left: 8,
+      right: 8,
       selectedMode: false,
+      pageIconColor: theme.muted,
+      pageIconInactiveColor: theme.divider,
+      pageTextStyle: {
+        color: theme.muted,
+        fontFamily: theme.font,
+      },
       textStyle: {
         color: theme.text,
       },
@@ -89,8 +100,9 @@ export function chartOption(model, theme) {
         left: '3%',
         right: '3%',
         top: 44,
-        bottom: 44,
-        containLabel: true,
+        bottom: 16,
+        outerBoundsMode: 'same',
+        outerBoundsContain: 'all',
       },
       xAxis: {
         type: 'category',

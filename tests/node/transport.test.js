@@ -199,5 +199,18 @@ test('shared pages elect one user without credentials, release the slot, and rej
   }));
   await pages.broadcast({ type: 'render', html: '', revision: 1, stylesheetUrl: '/styles.css.js?revision=1' });
   assert.equal((await reset).html, '');
+  let currentUser = pages.shared.user();
+  assert.ok(currentUser);
+  assert.doesNotThrow(() => pages.shared.publish(currentUser, {
+    html: '<p>Old surface</p>',
+    revision: 0,
+    stylesheetUrl: '/styles.css.js?revision=0',
+  }));
+  assert.equal(pages.shared.latest?.html, '');
+  assert.throws(() => pages.shared.publish(currentUser, {
+    html: '<p>Invalid surface</p>',
+    revision: 1,
+    stylesheetUrl: '/unrelated.css',
+  }), /Invalid live view/);
   reconnect.close();
 });

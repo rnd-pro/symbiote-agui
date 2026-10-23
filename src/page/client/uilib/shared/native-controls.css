@@ -94,7 +94,9 @@
   }
   input[type='checkbox'],
   input[type='radio'] {
-    @apply m-0 size-5 shrink-0 accent-agui-accent;
+    @apply m-0 w-5 shrink-0 accent-agui-accent;
+    height: var(--agui-control-height);
+    vertical-align: middle;
   }
   input[switch] {
     @apply appearance-none rounded-full border border-agui-border bg-agui-raised p-[.1875rem];

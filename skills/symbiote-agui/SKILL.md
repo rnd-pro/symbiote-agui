@@ -21,6 +21,9 @@ The default JSDA page bundle includes and registers every available library comp
 - `agui-sidebar`: independently scrolling authored content with a built-in expand/collapse button. `side="start"` is the default; use `side="end"` for the other side. Expanded by default; `collapsed` supplies a closed default. Supply `label`, `expand-label`, and `collapse-label`, or bind `$.label`, `$.expandLabel`, and `$.collapseLabel`. Boolean `$.value` is expanded state; pair its binding with `pub-to` to share visibility with other controls. Disabled/read-only state protects visibility changes, not the fields inside. Collapsing preserves mounted content and drafts. Desktop width uses `--agui-sidebar-width` (default `18rem`); collapsed panels keep their toggle visible.
 - `agui-viewport`: independently scrolling central content. Give it an `aria-label` or `aria-labelledby`; it defaults to `role="main"` and `tabindex="0"`, preserving explicit overrides. Place existing headers, dashboards, and panels inside it. A floating header within the viewport supplies focus spacing to that scroll region; an app-level header occupies its own row and needs no `floating` flag.
 - `agui-tabs`: authored tab layout with string active `value`, optional `pub-to`, caller-owned `label` for the tablist, and `orientation="horizontal"` (default) or `vertical`. Use direct `agui-tab` children with unique nonempty string `value` keys and caller-owned `label` text; labels, keys, and disabled state can use native property or `state` bindings. A disabled tab is unavailable for selection. Group `disabled`/`readonly` prevents switching without changing child fields' own edit policies. Panels stay mounted while hidden, preserving drafts and nested tab state. A missing, unknown, or disabled requested value displays the first enabled tab without publishing a correction; no enabled tabs means no visible panel and an effective value of `""`.
+- `agui-dialog`: native modal with preserved authored contents and boolean `value` for visibility. Supply `label` and `close-label`; optional `open-label` adds a built-in opener. Native property bindings use `$.label`, `$.closeLabel`, and `$.openLabel`. The `open` attribute supplies an initially open default when no value is bound. Pair the value binding with `pub-to` for shared visibility. Closing never saves or discards fields; child controls keep their own edit policies. See the dialog/popup example below.
+- `agui-filter`: reusable search and typed AND filters over provider-bound `rows` and `fields`, independent of any view. `value` is the filter dictionary; pair it with `pub-to`, and optionally publish `query` through `query-pub-to`. `results-to` publishes matching IDs into an existing provider array, including initialization and incoming updates, without user-action notifications. Supply caller-owned `texts`, `label`, optional `locale`, and `id-key` (default `id`).
+- `agui-table`: provider-bound `rows`, typed `columns`, and caller-owned `texts`, with sorting, ID selection, and local pagination. Optional `filteredIds` consumes a filter's matching IDs; `null` shows all rows and `[]` shows none. `value` is always a string ID array; `selection="none|single|multiple"` defaults to none. Pair selection with `pub-to` and sort with `sort-pub-to`. Supply `label`, optional `locale`, and `page-size` (default 20, maximum 100). Every source row needs a unique nonempty string ID. Disabled/read-only blocks changes; `loading` and `error` show caller-owned states. The table does not edit records.
 - `agui-dashboard`: responsive workspace. `layout="single"` (default), `split`, `equal`, or `grid`; `density="comfortable"` (default) or `compact`. In split mode, direct children with `slot="main"` use two columns and `slot="side"` one. Toolbars and `slot="full"` span all columns. These layout slot attributes do not require Shadow DOM.
 - `agui-panel`: content container; supply ordinary child markup and optional headings/actions.
 - `agui-header`: header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` under the same application provider or viewport, or directly in `agui-app` for a fixed header row. Add `floating` for sticky positioning within the scroll region; use `--agui-header-offset` if another sticky element is above it.
@@ -130,7 +133,63 @@ Arrow keys move focus without switching: Left/Right for horizontal tabs, Up/Down
 
 Discover the group's `set_value` and `read_value` tools by `ownerName="agui-tabs"`; component context includes the authored group ID and label. Each enabled tab has a scoped `select` tool under `agui-tab-button`, with group ID, tab value, and label in its component context. Use discovered names and refresh discovery after labels or availability change. Group reads return the effective active value, including fallback; selection responses contain only `value` and `changed`. Keep tab choice transient unless the task explicitly requires persistence.
 
+### Dialogs and popups example
+
+```html
+<context-provider ctx="EDITOR">
+  <script type="application/json">{"open":false,"name":"Morgan"}</script>
+  <agui-dialog id="contact-editor" label="Edit contact" open-label="Open editor" close-label="Close editor"
+    pub-to="EDITOR/open" bind="$.value: EDITOR/open">
+    <agui-field label="Name" pub-to="EDITOR/name" bind="$.value: EDITOR/name"></agui-field>
+    <form method="dialog"><button type="submit">Done</button></form>
+  </agui-dialog>
+  <button type="button" popovertarget="contact-help">About contacts</button>
+  <div id="contact-help" popover class="agui-popover" aria-label="Contact help">
+    <p>Keep contact details up to date.</p>
+    <button type="button" popovertarget="contact-help" popovertargetaction="hide">Close help</button>
+  </div>
+</context-provider>
+```
+
+Dialog buttons, Escape dismissal, and `method="dialog"` forms publish the open state once. Incoming assignments and repeated actions do not publish. Native modal behavior handles focus, background inertness, and focus restoration; do not add a focus trap or block dismissal to force saving. Keep open state transient. Record edits remain drafts after closing; declare record keys in `persist` and use the common data toolbar for explicit Save/Cancel actions. `Done` above only closes the editor.
+
+Discover scoped `open`, `close`, and `read_value` tools by `ownerName="agui-dialog"` and the authored ID in component context. Responses contain only `value` and, for mutations, `changed`. Popups use native `popover`/`popovertarget`, including light dismissal; `agui-popover` is a styling utility, not a registered component or a popup tool owner. No imports or handlers are required. Open dialogs and popups appear as inert presentation in viewer snapshots.
+
+### Filter and table example
+
+```html
+<context-provider ctx="LEADS">
+  <script type="application/json">
+    {
+      "rows":[{"id":"lead-1","name":"Northstar Studio","amount":0,"status":"new"},{"id":"lead-2","name":"Orbit Works","amount":2400,"status":"qualified"}],
+      "columns":[
+        {"key":"name","label":"Company","type":"text","sortable":true,"filter":"contains"},
+        {"key":"amount","label":"Opportunity","type":"number","sortable":true,"filter":"range"},
+        {"key":"status","label":"Stage","type":"status","filter":"equals","options":[{"value":"new","label":"New","tone":"info"},{"value":"qualified","label":"Qualified","tone":"success"}]}
+      ],
+      "selected":[],"query":"","filters":{},"matchingIds":[],"sort":null,
+      "texts":{"search":"Search leads","results":"Results","selected":"Selected","selection":"Selection","selectRow":"Select lead","selectAll":"Select filtered leads","page":"Page","pagination":"Lead pages","previous":"Previous page","next":"Next page","all":"All values","minimum":"Minimum","maximum":"Maximum","trueLabel":"Yes","falseLabel":"No","empty":"No matching leads.","loading":"Loading leads...","invalidRows":"Review lead IDs.","invalidColumns":"Review table columns.","invalidFields":"Review filter fields.","invalidState":"Review table state.","unavailable":"Table unavailable or read-only."}
+    }
+  </script>
+  <agui-field label="External search" type="search" pub-to="LEADS/query" bind="$.value: LEADS/query"></agui-field>
+  <agui-filter id="lead-filter" label="Lead filters" locale="en"
+    pub-to="LEADS/filters" query-pub-to="LEADS/query" results-to="LEADS/matchingIds"
+    bind="$.rows: LEADS/rows; $.fields: LEADS/columns; $.texts: LEADS/texts; $.value: LEADS/filters; $.query: LEADS/query"></agui-filter>
+  <agui-table id="lead-table" label="Leads" selection="multiple" locale="en" page-size="20"
+    pub-to="LEADS/selected" sort-pub-to="LEADS/sort"
+    bind="$.rows: LEADS/rows; $.columns: LEADS/columns; $.texts: LEADS/texts; $.value: LEADS/selected; $.filteredIds: LEADS/matchingIds; $.sort: LEADS/sort"></agui-table>
+</context-provider>
+```
+
+Fields support `text`, `number`, `date`, `boolean`, and `status`. The same descriptors can serve as filter `fields` and table `columns`; the table ignores filter settings. Text filters use `contains`; number/date filters use inclusive `range`; boolean filters use `equals` with `"true"`/`"false"`; text/status equality uses declared string options. Filter `value` maps keys to strings or `{ min?, max? }`; numeric bounds are numbers and dates are ISO strings. Search matches displayed values using the configured locale. The filter can supply matching IDs to any view; keep its full source records separate from its output.
+
+The table's `sort` is `null` or `{ key, direction: "ascending" | "descending" }`; header buttons cycle back to source order. Zero/false remain meaningful and invalid/null typed values sort last. Records render as text. Bind the table to the full source records and matching IDs so selections outside the filtered view survive. Select-all targets all matching rows across pages. Removed IDs are ignored without rewriting provider selection. Changed matching IDs and user sorting reset the local page to 1 without publishing a page correction. User-edit targets never echo incoming assignments; only the explicitly derived `results-to` output updates on incoming filter changes. Keep view state transient by default.
+
+Discover tools by owner and authored ID in component context. `agui-filter` provides `set_value` (`value`), `set_query` (`query`), and `read_result`; `agui-filter-field` provides `set_filter` with filter ID and field key. `agui-table` provides `set_selection` (`ids`), `set_sort`, `set_page`, `previous_page`, `next_page`, `read_view`, and `read_selection`; internal table controls expose scoped sorting and selection. Mutations return bounded change/count metadata. Reads accept `offset` and `limit` (default 20, maximum 100), returning `items` and `nextOffset` within 8 KiB. Filter reads return matching IDs; table reads return effective selected IDs or visible-page formatted cells. Oversized rows are identified by `truncated: true`. Action notifications contain changed property and counts, without whole records or selections. See the [filter contract](../../src/page/client/uilib/widgets/filter/README.md) and [table contract](../../src/page/client/uilib/widgets/table/README.md) for limits, text keys, and viewer behavior.
+
 ### Styling and tools
+
+Never mix blocks with different total heights in one toolbar or UI row. Include labels, hints, errors, and nested controls when comparing heights. Put different-height blocks in separate rows or vertical groups; do not compensate with `items-end`, spacer elements, dummy labels, or arbitrary padding. Keep search fields, toggles, range filters, summaries, and action buttons in homogeneous groups. An icon inside a button is part of that one control.
 
 Use `.agui-button-icon` for round icon-only buttons at the shared control size. Combine it with the usual button variants and supply an accessible name through `aria-label` or `aria-labelledby`.
 
@@ -146,7 +205,7 @@ Field, select, and toggle descriptors expose `set_value` with `{ "value": "..." 
 
 Meaningful interactions emit `agui:action` with `{ "widgetId": "...", "context": "...", "action": "change", "value": "..." }` or action `retry`. Give interactive components IDs. Values longer than 2048 characters are represented by `valueLength` in the event; use `read_value` or provider state for the actual value. Events are notifications, not storage. State resets on sync/replacement/restart follow ordinary AGUI semantics; components do not save to a database automatically.
 
-For manual review, save or insert the packaged `src/page/uilib-gallery.html` into one gallery session. It demonstrates the app shell with two collapsible sidebars, horizontal and nested vertical tabs, independent local controls, shared application inputs, property/object bindings, a floating viewport header, and the data toolbar without executable scripts. Shared name, Shared status, and Notifications are declared persistent; other inputs, tab choice, sidebar visibility, and theme remain transient. The gallery includes an import example and labeled illustrative submission states; its floating bar reports actual operations. Review independent scrolling, tab navigation, sidebar toggles, keyboard use, narrow screens, and native file pickers manually.
+For manual review, save or insert the packaged `src/page/uilib-gallery.html` into one gallery session. It demonstrates the app shell, sidebars, tabs, a dialog, native popups, a populated table with external search, controls/bindings, and the data toolbar without executable scripts. Shared name, Shared status, and Notifications are persistent; other inputs and presentation state remain transient. The gallery includes an import example and illustrative submission states; its floating bar reports actual operations. Review scrolling, keyboard/focus behavior, dismissal, table controls, narrow screens, native file pickers, and shared viewer surfaces manually.
 
 ## Reusable task interfaces
 

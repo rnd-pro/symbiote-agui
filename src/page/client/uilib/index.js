@@ -15,6 +15,13 @@ import { Toggle } from './controls/toggle/toggle.js';
 import { State } from './feedback/state/state.js';
 import { DataToolbar } from './controls/data-toolbar/data-toolbar.js';
 import { Icon } from './content/icon/icon.js';
+import { Dialog } from './feedback/dialog/dialog.js';
+import { Table } from './widgets/table/table.js';
+import { TableRow } from './widgets/table/row.js';
+import { TableCell } from './widgets/table/cell.js';
+import { TableHeading } from './widgets/table/heading.js';
+import { Filter } from './widgets/filter/filter.js';
+import { FilterField } from './widgets/filter/field.js';
 import {
   Message,
 } from './feedback/message/message.js';
@@ -35,7 +42,14 @@ export function registerUiLibComponents() {
   Toggle.reg('agui-toggle');
   ThemeToggle.reg('agui-theme-toggle');
   State.reg('agui-state');
+  Dialog.reg('agui-dialog');
   Message.reg('agui-message');
   DataToolbar.reg('agui-data-toolbar');
   Icon.reg('agui-icon');
+  TableCell.reg('agui-table-cell');
+  TableRow.reg('agui-table-row');
+  TableHeading.reg('agui-table-heading');
+  FilterField.reg('agui-filter-field');
+  Filter.reg('agui-filter');
+  Table.reg('agui-table');
 }

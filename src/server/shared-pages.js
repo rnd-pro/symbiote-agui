@@ -67,7 +67,7 @@ export class SharedPages {
     if (typeof snapshot.html !== 'string' || !Number.isSafeInteger(snapshot.revision) ||
       (snapshot.rootStyles !== undefined && typeof snapshot.rootStyles !== 'string') ||
       (snapshot.theme !== undefined && !['system', 'light', 'dark'].includes(snapshot.theme)) ||
-      ![STYLESHEET_PATH, `${STYLESHEET_PATH}?revision=${this.revision}`].includes(snapshot.stylesheetUrl)) {
+      ![STYLESHEET_PATH, `${STYLESHEET_PATH}?revision=${snapshot.revision}`].includes(snapshot.stylesheetUrl)) {
       throw new Error('Invalid live view.');
     }
     if (snapshot.revision !== this.revision) { return; }

@@ -1,4 +1,5 @@
 @import './client/uilib/shared/native-controls.css';
+@import './client/uilib/shared/native-overlays.css';
 @import './client/uilib/shared/chips.css';
 @import './client/uilib/shared/scrollbars.css';
 
@@ -68,6 +69,7 @@
     --agui-shadow-floating: 0 .25rem 1rem light-dark(rgb(0 0 0 / .12), rgb(0 0 0 / .35));
     --agui-motion-fast: 150ms;
     --agui-motion-ease: ease-out;
+    --agui-backdrop-blur: 4px;
     --agui-content-width: var(--container-7xl, 80rem);
     --agui-sidebar-width: 18rem;
     --agui-scrollbar-thumb: var(--agui-muted);

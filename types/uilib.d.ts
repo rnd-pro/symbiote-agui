@@ -54,6 +54,13 @@ export interface UiTabState {
   disabled?: boolean;
 }
 
+export interface UiDialogState {
+  value: boolean;
+  label?: string;
+  openLabel?: string;
+  closeLabel?: string;
+}
+
 export interface UiFeedbackState {
   status: UiStatus;
   message?: string;

@@ -1,0 +1,34 @@
+<context-provider id="table-data" ctx="RECORDS">
+  <script type="application/json">
+    {
+      "rows":[
+        {"key":"a","name":"<b>Alpha</b>","score":0,"active":false,"date":"2026-02-28","status":"new"},
+        {"key":"b","name":"Beta","score":10,"active":true,"date":"2026-03-01","status":"done"},
+        {"key":"c","name":"Gamma","score":10,"active":false,"date":"2026-03-02","status":"new"},
+        {"key":"d","name":"Delta","score":null,"active":true,"date":null,"status":"done"},
+        {"key":"e","name":"Epsilon","score":-2,"active":false,"date":"2026-03-03","status":"new"},
+        {"key":"f","name":"Zeta","score":"invalid","active":true,"date":"invalid","status":"done"}
+      ],
+      "columns":[
+        {"key":"name","label":"Name","type":"text","sortable":true,"filter":"contains"},
+        {"key":"score","label":"Score","type":"number","sortable":true,"filter":"range"},
+        {"key":"active","label":"Active","type":"boolean","filter":"equals"},
+        {"key":"date","label":"Date","type":"date","sortable":true,"filter":"range"},
+        {"key":"status","label":"Status","type":"status","filter":"equals","options":[{"value":"new","label":"New","tone":"info"},{"value":"done","label":"Done","tone":"success"}]}
+      ],
+      "matchingIds":[],"otherIds":[],"ids":["d"],"singleIds":[],"query":"","filters":{},"sort":null,"readonly":false,"loading":false,"error":"",
+      "texts":{"search":"Search records","results":"Results","selected":"Selected","selection":"Selection","selectRow":"Select record","selectAll":"Select filtered records","page":"Page","pagination":"Record pages","previous":"Previous page","next":"Next page","all":"All","minimum":"Minimum","maximum":"Maximum","trueLabel":"Yes","falseLabel":"No","empty":"No matches","loading":"Loading records","invalidRows":"Invalid record identities","invalidColumns":"Invalid columns","invalidFields":"Invalid filter fields","invalidState":"Invalid table state","unavailable":"Table unavailable"}
+    }
+  </script>
+  <agui-field id="external-query" label="External search" pub-to="RECORDS/query" bind="$.value: RECORDS/query"></agui-field>
+  <agui-filter id="records-filter" label="Contact filters" id-key="key" locale="en"
+    pub-to="RECORDS/filters" query-pub-to="RECORDS/query" results-to="RECORDS/matchingIds"
+    bind="$.rows: RECORDS/rows; $.fields: RECORDS/columns; $.texts: RECORDS/texts; $.value: RECORDS/filters; $.query: RECORDS/query; $.readonly: RECORDS/readonly; $.loading: RECORDS/loading; $.error: RECORDS/error"></agui-filter>
+  <agui-filter id="independent-filter" label="Independent filter" id-key="key" results-to="RECORDS/otherIds"
+    bind="$.rows: RECORDS/rows; $.fields: RECORDS/columns; $.texts: RECORDS/texts"></agui-filter>
+  <agui-table id="records-table" label="Contacts" id-key="key" selection="multiple" page-size="2" locale="en"
+    pub-to="RECORDS/ids" sort-pub-to="RECORDS/sort"
+    bind="$.rows: RECORDS/rows; $.columns: RECORDS/columns; $.texts: RECORDS/texts; $.value: RECORDS/ids; $.filteredIds: RECORDS/matchingIds; $.sort: RECORDS/sort; $.readonly: RECORDS/readonly; $.loading: RECORDS/loading; $.error: RECORDS/error"></agui-table>
+  <agui-table id="single-table" label="Pick one contact" id-key="key" selection="single" page-size="2"
+    pub-to="RECORDS/singleIds" bind="$.rows: RECORDS/rows; $.columns: RECORDS/columns; $.texts: RECORDS/texts; $.value: RECORDS/singleIds"></agui-table>
+</context-provider>

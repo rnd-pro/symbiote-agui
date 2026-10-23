@@ -1,0 +1,59 @@
+@layer components {
+  [popover].agui-popover,
+  [data-agui-mirror-surface='popover'].agui-popover {
+    @apply rounded-agui-panel border border-agui-border p-4 text-agui-text shadow-agui-floating;
+    max-inline-size: min(24rem, calc(100vw - 2rem));
+    max-block-size: calc(100dvh - 2rem);
+    overflow: auto;
+  }
+  .agui-dialog-surface::backdrop,
+  [popover].agui-popover::backdrop {
+    backdrop-filter: blur(var(--agui-backdrop-blur));
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    dialog.agui-dialog-surface[open],
+    [popover].agui-popover:popover-open {
+      opacity: 1;
+      translate: 0 0;
+      scale: 1;
+      transition-property: opacity, translate, scale, display, overlay;
+      transition-duration: calc(var(--agui-motion-fast) * 1.5);
+      transition-timing-function: var(--agui-motion-ease);
+      transition-behavior: allow-discrete;
+    }
+    .agui-dialog-surface[open]::backdrop,
+    [popover].agui-popover:popover-open::backdrop {
+      opacity: 1;
+      transition-property: opacity, display, overlay;
+      transition-duration: calc(var(--agui-motion-fast) * 1.5);
+      transition-timing-function: var(--agui-motion-ease);
+      transition-behavior: allow-discrete;
+    }
+    @starting-style {
+      dialog.agui-dialog-surface[open],
+      [popover].agui-popover:popover-open {
+        opacity: 0;
+        translate: 0 .5rem;
+        scale: .98;
+      }
+      .agui-dialog-surface[open]::backdrop,
+      [popover].agui-popover:popover-open::backdrop {
+        opacity: 0;
+      }
+    }
+  }
+  @supports (position-area: block-end) {
+    [popover].agui-popover {
+      inset: auto;
+      margin: .5rem;
+      position-area: block-end;
+      position-try-fallbacks: flip-block, flip-inline;
+    }
+  }
+  @supports not selector(:popover-open) {
+    [popover].agui-popover {
+      position: static;
+      margin: .5rem 0;
+    }
+  }
+}

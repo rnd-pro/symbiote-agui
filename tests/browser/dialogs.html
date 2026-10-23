@@ -1,0 +1,21 @@
+<context-provider id="dialog-data" ctx="EDITOR" persist="name">
+  <script type="application/json">
+    {"editorOpen":false,"name":"Baseline","label":"Edit contact","openLabel":"Open editor","closeLabel":"Close editor"}
+  </script>
+  <agui-dialog id="record-editor" pub-to="EDITOR/editorOpen"
+    bind="$.value: EDITOR/editorOpen; $.label: EDITOR/label; $.openLabel: EDITOR/openLabel; $.closeLabel: EDITOR/closeLabel">
+    <agui-field id="dialog-name" label="Contact name" pub-to="EDITOR/name" bind="$.value: EDITOR/name"></agui-field>
+    <button id="dialog-help-trigger" type="button" popovertarget="dialog-help">Help</button>
+    <div id="dialog-help" popover class="agui-popover" aria-label="Editor help">
+      <p>Changes remain drafts until Save.</p>
+      <button type="button" popovertarget="dialog-help" popovertargetaction="hide">Close help</button>
+    </div>
+    <form method="dialog"><button id="form-close">Close without saving</button></form>
+  </agui-dialog>
+  <agui-dialog id="independent-editor" label="Independent editor" open-label="Open independent editor" close-label="Close independent editor">
+    <input aria-label="Independent draft">
+  </agui-dialog>
+  <button id="help-trigger" type="button" popovertarget="help-popup">Show help</button>
+  <div id="help-popup" popover class="agui-popover" aria-label="Session help"><p>Native non-modal help.</p></div>
+  <agui-data-toolbar id="editor-toolbar" bind="state: AGUI_TEXT/dataToolbar"></agui-data-toolbar>
+</context-provider>

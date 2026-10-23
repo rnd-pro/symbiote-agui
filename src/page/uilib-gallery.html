@@ -9,6 +9,30 @@
       "galleryTab": "overview",
       "galleryTabNotes": "",
       "galleryTabLabel": "Notes",
+      "galleryEditorOpen": false,
+      "tableQuery": "",
+      "tableSelection": [],
+      "tableFilters": {},
+      "tableMatchingIds": [],
+      "tableSort": null,
+      "tableLoading": false,
+      "tableReadonly": false,
+      "tableRows": [
+        {"id":"lead-01","name":"Northstar Studio","amount":0,"status":"new","active":true,"followUp":"2026-11-02"},
+        {"id":"lead-02","name":"Orbit Works","amount":2400,"status":"contacted","active":false,"followUp":"2026-11-04"},
+        {"id":"lead-03","name":"Harbor Labs","amount":1800,"status":"new","active":true,"followUp":"2026-11-03"},
+        {"id":"lead-04","name":"Meadow Apps","amount":4200,"status":"qualified","active":true,"followUp":"2026-11-08"},
+        {"id":"lead-05","name":"Atlas Supply","amount":1800,"status":"contacted","active":false,"followUp":null},
+        {"id":"lead-06","name":"Cedar Design","amount":null,"status":"new","active":true,"followUp":"2026-11-06"}
+      ],
+      "tableColumns": [
+        {"key":"name","label":"Company","type":"text","sortable":true,"filter":"contains"},
+        {"key":"amount","label":"Opportunity","type":"number","sortable":true,"filter":"range"},
+        {"key":"status","label":"Stage","type":"status","filter":"equals","options":[{"value":"new","label":"New","tone":"info"},{"value":"contacted","label":"Contacted","tone":"warning"},{"value":"qualified","label":"Qualified","tone":"success"}]},
+        {"key":"active","label":"Active","type":"boolean","filter":"equals"},
+        {"key":"followUp","label":"Follow-up","type":"date","sortable":true,"filter":"range"}
+      ],
+      "tableTexts": {"search":"Search leads","results":"Results","selected":"Selected","selection":"Selection","selectRow":"Select lead","selectAll":"Select filtered leads","page":"Page","pagination":"Lead pages","previous":"Previous page","next":"Next page","all":"All values","minimum":"Minimum","maximum":"Maximum","trueLabel":"Yes","falseLabel":"No","empty":"No matching leads.","loading":"Loading leads...","invalidRows":"Lead IDs must be unique nonempty strings.","invalidColumns":"Review the table columns.","invalidFields":"Review the filter fields.","invalidState":"Review the table state.","unavailable":"The table is unavailable or read-only."},
       "query": "",
       "status": "",
       "sharedName": "Alex",
@@ -44,6 +68,8 @@
         <a href="#gallery-controls">Controls</a>
         <a href="#gallery-bindings">Application bindings</a>
         <a href="#gallery-tabs-panel">Tabs</a>
+        <a href="#gallery-overlays">Dialogs and popups</a>
+        <a href="#gallery-table-panel">Table</a>
         <a href="#gallery-workflow">Data workflow</a>
       </nav>
     </agui-sidebar>
@@ -54,7 +80,7 @@
       </agui-header>
       <agui-dashboard layout="split" bind="@density: APP/density">
         <agui-toolbar aria-label="Contact filters">
-          <agui-field id="query-control" label="Search" hint="Starts from application state." bind="$.value: APP/query" type="search" name="query" placeholder="Name or role..."></agui-field>
+          <agui-field id="query-control" label="Search" bind="$.value: APP/query" type="search" name="query" placeholder="Name or role..."></agui-field>
           <agui-select id="status-control" label="Status" placeholder="All statuses" name="status" bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
         </agui-toolbar>
         <agui-panel id="gallery-controls" slot="main" class="grid gap-5">
@@ -133,6 +159,44 @@
           <agui-component class="text-sm text-agui-muted">Shared active tab: {{APP/galleryTab}}</agui-component>
         </agui-panel>
         <agui-panel slot="full" class="grid gap-4">
+          <h2 id="gallery-overlays">Dialogs and popups</h2>
+          <p class="text-sm text-agui-muted">The editor uses native modal focus and Escape dismissal. Closing keeps edits as drafts; Save and Cancel changes remain separate actions.</p>
+          <agui-toggle label="Show contact editor" pub-to="APP/galleryEditorOpen" bind="$.value: APP/galleryEditorOpen"></agui-toggle>
+          <agui-dialog id="gallery-editor" label="Edit shared contact" open-label="Open contact editor" close-label="Close contact editor"
+            pub-to="APP/galleryEditorOpen" bind="$.value: APP/galleryEditorOpen">
+            <agui-field label="Shared name" name="dialog_shared_name" pub-to="APP/sharedName" bind="$.value: APP/sharedName"></agui-field>
+            <agui-select label="Shared status" name="dialog_shared_status" pub-to="APP/sharedStatus" bind="$.value: APP/sharedStatus; $.options: APP/statusOptions"></agui-select>
+            <p class="text-sm text-agui-muted">Close the editor, then use the floating bar to save or cancel these edits.</p>
+            <button type="button" popovertarget="gallery-editor-help">About drafts</button>
+            <div id="gallery-editor-help" popover class="agui-popover" aria-label="About draft edits">
+              <p class="text-sm">Changes appear in all bound fields immediately. Closing this popup or the editor does not save or discard them.</p>
+              <button class="mt-3" type="button" popovertarget="gallery-editor-help" popovertargetaction="hide">Close help</button>
+            </div>
+            <form method="dialog"><button type="submit">Done</button></form>
+          </agui-dialog>
+          <div>
+            <button type="button" popovertarget="gallery-popup">Show workspace help</button>
+            <div id="gallery-popup" popover class="agui-popover" aria-label="Workspace help">
+              <p class="text-sm">This native popup is non-modal. Click outside or press Escape to dismiss it.</p>
+            </div>
+          </div>
+        </agui-panel>
+        <agui-panel slot="full" class="grid gap-4">
+          <h2 id="gallery-table-panel">Filters and table</h2>
+          <p class="text-sm text-agui-muted">The independent filter publishes matching IDs; the table handles sorting, selection, and paging locally. Select-all includes matching leads on other pages and keeps selections outside the filter. This table does not edit its records.</p>
+          <agui-field label="External filter search" type="search" name="table_query" pub-to="APP/tableQuery" bind="$.value: APP/tableQuery"></agui-field>
+          <agui-toolbar aria-label="Table availability">
+            <agui-toggle label="Simulate table loading" pub-to="APP/tableLoading" bind="$.value: APP/tableLoading"></agui-toggle>
+            <agui-toggle label="Read-only table" pub-to="APP/tableReadonly" bind="$.value: APP/tableReadonly"></agui-toggle>
+          </agui-toolbar>
+          <agui-filter id="gallery-lead-filters" label="Lead filters" locale="en"
+            pub-to="APP/tableFilters" query-pub-to="APP/tableQuery" results-to="APP/tableMatchingIds"
+            bind="$.rows: APP/tableRows; $.fields: APP/tableColumns; $.texts: APP/tableTexts; $.value: APP/tableFilters; $.query: APP/tableQuery; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-filter>
+          <agui-table id="gallery-leads" label="Example leads" selection="multiple" page-size="3" locale="en"
+            pub-to="APP/tableSelection" sort-pub-to="APP/tableSort"
+            bind="$.rows: APP/tableRows; $.columns: APP/tableColumns; $.texts: APP/tableTexts; $.value: APP/tableSelection; $.filteredIds: APP/tableMatchingIds; $.sort: APP/tableSort; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-table>
+        </agui-panel>
+        <agui-panel slot="full" class="grid gap-4">
           <h2>Theme tokens</h2>
           <div class="flex flex-wrap gap-2">
             <span class="agui-chip">Neutral</span>
@@ -168,13 +232,13 @@
             <agui-icon name="mail" aria-label="Email"></agui-icon>
             <agui-icon name="check_circle" aria-label="Complete" class="text-agui-accent"></agui-icon>
             <agui-icon name="warning" aria-label="Warning" class="text-agui-danger"></agui-icon>
+          </agui-toolbar>
+          <agui-toolbar aria-label="Icon buttons">
             <button type="button"><agui-icon name="download"></agui-icon>Download</button>
             <button class="agui-button-icon" type="button" aria-label="Settings"><agui-icon name="settings"></agui-icon></button>
           </agui-toolbar>
-          <agui-toolbar aria-label="Dynamic icon">
-            <agui-select label="Icon" pub-to="APP/iconName" bind="$.value: APP/iconName; $.options: APP/iconOptions"></agui-select>
-            <agui-icon id="dynamic-icon" bind="$.name: APP/iconName; @aria-label: APP/iconName"></agui-icon>
-          </agui-toolbar>
+          <agui-select label="Icon" pub-to="APP/iconName" bind="$.value: APP/iconName; $.options: APP/iconOptions"></agui-select>
+          <agui-icon id="dynamic-icon" bind="$.name: APP/iconName; @aria-label: APP/iconName"></agui-icon>
         </agui-panel>
         <agui-panel slot="full" class="grid gap-4">
           <h2 id="gallery-workflow">Data workflow</h2>

@@ -74,6 +74,7 @@ export class SharedView {
     this.observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
     root.addEventListener('input', this.schedule, true);
     root.addEventListener('change', this.schedule, true);
+    root.addEventListener('toggle', this.schedule, true);
     this.refresh = window.setInterval(() => this.publish(), MIRROR_REFRESH_MS);
   }
 
@@ -148,5 +149,6 @@ export class SharedView {
     let root = document.getElementById(CONTENT_ROOT_ID);
     root?.removeEventListener('input', this.schedule, true);
     root?.removeEventListener('change', this.schedule, true);
+    root?.removeEventListener('toggle', this.schedule, true);
   }
 }

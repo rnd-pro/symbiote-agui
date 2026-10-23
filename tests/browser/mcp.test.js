@@ -149,7 +149,7 @@ for (let route of ['MCP', 'CLI']) {
     assert.equal(await restoredPage.$eval('output', (output) => output.textContent), '0 / 3');
     assert.equal((await cli('clear', sessionId)).cleared, true);
     assert.equal(await restoredPage.$('task-desk'), null);
-    assert.deepEqual((await invoke('list_tools', { sessionId })).data.tools, []);
+    assert.equal((await invoke('list_tools', { sessionId })).data.tools.some((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.ownerName === 'task-desk'), false);
     await cli('stop', sessionId);
     assert.equal((await cli('start', sessionId, '--no-open')).restored, false);
   });

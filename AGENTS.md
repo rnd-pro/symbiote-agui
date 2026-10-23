@@ -33,6 +33,7 @@ Read [README.md](./README.md) for the project purpose and main workflows.
 
 - Run existing checks that directly cover the changed behavior. For JavaScript or type changes, run `npm run types`. Keep validation proportional to the task; avoid unrelated or repeated checks without a new reason.
 - Prefer user manual review for appearance, layout, animation, mobile behavior, and external browsers with active sessions. State what needs manual verification. Do not create automated style tests.
+- Do not hardcode complete tool lists or global tool counts in tests. Discover fixture tools by owner or action key, verify their behavior and cleanup, and allow unrelated system or library tools. Derive protocol catalog expectations from the authoritative catalog instead of copying its tool names.
 - Add automated tests for a concrete bug found during implementation or reported by the user, or for critical system behavior. Do not add tests for every routine change or follow TDD by default.
 - Use Node.js's built-in test runner and the existing Puppeteer dependency for browser tests. Keep tests in `tests/node` and `tests/browser`; do not add another test library for capabilities already available.
 

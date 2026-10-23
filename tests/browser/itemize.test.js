@@ -39,15 +39,19 @@ for (let native of [false, true]) {
     await page.waitForSelector('task-row input');
     assert.equal(await page.evaluate(() => typeof Reflect.get(document, 'modelContext')?.registerTool === 'function'), native);
     let discovery = await cli('tools', sessionId);
-    let names = ['toggle_in_task-row_brief', 'toggle_in_task-row_preview'];
-    assert.deepEqual(discovery.tools.map((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.name).sort(), names);
-    assert.equal(discovery.tools.every((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.nativeActive === native), true);
-    assert.equal(new Set(discovery.tools.map((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.ownerId)).size, 2);
+    let rowTools = discovery.tools.filter((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.ownerName === 'task-row' && tool.key === 'auto:toggle');
+    let rowCount = await page.$$eval('task-row', (rows) => rows.length);
+    assert.ok(rowCount > 0);
+    assert.equal(rowTools.length, rowCount);
+    assert.equal(rowTools.every((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.nativeActive === native), true);
+    assert.equal(new Set(rowTools.map((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.ownerId)).size, rowCount);
+    let names = rowTools.map((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.name);
     if (native) {
-      assert.deepEqual(await page.evaluate(async () => {
+      let registered = await page.evaluate(async () => {
         let context = Reflect.get(document, 'modelContext');
-        return (await context.getTools()).map((/** @type {{ name: string }} */ tool) => tool.name).sort();
-      }), names);
+        return (await context.getTools()).map((/** @type {{ name: string }} */ tool) => tool.name);
+      });
+      assert.ok(names.every((/** @type {string} */ name) => registered.includes(name)));
     }
     let call = {
       sessionId,
@@ -67,7 +71,7 @@ for (let native of [false, true]) {
     assert.equal((await cliToolCall('call_tool', call)).isError, false);
     assert.deepEqual(await page.$$eval('input', (inputs) => inputs.map((input) => input.checked)), [false, true]);
     await cli('clear', sessionId);
-    assert.deepEqual((await cli('tools', sessionId)).tools, []);
+    assert.equal((await cli('tools', sessionId)).tools.some((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.ownerName === 'task-row'), false);
     assert.equal(await page.$('task-row'), null);
     assert.deepEqual(errors, []);
   });

@@ -4,6 +4,7 @@ import { connectMcp, mcpCall } from './mcp-client.js';
 import { temporaryState } from './state-fixture.js';
 import { parseCommand } from '../../src/cli/parse.js';
 import { validateToolInput } from '../../src/tools/validation.js';
+import { MCP_TOOLS } from '../../src/mcp/catalog.js';
 
 test('MCP uses real stdio negotiation, exposes schemas, and reports invalid or absent sessions', async (t) => {
   let state = await temporaryState();
@@ -11,7 +12,7 @@ test('MCP uses real stdio negotiation, exposes schemas, and reports invalid or a
   let client = await connectMcp();
   t.after(() => client.close());
   let tools = await client.listTools();
-  assert.deepEqual(tools.tools.map((tool) => tool.name).sort(), ['call_tool', 'list_pages', 'list_tools']);
+  assert.deepEqual(tools.tools.map((tool) => tool.name).sort(), Object.keys(MCP_TOOLS).sort());
   assert.deepEqual(parseCommand(['mcp']), { kind: 'mcp' });
   assert.throws(() => parseCommand(['mcp', 'session']));
   assert.throws(() => parseCommand(['mcp', '--no-open']));

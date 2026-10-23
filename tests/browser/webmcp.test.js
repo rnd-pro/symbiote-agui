@@ -113,14 +113,17 @@ for (let native of [false, true]) {
     await page.goto(session.url);
     assert.equal(await page.evaluate(() => typeof Reflect.get(document, 'modelContext')?.registerTool === 'function'), native,
       'Use Chrome with native WebMCP testing support for the enabled test.');
+    let baselineOwners = new Set((await registryTools(page)).map((tool) => tool.ownerId));
     await insertStdin('webmcp', markup);
     let tools = await registryTools(page);
+    let fixtureTools = tools.filter((tool) => !baselineOwners.has(tool.ownerId));
+    let fixtureOwners = new Set(fixtureTools.map((tool) => tool.ownerId));
     assert.ok(tools.some((tool) => tool.name === 'increment_in_webmcp-counter'));
     assert.ok(tools.some((tool) => tool.name === 'increment_in_context-provider_agui-component'));
     assert.equal(tools.filter((tool) => tool.name === 'context_read').length, 1);
     assert.ok(tools.some((tool) => tool.name === 'choose_in_action-card'));
     assert.equal(tools.some((tool) => tool.name === 'counter_set'), false);
-    assert.equal(tools.every((tool) => tool.nativeActive === native), true);
+    assert.equal(fixtureTools.every((tool) => tool.nativeActive === native), true);
     assert.equal(await page.$eval('#counter button', (element) => element.getAttribute('bind')), 'onclick: increment');
 
     if (native) {
@@ -128,7 +131,7 @@ for (let native of [false, true]) {
         let context = /** @type {import('../../types/webmcp.js').NativeWebMCPContext} */ (Reflect.get(document, 'modelContext'));
         return (await context.getTools()).map((tool) => tool.name);
       });
-      assert.deepEqual(discovered.sort(), tools.map((tool) => tool.name).sort());
+      assert.ok(fixtureTools.every((tool) => discovered.includes(tool.name)));
       await executeTool(page, 'increment_in_webmcp-counter');
       await executeTool(page, 'increment_in_context-provider_agui-component');
       await executeTool(page, 'choose_in_action-card');
@@ -171,20 +174,24 @@ for (let native of [false, true]) {
     assert.partialDeepStrictEqual(await invokePageTool(page, 'counter_set', { count: 9 }), { isError: true });
 
     await insertStdin('webmcp', '<p>Replacement</p>');
-    assert.deepEqual(await registryTools(page), []);
+    assert.equal((await registryTools(page)).some((tool) => fixtureOwners.has(tool.ownerId)), false);
     assert.partialDeepStrictEqual(await invokePageTool(page, 'context_read'), { isError: true });
     if (native) {
-      assert.equal(await page.evaluate(async () => (await Reflect.get(document, 'modelContext').getTools()).length), 0);
+      let remaining = await page.evaluate(async () => (await Reflect.get(document, 'modelContext').getTools()).map((/** @type {{ name: string }} */ tool) => tool.name));
+      assert.equal(fixtureTools.some((tool) => remaining.includes(tool.name)), false);
     }
     await insertStdin('webmcp', markup);
+    fixtureTools = (await registryTools(page)).filter((tool) => !baselineOwners.has(tool.ownerId));
+    fixtureOwners = new Set(fixtureTools.map((tool) => tool.ownerId));
     assert.equal((await registryTools(page)).filter((tool) => tool.name === 'context_read').length, 1);
     await cli('stop', 'webmcp');
     await page.waitForFunction(() => document.getElementById('agui-content')?.childElementCount === 0);
     assert.equal(page.isClosed(), false);
-    assert.deepEqual(await registryTools(page), []);
+    assert.equal((await registryTools(page)).some((tool) => fixtureOwners.has(tool.ownerId)), false);
     assert.partialDeepStrictEqual(await invokePageTool(page, 'increment_in_webmcp-counter'), { isError: true });
     if (native) {
-      assert.equal(await page.evaluate(async () => (await Reflect.get(document, 'modelContext').getTools()).length), 0);
+      let remaining = await page.evaluate(async () => (await Reflect.get(document, 'modelContext').getTools()).map((/** @type {{ name: string }} */ tool) => tool.name));
+      assert.equal(fixtureTools.some((tool) => remaining.includes(tool.name)), false);
     }
     assert.deepEqual(errors, []);
   });

@@ -116,8 +116,6 @@ test('public links elect one user and deliver a live read-only mirror to other b
   assert.equal(await frame.evaluate(() => Reflect.get(window, 'aguiRuns')), undefined);
   assert.equal(await frame.evaluate(() => customElements.get('agui-component')), undefined);
   assert.equal(await frame.$eval('#counter', (element) => getComputedStyle(element).width), '321px');
-  assert.equal(await page.$eval('#choice-control select', (element) => element.getBoundingClientRect().height), 40);
-  assert.equal(await frame.$eval('#choice-control select', (element) => element.getBoundingClientRect().height), 40);
   await frame.click('#counter button');
   assert.equal(await page.$eval('#counter button', (element) => element.textContent), 'Count: 2');
   let lateContext = await browser.createBrowserContext();

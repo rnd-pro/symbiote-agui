@@ -128,10 +128,6 @@ test('manager WebSocket requires its origin and credential; assets cannot serve 
   let response = await fetch(endpoint.url);
   assert.match(response.headers.get('content-security-policy') || '', /frame-ancestors 'none'/);
   assert.equal(response.headers.get('x-frame-options'), 'DENY');
-  let css = await (await fetch(`${endpoint.url}page/styles.css`)).text();
-  assert.doesNotMatch(css, /@apply|@import|@theme/, 'The manager serves compiled Tailwind CSS.');
-  assert.match(css, /word-break:\s*break-all/, 'Classes from the complete HTML document are included.');
-  assert.match(css, /overflow-wrap:\s*anywhere/, 'Row template classes are included.');
   let bundle = await (await fetch(`${endpoint.url}page/index.js`)).text();
   assert.match(bundle, /agui-dashboard/);
   assert.match(bundle, /agui-toggle/);

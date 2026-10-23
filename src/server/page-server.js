@@ -4,6 +4,7 @@ import { createStyles } from '../markup/styles.js';
 import { STYLESHEET_PATH, CLIENT_SCRIPT_PATH } from '../markup/constants.js';
 import { CHART_RUNTIME_PATH } from '../page/client/uilib/widgets/chart/constants.js';
 import { MAP_RUNTIME_PATH, MAP_CSS_PATH, MAP_ASSET_PREFIX } from '../page/client/uilib/widgets/map/constants.js';
+import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../page/client/uilib/widgets/markdown/constants.js';
 import { serveMapAsset } from './map-assets.js';
 import { TUNNEL_HEALTH_PATH } from '../tunnel/constants.js';
 
@@ -56,6 +57,8 @@ export async function startPageServer(access) {
       CLIENT_SCRIPT_PATH,
       CHART_RUNTIME_PATH,
       MAP_RUNTIME_PATH,
+      MARKDOWN_RUNTIME_PATH,
+      MARKDOWN_SANITIZER_PATH,
     ].includes(pathname || '')) {
       response.writeHead(404).end();
       return;

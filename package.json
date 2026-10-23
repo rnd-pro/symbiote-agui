@@ -63,6 +63,7 @@
     "@modelcontextprotocol/server": "^2.3.1",
     "@symbiotejs/symbiote": "^3.8.3",
     "@tailwindcss/node": "^4.3.3",
+    "dompurify": "^3.4.17",
     "echarts": "^6.1.0",
     "jsda-kit": "1.6.4",
     "leaflet": "^1.9.4",

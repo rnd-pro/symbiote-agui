@@ -20,6 +20,7 @@ import { Chart } from './widgets/chart/chart.js';
 import { ChartDataTable } from './widgets/chart/data-table.js';
 import { AguiMap } from './widgets/map/map.js';
 import { MapDataTable } from './widgets/map/data-table.js';
+import { Markdown } from './widgets/markdown/markdown.js';
 import { Kanban } from './widgets/kanban/kanban.js';
 import { KanbanColumn } from './widgets/kanban/column.js';
 import { KanbanCard } from './widgets/kanban/card.js';
@@ -63,6 +64,7 @@ export function registerUiLibComponents() {
   Chart.reg('agui-chart');
   MapDataTable.reg('agui-map-data');
   AguiMap.reg('agui-map');
+  Markdown.reg('agui-markdown');
   KanbanCard.reg('agui-kanban-card');
   KanbanColumn.reg('agui-kanban-column');
   Kanban.reg('agui-kanban');

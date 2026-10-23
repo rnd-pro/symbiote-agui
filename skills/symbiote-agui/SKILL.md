@@ -27,6 +27,7 @@ The default JSDA page bundle includes and registers every available library comp
 - `agui-kanban`: status editor over a provider-bound records array in `value`, with `columns: [{ value, label, disabled?, tone? }]`. Pair `pub-to` with the same provider binding; cards move between columns through native drag-and-drop or Alt+Left/Right while focused. Configure `id-key`, `status-key`, `title-key`, and optional `description-key`. Unknown statuses remain in a caller-labeled unassigned group. Provide `label` and caller-owned `texts`; disabled/read-only, loading, and errors block edits. Declare records in `persist` and use the data toolbar for Save/Cancel.
 - `agui-chart`: prepared `rows` and declarative `series` for `type="line|bar|donut"`, rendered as SVG. Supply `id-key`, `x-key`, `x-label`, `label`, optional `description`, and caller-owned `texts`. Optional `value` is a selected ID array with `selection="none|single|multiple"` and `pub-to`. A built-in data disclosure supports keyboard reading/selection. The heavy runtime loads automatically on element initialization; do not add imports or engine configuration to sessions.
 - `agui-map`: prepared location `rows`, selected IDs in `value`, and `view: { center: [latitude, longitude], zoom }`. Use `pub-to` for selection and `view-pub-to` for viewport publication. Supply caller-owned labels/texts and optional raster `tiles` with visible attribution. Leaflet and CSS load automatically on initialization; a coordinate table provides keyboard selection. Viewers receive the user's inert map viewport without Leaflet.
+- `agui-markdown`: Markdown string in `value` or an external `src` URL, caller-owned accessible `label`, and `texts`. JSDA-Kit renders formatting, highlighted code, native HTML/media, and custom wrappers with readable Markdown/JSON fallbacks. Registered components can enhance wrappers; task checkboxes stay disabled. Dependencies load on initialization without session imports or scripts.
 - `agui-dashboard`: responsive workspace. `layout="single"` (default), `split`, `equal`, or `grid`; `density="comfortable"` (default) or `compact`. In split mode, direct children with `slot="main"` use two columns and `slot="side"` one. Toolbars and `slot="full"` span all columns. These layout slot attributes do not require Shadow DOM.
 - `agui-panel`: content container; supply ordinary child markup and optional headings/actions.
 - `agui-header`: header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` under the same application provider or viewport, or directly in `agui-app` for a fixed header row. Add `floating` for sticky positioning within the scroll region; use `--agui-header-offset` if another sticky element is above it.
@@ -266,6 +267,32 @@ Field attributes `id-key`, `latitude-key`, `longitude-key`, and `label-key` defa
 `tiles` defaults to `null` (markers without a basemap). Configure an HTTPS raster URL with `{z}`, `{x}`, `{y}`, required plain-text attribution, optional HTTPS `attributionUrl`, and optional native `minZoom`/`maxZoom` (default 0-19). Follow the [tile provider policy](https://operations.osmfoundation.org/policies/tiles/); do not prefetch or bulk-download tiles. Images send only the page origin as referrer, including in viewers. Tile URLs are public to page viewers; do not put private credentials in them. No CDN scripts, Leaflet options, popup HTML, imports, or session initialization code are needed.
 
 Discover by `ownerName="agui-map"` and authored ID. `set_selection` accepts `ids`; `set_view` accepts `center` and `zoom`; `fit_records` fits valid locations. `read_view` returns viewport/counts and visible IDs, with `offset`/`limit` (default 20, maximum 100), `nextOffset`, and an 8 KiB bound. Notifications use `map-selection-change` or `map-view-change` and counts, never records. Disabled/read-only blocks selection and navigation. Tile failure shows caller text while markers remain usable. Viewers see the user's scaled, inert viewport and do not run Leaflet. See the [map contract](../../src/page/client/uilib/widgets/map/README.md) for configuration, copy, lifecycle, and sharing behavior.
+
+### Markdown documents
+
+Use the built-in renderer for notes, instructions, or reports. Keep the source in the common provider and bind it directly:
+
+```html
+<context-provider ctx="NOTES">
+  <script type="application/json">
+    {
+      "document":"# Project notes\n\n## Next steps\n\n- [x] Review requirements\n- [ ] Prepare proposal\n\n[Reference](https://example.com/docs)",
+      "texts":{"loading":"Loading document...","empty":"No document yet.","loadFailed":"Document renderer could not load. Reload to retry.","renderFailed":"Document could not be rendered.","invalidValue":"The document must be text.","inputTooLarge":"The source document is too large.","outputTooLarge":"The rendered document is too large.","invalidSrc":"The document URL is invalid.","fetchFailed":"The document could not be loaded."}
+    }
+  </script>
+  <agui-markdown label="Project notes" bind="$.value: NOTES/document; $.texts: NOTES/texts"></agui-markdown>
+</context-provider>
+```
+
+The same fields work through `bind="state: NOTES/documentState"`. Optional `loading` and `error` attributes or property bindings show external states. When embedding source containing script-closing tags in initial provider JSON, encode `<` as `\u003c` so the text stays inside the JSON script element. GFM headings, paragraphs, lists, blockquotes, emphasis, code, links, tables, and disabled task checkboxes are supported. Task checkboxes are document content, not editable shared state; use ordinary AGUI controls for real task editing.
+
+For external files, use `src="https://example.com/notes.md"` or `bind="$.src: NOTES/documentUrl"`. Nonempty `src` overrides `value`; clearing it restores the bound text. Browser loads omit credentials/referrers, require normal CORS access, time out after 15 seconds, and abort on URL changes/removal. A loaded URL is reused until changed, cleared, or reloaded. Fetching does not overwrite `value`.
+
+Use native HTML and custom-element wrappers as described in [Extensible Markdown](https://rnd-pro.com/pulse/ext-md/). Put blank lines around wrapper tags, inner Markdown blocks, and fenced JSON. Fallback headings, images, links, and JSON remain readable when an implementation is unavailable. Use each registered component's existing attribute/state contract; extension implementations read and validate their documented JSON payloads. Fenced code remains text, with JSDA's Highlight.js colors generated for both themes. Raw scripts, event attributes, source RAT bindings, and inline styles are filtered. Literal template text is not evaluated by wrapper components.
+
+HTTP/HTTPS and `mailto:` links are supported; local fragments target scoped document IDs. Relative links and media resolve against `src`, or the page for bound text. Web links open separately with `noopener noreferrer`; executable protocols and URL credentials are rejected. Source is limited to 64 KiB UTF-8, rendered HTML to 256 KiB, and output to 5,000 nodes/32 levels.
+
+Do not add imports, parser options, registration scripts, highlighter setup, or `pub-to`. The widget dynamically loads JSDA's renderer; browsers without native sanitization load DOMPurify automatically. Inert viewers fetch neither runtime nor Markdown source and cannot follow links; images/media may load normally. Use existing provider reads for bound source data, and the common Save workflow for declared persistent fields. See the [Markdown contract](../../src/page/client/uilib/widgets/markdown/README.md).
 
 ### Styling and tools
 

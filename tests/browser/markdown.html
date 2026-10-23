@@ -1,0 +1,12 @@
+<context-provider id="markdown-data" ctx="DOCS">
+  <script type="application/json">
+    {
+      "source":"# Waiting",
+      "secret":"Private provider value",
+      "texts":{"loading":"Loading document","empty":"No document","loadFailed":"Document dependency failed","renderFailed":"Document rendering failed","invalidValue":"Document must be text","inputTooLarge":"Document source is too large","outputTooLarge":"Rendered document is too large","invalidSrc":"Invalid document URL","fetchFailed":"Document request failed"}
+    }
+  </script>
+  <agui-markdown id="first-document" label="Project notes" bind="$.value: DOCS/source; $.texts: DOCS/texts"></agui-markdown>
+  <agui-markdown id="second-document" label="Same notes" bind="$.value: DOCS/source; $.texts: DOCS/texts"></agui-markdown>
+  <agui-markdown id="late-document" label="Removed document" bind="$.value: DOCS/source; $.texts: DOCS/texts"></agui-markdown>
+</context-provider>

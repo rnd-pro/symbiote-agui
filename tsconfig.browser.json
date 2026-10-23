@@ -6,7 +6,8 @@
   "include": [
     "src/manager/page/**/*.js",
     "src/page/client/**/*.js",
-    "types/components.d.ts"
+    "types/components.d.ts",
+    "types/jsda-kit.d.ts"
   ],
   "exclude": []
 }

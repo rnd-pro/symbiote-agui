@@ -57,12 +57,33 @@ test('manager lists saved sessions, deduplicates requests and serializes direct 
   assert.equal((await operations.dispatch({ ...request, id: randomUUID() })).ok, true);
   assert.equal((await readSession('desk'))?.pid, pid, 'Starting a running session reuses its worker.');
   assert.equal((await operations.dispatch({ ...request, operation: 'stop' })).ok, false, 'An ID cannot change operations.');
-  let [stop, start] = await Promise.all([
-    operations.dispatch({ id: randomUUID(), operation: 'stop', sessionId: 'desk' }),
-    operations.dispatch({ id: randomUUID(), operation: 'start', sessionId: 'desk' }),
+  let stopping = operations.dispatch({
+    id: randomUUID(),
+    operation: 'stop',
+    sessionId: 'desk',
+  });
+  let stoppedState = operations.serialize('desk', () => statusSession('desk'));
+  let starting = operations.dispatch({
+    id: randomUUID(),
+    operation: 'start',
+    sessionId: 'desk',
+  });
+  let startedState = operations.serialize('desk', () => statusSession('desk'));
+  let [
+    stop,
+    stopped,
+    start,
+    started,
+  ] = await Promise.all([
+    stopping,
+    stoppedState,
+    starting,
+    startedState,
   ]);
   assert.equal(stop.ok, true);
+  assert.equal(stopped.active, false, 'A queued read after stop must observe a stopped session.');
   assert.equal(start.ok, true);
+  assert.equal(started.active, true, 'A queued read after start must observe a running session.');
   assert.equal((await statusSession('desk')).active, true);
   let description = await operations.dispatch({ id: randomUUID(), operation: 'describe', sessionId: 'desk' });
   assert.match(description.description?.description || '', /Interactive workspace/);

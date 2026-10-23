@@ -121,10 +121,20 @@
   textarea::placeholder {
     @apply text-agui-muted;
   }
+  details {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  details::details-content {
+    min-inline-size: 0;
+    inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
   summary {
     @apply flex min-w-0 cursor-pointer list-none items-center justify-between gap-3 rounded-agui-control border border-agui-border bg-agui-surface px-3 py-2 text-sm text-agui-text;
     min-height: var(--agui-control-height);
     user-select: none;
+    overflow-wrap: anywhere;
   }
   summary::-webkit-details-marker {
     display: none;

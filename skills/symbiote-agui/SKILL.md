@@ -17,11 +17,14 @@ For routine use, prepare HTML and JSON files with workspace file tools, then run
 
 The default JSDA page bundle includes and registers every available library component. Compose them directly in HTML with Symbiote contexts; do not add imports, registration scripts, per-component JSON, or JavaScript initialization. Use these before generating custom components.
 
+- `agui-app`: viewport-height application shell. Direct children are an optional `agui-header` or `slot="header"` region, one start sidebar, one `agui-viewport`, an optional end sidebar, and an optional `slot="footer"` region. Place the single `agui-data-toolbar` last as a direct child of the app so its reserved row keeps all scroll areas clear of the floating bar. The header/footer stay outside the scroll regions. Sidebars flank the viewport from 64rem upward and stack above/below it on narrower screens. Use `--agui-app-height` to embed a shorter shell; the default is `100dvh`.
+- `agui-sidebar`: independently scrolling authored content with a built-in expand/collapse button. `side="start"` is the default; use `side="end"` for the other side. Expanded by default; `collapsed` supplies a closed default. Supply `label`, `expand-label`, and `collapse-label`, or bind `$.label`, `$.expandLabel`, and `$.collapseLabel`. Boolean `$.value` is expanded state; pair its binding with `pub-to` to share visibility with other controls. Disabled/read-only state protects visibility changes, not the fields inside. Collapsing preserves mounted content and drafts. Desktop width uses `--agui-sidebar-width` (default `18rem`); collapsed panels keep their toggle visible.
+- `agui-viewport`: independently scrolling central content. Give it an `aria-label` or `aria-labelledby`; it defaults to `role="main"` and `tabindex="0"`, preserving explicit overrides. Place existing headers, dashboards, and panels inside it. A floating header within the viewport supplies focus spacing to that scroll region; an app-level header occupies its own row and needs no `floating` flag.
 - `agui-dashboard`: responsive workspace. `layout="single"` (default), `split`, `equal`, or `grid`; `density="comfortable"` (default) or `compact`. In split mode, direct children with `slot="main"` use two columns and `slot="side"` one. Toolbars and `slot="full"` span all columns. These layout slot attributes do not require Shadow DOM.
 - `agui-panel`: content container; supply ordinary child markup and optional headings/actions.
-- `agui-header`: page-wide header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` under the same application provider. Add `floating` for sticky positioning; use `--agui-header-offset` if another sticky element is above it.
+- `agui-header`: header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` under the same application provider or viewport, or directly in `agui-app` for a fixed header row. Add `floating` for sticky positioning within the scroll region; use `--agui-header-offset` if another sticky element is above it.
 - `agui-toolbar`: wrapping logical control group. Give it an `aria-label` or `label`. Place related fields, selects, and buttons inside it.
-- `agui-data-toolbar`: common floating Save, Cancel changes, Import JSON, and Export JSON actions with edit/submission statuses, errors, User/Viewer marker, and Connected/Disconnected indicator. Use one last in the dashboard for data manipulation tasks. It owns its controls and lifecycle; no session-specific handlers or initialization are needed. See the complete contract under Local data commits below.
+- `agui-data-toolbar`: common floating Save, Cancel changes, Import JSON, and Export JSON actions with edit/submission statuses, errors, User/Viewer marker, and Connected/Disconnected indicator. Use one last in the dashboard for data manipulation tasks, or last directly in `agui-app` when using the shell. It owns its controls and lifecycle; no session-specific handlers or initialization are needed. See the complete contract under Local data commits below.
 - `agui-field`: renders its own native input and supplies a visible label, required marker, hints, errors, context synchronization, and tools. Set `type` to text (default), search, email, url, tel, number, date, checkbox, or radio; use `type="textarea"` for multiline text. Put native attributes such as `name`, `placeholder`, `autocomplete`, `min`, `max`, `step`, `minlength`, `maxlength`, `pattern`, `rows`, and `cols` on the field. Attribute changes propagate to the internal control; recreate the field to switch between input and textarea. Do not supply child inputs, light DOM slots, or a slot processor. Use `agui-select` for options.
 - `agui-select`: native single-select driven by an `options` property binding; provide `name` on the component. Each option is `{ "value": "new", "label": "New", "disabled": false }`; value/label are strings, disabled is optional. Use `placeholder` for a clear/empty option; reserve the empty value for it. No HTML option generation or modules are needed.
 - `agui-toggle`: reusable boolean control with a native checkbox styled as a 24px-high on/off switch inside a standard 40px-high clickable label. Use `label`, `name`, `checked`, `disabled`, `readonly`, `hint`, and `error` attributes or the same native `$.value` and `state` bindings as fields. Values are booleans, with local state and the usual control tools/change action. Example: `<agui-toggle label="Notifications" name="notifications" checked></agui-toggle>`.
@@ -84,6 +87,29 @@ Inside components, declare defaults in native `init$` and use `$`, `add$()`, and
 
 Update common application data through CLI `update`, for example `{ "selector": "#app-data", "values": { "nameLabel": "Customer name" } }`; ordinary bindings propagate the change. For a local primitive, target its ID and public property, such as `{ "selector": "#name-control", "values": { "value": "Ada" } }`. Use `add$` for new properties. Native input interactions remain local and require no agent round trip.
 
+### App layout example
+
+```html
+<context-provider ctx="WORKSPACE">
+  <script type="application/json">{"navigationOpen":true,"notes":""}</script>
+  <agui-app>
+    <agui-header><h1>Task workspace</h1></agui-header>
+    <agui-sidebar id="navigation" label="Navigation" expand-label="Show navigation" collapse-label="Hide navigation"
+      pub-to="WORKSPACE/navigationOpen" bind="$.value: WORKSPACE/navigationOpen">
+      <nav aria-label="Workspace"><a href="#task-notes">Notes</a></nav>
+    </agui-sidebar>
+    <agui-viewport aria-label="Task details">
+      <agui-dashboard>
+        <agui-toggle label="Show navigation" pub-to="WORKSPACE/navigationOpen" bind="$.value: WORKSPACE/navigationOpen"></agui-toggle>
+        <agui-field id="task-notes" label="Notes" type="textarea" pub-to="WORKSPACE/notes" bind="$.value: WORKSPACE/notes"></agui-field>
+      </agui-dashboard>
+    </agui-viewport>
+  </agui-app>
+</context-provider>
+```
+
+Sidebar clicks, keyboard input, and scoped `set_value` tools publish visibility changes; incoming assignments and repeated values emit no changes. Sidebar tools also include `read_value` and `toggle`; discover their exact names through CLI `tools`. Keep visibility transient by default. For record-editing workspaces, declare the record keys in `persist` and place the data toolbar directly in the app as described above.
+
 ### Styling and tools
 
 Use `.agui-button-icon` for round icon-only buttons at the shared control size. Combine it with the usual button variants and supply an accessible name through `aria-label` or `aria-labelledby`.
@@ -100,7 +126,7 @@ Field, select, and toggle descriptors expose `set_value` with `{ "value": "..." 
 
 Meaningful interactions emit `agui:action` with `{ "widgetId": "...", "context": "...", "action": "change", "value": "..." }` or action `retry`. Give interactive components IDs. Values longer than 2048 characters are represented by `valueLength` in the event; use `read_value` or provider state for the actual value. Events are notifications, not storage. State resets on sync/replacement/restart follow ordinary AGUI semantics; components do not save to a database automatically.
 
-For manual review, save or insert the packaged `src/page/uilib-gallery.html` into one gallery session. It demonstrates independent local controls, shared application inputs, property/object bindings, a floating header, and the data toolbar without executable scripts. Shared name, Shared status, and Notifications are declared persistent; other inputs and theme remain transient. The gallery includes an import example and labeled illustrative submission states; its floating bar reports actual operations. Review keyboard use, narrow screens, and native file pickers manually.
+For manual review, save or insert the packaged `src/page/uilib-gallery.html` into one gallery session. It demonstrates the app shell with two collapsible sidebars, independent local controls, shared application inputs, property/object bindings, a floating viewport header, and the data toolbar without executable scripts. Shared name, Shared status, and Notifications are declared persistent; other inputs, sidebar visibility, and theme remain transient. The gallery includes an import example and labeled illustrative submission states; its floating bar reports actual operations. Review independent scrolling, sidebar toggles, keyboard use, narrow screens, and native file pickers manually.
 
 ## Reusable task interfaces
 

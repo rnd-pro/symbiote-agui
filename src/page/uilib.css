@@ -1,5 +1,6 @@
 @import './client/uilib/shared/native-controls.css';
 @import './client/uilib/shared/chips.css';
+@import './client/uilib/shared/scrollbars.css';
 
 @utility agui-popover {
   background-color: var(--agui-popover-bg);
@@ -68,6 +69,9 @@
     --agui-motion-fast: 150ms;
     --agui-motion-ease: ease-out;
     --agui-content-width: var(--container-7xl, 80rem);
+    --agui-sidebar-width: 18rem;
+    --agui-scrollbar-thumb: var(--agui-muted);
+    --agui-scrollbar-track: transparent;
     --agui-control-height: 2.4rem;
     --agui-toggle-height: 1.5rem;
     --agui-panel-padding: 1.25rem;

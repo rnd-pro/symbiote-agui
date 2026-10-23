@@ -1,0 +1,46 @@
+@layer base {
+  /* The document scrollbar uses the root's scheme, independently of body. */
+  :root {
+    color-scheme: light dark;
+  }
+  :root:has(body[data-theme='light']) {
+    color-scheme: light;
+  }
+  :root:has(body[data-theme='dark']) {
+    color-scheme: dark;
+  }
+  * {
+    scrollbar-color: var(--agui-scrollbar-thumb) var(--agui-scrollbar-track);
+    scrollbar-width: thin;
+  }
+  @supports not (scrollbar-color: auto) {
+    @media (forced-colors: none) and (pointer: fine) {
+      ::-webkit-scrollbar {
+        width: .625rem;
+        height: .625rem;
+      }
+      ::-webkit-scrollbar-track,
+      ::-webkit-scrollbar-corner {
+        background: var(--agui-scrollbar-track);
+      }
+      ::-webkit-scrollbar-thumb {
+        border: 2px solid transparent;
+        border-radius: var(--agui-radius-control);
+        background: var(--agui-scrollbar-thumb);
+        background-clip: padding-box;
+      }
+    }
+  }
+  @media (prefers-contrast: more) {
+    * {
+      --agui-scrollbar-thumb: var(--agui-text);
+      scrollbar-width: auto;
+    }
+  }
+  @media (forced-colors: active), (pointer: coarse) {
+    * {
+      scrollbar-color: auto;
+      scrollbar-width: auto;
+    }
+  }
+}

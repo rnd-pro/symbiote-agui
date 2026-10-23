@@ -4,6 +4,7 @@ import { TOGGLE_TEMPLATE } from './controls/toggle/template.js';
 import { STATE_TEMPLATE } from './feedback/state/template.js';
 import { DATA_TOOLBAR_TEMPLATE } from './controls/data-toolbar/template.js';
 import { ICON_TEMPLATE } from './content/icon/template.js';
+import { SIDEBAR_TEMPLATE } from './layouts/sidebar/template.js';
 import {
   MESSAGE_TEMPLATE,
 } from './feedback/message/template.js';
@@ -16,5 +17,6 @@ export let UILIB_TEMPLATES = Object.freeze({
   state: STATE_TEMPLATE,
   dataToolbar: DATA_TOOLBAR_TEMPLATE,
   icon: ICON_TEMPLATE,
+  sidebar: SIDEBAR_TEMPLATE,
   message: MESSAGE_TEMPLATE,
 });

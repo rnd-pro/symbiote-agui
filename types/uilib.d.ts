@@ -31,6 +31,15 @@ export interface UiSelectState extends UiControlState {
   placeholder?: string;
 }
 
+export interface UiSidebarState {
+  value: boolean;
+  label?: string;
+  expandLabel?: string;
+  collapseLabel?: string;
+  disabled?: boolean;
+  readonly?: boolean;
+}
+
 export interface UiFeedbackState {
   status: UiStatus;
   message?: string;

@@ -1,12 +1,4 @@
 /** @type {import('../../../types/uilib.js').UiOption[]} */
-export let STATUS_OPTIONS = [
-  { value: 'all', label: 'All statuses' },
-  { value: 'running', label: 'Running' },
-  { value: 'stopped', label: 'Stopped' },
-  { value: 'unknown', label: 'Unknown' },
-];
-
-/** @type {import('../../../types/uilib.js').UiOption[]} */
 export let BULK_OPTIONS = [
   { value: 'start', label: 'Start saved sessions' },
   { value: 'stop', label: 'Stop running sessions' },

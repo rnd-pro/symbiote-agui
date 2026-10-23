@@ -1,6 +1,6 @@
 # Extensible Markdown
 
-Bind a string to `agui-markdown` with `bind="$.value: APP/document"`, or set `src` to load an external Markdown file. The common `state` binding accepts `{ value?, src?, label, texts, loading?, error? }`. Supply a caller-owned accessible `label`. Provider updates rerender automatically. In initial provider JSON, encode `<` as `\u003c` when source contains script-closing tags, preserving the enclosing JSON script element. The component does not publish edits, save data, or expose mutation tools. Use ordinary provider reads to inspect bound source data.
+Bind a string to `agui-markdown` with `bind="$.value: APP/document"`, or set `src` to load an external Markdown file. The common `state` binding accepts `{ value?, src?, label, texts, extensions?, loading?, error? }`. Supply a caller-owned accessible `label`. Provider updates rerender automatically. In initial provider JSON, encode `<` as `\u003c` when source contains script-closing tags, preserving the enclosing JSON script element. Set the native `extensions` property to `false` for document-only rendering: custom-element wrappers are unwrapped before insertion, preserving their fallback content without constructing registered components. The default is `true`. Use this setting when displaying documents inside privileged application interfaces. The component does not publish edits, save data, or expose mutation tools. Use ordinary provider reads to inspect bound source data.
 
 ## External sources
 

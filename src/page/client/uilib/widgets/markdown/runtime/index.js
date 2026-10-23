@@ -14,7 +14,8 @@ export async function markdownHtml(source) {
  * @param {string} source
  * @param {string} headingPrefix
  * @param {string} [baseUrl]
+ * @param {boolean} [extensions]
  */
-export async function renderMarkdown(source, headingPrefix, baseUrl = document.baseURI) {
-  return markdownFragment(await markdownHtml(source), headingPrefix, baseUrl);
+export async function renderMarkdown(source, headingPrefix, baseUrl = document.baseURI, extensions = true) {
+  return markdownFragment(await markdownHtml(source), headingPrefix, baseUrl, extensions);
 }

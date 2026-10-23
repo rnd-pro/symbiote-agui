@@ -8,6 +8,7 @@ import { closeServer, waitForServer } from '../shared/server.js';
 import { ManagerOperations } from './operations.js';
 import { MANAGER_PATH, MANAGER_SOCKET_PATH } from './constants.js';
 import { createManagerStyles } from './styles.js';
+import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../page/client/uilib/widgets/markdown/constants.js';
 
 /**
  * @param {unknown} value
@@ -33,6 +34,18 @@ export async function startManagerServer(record, stop) {
   let assets = new URL('./page/', import.meta.url);
   let files = new Map([[MANAGER_PATH, new URL('index.html', assets)]]);
   files.set(`${MANAGER_PATH}page/theme.js`, new URL('theme.js', assets));
+  let markdownAssets = new Map([
+    [
+      MARKDOWN_RUNTIME_PATH,
+      new URL('../page/client/uilib/widgets/markdown/runtime/index.js', import.meta.url),
+    ],
+    [
+      MARKDOWN_SANITIZER_PATH,
+      new URL('../page/client/uilib/widgets/markdown/sanitizer/index.js', import.meta.url),
+    ],
+  ]);
+  /** @type {Map<string, Promise<string>>} */
+  let markdownBundles = new Map();
   let server = createServer(async (request, response) => {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
@@ -59,6 +72,19 @@ export async function startManagerServer(record, stop) {
     }
     if (path === `${MANAGER_PATH}page/index.js`) {
       response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }).end(client);
+      return;
+    }
+    let markdownAsset = markdownAssets.get(path);
+    if (markdownAsset) {
+      try {
+        let bundle = markdownBundles.get(path) || jsBuild(fileURLToPath(markdownAsset));
+        markdownBundles.set(path, bundle);
+        let script = await bundle;
+        response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }).end(script);
+      } catch {
+        markdownBundles.delete(path);
+        response.writeHead(500).end();
+      }
       return;
     }
     let file = files.get(path);

@@ -56,6 +56,7 @@ export class Table extends UiComponent {
     selectedCount: 0,
     effectivePage: 1,
     pageCount: 1,
+    paginationHidden: true,
     previousDisabled: true,
     nextDisabled: true,
     selectRow: (

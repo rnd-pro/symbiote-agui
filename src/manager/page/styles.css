@@ -7,20 +7,54 @@
     @apply antialiased;
     --agui-icon-optical-size: 20;
   }
-  pre { @apply whitespace-pre-wrap break-words text-sm leading-6; }
-  a { @apply text-agui-accent underline underline-offset-4; }
-  a:focus-visible { @apply outline-2 outline-offset-2 outline-agui-accent; }
-  dialog { @apply m-auto max-h-[85vh] w-[min(650px,90vw)] overflow-y-auto rounded-xl border border-agui-border bg-agui-surface p-6 text-agui-text shadow-xl; }
-  dialog::backdrop { background: rgb(0 0 0 / .65); }
+  a {
+    @apply text-agui-accent underline underline-offset-4;
+  }
+  a:focus-visible {
+    @apply outline-2 outline-offset-2 outline-agui-accent;
+  }
 }
 
 @layer components {
-  agui-session-row { @apply block min-w-0; }
+  .manager-app {
+    --agui-content-width: 100%;
+    --agui-sidebar-width: 19rem;
+    --agui-table-height: 55dvh;
+  }
+  .manager-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
+    align-items: start;
+    gap: 1rem;
+  }
+  .manager-footer {
+    @apply flex flex-wrap justify-between gap-2 border-t border-agui-border bg-agui-surface px-4 py-2 text-xs text-agui-muted;
+  }
+  agui-session-row,
+  agui-session-controls {
+    @apply block min-w-0;
+  }
+  agui-session-row [data-session] {
+    cursor: pointer;
+  }
+  agui-session-row [data-selected='true'] {
+    border-color: var(--agui-accent);
+    outline: 1px solid var(--agui-accent);
+  }
+  .manager-session-select {
+    @apply h-auto min-h-0 min-w-0 rounded-none border-0 bg-transparent p-0 text-left font-semibold;
+  }
+  .manager-session-select:hover:enabled,
+  .manager-session-select:active:enabled {
+    background: transparent;
+  }
   [data-state='running'] .session-status {
     @apply bg-agui-success text-agui-on-success;
   }
   [data-state='unknown'] .session-status {
     @apply bg-agui-warning text-agui-on-warning;
   }
-  .error:empty { display: none; }
+  .error:empty {
+    display: none;
+  }
 }

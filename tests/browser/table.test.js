@@ -134,6 +134,7 @@ test('independent filters compose with provider-backed tables, sorting and selec
   assert.deepEqual(await data('ids'), [
     'd',
   ]);
+  assert.equal(await page.$eval(`${table} .agui-table-pagination`, (element) => Reflect.get(element, 'hidden')), false);
   await page.click(`${table} .agui-table-pagination button:last-child`);
   assert.equal((await call('set_page', {
     page: 2,
@@ -143,6 +144,7 @@ test('independent filters compose with provider-backed tables, sorting and selec
   ]);
   await page.click(`${table} tr[data-row-id="c"] td[data-column=""] input`);
   await page.type('#external-query input', 'Beta');
+  assert.equal(await page.$eval(`${table} .agui-table-pagination`, (element) => Reflect.get(element, 'hidden')), true);
   assert.equal(await page.$eval(`${filter} .agui-filter-query input`, (input) => Reflect.get(input, 'value')), 'Beta');
   assert.deepEqual(await visible(), [
     'b',
@@ -249,6 +251,10 @@ test('independent filters compose with provider-backed tables, sorting and selec
   assert.deepEqual(await data('singleIds'), [
     'b',
   ]);
+  await update({
+    rows: await data('rows'),
+  });
+  assert.equal(await page.$eval('#single-table tr[data-row-id="b"] td[data-column=""] input', (element) => Reflect.get(element, 'checked')), true, 'Data refresh keeps the visible radio selected; hidden data-cell inputs cannot take its group selection.');
   await update({
     readonly: true,
   });

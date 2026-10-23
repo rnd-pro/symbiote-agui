@@ -1,10 +1,13 @@
 import { ContextProvider } from '../../page/client/context-provider.js';
 import { registerUiLibComponents } from '../../page/client/uilib/index.js';
 import { ManagerConnection } from './connection.js';
-import { rowState } from './rows.js';
+import './rows.js';
+import './controls.js';
+import { rowState } from './session-state.js';
 import { MANAGER_REFRESH_MS } from '../constants.js';
 import { getTheme, setTheme, watchTheme } from './theme.js';
-import { STATUS_OPTIONS, BULK_OPTIONS } from './options.js';
+import { BULK_OPTIONS } from './options.js';
+import { SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, DESCRIPTION_TEXTS, sessionRecords } from './view.js';
 import { formatDataFlow } from '../../metadata/format.js';
 
 class SessionManager extends ContextProvider {
@@ -23,10 +26,27 @@ class SessionManager extends ContextProvider {
     controlsDisabled: true,
     refreshDisabled: true,
     theme: getTheme(),
-    statusOptions: STATUS_OPTIONS,
+    columns: SESSION_COLUMNS,
+    filterFields: SESSION_FILTER_FIELDS,
+    filterTexts: FILTER_TEXTS,
+    tableTexts: TABLE_TEXTS,
+    records: [],
+    matchingIds: [],
+    filters: {},
+    selection: [],
+    selectedRows: {},
+    inspectorOpen: false,
+    noSelection: true,
+    loading: true,
+    discoveryError: '',
+    settingsOpen: false,
+    descriptionOpen: false,
+    description: '',
+    descriptionTexts: DESCRIPTION_TEXTS,
+    descriptionExtensions: false,
+    openSettings: () => { this.$.settingsOpen = true; },
     bulkOptions: BULK_OPTIONS,
     query: '',
-    statusFilter: 'all',
     bulkOperation: 'start',
     storageFolder: '',
     storageHint: 'Loading save-folder settings...',
@@ -55,8 +75,11 @@ class SessionManager extends ContextProvider {
   renderCallback() {
     this.sub('theme', (theme) => setTheme(String(theme)));
     this.stopThemeSync = watchTheme((theme) => { this.$.theme = theme; });
-    this.sub('query', () => this.renderRows(), false);
-    this.sub('statusFilter', () => this.renderRows(), false);
+    this.sub('matchingIds', () => this.renderRows(), false);
+    this.sub('selection', () => {
+      this.renderRows();
+      this.$.inspectorOpen = !this.$.noSelection;
+    }, false);
     this.connection = new ManagerConnection((ready, message) => {
       this.$.connectionTone = ready ? 'info' : 'alert';
       this.$.connection = message;
@@ -77,20 +100,27 @@ class SessionManager extends ContextProvider {
       let result = await this.connection.request('snapshot');
       if (!result.ok || !result.snapshot) { throw new Error(result.error?.message || 'Session discovery failed.'); }
       this.snapshot = result.snapshot;
+      let selection = /** @type {string[]} */ (this.$.selection);
+      let retained = selection.filter((id) => result.snapshot?.sessions.some((row) => row.sessionId === id));
+      if (retained.length !== selection.length) { this.$.selection = retained; }
       if (!this.loaded) { this.$.storageFolder = result.snapshot.storage.folder || ''; }
       this.$.storageHint = result.snapshot.storage.message;
       this.$.storageContext = result.snapshot.storage.editable
         ? `Relative paths use ${result.snapshot.storage.projectDirectory}. Default cache: ${result.snapshot.storage.defaultFolder}.`
         : `Default cache: ${result.snapshot.storage.defaultFolder}.`;
+      this.$.discoveryError = '';
       this.loaded = true;
+      this.$.records = sessionRecords(result.snapshot.sessions);
+      this.$.loading = false;
       this.$.scope = result.snapshot.scope.settings.folder || `Private cache: ${result.snapshot.scope.stateRoot}`;
       this.$.checkedAt = `Updated ${new Date(result.snapshot.checkedAt).toLocaleTimeString()}`;
       this.renderRows();
     } catch (error) {
       this.$.noticeTone = 'alert';
       this.$.notice = String(error instanceof Error ? error.message : error);
-      this.$.empty = 'Session discovery failed. Refresh to try again.';
-      this.$.emptyStatus = 'error';
+      this.$.discoveryError = 'Session discovery failed. Refresh to try again.';
+      this.$.loading = false;
+      this.renderRows();
     } finally {
       this.refreshing = false;
       if (this.refreshAgain) { this.refreshAgain = false; void this.refresh(); }
@@ -99,17 +129,32 @@ class SessionManager extends ContextProvider {
 
   renderRows() {
     let sessions = this.snapshot?.sessions || [];
-    let query = String(this.$.query).toLowerCase();
-    let filter = this.$.statusFilter;
-    let matches = sessions.filter((row) => `${row.sessionId} ${row.definition?.title || ''} ${row.definition?.description || ''} ${JSON.stringify(row.definition?.metadata ?? {})}`.toLowerCase().includes(query)
-      && (filter === 'all' || (filter === 'running' && row.active === true) || (filter === 'stopped' && row.active === false) || (filter === 'unknown' && row.active === null)));
+    let matchingIds = new Set(/** @type {string[]} */ (this.$.matchingIds));
+    let matches = sessions.filter((row) => matchingIds.has(row.sessionId));
     let disabled = !this.connection?.ready || this.busy || !this.loaded;
     this.$.controlsDisabled = disabled;
     this.$.storageDisabled = disabled || !this.snapshot?.storage.editable;
     this.$.counts = `${sessions.length} total / ${sessions.filter((row) => row.active === true).length} running / ${sessions.filter((row) => row.active === false).length} stopped / ${sessions.filter((row) => row.active === null).length} unknown`;
-    this.$.rows = Object.fromEntries(matches.map((row) => [row.sessionId, rowState(row, disabled, (operation, id) => { void this.act(operation, id); })]));
-    this.$.emptyStatus = matches.length > 0 ? 'ready' : this.loaded ? 'empty' : 'loading';
-    this.$.empty = this.loaded ? sessions.length ? 'No sessions match these filters.' : 'No sessions saved or running in this scope.' : 'Loading sessions...';
+    let states = Object.fromEntries(sessions.map((row) => [
+      row.sessionId,
+      rowState(row, disabled, (operation, id) => { void this.act(operation, id); }),
+    ]));
+    let selected = /** @type {string[]} */ (this.$.selection)[0];
+    this.$.rows = Object.fromEntries(matches.map((row) => [
+      row.sessionId,
+      {
+        card: {
+          ...states[row.sessionId],
+          selected: selected === row.sessionId,
+        },
+      },
+    ]));
+    this.$.noSelection = !selected || !states[selected];
+    this.$.selectedRows = selected && states[selected] ? {
+      [selected]: states[selected],
+    } : {};
+    this.$.emptyStatus = this.$.discoveryError ? 'error' : matches.length > 0 ? 'ready' : this.loaded ? 'empty' : 'loading';
+    this.$.empty = this.$.discoveryError || (this.loaded ? sessions.length ? 'No sessions match these filters.' : 'No sessions saved or running in this scope.' : 'Loading sessions...');
   }
 
   /**
@@ -165,10 +210,9 @@ class SessionManager extends ContextProvider {
     try {
       let result = await this.connection.request(operation, { ...(sessionId ? { sessionId } : { all: true }), ...(warning ? { confirm: true } : {}) });
       if (result.description) {
-        let dialog = /** @type {HTMLDialogElement} */ (this.ref.description);
-        this.ref.descriptionText.textContent = [result.description.description || 'No description.',
+        this.$.description = [result.description.description || 'No description.',
           formatDataFlow(result.description.metadata?.dataFlow)].filter(Boolean).join('\n\n');
-        dialog.showModal();
+        this.$.descriptionOpen = true;
       }
       this.$.noticeTone = !result.ok || result.sessions?.some((row) => !row.ok) ? 'alert' : 'info';
       this.$.notice = (result.description ? `Description loaded for ${sessionId}.` : result.sessions?.map((row) => `${row.sessionId}: ${row.ok ? `${operation} completed` : row.error.message}`).join('\n'))

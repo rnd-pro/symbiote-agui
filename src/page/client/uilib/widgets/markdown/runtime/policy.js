@@ -91,14 +91,18 @@ export let MARKDOWN_SAFE_ATTRIBUTES = Object.freeze([
   'scope',
 ]);
 
-/** @param {string} html */
-export function markdownPolicy(html) {
+/**
+ * @param {string} html
+ * @param {boolean} [extensions]
+ */
+export function markdownPolicy(html, extensions = true) {
   // An inert document prevents custom-element constructors and resource loads
   // while discovering wrapper names. Only sanitized nodes enter the live page.
   let inert = document.implementation.createHTMLDocument('');
   let template = inert.createElement('template');
   template.innerHTML = html;
   let customTags = new Set();
+  let unwrappedTags = new Set();
   let attributes = new Set(MARKDOWN_SAFE_ATTRIBUTES);
   for (let element of template.content.querySelectorAll('*')) {
     let name = element.localName;
@@ -106,6 +110,7 @@ export function markdownPolicy(html) {
       'agui-markdown',
       'context-provider',
     ].includes(name)) { continue; }
+    if (!extensions) { unwrappedTags.add(name); continue; }
     customTags.add(name);
     let component = customElements.get(name);
     let observed = /** @type {string[]} */ (component && Reflect.get(component, 'observedAttributes') || []);
@@ -129,6 +134,7 @@ export function markdownPolicy(html) {
     ],
     attributes: Array.from(attributes),
     customTags,
+    unwrappedTags,
   };
 }
 

@@ -24,6 +24,7 @@ export class Markdown extends UiComponent {
   sourceController;
   init$ = {
     value: '',
+    extensions: true,
     texts: {},
     label: undefined,
     src: undefined,
@@ -38,6 +39,7 @@ export class Markdown extends UiComponent {
   renderCallback() {
     for (let key of [
       'value',
+      'extensions',
       'texts',
       ...Object.keys(MARKDOWN_ATTRIBUTES),
       ...Object.values(MARKDOWN_ATTRIBUTES).map((attribute) => `attribute-${attribute}`),
@@ -154,7 +156,7 @@ export class Markdown extends UiComponent {
     let source = remote.value;
     let error = String(this.$.error ?? this.getAttribute('error') ?? '');
     let loading = remote.loading || !!(this.$.loading ?? this.hasAttribute('loading'));
-    let issue = remote.issue || (typeof source !== 'string' ? 'invalidValue'
+    let issue = remote.issue || (typeof source !== 'string' || typeof this.$.extensions !== 'boolean' ? 'invalidValue'
       : source.length > MARKDOWN_LIMITS.inputBytes || new TextEncoder().encode(source).byteLength > MARKDOWN_LIMITS.inputBytes ? 'inputTooLarge'
       : !source.trim() ? 'empty' : this.loadFailed ? 'loadFailed' : '');
     let busy = !error && (loading || !issue && !this.runtime);
@@ -171,7 +173,7 @@ export class Markdown extends UiComponent {
       statusMessage: this.text('loading'),
     });
     try {
-      let fragment = await this.runtime.renderMarkdown(String(source), this.headingPrefix, this.sourceBaseUrl || document.baseURI);
+      let fragment = await this.runtime.renderMarkdown(String(source), this.headingPrefix, this.sourceBaseUrl || document.baseURI, this.$.extensions === true);
       if (this.disposed || !this.isConnected || revision !== this.revision) { return; }
       // The runtime prepares safe HTML and trusted component instances before
       // connection; document text does not enter the host's RAT pipeline.

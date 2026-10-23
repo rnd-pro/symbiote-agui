@@ -43,7 +43,8 @@ export class Tab extends UiComponent {
 
   refreshOwner() {
     let owner = /** @type {import('./tabs.js').Tabs | null} */ (this.parentElement?.closest('agui-tabs'));
-    owner?.refresh();
+    // Authored panels can upgrade before their owning tabs element is registered.
+    if (owner?.ready) { owner.refresh(); }
   }
 
   destroyCallback() {

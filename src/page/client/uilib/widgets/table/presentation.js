@@ -52,6 +52,7 @@ export function presentTable(table, state) {
     selectedCount: selected.size,
     effectivePage: model?.page ?? 1,
     pageCount: model?.pageCount ?? 1,
+    paginationHidden: (model?.pageCount ?? 1) <= 1,
     previousDisabled: unavailable || !model || model.page <= 1,
     nextDisabled: unavailable || !model || model.page >= model.pageCount,
     headings: [
@@ -102,6 +103,10 @@ export function presentTable(table, state) {
             cellClass: column.type === 'status' ? 'agui-chip' : '',
             tone: column.options?.find((option) => option.value === row[column.key])?.tone ?? false,
             isSelection: false,
+            // Hidden inputs in data cells must not join the selection radio group.
+            selectionType: 'checkbox',
+            groupName: '',
+            selected: false,
           })),
         ],
       };

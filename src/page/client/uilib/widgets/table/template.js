@@ -14,7 +14,7 @@ export let TABLE_TEMPLATE = html`
       <span bind="textContent: resultsLabel"></span> <output bind="textContent: filteredCount"></output> / <output bind="textContent: totalCount"></output>
       <span bind="hidden: !selectionEnabled"> · <span bind="textContent: selectedLabel"></span> <output bind="textContent: selectedCount"></output></span>
     </p>
-    <div class="agui-table-pagination" role="group" bind="@aria-label: paginationLabel">
+    <div class="agui-table-pagination" role="group" bind="@aria-label: paginationLabel; hidden: paginationHidden">
       <button type="button" bind="onclick: previous_page; disabled: previousDisabled; @aria-label: previousLabel"><agui-icon name="chevron_left"></agui-icon></button>
       <span class="agui-table-page"><span bind="textContent: pageLabel"></span> <output bind="textContent: effectivePage"></output> / <output bind="textContent: pageCount"></output></span>
       <button type="button" bind="onclick: next_page; disabled: nextDisabled; @aria-label: nextLabel"><agui-icon name="chevron_right"></agui-icon></button>

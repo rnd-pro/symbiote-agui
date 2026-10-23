@@ -11,60 +11,86 @@
     <script type="module" src="./page/index.js"></script>
   </head>
   <body>
-    <agui-session-manager ctx="MANAGER" class="block">
-      <agui-header floating>
-        <div class="min-w-0">
-          <h1 class="flex items-center gap-2"><agui-icon name="dashboard"></agui-icon>AGUI Manager</h1>
-        </div>
-        <agui-toolbar aria-label="Appearance">
-          <agui-theme-toggle id="manager-theme" ctx="MANAGER" aria-label="Dark theme" light-label="Switch to light theme" dark-label="Switch to dark theme"></agui-theme-toggle>
-        </agui-toolbar>
-      </agui-header>
-      <agui-dashboard role="main">
-        <agui-panel class="grid gap-3" aria-label="Storage scope">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="flex items-center gap-2"><agui-icon name="home"></agui-icon>Storage scope</h2>
-            <small class="text-xs text-agui-muted">{{MANAGER/checkedAt}}</small>
-          </div>
-          <p class="break-all text-sm text-agui-muted">{{MANAGER/scope}}</p>
-          <p class="counts text-sm">{{MANAGER/counts}}</p>
-          <details class="grid gap-3">
-            <summary>AGUI folder settings</summary>
-            <div class="mt-3 grid gap-3">
-              <agui-field label="Save path" name="saveFolder" maxlength="4096" placeholder="Default private cache" pub-to="MANAGER/storageFolder" bind="$.value: MANAGER/storageFolder; $.disabled: MANAGER/storageDisabled"></agui-field>
-              <p class="break-words text-xs text-agui-muted">{{MANAGER/storageHint}}</p>
-              <p class="break-all text-xs text-agui-muted">{{MANAGER/storageContext}}</p>
-              <agui-toolbar aria-label="AGUI folder settings">
-                <button type="button" class="agui-button-primary" bind="onclick: MANAGER/saveStorage; disabled: MANAGER/storageDisabled"><agui-icon name="save"></agui-icon>Save folder and open</button>
-                <button type="button" bind="onclick: MANAGER/resetStorage; disabled: MANAGER/storageDisabled"><agui-icon name="home"></agui-icon>Use default cache</button>
-              </agui-toolbar>
-            </div>
-          </details>
-        </agui-panel>
-        <agui-panel class="grid gap-4">
-          <agui-toolbar class="toolbar items-end" aria-label="Session filters">
-            <agui-field label="Search sessions" type="search" name="query" placeholder="Name or description..." pub-to="MANAGER/query" bind="$.value: MANAGER/query"></agui-field>
-            <agui-select label="Status" name="status" pub-to="MANAGER/statusFilter" bind="$.options: MANAGER/statusOptions; $.value: MANAGER/statusFilter"></agui-select>
-            <button type="button" bind="onclick: MANAGER/refresh; disabled: MANAGER/refreshDisabled"><agui-icon name="refresh"></agui-icon>Refresh</button>
-          </agui-toolbar>
-          <agui-toolbar class="bulk items-end" aria-label="Bulk session actions">
+    <agui-app class="manager-app">
+      <agui-sidebar label="Workspace" expand-label="Expand workspace" collapse-label="Collapse workspace">
+        <div class="grid gap-6">
+          <section class="grid gap-3" aria-labelledby="filters-heading">
+            <h2 id="filters-heading" class="text-xs uppercase tracking-widest text-agui-muted">Find a session</h2>
+            <agui-filter id="manager-filter" label="Session filters" results-to="MANAGER/matchingIds" pub-to="MANAGER/filters" query-pub-to="MANAGER/query"
+              bind="$.rows: MANAGER/records; $.fields: MANAGER/filterFields; $.texts: MANAGER/filterTexts; $.value: MANAGER/filters; $.query: MANAGER/query; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError"></agui-filter>
+          </section>
+          <section class="grid gap-3" aria-labelledby="bulk-heading">
+            <h2 id="bulk-heading" class="text-xs uppercase tracking-widest text-agui-muted">Scope actions</h2>
             <agui-select label="All sessions in this scope" name="operation" pub-to="MANAGER/bulkOperation" bind="$.options: MANAGER/bulkOptions; $.value: MANAGER/bulkOperation; $.disabled: MANAGER/controlsDisabled"></agui-select>
-            <button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; disabled: MANAGER/controlsDisabled"><agui-icon name="check"></agui-icon>Apply to all</button>
-          </agui-toolbar>
+            <p class="text-xs text-agui-muted">Applies to the entire folder, including sessions hidden by filters.</p>
+            <agui-toolbar class="bulk" aria-label="Bulk session actions">
+              <button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; disabled: MANAGER/controlsDisabled"><agui-icon name="check"></agui-icon>Apply to all</button>
+            </agui-toolbar>
+          </section>
+          <agui-panel class="grid gap-2" aria-label="Storage scope">
+            <h2 class="text-xs uppercase tracking-widest text-agui-muted">AGUI folder</h2>
+            <p class="break-all text-xs text-agui-muted">{{MANAGER/scope}}</p>
+            <button type="button" bind="onclick: MANAGER/openSettings"><agui-icon name="settings"></agui-icon>Folder settings</button>
+          </agui-panel>
+        </div>
+      </agui-sidebar>
+      <agui-viewport role="main" aria-label="Sessions" tabindex="0">
+        <agui-session-manager ctx="MANAGER" class="flex min-h-full min-w-0 flex-col">
+          <agui-header floating>
+            <h1 class="flex items-center gap-2"><agui-icon name="dashboard"></agui-icon>AGUI Manager</h1>
+            <agui-toolbar class="toolbar" aria-label="Manager controls">
+              <agui-theme-toggle id="manager-theme" ctx="MANAGER" aria-label="Theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
+              <button type="button" class="agui-button-icon" aria-label="Refresh" title="Refresh" bind="onclick: MANAGER/refresh; disabled: MANAGER/refreshDisabled"><agui-icon name="refresh"></agui-icon></button>
+              <button type="button" class="agui-button-icon" aria-label="Settings" title="Settings" bind="onclick: MANAGER/openSettings"><agui-icon name="settings"></agui-icon></button>
+            </agui-toolbar>
+          </agui-header>
+          <div class="min-w-0 flex-1 p-4 sm:p-6">
+            <div class="mb-6 grid gap-2">
+              <p class="text-xs uppercase tracking-widest text-agui-muted">Your workspace</p>
+              <h2 class="text-2xl font-semibold">Sessions</h2>
+              <p class="counts text-sm text-agui-muted" role="status">{{MANAGER/counts}}</p>
+            </div>
+            <agui-tabs id="session-views" label="Session view" value="table">
+              <agui-tab value="table" label="Table">
+                <div class="grid gap-4">
+                  <agui-table id="manager-table" label="Sessions" selection="single" page-size="15" pub-to="MANAGER/selection"
+                    bind="$.rows: MANAGER/records; $.columns: MANAGER/columns; $.texts: MANAGER/tableTexts; $.filteredIds: MANAGER/matchingIds; $.value: MANAGER/selection; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError"></agui-table>
+                </div>
+              </agui-tab>
+              <agui-tab value="cards" label="Cards">
+                <agui-state bind="$.status: MANAGER/emptyStatus; $.message: MANAGER/empty"></agui-state>
+                <div class="sessions manager-cards" itemize="MANAGER/rows">
+                  <template>
+                    <agui-session-row pub-to="MANAGER/selection" bind="state: card"></agui-session-row>
+                  </template>
+                </div>
+              </agui-tab>
+            </agui-tabs>
+          </div>
+          <footer class="manager-footer">
+            <span role="status">{{MANAGER/connection}}</span>
+            <span>{{MANAGER/checkedAt}}</span>
+          </footer>
           <agui-message class="notice" close-label="Dismiss message" bind="$.tone: MANAGER/noticeTone; $.message: MANAGER/notice" hidden></agui-message>
-        </agui-panel>
-        <section class="grid min-w-0 gap-4" aria-labelledby="sessions-heading">
-          <h2 id="sessions-heading" class="text-lg font-semibold">Sessions</h2>
-          <agui-state bind="$.status: MANAGER/emptyStatus; $.message: MANAGER/empty"></agui-state>
-          <div class="sessions grid gap-4" itemize="MANAGER/rows" item-tag="agui-session-row"></div>
-        </section>
-      </agui-dashboard>
-      <agui-message class="connection" close-label="Dismiss message" bind="$.tone: MANAGER/connectionTone; $.message: MANAGER/connection" hidden></agui-message>
-      <dialog ref="description" aria-labelledby="description-heading">
-        <h2 id="description-heading" class="text-lg font-semibold">Session description</h2>
-        <pre ref="descriptionText" class="my-5"></pre>
-        <form method="dialog"><button autofocus><agui-icon name="close"></agui-icon>Close</button></form>
-      </dialog>
-    </agui-session-manager>
+          <agui-message class="connection" close-label="Dismiss message" bind="$.tone: MANAGER/connectionTone; $.message: MANAGER/connection" hidden></agui-message>
+          <agui-dialog id="manager-settings" label="AGUI folder settings" close-label="Close settings" pub-to="MANAGER/settingsOpen" bind="$.value: MANAGER/settingsOpen">
+            <agui-field label="Save path" name="saveFolder" maxlength="4096" placeholder="Default private cache" pub-to="MANAGER/storageFolder" bind="$.value: MANAGER/storageFolder; $.disabled: MANAGER/storageDisabled"></agui-field>
+            <p class="break-words text-xs text-agui-muted">{{MANAGER/storageHint}}</p>
+            <p class="break-all text-xs text-agui-muted">{{MANAGER/storageContext}}</p>
+            <agui-toolbar aria-label="AGUI folder settings">
+              <button type="button" class="agui-button-primary" bind="onclick: MANAGER/saveStorage; disabled: MANAGER/storageDisabled"><agui-icon name="save"></agui-icon>Save folder and open</button>
+              <button type="button" bind="onclick: MANAGER/resetStorage; disabled: MANAGER/storageDisabled"><agui-icon name="home"></agui-icon>Use default cache</button>
+            </agui-toolbar>
+          </agui-dialog>
+          <agui-dialog id="manager-description" label="Session description" close-label="Close description" pub-to="MANAGER/descriptionOpen" bind="$.value: MANAGER/descriptionOpen">
+            <agui-markdown label="Session description" bind="$.value: MANAGER/description; $.texts: MANAGER/descriptionTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown>
+          </agui-dialog>
+        </agui-session-manager>
+      </agui-viewport>
+      <agui-sidebar id="session-inspector" side="end" label="Selected session" expand-label="Expand session controls" collapse-label="Collapse session controls"
+        pub-to="MANAGER/inspectorOpen" bind="$.value: MANAGER/inspectorOpen; hidden: MANAGER/noSelection" hidden>
+        <div itemize="MANAGER/selectedRows" item-tag="agui-session-controls"></div>
+      </agui-sidebar>
+    </agui-app>
   </body>
 </html>

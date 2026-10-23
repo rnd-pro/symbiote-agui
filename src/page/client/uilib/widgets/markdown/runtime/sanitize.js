@@ -8,9 +8,10 @@ let pending;
  * @param {string} html
  * @param {string} headingPrefix
  * @param {string} baseUrl
+ * @param {boolean} [extensions]
  */
-export async function markdownFragment(html, headingPrefix, baseUrl) {
-  let policy = markdownPolicy(html);
+export async function markdownFragment(html, headingPrefix, baseUrl, extensions = true) {
+  let policy = markdownPolicy(html, extensions);
   let inert = document.implementation.createHTMLDocument('');
   let root = inert.createElement('div');
   if ('setHTML' in Element.prototype) {
@@ -22,6 +23,7 @@ export async function markdownFragment(html, headingPrefix, baseUrl) {
         replaceWithChildrenElements: [
           'agui-markdown',
           'context-provider',
+          ...policy.unwrappedTags,
         ],
         comments: false,
       },

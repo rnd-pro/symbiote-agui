@@ -16,6 +16,9 @@ import { State } from './feedback/state/state.js';
 import { DataToolbar } from './controls/data-toolbar/data-toolbar.js';
 import { Icon } from './content/icon/icon.js';
 import { Dialog } from './feedback/dialog/dialog.js';
+import { Kanban } from './widgets/kanban/kanban.js';
+import { KanbanColumn } from './widgets/kanban/column.js';
+import { KanbanCard } from './widgets/kanban/card.js';
 import { Table } from './widgets/table/table.js';
 import { TableRow } from './widgets/table/row.js';
 import { TableCell } from './widgets/table/cell.js';
@@ -52,4 +55,7 @@ export function registerUiLibComponents() {
   FilterField.reg('agui-filter-field');
   Filter.reg('agui-filter');
   Table.reg('agui-table');
+  KanbanCard.reg('agui-kanban-card');
+  KanbanColumn.reg('agui-kanban-column');
+  Kanban.reg('agui-kanban');
 }

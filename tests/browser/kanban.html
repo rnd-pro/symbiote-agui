@@ -1,0 +1,26 @@
+<context-provider id="work-data" ctx="WORK" persist="records">
+  <script type="application/json">
+    {
+      "records":[
+        {"key":"a","name":"<b>Alpha</b>","stage":"todo","details":"Keep the original fields","amount":0},
+        {"key":"b","name":"Beta","stage":"done","details":false},
+        {"key":"c","name":"Gamma","stage":"legacy"},
+        {"key":"d","name":0,"stage":null}
+      ],
+      "stages":[{"value":"todo","label":"To do","tone":"info"},{"value":"done","label":"Done","tone":"success"},{"value":"locked","label":"Locked","disabled":true}],
+      "tableColumns":[{"key":"name","label":"Title","type":"text","sortable":true},{"key":"stage","label":"Status","type":"text"}],
+      "selected":[],"readonly":false,"disabled":false,"loading":false,"error":"",
+      "texts":{"items":"Cards","moveHint":"Drag cards between columns, or focus a card and use Alt+Left or Alt+Right.","unassigned":"Unassigned","untitled":"Untitled card","empty":"No work","emptyColumn":"No cards in this column","loading":"Loading work","invalidRows":"Invalid record IDs","invalidColumns":"Invalid status columns","invalidState":"Invalid board state","unavailable":"Board unavailable","results":"Results","selected":"Selected","selection":"Selection","selectRow":"Select card","selectAll":"Select all cards","page":"Page","pagination":"Pages","previous":"Previous page","next":"Next page"}
+    }
+  </script>
+  <agui-kanban id="work-board" label="Work board" id-key="key" status-key="stage" title-key="name" description-key="details"
+    pub-to="WORK/records" bind="$.value: WORK/records; $.columns: WORK/stages; $.texts: WORK/texts; $.readonly: WORK/readonly; $.disabled: WORK/disabled; $.loading: WORK/loading; $.error: WORK/error"></agui-kanban>
+  <agui-table id="work-table" label="Work table" id-key="key" selection="multiple" page-size="20"
+    pub-to="WORK/selected" bind="$.rows: WORK/records; $.columns: WORK/tableColumns; $.texts: WORK/texts; $.value: WORK/selected"></agui-table>
+  <agui-data-toolbar id="work-toolbar" bind="state: AGUI_TEXT/dataToolbar"></agui-data-toolbar>
+</context-provider>
+<context-provider ctx="OTHER">
+  <script type="application/json">{"records":[{"key":"a","name":"Independent record","stage":"todo"}]}</script>
+  <agui-kanban id="other-board" label="Independent board" id-key="key" status-key="stage" title-key="name"
+    pub-to="OTHER/records" bind="$.value: OTHER/records; $.columns: WORK/stages; $.texts: WORK/texts"></agui-kanban>
+</context-provider>

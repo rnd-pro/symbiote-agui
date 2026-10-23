@@ -1,4 +1,4 @@
-<context-provider id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications">
+<context-provider id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications tableRows">
   <script type="application/json">
     {
       "nameLabel": "Name",
@@ -17,13 +17,15 @@
       "tableSort": null,
       "tableLoading": false,
       "tableReadonly": false,
+      "kanbanColumns": [{"value":"new","label":"New","tone":"info"},{"value":"contacted","label":"Contacted","tone":"warning"},{"value":"qualified","label":"Qualified","tone":"success"}],
+      "kanbanTexts": {"items":"Leads","moveHint":"Drag cards into a stage, or focus a card and press Alt+Left or Alt+Right.","unassigned":"Unassigned","untitled":"Unnamed lead","empty":"No leads yet.","emptyColumn":"No leads in this stage.","loading":"Loading leads...","invalidRows":"Lead IDs must be unique nonempty strings.","invalidColumns":"Review the stage definitions.","invalidState":"Review the board configuration.","unavailable":"The board is unavailable or read-only."},
       "tableRows": [
-        {"id":"lead-01","name":"Northstar Studio","amount":0,"status":"new","active":true,"followUp":"2026-11-02"},
+        {"id":"lead-01","name":"Northstar Studio","amount":0,"status":"new","active":true,"followUp":"2026-11-02","notes":"Prepare an introductory proposal."},
         {"id":"lead-02","name":"Orbit Works","amount":2400,"status":"contacted","active":false,"followUp":"2026-11-04"},
         {"id":"lead-03","name":"Harbor Labs","amount":1800,"status":"new","active":true,"followUp":"2026-11-03"},
         {"id":"lead-04","name":"Meadow Apps","amount":4200,"status":"qualified","active":true,"followUp":"2026-11-08"},
         {"id":"lead-05","name":"Atlas Supply","amount":1800,"status":"contacted","active":false,"followUp":null},
-        {"id":"lead-06","name":"Cedar Design","amount":null,"status":"new","active":true,"followUp":"2026-11-06"}
+        {"id":"lead-06","name":"Cedar Design","amount":null,"status":"review","active":true,"followUp":"2026-11-06"}
       ],
       "tableColumns": [
         {"key":"name","label":"Company","type":"text","sortable":true,"filter":"contains"},
@@ -69,7 +71,8 @@
         <a href="#gallery-bindings">Application bindings</a>
         <a href="#gallery-tabs-panel">Tabs</a>
         <a href="#gallery-overlays">Dialogs and popups</a>
-        <a href="#gallery-table-panel">Table</a>
+        <a href="#gallery-table-panel">Filters and table</a>
+        <a href="#gallery-kanban-panel">Kanban</a>
         <a href="#gallery-workflow">Data workflow</a>
       </nav>
     </agui-sidebar>
@@ -186,8 +189,8 @@
           <p class="text-sm text-agui-muted">The independent filter publishes matching IDs; the table handles sorting, selection, and paging locally. Select-all includes matching leads on other pages and keeps selections outside the filter. This table does not edit its records.</p>
           <agui-field label="External filter search" type="search" name="table_query" pub-to="APP/tableQuery" bind="$.value: APP/tableQuery"></agui-field>
           <agui-toolbar aria-label="Table availability">
-            <agui-toggle label="Simulate table loading" pub-to="APP/tableLoading" bind="$.value: APP/tableLoading"></agui-toggle>
-            <agui-toggle label="Read-only table" pub-to="APP/tableReadonly" bind="$.value: APP/tableReadonly"></agui-toggle>
+            <agui-toggle label="Simulate data loading" pub-to="APP/tableLoading" bind="$.value: APP/tableLoading"></agui-toggle>
+            <agui-toggle label="Read-only data" pub-to="APP/tableReadonly" bind="$.value: APP/tableReadonly"></agui-toggle>
           </agui-toolbar>
           <agui-filter id="gallery-lead-filters" label="Lead filters" locale="en"
             pub-to="APP/tableFilters" query-pub-to="APP/tableQuery" results-to="APP/tableMatchingIds"
@@ -195,6 +198,13 @@
           <agui-table id="gallery-leads" label="Example leads" selection="multiple" page-size="3" locale="en"
             pub-to="APP/tableSelection" sort-pub-to="APP/tableSort"
             bind="$.rows: APP/tableRows; $.columns: APP/tableColumns; $.texts: APP/tableTexts; $.value: APP/tableSelection; $.filteredIds: APP/tableMatchingIds; $.sort: APP/tableSort; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-table>
+        </agui-panel>
+        <agui-panel slot="full" class="grid gap-4">
+          <h2 id="gallery-kanban-panel">Kanban</h2>
+          <p class="text-sm text-agui-muted">Drag leads between stages. Focus a card and press Alt+Left or Alt+Right to move it with the keyboard. The table above uses the same records and updates immediately. Unrecognized stages stay in Unassigned. Save commits record changes; Cancel restores the latest saved records. Table filters do not hide board cards.</p>
+          <agui-kanban id="gallery-lead-board" label="Lead stages" title-key="name" description-key="notes"
+            pub-to="APP/tableRows"
+            bind="$.value: APP/tableRows; $.columns: APP/kanbanColumns; $.texts: APP/kanbanTexts; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-kanban>
         </agui-panel>
         <agui-panel slot="full" class="grid gap-4">
           <h2>Theme tokens</h2>
@@ -242,10 +252,10 @@
         </agui-panel>
         <agui-panel slot="full" class="grid gap-4">
           <h2 id="gallery-workflow">Data workflow</h2>
-          <p class="text-sm text-agui-muted">Edit Shared name, Shared status, or Notifications, then use the floating bar. Save persists those values locally. Import replaces the draft; Cancel restores the saved values. Export includes unsaved edits.</p>
+          <p class="text-sm text-agui-muted">Edit Shared name, Shared status, Notifications, or lead stages, then use the floating bar. Save persists those values locally. Import replaces the draft, including the entire leads array; Cancel restores the saved values. Export includes unsaved edits.</p>
           <details>
             <summary class="min-h-10 min-w-10 cursor-pointer py-2">JSON import format</summary>
-            <pre class="mt-3 overflow-auto rounded-md bg-agui-bg p-3 text-sm"><code>{"version":1,"changes":[{"provider":"APP","values":{"sharedName":"Morgan","sharedStatus":"new","notifications":true}}]}</code></pre>
+            <pre class="mt-3 overflow-auto rounded-md bg-agui-bg p-3 text-sm"><code>{"version":1,"changes":[{"provider":"APP","values":{"sharedName":"Morgan","sharedStatus":"new","notifications":true,"tableRows":[{"id":"lead-imported","name":"Example Company","amount":1200,"status":"new","active":true,"followUp":null}]}}]}</code></pre>
           </details>
           <p class="text-sm text-agui-muted">The examples below illustrate status meanings. The floating bar reports actual operations; this gallery does not simulate agent delivery or external writes.</p>
           <agui-component>

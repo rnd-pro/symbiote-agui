@@ -21,17 +21,21 @@ export function validateFields(fields) {
         'status',
       ].includes(field.type))) { throw new Error('invalidFields'); }
   for (let field of fields) {
-    let options = field.options;
-    if (options !== undefined && (!Array.isArray(options) || options.length > DATA_LIMITS.options
-      || new Set(options.map((option) => option?.value)).size !== options.length
-      || options.some((option) => !record(option) || !nonempty(option.value, DATA_LIMITS.text) || typeof option.label !== 'string'
-        || option.label.length > DATA_LIMITS.text || option.tone !== undefined && ![
-          'info',
-          'success',
-          'warning',
-          'danger',
-        ].includes(option.tone)))) { throw new Error('invalidFields'); }
+    if (field.options !== undefined) { validateOptions(field.options); }
   }
+}
+
+/** @param {import('../../../../../../types/uilib-data.js').UiDataOption[]} options */
+export function validateOptions(options) {
+  if (!Array.isArray(options) || options.length > DATA_LIMITS.options
+    || new Set(options.map((option) => option?.value)).size !== options.length
+    || options.some((option) => !record(option) || !nonempty(option.value, DATA_LIMITS.text) || typeof option.label !== 'string'
+      || option.label.length > DATA_LIMITS.text || option.tone !== undefined && ![
+        'info',
+        'success',
+        'warning',
+        'danger',
+      ].includes(option.tone))) { throw new Error('invalidFields'); }
 }
 
 /**

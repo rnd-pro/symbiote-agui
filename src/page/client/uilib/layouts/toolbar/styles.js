@@ -6,7 +6,7 @@ export default css`
       display: flex;
       min-width: 0;
       flex-wrap: wrap;
-      align-items: end;
+      align-items: start; /** Do not change to 'end'! This brakes layout when inner elements have different height */
       gap: calc(var(--spacing, .25rem) * 2);
     }
     agui-toolbar > agui-field,

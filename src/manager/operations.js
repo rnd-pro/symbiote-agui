@@ -14,6 +14,7 @@ import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE } from '../shared/constants.js';
 import { errorMessage } from '../shared/system-error.js';
 import { MANAGER_OPERATIONS, MANAGER_REQUEST_LIMIT, MANAGER_REQUEST_TTL_MS } from './constants.js';
+import { configureManagerStorage, managerStorageSettings } from './storage.js';
 
 /** @param {unknown} error */
 function failure(error) {
@@ -27,7 +28,14 @@ function failure(error) {
 export function validateManagerRequest(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) { throw new CommandError('Expected a management request.'); }
   let value = /** @type {Record<string, unknown>} */ (input);
-  if (Object.keys(value).some((key) => !['id', 'operation', 'sessionId', 'all', 'confirm'].includes(key))
+  if (Object.keys(value).some((key) => ![
+    'id',
+    'operation',
+    'sessionId',
+    'all',
+    'confirm',
+    'folder',
+  ].includes(key))
     || typeof value.id !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(value.id)
     || typeof value.operation !== 'string' || !Object.hasOwn(MANAGER_OPERATIONS, value.operation)
     || (value.all !== undefined && typeof value.all !== 'boolean')
@@ -36,6 +44,15 @@ export function validateManagerRequest(input) {
   }
   let request = /** @type {import('../../types/manager.js').ManagerRequest} */ (input);
   let operation = MANAGER_OPERATIONS[request.operation];
+  if (request.operation === 'configure storage') {
+    if (request.sessionId !== undefined || request.all || request.confirm
+      || (request.folder !== null && (typeof request.folder !== 'string'
+        || !request.folder.trim() || request.folder.length > 4096 || request.folder.includes('\0')))) {
+      throw new CommandError('Choose a nonempty save folder, or null for the default cache.');
+    }
+    return request;
+  }
+  if (request.folder !== undefined) { throw new CommandError('Folder is only accepted by configure storage.'); }
   if (request.operation === 'snapshot') {
     if (request.sessionId !== undefined || request.all || request.confirm) { throw new CommandError('Snapshot does not accept a target.'); }
   } else if (request.all) {
@@ -56,6 +73,11 @@ export class ManagerOperations {
   tunnelChecks = new Map();
   /** @type {Map<string, { fingerprint: string; completedAt?: number; result: Promise<import('../../types/manager.js').ManagerResult> }>} */
   requests = new Map();
+
+  /** @param {import('../../types/manager.js').ManagerRecord} [record] */
+  constructor(record) {
+    this.record = record;
+  }
 
   assertScope() {
     if (getStateRoot() !== this.scope.stateRoot || getSettings().folder !== this.scope.settings.folder) {
@@ -84,7 +106,12 @@ export class ManagerOperations {
       }
       return row;
     }));
-    return { scope: this.scope, checkedAt: new Date().toISOString(), sessions };
+    return {
+      scope: this.scope,
+      checkedAt: new Date().toISOString(),
+      sessions,
+      storage: managerStorageSettings(this.record),
+    };
   }
 
   /**
@@ -96,7 +123,13 @@ export class ManagerOperations {
       this.assertScope();
       let request = validateManagerRequest(input);
       if (['snapshot', 'describe'].includes(request.operation)) { return await this.execute(request); }
-      let fingerprint = JSON.stringify([request.operation, request.sessionId, !!request.all, !!request.confirm]);
+      let fingerprint = JSON.stringify([
+        request.operation,
+        request.sessionId,
+        !!request.all,
+        !!request.confirm,
+        request.folder,
+      ]);
       let previous = this.requests.get(request.id);
       if (previous) {
         if (previous.fingerprint !== fingerprint) { throw new CommandError('Request ID was already used for another operation.'); }
@@ -115,6 +148,9 @@ export class ManagerOperations {
 
   /** @param {import('../../types/manager.js').ManagerRequest} request */
   async execute(request) {
+    if (request.operation === 'configure storage') {
+      return this.serialize('\0storage', () => configureManagerStorage(this.record, request.folder ?? null));
+    }
     if (request.operation === 'snapshot') { return { ok: true, snapshot: await this.snapshot() }; }
     if (request.operation === 'describe') { return { ok: true, description: await describeDefinition(request.sessionId || '') }; }
     let ids = await listSessionIds(true);

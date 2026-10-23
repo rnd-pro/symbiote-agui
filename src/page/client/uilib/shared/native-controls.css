@@ -121,9 +121,33 @@
   textarea::placeholder {
     @apply text-agui-muted;
   }
+  summary {
+    @apply flex min-w-0 cursor-pointer list-none items-center justify-between gap-3 rounded-agui-control border border-agui-border bg-agui-surface px-3 py-2 text-sm text-agui-text;
+    min-height: var(--agui-control-height);
+    user-select: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary::after {
+    @apply size-2 shrink-0 border-b-2 border-r-2 border-agui-muted;
+    content: '';
+    rotate: -45deg;
+  }
+  summary:hover {
+    @apply border-agui-border-hover bg-agui-hover;
+  }
+  details[open] > summary {
+    @apply border-agui-accent bg-agui-accent-soft text-agui-accent;
+  }
+  details[open] > summary::after {
+    @apply border-agui-accent;
+    rotate: 45deg;
+  }
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible,
+  summary:focus-visible,
   button:focus-visible,
   .agui-button:focus-visible {
     @apply outline-2 outline-offset-2 outline-agui-accent;
@@ -148,6 +172,7 @@
   textarea,
   button,
   a,
+  summary,
   [tabindex] {
     scroll-margin-block-start: calc(var(--agui-header-height) + var(--agui-header-offset) + 1rem);
   }
@@ -200,9 +225,27 @@
     @apply text-sm text-agui-muted;
   }
   @media (prefers-reduced-motion: no-preference) {
+    @supports (interpolate-size: allow-keywords) and (transition-behavior: allow-discrete) and selector(details::details-content) {
+      details::details-content {
+        interpolate-size: allow-keywords;
+        block-size: 0;
+        opacity: 0;
+        overflow: clip;
+        overflow-clip-margin: .25rem;
+        transition-property: block-size, opacity, content-visibility;
+        transition-duration: calc(var(--agui-motion-fast) * 1.5);
+        transition-timing-function: var(--agui-motion-ease);
+        transition-behavior: allow-discrete;
+      }
+      details[open]::details-content {
+        block-size: auto;
+        opacity: 1;
+      }
+    }
     input,
     textarea,
     select,
+    summary,
     button,
     .agui-button {
       transition-property: background-color, border-color, color, outline-color;
@@ -212,7 +255,8 @@
     input[switch]::before {
       transition: transform var(--agui-motion-fast) var(--agui-motion-ease);
     }
-    .agui-select-chevron {
+    .agui-select-chevron,
+    summary::after {
       transition: rotate var(--agui-motion-fast) var(--agui-motion-ease);
     }
   }

@@ -28,6 +28,12 @@ class SessionManager extends ContextProvider {
     query: '',
     statusFilter: 'all',
     bulkOperation: 'start',
+    storageFolder: '',
+    storageHint: 'Loading save-folder settings...',
+    storageContext: '',
+    storageDisabled: true,
+    saveStorage: () => { void this.saveStorage(); },
+    resetStorage: () => { void this.saveStorage(true); },
     refresh: () => { void this.refresh(); },
     bulk: () => {
       void this.act(/** @type {import('../../../types/manager.js').ManagerOperation} */ (this.$.bulkOperation));
@@ -71,6 +77,11 @@ class SessionManager extends ContextProvider {
       let result = await this.connection.request('snapshot');
       if (!result.ok || !result.snapshot) { throw new Error(result.error?.message || 'Session discovery failed.'); }
       this.snapshot = result.snapshot;
+      if (!this.loaded) { this.$.storageFolder = result.snapshot.storage.folder || ''; }
+      this.$.storageHint = result.snapshot.storage.message;
+      this.$.storageContext = result.snapshot.storage.editable
+        ? `Relative paths use ${result.snapshot.storage.projectDirectory}. Default cache: ${result.snapshot.storage.defaultFolder}.`
+        : `Default cache: ${result.snapshot.storage.defaultFolder}.`;
       this.loaded = true;
       this.$.scope = result.snapshot.scope.settings.folder || `Private cache: ${result.snapshot.scope.stateRoot}`;
       this.$.checkedAt = `Updated ${new Date(result.snapshot.checkedAt).toLocaleTimeString()}`;
@@ -94,10 +105,43 @@ class SessionManager extends ContextProvider {
       && (filter === 'all' || (filter === 'running' && row.active === true) || (filter === 'stopped' && row.active === false) || (filter === 'unknown' && row.active === null)));
     let disabled = !this.connection?.ready || this.busy || !this.loaded;
     this.$.controlsDisabled = disabled;
+    this.$.storageDisabled = disabled || !this.snapshot?.storage.editable;
     this.$.counts = `${sessions.length} total / ${sessions.filter((row) => row.active === true).length} running / ${sessions.filter((row) => row.active === false).length} stopped / ${sessions.filter((row) => row.active === null).length} unknown`;
     this.$.rows = Object.fromEntries(matches.map((row) => [row.sessionId, rowState(row, disabled, (operation, id) => { void this.act(operation, id); })]));
     this.$.emptyStatus = matches.length > 0 ? 'ready' : this.loaded ? 'empty' : 'loading';
     this.$.empty = this.loaded ? sessions.length ? 'No sessions match these filters.' : 'No sessions saved or running in this scope.' : 'Loading sessions...';
+  }
+
+  /**
+   * @param {boolean} [reset]
+   */
+  async saveStorage(reset = false) {
+    if (this.busy || !this.connection?.ready || !this.snapshot?.storage.editable) { return; }
+    this.busy = true;
+    this.$.noticeTone = 'info';
+    this.$.notice = 'Saving the folder setting and opening its manager...';
+    this.renderRows();
+    try {
+      let result = await this.connection.request('configure storage', {
+        folder: reset ? null : String(this.$.storageFolder).trim() || null,
+      });
+      if (!result.ok || !result.manager?.url || !result.manager.launchUrl) {
+        throw new Error(result.error?.message || 'The selected save folder could not open.');
+      }
+      this.$.notice = 'Save folder updated. Existing files and sessions remain in their original scope.';
+      if (result.manager.url !== `${location.origin}${location.pathname}`) {
+        location.assign(result.manager.launchUrl);
+      } else {
+        if (reset) { this.$.storageFolder = ''; }
+        await this.refresh();
+      }
+    } catch (error) {
+      this.$.noticeTone = 'alert';
+      this.$.notice = error instanceof Error ? error.message : String(error);
+    } finally {
+      this.busy = false;
+      this.renderRows();
+    }
   }
 
   /**

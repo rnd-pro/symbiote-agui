@@ -4,7 +4,7 @@ import type { CommandFailure } from './cli.js';
 
 export type ManagerTheme = 'system' | 'light' | 'dark';
 
-export type ManagerOperation = 'snapshot' | 'describe' | 'start' | 'stop' | 'clear' | 'sync' | 'share' | 'tunnel check' | 'tunnel renew';
+export type ManagerOperation = 'snapshot' | 'describe' | 'start' | 'stop' | 'clear' | 'sync' | 'share' | 'tunnel check' | 'tunnel renew' | 'configure storage';
 
 export interface ManagerRequest {
   id: string;
@@ -12,6 +12,7 @@ export interface ManagerRequest {
   sessionId?: string;
   all?: boolean;
   confirm?: boolean;
+  folder?: string | null;
 }
 
 export interface ManagerScope {
@@ -28,6 +29,16 @@ export interface ManagerSnapshot {
   scope: ManagerScope;
   checkedAt: string;
   sessions: ManagerSession[];
+  storage: ManagerStorageSettings;
+}
+
+export interface ManagerStorageSettings {
+  editable: boolean;
+  folder?: string;
+  defaultFolder: string;
+  projectDirectory?: string;
+  configPath?: string;
+  message: string;
 }
 
 export interface ManagerResult {
@@ -35,12 +46,14 @@ export interface ManagerResult {
   sessions?: SessionOperationResult[];
   description?: DefinitionInfo;
   snapshot?: ManagerSnapshot;
+  manager?: ManagerStatus;
   error?: CommandFailure['error'];
 }
 
 export type ManagerReply = { id: string; result: ManagerResult };
 
 export interface ManagerRecord extends ManagerScope {
+  projectDirectory?: string;
   instanceId: string;
   token: string;
   pid: number;

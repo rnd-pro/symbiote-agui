@@ -27,7 +27,7 @@ export async function startManagerServer(record, stop) {
     createManagerStyles(),
     jsBuild(fileURLToPath(new URL('./page/index.js', import.meta.url))),
   ]);
-  let operations = new ManagerOperations();
+  let operations = new ManagerOperations(record);
   let origin = '';
   let host = '';
   let assets = new URL('./page/', import.meta.url);

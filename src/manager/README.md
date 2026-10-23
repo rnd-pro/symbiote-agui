@@ -2,6 +2,8 @@
 
 The CLI launches one detached manager per resolved storage scope. Its private `.manager` registry is separate from ordinary sessions, so session bulk operations cannot stop or clear it. The worker pins the library and runtime roots in its environment.
 
+Save-folder settings use the launch project directory retained in the private registry. The authenticated operation updates that project's `.agui.json`, then uses a short-lived Node launcher to resolve and open the new scope without changing this process's environment. Existing managers, session workers, definitions, and committed data retain their paths. Environment-selected scopes are read-only. Browser requests cannot select the configuration file or launch directory.
+
 The server serves packaged assets on a dedicated loopback origin. Browser authorization consumes the launch URL fragment and retains the credential in origin-scoped storage. Every WebSocket requires the exact origin and an initial authentication message. HTTP lifecycle requests verify the private credential and process identity. Generated pages and tunnel routes do not carry manager capabilities.
 
 The operation dictionary restricts requests to named session functions. Session mutations are serialized; mutation request IDs retain their result for ten minutes. Worker functions still perform their existing authenticated identity checks. Browser disconnects never cancel or replay accepted operations.

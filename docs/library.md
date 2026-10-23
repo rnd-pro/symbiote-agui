@@ -13,6 +13,8 @@ npx symbiote-agui config show
 
 The folder setting is saved in `.agui.json` using a relative path. Commands discover the nearest configuration in the current directory or its parents. Include that configuration and the chosen folder in Git. No dependency or Git repository initialization is required.
 
+You can also open AGUI folder settings under Storage scope in the [session manager](./reference.md#session-manager). Saving opens the selected folder's manager; existing files and live sessions remain in their original scope. Use default cache returns to private caching without deleting the library.
+
 An absolute `AGUI_LIBRARY_DIR` environment variable overrides the project setting. An empty value explicitly selects private caching. `npx symbiote-agui config reset` removes the project folder setting; it does not delete interfaces or stop workers. Environment overrides remain in effect until unset.
 
 Without a folder setting, definitions stay in the private cache under `~/.symbiote-agui/sessions/.cache/` or the selected `AGUI_STATE_DIR`. Markdown descriptions are stored beside the cached HTML.

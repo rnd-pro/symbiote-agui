@@ -24,8 +24,9 @@ function canonicalPath(path) {
   }
 }
 
-function projectConfig() {
-  let directory = process.cwd();
+/** @param {string} projectDirectory */
+function projectConfig(projectDirectory) {
+  let directory = resolve(projectDirectory);
   while (true) {
     let path = join(directory, CONFIG_FILE);
     try {
@@ -41,13 +42,37 @@ function projectConfig() {
       }
     }
     let parent = dirname(directory);
-    if (parent === directory) { return { path: join(process.cwd(), CONFIG_FILE), value: {} }; }
+    if (parent === directory) {
+      return {
+        path: join(projectDirectory, CONFIG_FILE),
+        value: {
+        },
+      };
+    }
     directory = parent;
   }
 }
 
-/** @returns {import('../../types/library.js').StorageSettings} */
-export function getSettings() {
+/**
+ * @param {string} [projectDirectory]
+ * @returns {import('../../types/library.js').StorageSettings}
+ */
+export function getProjectSettings(projectDirectory = process.cwd()) {
+  let config = projectConfig(projectDirectory);
+  let folder = config.value.folder ? canonicalPath(resolve(dirname(config.path), config.value.folder)) : undefined;
+  return {
+    mode: folder ? 'folder' : 'cache',
+    folder,
+    source: 'project',
+    configPath: config.path,
+  };
+}
+
+/**
+ * @param {string} [projectDirectory]
+ * @returns {import('../../types/library.js').StorageSettings}
+ */
+export function getSettings(projectDirectory = process.cwd()) {
   if (process.env.AGUI_LIBRARY_DIR !== undefined) {
     let value = process.env.AGUI_LIBRARY_DIR;
     if (value && !isAbsolute(value)) {
@@ -55,16 +80,17 @@ export function getSettings() {
     }
     return { mode: value ? 'folder' : 'cache', folder: value ? canonicalPath(value) : undefined, source: 'environment' };
   }
-  let config = projectConfig();
-  let folder = config.value.folder ? canonicalPath(resolve(dirname(config.path), config.value.folder)) : undefined;
-  return { mode: folder ? 'folder' : 'cache', folder, source: 'project', configPath: config.path };
+  return getProjectSettings(projectDirectory);
 }
 
-/** @param {string | undefined} folder */
-export async function configureFolder(folder) {
-  let config = projectConfig();
+/**
+ * @param {string | undefined} folder
+ * @param {string} [projectDirectory]
+ */
+export async function configureFolder(folder, projectDirectory = process.cwd()) {
+  let config = projectConfig(projectDirectory);
   if (folder !== undefined) {
-    let absolute = resolve(folder);
+    let absolute = resolve(projectDirectory, folder);
     try { await mkdir(absolute, { recursive: true }); }
     catch (error) { throw new CommandError(`Cannot create ${absolute}: ${errorMessage(error)}`, ERROR_CODE.CONFIG_ERROR, EXIT_CODE.RUNTIME_ERROR); }
     config.value.folder = relative(dirname(config.path), canonicalPath(absolute)) || '.';
@@ -80,5 +106,5 @@ export async function configureFolder(folder) {
   } finally {
     await unlink(temporary).catch((error) => { if (!hasErrorCode(error, 'ENOENT')) { throw error; } });
   }
-  return getSettings();
+  return getSettings(projectDirectory);
 }

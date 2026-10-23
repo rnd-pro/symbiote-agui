@@ -83,15 +83,22 @@
     font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
     font-optical-sizing: auto;
     font-size-adjust: from-font;
-    font-weight: 300;
+    font-weight: 400;
     font-style: normal;
     font-variation-settings: 'wdth' 100;
   }
+  @media (prefers-color-scheme: dark) {
+    body {
+      font-weight: 300;
+    }
+  }
   body[data-theme='light'] {
     color-scheme: light;
+    font-weight: 400;
   }
   body[data-theme='dark'] {
     color-scheme: dark;
+    font-weight: 300;
   }
 }
 

@@ -6,10 +6,73 @@ import puppeteer from 'puppeteer-core';
 import { cli } from './helpers.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';
+import { temporaryManagerProject } from '../node/manager-storage-fixture.js';
 import { setSessionMetadata } from '../../src/metadata/service.js';
 import { sampleMetadata } from '../node/metadata-fixture.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
+
+test('manager save-folder controls persist the project setting and open the selected scope', {
+  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
+  timeout: 45_000,
+}, async (t) => {
+  let project = await temporaryManagerProject();
+  let folder = join(project.projectDirectory, 'saved interfaces');
+  /** @type {import('puppeteer-core').Browser | undefined} */
+  let browser;
+  t.after(async () => {
+    await browser?.close();
+    await project.cli([
+      'manager',
+      'stop',
+    ], folder).catch(() => {});
+    await project.close();
+  });
+  let htmlPath = join(project.directory, 'saved.html');
+  await writeFile(htmlPath, '<h1>Original cache</h1>');
+  await project.cli([
+    'save',
+    'original',
+    '--file',
+    htmlPath,
+  ]);
+  let manager = await project.cli([
+    'manager',
+    '--no-open',
+  ]);
+  browser = await puppeteer.launch({
+    executablePath,
+    headless: true,
+  });
+  let page = await browser.newPage();
+  await page.goto(manager.launchUrl);
+  await page.waitForSelector('[data-session="original"]');
+  await page.click('details summary');
+  await page.type('agui-field[name="saveFolder"] input', './saved interfaces');
+  let navigation = page.waitForNavigation();
+  await page.locator('::-p-aria([name="Save folder and open"][role="button"])').click();
+  await navigation;
+  await page.waitForFunction((selected) => document.querySelector('agui-panel[aria-label="Storage scope"]')?.textContent?.includes(selected), {}, folder);
+  assert.notEqual(page.url(), manager.url);
+  assert.equal(await page.$('[data-session="original"]'), null, 'Source definitions are not silently copied to the new scope.');
+  await page.reload();
+  await page.waitForFunction(() => !document.querySelector('agui-field[name="saveFolder"] input')?.hasAttribute('disabled'));
+  await page.click('details summary');
+  assert.equal(await page.$eval('agui-field[name="saveFolder"] input', (element) => element.value), folder);
+  assert.equal((await project.cli([
+    'config',
+    'show',
+  ])).settings.folder, folder);
+  navigation = page.waitForNavigation();
+  await page.locator('::-p-aria([name="Use default cache"][role="button"])').click();
+  await navigation;
+  await page.waitForSelector('[data-session="original"]');
+  assert.equal(page.url(), manager.url);
+  assert.equal((await project.cli([
+    'config',
+    'show',
+  ])).settings.folder, undefined);
+});
 
 /**
  * @param {import('puppeteer-core').Page} page

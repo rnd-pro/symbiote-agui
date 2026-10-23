@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, rmdir, writeFile } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, isAbsolute } from 'node:path';
 import { getStateRoot, isProcessAlive } from '../sessions/store.js';
 import { getSettings } from '../config/settings.js';
 import { hasErrorCode } from '../shared/system-error.js';
@@ -20,6 +20,7 @@ export async function readManager() {
     if (record.instanceId !== instanceId || !/^[a-f0-9]{64}$/.test(record.token)
       || !Number.isSafeInteger(record.pid) || record.pid <= 0 || record.stateRoot !== getStateRoot()
       || record.settings?.folder !== getSettings().folder
+      || (record.projectDirectory !== undefined && (typeof record.projectDirectory !== 'string' || !isAbsolute(record.projectDirectory)))
       || (record.url && !/^http:\/\/127\.0\.0\.1:[0-9]+\/manager\/$/.test(record.url))) {
       throw new Error('Invalid manager metadata.');
     }
@@ -55,6 +56,7 @@ export async function reserveManager() {
   let record = {
     stateRoot: root,
     settings: getSettings(),
+    projectDirectory: process.cwd(),
     instanceId: randomUUID(),
     token: randomBytes(32).toString('hex'),
     pid: process.pid,

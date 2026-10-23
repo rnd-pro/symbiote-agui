@@ -28,6 +28,18 @@
           </div>
           <p class="break-all text-sm text-agui-muted">{{MANAGER/scope}}</p>
           <p class="counts text-sm">{{MANAGER/counts}}</p>
+          <details class="grid gap-3">
+            <summary>AGUI folder settings</summary>
+            <div class="mt-3 grid gap-3">
+              <agui-field label="Save path" name="saveFolder" maxlength="4096" placeholder="Default private cache" pub-to="MANAGER/storageFolder" bind="$.value: MANAGER/storageFolder; $.disabled: MANAGER/storageDisabled"></agui-field>
+              <p class="break-words text-xs text-agui-muted">{{MANAGER/storageHint}}</p>
+              <p class="break-all text-xs text-agui-muted">{{MANAGER/storageContext}}</p>
+              <agui-toolbar aria-label="AGUI folder settings">
+                <button type="button" class="agui-button-primary" bind="onclick: MANAGER/saveStorage; disabled: MANAGER/storageDisabled"><agui-icon name="save"></agui-icon>Save folder and open</button>
+                <button type="button" bind="onclick: MANAGER/resetStorage; disabled: MANAGER/storageDisabled"><agui-icon name="home"></agui-icon>Use default cache</button>
+              </agui-toolbar>
+            </div>
+          </details>
         </agui-panel>
         <agui-panel class="grid gap-4">
           <agui-toolbar class="toolbar items-end" aria-label="Session filters">

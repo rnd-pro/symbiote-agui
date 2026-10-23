@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest an improvement to Symbiote AGUI.
+title: '[Feature] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues before submitting. See the [contributing guide](https://github.com/rnd-pro/symbiote-agui/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/rnd-pro/symbiote-agui/blob/main/CODE_OF_CONDUCT.md).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Describe the task you want to complete and what currently gets in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement
+      description: Describe how you would like AGUI to behave. A concrete example helps.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds
+      description: What have you tried, and why does it fall short?

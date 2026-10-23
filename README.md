@@ -5,6 +5,8 @@
 [![MIT license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![Node.js 24 or newer](https://img.shields.io/badge/Node.js-%3E%3D24-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/en/download)
 
+![Symbiote AGUI](https://rnd-pro.com/idn/4a7be2ee-b771-436e-23a2-4050ffdad800/4096)
+
 > An interactive workspace for your AI conversation.
 
 Symbiote AGUI lets your AI agent create a browser interface for the task you are working on together. Explore data, fill in forms, compare options, or work through a checklist while your agent responds to your choices.
@@ -112,6 +114,10 @@ Sessions can also describe their initial data source, provider bindings, and int
 - [Session controls, sharing limits, and optional integrations](./docs/reference.md)
 - [AGUI skill for agents creating and operating interfaces](./skills/symbiote-agui/SKILL.md)
 - [Package on npm](https://www.npmjs.com/package/symbiote-agui)
+
+## Contributing
+
+Bug reports, ideas, and focused pull requests are welcome. Read the [contributing guide](./CONTRIBUTING.md) and [Code of Conduct](./CODE_OF_CONDUCT.md) before participating.
 
 ## License
 

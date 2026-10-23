@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible problem with Symbiote AGUI.
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues before submitting. See the [contributing guide](https://github.com/rnd-pro/symbiote-agui/blob/main/CONTRIBUTING.md).
+        Remove credentials, launch URL fragments, private data, and live tunnel links. Report suspected vulnerabilities privately to team@rnd-pro.com.
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: What were you trying to do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include a minimal CLI sequence or HTML example where possible.
+      placeholder: |
+        1. Start a session...
+        2. Open the page...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include package, Node.js, OS, and browser versions. Name the agent or MCP client if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs, screenshots, or additional context
+      description: Share only the relevant output, with sensitive information removed.

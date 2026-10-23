@@ -153,8 +153,10 @@ export class ManagerOperations {
     }
     if (request.operation === 'snapshot') { return { ok: true, snapshot: await this.snapshot() }; }
     if (request.operation === 'describe') { return { ok: true, description: await describeDefinition(request.sessionId || '') }; }
-    let ids = await listSessionIds(true);
-    let targets = request.all ? ids : [request.sessionId || ''];
+    // Reserve single-session queue order before asynchronous discovery can reorder requests.
+    let targets = request.all ? await listSessionIds(true) : [
+      request.sessionId || '',
+    ];
     let sessions = await Promise.all(targets.map((sessionId) => this.serialize(sessionId, async () => {
       try {
         this.assertScope();

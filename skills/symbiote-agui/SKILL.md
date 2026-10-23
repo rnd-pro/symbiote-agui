@@ -25,6 +25,7 @@ The default JSDA page bundle includes and registers every available library comp
 - `agui-filter`: reusable search and typed AND filters over provider-bound `rows` and `fields`, independent of any view. `value` is the filter dictionary; pair it with `pub-to`, and optionally publish `query` through `query-pub-to`. `results-to` publishes matching IDs into an existing provider array, including initialization and incoming updates, without user-action notifications. Supply caller-owned `texts`, `label`, optional `locale`, and `id-key` (default `id`).
 - `agui-table`: provider-bound `rows`, typed `columns`, and caller-owned `texts`, with sorting, ID selection, and local pagination. Optional `filteredIds` consumes a filter's matching IDs; `null` shows all rows and `[]` shows none. `value` is always a string ID array; `selection="none|single|multiple"` defaults to none. Pair selection with `pub-to` and sort with `sort-pub-to`. Supply `label`, optional `locale`, and `page-size` (default 20, maximum 100). Every source row needs a unique nonempty string ID. Disabled/read-only blocks changes; `loading` and `error` show caller-owned states. The table does not edit records.
 - `agui-kanban`: status editor over a provider-bound records array in `value`, with `columns: [{ value, label, disabled?, tone? }]`. Pair `pub-to` with the same provider binding; cards move between columns through native drag-and-drop or Alt+Left/Right while focused. Configure `id-key`, `status-key`, `title-key`, and optional `description-key`. Unknown statuses remain in a caller-labeled unassigned group. Provide `label` and caller-owned `texts`; disabled/read-only, loading, and errors block edits. Declare records in `persist` and use the data toolbar for Save/Cancel.
+- `agui-chart`: prepared `rows` and declarative `series` for `type="line|bar|donut"`, rendered as SVG. Supply `id-key`, `x-key`, `x-label`, `label`, optional `description`, and caller-owned `texts`. Optional `value` is a selected ID array with `selection="none|single|multiple"` and `pub-to`. A built-in data disclosure supports keyboard reading/selection. The heavy runtime loads automatically on element initialization; do not add imports or engine configuration to sessions.
 - `agui-dashboard`: responsive workspace. `layout="single"` (default), `split`, `equal`, or `grid`; `density="comfortable"` (default) or `compact`. In split mode, direct children with `slot="main"` use two columns and `slot="side"` one. Toolbars and `slot="full"` span all columns. These layout slot attributes do not require Shadow DOM.
 - `agui-panel`: content container; supply ordinary child markup and optional headings/actions.
 - `agui-header`: header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` under the same application provider or viewport, or directly in `agui-app` for a fixed header row. Add `floating` for sticky positioning within the scroll region; use `--agui-header-offset` if another sticky element is above it.
@@ -214,6 +215,30 @@ Cards use native drag-and-drop. Keyboard users focus a card and press Alt+Left/R
 Bind `agui-table`'s `rows` to the same records for a synchronized view; keep table selection in a separate ID array. Moving a card creates a local draft. Declare records in `persist` and use the existing data toolbar to Save or Cancel; do not add a move handler or extra feedback call. Shared viewers see inert cards and selected statuses.
 
 Discover `move_item` (`id`, `status`) and `read_view` by `ownerName="agui-kanban"` and the authored ID. Each card exposes `set_status` (`status`) under `agui-kanban-card`, with board ID and record ID in component context. Mutations return only `changed`, `recordId`, applied `status`, and `totalCount`. `read_view` accepts optional `status` (empty string for unassigned), `offset`, and `limit` (default 20, maximum 100). It returns only card fields within 8 KiB, with `nextOffset` and `truncated: true` for oversized cards. Notifications use `action: "kanban-change"`, record ID, status, and count. Rediscover after card moves or availability changes. See the [Kanban contract](../../src/page/client/uilib/widgets/kanban/README.md) for limits and text keys.
+
+### Chart example
+
+```html
+<context-provider ctx="METRICS">
+  <script type="application/json">
+    {
+      "rows":[{"id":"jan","month":"2026-01-01","amount":0},{"id":"feb","month":"2026-02-01","amount":2400},{"id":"mar","month":"2026-03-01","amount":null}],
+      "series":[{"key":"amount","valueKey":"amount","label":"Revenue","format":"currency","currency":"USD","color":"success"}],
+      "selected":[],
+      "texts":{"data":"Explore chart data","loading":"Loading chart...","empty":"No values to plot.","loadFailed":"Chart library could not load. Reload to retry.","renderFailed":"Chart could not be rendered.","invalidRows":"Review values and record IDs.","invalidSeries":"Review series and matching units.","invalidState":"Review chart settings.","unavailable":"Selection is unavailable.","results":"Results","selected":"Selected","selection":"Selection","selectRow":"Select point","selectAll":"Select all points","page":"Page","pagination":"Data pages","previous":"Previous page","next":"Next page"}
+    }
+  </script>
+  <agui-chart id="revenue-chart" type="line" label="Monthly revenue" description="Prepared monthly amounts; missing values remain gaps."
+    x-key="month" x-type="date" x-label="Month" locale="en-US" selection="multiple"
+    pub-to="METRICS/selected" bind="$.rows: METRICS/rows; $.series: METRICS/series; $.texts: METRICS/texts; $.value: METRICS/selected"></agui-chart>
+</context-provider>
+```
+
+Use `bar` for category comparisons and `donut` for a single nonnegative series. Donut zero values remain zero rather than becoming equal slices. Each series declares `key`, `valueKey`, and caller-owned `label`, with optional semantic `color`, `format="number|currency|percent"`, `currency`, `digits` (0-6), and `unit`. Cartesian series must share format, currency, and units. Input rows retain their order; no implicit aggregation or sorting occurs. Up to 500 records and 8 series are supported. Use the existing table/filter widgets for larger datasets or data preparation.
+
+Point clicks, the native data table, and `set_selection` (`ids`) select source IDs through one guarded path. Incoming updates and equivalent selections emit no changes; removed records are ignored without rewriting provider selection. Discover tools by `ownerName="agui-chart"` and authored ID. `read_view` returns formatted X/series fields, and `read_selection` returns IDs; use `offset` and `limit` (default 20, maximum 100) and follow `nextOffset` within 8 KiB. Oversized points return ID and `truncated: true`. Notifications contain only chart ID/context and counts. Selection stays transient by default; charts never edit records.
+
+The packaged runtime loads once per page when the first chart initializes, with caller-owned loading/error states. Chart-free pages and viewers do not fetch it. Charts react to container size, theme, and reduced motion; hidden charts update when revealed. Do not supply ECharts options, callbacks, HTML tooltips, imports, or initialization scripts. Shared viewers receive inert SVG and data. See the [chart contract](../../src/page/client/uilib/widgets/chart/README.md) for complete attributes, copy, and lifecycle behavior.
 
 ### Styling and tools
 

@@ -62,6 +62,7 @@
     "@modelcontextprotocol/server": "^2.3.1",
     "@symbiotejs/symbiote": "^3.8.3",
     "@tailwindcss/node": "^4.3.3",
+    "echarts": "^6.1.0",
     "jsda-kit": "1.6.4",
     "linkedom": "^0.18.13",
     "tailwindcss": "^4.3.3",

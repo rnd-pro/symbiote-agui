@@ -1,0 +1,21 @@
+<context-provider id="chart-data" ctx="CHARTS">
+  <script type="application/json">
+    {
+      "rows":[{"key":"a","name":"<b>Alpha</b>","revenue":0,"cost":3,"private":"Never exposed by chart reads"},{"key":"b","name":"Beta","revenue":10,"cost":5},{"key":"c","name":"Gamma","revenue":null,"cost":null}],
+      "series":[{"key":"revenue","valueKey":"revenue","label":"Revenue","color":"success"},{"key":"cost","valueKey":"cost","label":"Cost","color":"accent"}],
+      "singleSeries":[{"key":"revenue","valueKey":"revenue","label":"Revenue","color":"success"}],
+      "ids":[],"readonly":false,"loading":false,"error":"",
+      "texts":{"data":"Explore chart data","loading":"Loading chart","empty":"No chart data","loadFailed":"Chart dependency failed","renderFailed":"Chart rendering failed","invalidRows":"Invalid chart records","invalidSeries":"Invalid chart series","invalidState":"Invalid chart settings","unavailable":"Chart unavailable","results":"Results","selected":"Selected","selection":"Selection","selectRow":"Select point","selectAll":"Select all points","page":"Page","pagination":"Data pages","previous":"Previous page","next":"Next page"}
+    }
+  </script>
+  <agui-chart id="line-chart" type="line" label="Revenue and cost" description="Prepared company values" x-label="Company" id-key="key" x-key="name" selection="multiple" locale="en-US"
+    pub-to="CHARTS/ids" bind="$.rows: CHARTS/rows; $.series: CHARTS/series; $.texts: CHARTS/texts; $.value: CHARTS/ids; $.readonly: CHARTS/readonly; $.loading: CHARTS/loading; $.error: CHARTS/error"></agui-chart>
+  <agui-chart id="bar-chart" type="bar" label="Revenue" x-label="Company" id-key="key" x-key="name" selection="multiple" locale="en-US"
+    pub-to="CHARTS/ids" bind="$.rows: CHARTS/rows; $.series: CHARTS/singleSeries; $.texts: CHARTS/texts; $.value: CHARTS/ids; $.readonly: CHARTS/readonly; $.loading: CHARTS/loading; $.error: CHARTS/error"></agui-chart>
+  <agui-chart id="donut-chart" type="donut" label="Revenue share" x-label="Company" id-key="key" x-key="name" selection="multiple" locale="en-US"
+    pub-to="CHARTS/ids" bind="$.rows: CHARTS/rows; $.series: CHARTS/singleSeries; $.texts: CHARTS/texts; $.value: CHARTS/ids; $.readonly: CHARTS/readonly; $.loading: CHARTS/loading; $.error: CHARTS/error"></agui-chart>
+  <agui-chart id="moving-chart" type="bar" label="Moved while loading" x-label="Company" id-key="key" x-key="name"
+    bind="$.rows: CHARTS/rows; $.series: CHARTS/singleSeries; $.texts: CHARTS/texts"></agui-chart>
+  <agui-chart id="late-chart" type="bar" label="Removed while loading" x-label="Company" id-key="key" x-key="name"
+    bind="$.rows: CHARTS/rows; $.series: CHARTS/singleSeries; $.texts: CHARTS/texts"></agui-chart>
+</context-provider>

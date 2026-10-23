@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { closeServer, waitForServer } from '../shared/server.js';
 import { createStyles } from '../markup/styles.js';
 import { STYLESHEET_PATH, CLIENT_SCRIPT_PATH } from '../markup/constants.js';
+import { CHART_RUNTIME_PATH } from '../page/client/uilib/widgets/chart/constants.js';
 import { TUNNEL_HEALTH_PATH } from '../tunnel/constants.js';
 
 /** @param {import('../../types/session.js').PageAccess} access */
@@ -41,7 +42,12 @@ export async function startPageServer(access) {
       response.writeHead(308, { location: access.path }).end();
       return;
     }
-    if (request.method !== 'GET' || ![access.path, STYLESHEET_PATH, CLIENT_SCRIPT_PATH].includes(pathname || '')) {
+    if (request.method !== 'GET' || ![
+      access.path,
+      STYLESHEET_PATH,
+      CLIENT_SCRIPT_PATH,
+      CHART_RUNTIME_PATH,
+    ].includes(pathname || '')) {
       response.writeHead(404).end();
       return;
     }

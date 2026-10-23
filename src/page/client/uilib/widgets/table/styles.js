@@ -37,7 +37,8 @@ export default css`
     }
     .agui-table-scroll th,
     .agui-table-scroll td {
-      padding: .625rem .75rem;
+      height: var(--agui-control-height);
+      padding: 0 .75rem;
       border-block-end: 1px solid var(--agui-divider);
       text-align: start;
       vertical-align: middle;
@@ -45,6 +46,9 @@ export default css`
       max-inline-size: 32rem;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    .agui-table-scroll td > input:not([hidden]) {
+      display: block;
     }
     .agui-table-scroll th {
       position: sticky;

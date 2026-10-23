@@ -19,6 +19,11 @@
       "tableReadonly": false,
       "kanbanColumns": [{"value":"new","label":"New","tone":"info"},{"value":"contacted","label":"Contacted","tone":"warning"},{"value":"qualified","label":"Qualified","tone":"success"}],
       "kanbanTexts": {"items":"Leads","moveHint":"Drag cards into a stage, or focus a card and press Alt+Left or Alt+Right.","unassigned":"Unassigned","untitled":"Unnamed lead","empty":"No leads yet.","emptyColumn":"No leads in this stage.","loading":"Loading leads...","invalidRows":"Lead IDs must be unique nonempty strings.","invalidColumns":"Review the stage definitions.","invalidState":"Review the board configuration.","unavailable":"The board is unavailable or read-only."},
+      "chartTexts": {"data":"Explore chart data","loading":"Loading chart...","empty":"No values to plot.","loadFailed":"The chart library could not load. Reload this page to retry.","renderFailed":"The chart could not be rendered.","invalidRows":"Review chart values and record IDs.","invalidSeries":"Review series definitions and matching units.","invalidState":"Review chart settings.","unavailable":"Chart selection is unavailable.","results":"Results","selected":"Selected","selection":"Selection","selectRow":"Select point","selectAll":"Select all points","page":"Page","pagination":"Data pages","previous":"Previous page","next":"Next page"},
+      "opportunitySeries": [{"key":"amount","valueKey":"amount","label":"Opportunity","color":"success","format":"currency","currency":"USD"}],
+      "monthlyRows": [{"id":"jan","month":"2026-01-01","actual":0,"target":1200},{"id":"feb","month":"2026-02-01","actual":1800,"target":1600},{"id":"mar","month":"2026-03-01","actual":null,"target":2000},{"id":"apr","month":"2026-04-01","actual":2600,"target":2400}],
+      "monthlySeries": [{"key":"actual","valueKey":"actual","label":"Actual","color":"success","format":"currency","currency":"USD"},{"key":"target","valueKey":"target","label":"Target","color":"accent","format":"currency","currency":"USD"}],
+      "monthlySelected": [],
       "tableRows": [
         {"id":"lead-01","name":"Northstar Studio","amount":0,"status":"new","active":true,"followUp":"2026-11-02","notes":"Prepare an introductory proposal."},
         {"id":"lead-02","name":"Orbit Works","amount":2400,"status":"contacted","active":false,"followUp":"2026-11-04"},
@@ -73,6 +78,7 @@
         <a href="#gallery-overlays">Dialogs and popups</a>
         <a href="#gallery-table-panel">Filters and table</a>
         <a href="#gallery-kanban-panel">Kanban</a>
+        <a href="#gallery-charts-panel">Charts</a>
         <a href="#gallery-workflow">Data workflow</a>
       </nav>
     </agui-sidebar>
@@ -205,6 +211,19 @@
           <agui-kanban id="gallery-lead-board" label="Lead stages" title-key="name" description-key="notes"
             pub-to="APP/tableRows"
             bind="$.value: APP/tableRows; $.columns: APP/kanbanColumns; $.texts: APP/kanbanTexts; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-kanban>
+        </agui-panel>
+        <agui-panel slot="full" class="grid gap-5">
+          <h2 id="gallery-charts-panel">Charts</h2>
+          <p class="text-sm text-agui-muted">The chart runtime loads when the first chart initializes. Select a bar or donut sector to share lead selection with the table. Each chart has a keyboard-accessible data view; the line example keeps its own selection. Missing values remain gaps and zero values stay meaningful.</p>
+          <agui-chart id="gallery-monthly-chart" type="line" label="Monthly revenue" description="Prepared monthly amounts with a missing actual value in March."
+            x-key="month" x-type="date" x-label="Month" selection="multiple" locale="en-US"
+            pub-to="APP/monthlySelected" bind="$.rows: APP/monthlyRows; $.series: APP/monthlySeries; $.texts: APP/chartTexts; $.value: APP/monthlySelected"></agui-chart>
+          <agui-chart id="gallery-opportunity-chart" type="bar" label="Opportunity by company" description="Company amounts from the shared leads records."
+            x-key="name" x-label="Company" selection="multiple" locale="en-US"
+            pub-to="APP/tableSelection" bind="$.rows: APP/tableRows; $.series: APP/opportunitySeries; $.texts: APP/chartTexts; $.value: APP/tableSelection; $.readonly: APP/tableReadonly; $.loading: APP/tableLoading"></agui-chart>
+          <agui-chart id="gallery-share-chart" type="donut" label="Opportunity share" description="One nonnegative amount per company, without inferred aggregation."
+            x-key="name" x-label="Company" selection="multiple" locale="en-US"
+            pub-to="APP/tableSelection" bind="$.rows: APP/tableRows; $.series: APP/opportunitySeries; $.texts: APP/chartTexts; $.value: APP/tableSelection; $.readonly: APP/tableReadonly; $.loading: APP/tableLoading"></agui-chart>
         </agui-panel>
         <agui-panel slot="full" class="grid gap-4">
           <h2>Theme tokens</h2>

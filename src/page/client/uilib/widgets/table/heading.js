@@ -1,10 +1,11 @@
 import { ToolDescriptor } from '@symbiotejs/symbiote/webmcp';
+import { TABLE_HOST_SELECTOR } from './constants.js';
 import { UiComponent } from '../../shared/component.js';
 import { TABLE_HEADING_TEMPLATE } from './template.js';
 
 export class TableHeading extends UiComponent {
   componentDescription = () => JSON.stringify({
-    tableId: this.closest('agui-table')?.id || '',
+    tableId: this.closest(TABLE_HOST_SELECTOR)?.id || '',
     column: this.$.columnKey,
     label: this.$.label,
   });

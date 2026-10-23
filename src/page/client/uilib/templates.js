@@ -8,6 +8,7 @@ import { SIDEBAR_TEMPLATE } from './layouts/sidebar/template.js';
 import { TABS_TEMPLATE, TAB_BUTTON_TEMPLATE } from './layouts/tabs/template.js';
 import { DIALOG_TEMPLATE } from './feedback/dialog/template.js';
 import { FILTER_TEMPLATE, FILTER_FIELD_TEMPLATE } from './widgets/filter/template.js';
+import { CHART_TEMPLATE } from './widgets/chart/template.js';
 import { KANBAN_TEMPLATE, KANBAN_COLUMN_TEMPLATE, KANBAN_CARD_TEMPLATE } from './widgets/kanban/template.js';
 import { TABLE_TEMPLATE, TABLE_ROW_TEMPLATE, TABLE_HEADING_TEMPLATE, TABLE_CELL_TEMPLATE } from './widgets/table/template.js';
 import {
@@ -26,6 +27,7 @@ export let UILIB_TEMPLATES = Object.freeze({
   tabs: TABS_TEMPLATE,
   tabButton: TAB_BUTTON_TEMPLATE,
   dialog: DIALOG_TEMPLATE,
+  chart: CHART_TEMPLATE,
   kanban: KANBAN_TEMPLATE,
   kanbanColumn: KANBAN_COLUMN_TEMPLATE,
   kanbanCard: KANBAN_CARD_TEMPLATE,

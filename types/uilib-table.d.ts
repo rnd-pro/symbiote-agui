@@ -1,8 +1,8 @@
 import type { UiTexts } from './uilib.js';
-import type { UiDataField, UiDataRecord } from './uilib-data.js';
+import type { UiDataField, UiDataRecord, UiDataSelection } from './uilib-data.js';
 
 export type UiTableRecord = UiDataRecord;
-export type UiTableSelection = 'none' | 'single' | 'multiple';
+export type UiTableSelection = UiDataSelection;
 export type UiTableProperty = 'value' | 'sort' | 'page';
 export type UiTableIssue = 'invalidRows' | 'invalidColumns' | 'invalidState';
 export interface UiTableColumn extends UiDataField {

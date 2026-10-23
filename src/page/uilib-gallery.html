@@ -6,6 +6,9 @@
       "density": "comfortable",
       "navigationOpen": true,
       "inspectorOpen": false,
+      "galleryTab": "overview",
+      "galleryTabNotes": "",
+      "galleryTabLabel": "Notes",
       "query": "",
       "status": "",
       "sharedName": "Alex",
@@ -40,6 +43,7 @@
       <nav aria-label="Gallery sections" class="grid gap-3 text-sm">
         <a href="#gallery-controls">Controls</a>
         <a href="#gallery-bindings">Application bindings</a>
+        <a href="#gallery-tabs-panel">Tabs</a>
         <a href="#gallery-workflow">Data workflow</a>
       </nav>
     </agui-sidebar>
@@ -103,6 +107,30 @@
           <p class="text-sm text-agui-muted">Retry sends an action to the agent. This gallery does not contact an external service.</p>
           <agui-field label="Notification message" name="notification_message" placeholder="Type a message to preview" pub-to="APP/notificationMessage" bind="$.value: APP/notificationMessage"></agui-field>
           <agui-message bind="$.message: APP/notificationMessage" close-label="Dismiss message"></agui-message>
+        </agui-panel>
+        <agui-panel slot="full" class="grid gap-4">
+          <h2 id="gallery-tabs-panel">Tabs</h2>
+          <agui-tabs id="gallery-tabs" label="Workspace views" pub-to="APP/galleryTab" bind="$.value: APP/galleryTab">
+            <agui-tab value="overview" label="Overview">
+              <p class="text-sm text-agui-muted">Arrow keys move focus. Enter or Space activates a tab. Switching views preserves entered notes.</p>
+              <agui-tabs id="gallery-nested-tabs" label="Nested guides" orientation="vertical" value="bindings">
+                <agui-tab value="bindings" label="Bindings">
+                  <p class="text-sm">Bind value to common state and use pub-to to publish tab changes.</p>
+                </agui-tab>
+                <agui-tab value="keyboard" label="Keyboard">
+                  <p class="text-sm">Vertical tabs use Up and Down. Home and End move to the first and last enabled tabs.</p>
+                </agui-tab>
+              </agui-tabs>
+            </agui-tab>
+            <agui-tab value="notes" bind="$.label: APP/galleryTabLabel">
+              <agui-field id="gallery-tab-notes" label="Workspace notes" type="textarea" name="tab_notes" rows="4"
+                pub-to="APP/galleryTabNotes" bind="$.value: APP/galleryTabNotes"></agui-field>
+            </agui-tab>
+            <agui-tab value="future" label="Unavailable view" disabled>
+              <p>This view is disabled.</p>
+            </agui-tab>
+          </agui-tabs>
+          <agui-component class="text-sm text-agui-muted">Shared active tab: {{APP/galleryTab}}</agui-component>
         </agui-panel>
         <agui-panel slot="full" class="grid gap-4">
           <h2>Theme tokens</h2>

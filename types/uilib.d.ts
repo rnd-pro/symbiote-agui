@@ -40,6 +40,20 @@ export interface UiSidebarState {
   readonly?: boolean;
 }
 
+export interface UiTabsState {
+  value: string;
+  label?: string;
+  orientation?: 'horizontal' | 'vertical';
+  disabled?: boolean;
+  readonly?: boolean;
+}
+
+export interface UiTabState {
+  value: string;
+  label?: string;
+  disabled?: boolean;
+}
+
 export interface UiFeedbackState {
   status: UiStatus;
   message?: string;

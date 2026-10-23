@@ -20,6 +20,7 @@ The default JSDA page bundle includes and registers every available library comp
 - `agui-app`: viewport-height application shell. Direct children are an optional `agui-header` or `slot="header"` region, one start sidebar, one `agui-viewport`, an optional end sidebar, and an optional `slot="footer"` region. Place the single `agui-data-toolbar` last as a direct child of the app so its reserved row keeps all scroll areas clear of the floating bar. The header/footer stay outside the scroll regions. Sidebars flank the viewport from 64rem upward and stack above/below it on narrower screens. Use `--agui-app-height` to embed a shorter shell; the default is `100dvh`.
 - `agui-sidebar`: independently scrolling authored content with a built-in expand/collapse button. `side="start"` is the default; use `side="end"` for the other side. Expanded by default; `collapsed` supplies a closed default. Supply `label`, `expand-label`, and `collapse-label`, or bind `$.label`, `$.expandLabel`, and `$.collapseLabel`. Boolean `$.value` is expanded state; pair its binding with `pub-to` to share visibility with other controls. Disabled/read-only state protects visibility changes, not the fields inside. Collapsing preserves mounted content and drafts. Desktop width uses `--agui-sidebar-width` (default `18rem`); collapsed panels keep their toggle visible.
 - `agui-viewport`: independently scrolling central content. Give it an `aria-label` or `aria-labelledby`; it defaults to `role="main"` and `tabindex="0"`, preserving explicit overrides. Place existing headers, dashboards, and panels inside it. A floating header within the viewport supplies focus spacing to that scroll region; an app-level header occupies its own row and needs no `floating` flag.
+- `agui-tabs`: authored tab layout with string active `value`, optional `pub-to`, caller-owned `label` for the tablist, and `orientation="horizontal"` (default) or `vertical`. Use direct `agui-tab` children with unique nonempty string `value` keys and caller-owned `label` text; labels, keys, and disabled state can use native property or `state` bindings. A disabled tab is unavailable for selection. Group `disabled`/`readonly` prevents switching without changing child fields' own edit policies. Panels stay mounted while hidden, preserving drafts and nested tab state. A missing, unknown, or disabled requested value displays the first enabled tab without publishing a correction; no enabled tabs means no visible panel and an effective value of `""`.
 - `agui-dashboard`: responsive workspace. `layout="single"` (default), `split`, `equal`, or `grid`; `density="comfortable"` (default) or `compact`. In split mode, direct children with `slot="main"` use two columns and `slot="side"` one. Toolbars and `slot="full"` span all columns. These layout slot attributes do not require Shadow DOM.
 - `agui-panel`: content container; supply ordinary child markup and optional headings/actions.
 - `agui-header`: header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` under the same application provider or viewport, or directly in `agui-app` for a fixed header row. Add `floating` for sticky positioning within the scroll region; use `--agui-header-offset` if another sticky element is above it.
@@ -110,6 +111,25 @@ Update common application data through CLI `update`, for example `{ "selector": 
 
 Sidebar clicks, keyboard input, and scoped `set_value` tools publish visibility changes; incoming assignments and repeated values emit no changes. Sidebar tools also include `read_value` and `toggle`; discover their exact names through CLI `tools`. Keep visibility transient by default. For record-editing workspaces, declare the record keys in `persist` and place the data toolbar directly in the app as described above.
 
+### Tabs example
+
+```html
+<context-provider ctx="VIEWS">
+  <script type="application/json">{"active":"overview","notes":""}</script>
+  <agui-tabs id="task-views" label="Task views" pub-to="VIEWS/active" bind="$.value: VIEWS/active">
+    <agui-tab value="overview" label="Overview"><p>Task overview</p></agui-tab>
+    <agui-tab value="notes" label="Notes">
+      <agui-field label="Notes" type="textarea" pub-to="VIEWS/notes" bind="$.value: VIEWS/notes"></agui-field>
+    </agui-tab>
+    <agui-tab value="history" label="History" disabled><p>Unavailable view</p></agui-tab>
+  </agui-tabs>
+</context-provider>
+```
+
+Arrow keys move focus without switching: Left/Right for horizontal tabs, Up/Down for vertical tabs, with horizontal direction matching RTL. Enter/Space activates the focused tab; Home/End focuses the first/last enabled tab. Leaving the tablist restores the active tab as its entry point. Incoming state changes never publish user actions. Visibility changes use native `hidden`; there is no routing, remounting, or synthetic window resize.
+
+Discover the group's `set_value` and `read_value` tools by `ownerName="agui-tabs"`; component context includes the authored group ID and label. Each enabled tab has a scoped `select` tool under `agui-tab-button`, with group ID, tab value, and label in its component context. Use discovered names and refresh discovery after labels or availability change. Group reads return the effective active value, including fallback; selection responses contain only `value` and `changed`. Keep tab choice transient unless the task explicitly requires persistence.
+
 ### Styling and tools
 
 Use `.agui-button-icon` for round icon-only buttons at the shared control size. Combine it with the usual button variants and supply an accessible name through `aria-label` or `aria-labelledby`.
@@ -126,7 +146,7 @@ Field, select, and toggle descriptors expose `set_value` with `{ "value": "..." 
 
 Meaningful interactions emit `agui:action` with `{ "widgetId": "...", "context": "...", "action": "change", "value": "..." }` or action `retry`. Give interactive components IDs. Values longer than 2048 characters are represented by `valueLength` in the event; use `read_value` or provider state for the actual value. Events are notifications, not storage. State resets on sync/replacement/restart follow ordinary AGUI semantics; components do not save to a database automatically.
 
-For manual review, save or insert the packaged `src/page/uilib-gallery.html` into one gallery session. It demonstrates the app shell with two collapsible sidebars, independent local controls, shared application inputs, property/object bindings, a floating viewport header, and the data toolbar without executable scripts. Shared name, Shared status, and Notifications are declared persistent; other inputs, sidebar visibility, and theme remain transient. The gallery includes an import example and labeled illustrative submission states; its floating bar reports actual operations. Review independent scrolling, sidebar toggles, keyboard use, narrow screens, and native file pickers manually.
+For manual review, save or insert the packaged `src/page/uilib-gallery.html` into one gallery session. It demonstrates the app shell with two collapsible sidebars, horizontal and nested vertical tabs, independent local controls, shared application inputs, property/object bindings, a floating viewport header, and the data toolbar without executable scripts. Shared name, Shared status, and Notifications are declared persistent; other inputs, tab choice, sidebar visibility, and theme remain transient. The gallery includes an import example and labeled illustrative submission states; its floating bar reports actual operations. Review independent scrolling, tab navigation, sidebar toggles, keyboard use, narrow screens, and native file pickers manually.
 
 ## Reusable task interfaces
 

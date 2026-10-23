@@ -1,0 +1,23 @@
+<context-provider id="tabs-data" ctx="TABS">
+  <script type="application/json">
+    {"view":"profile","notesLabel":"Notes","notesDisabled":false,"readonly":false,"orientation":"horizontal","draft":""}
+  </script>
+  <agui-tabs id="record-tabs" label="Record views" pub-to="TABS/view"
+    bind="$.value: TABS/view; $.readonly: TABS/readonly; $.orientation: TABS/orientation">
+    <agui-tab id="profile-panel" value="profile" label="Profile">
+      <input id="profile-draft" aria-label="Profile draft">
+      <agui-tabs id="nested-tabs" label="Nested views" value="one">
+        <agui-tab value="one" label="Nested one"><p>First nested panel</p></agui-tab>
+        <agui-tab value="two" label="Nested two"><p>Second nested panel</p></agui-tab>
+      </agui-tabs>
+    </agui-tab>
+    <agui-tab id="notes-panel" value="notes" bind="$.label: TABS/notesLabel; $.disabled: TABS/notesDisabled">
+      <agui-field id="notes-draft" label="Draft notes" pub-to="TABS/draft" bind="$.value: TABS/draft"></agui-field>
+    </agui-tab>
+    <agui-tab value="future" label="Future view" disabled><p>Not available</p></agui-tab>
+  </agui-tabs>
+  <agui-tabs id="independent-tabs" label="Independent views" value="one">
+    <agui-tab value="one" label="Independent one"><p>Separate first panel</p></agui-tab>
+    <agui-tab value="two" label="Independent two"><p>Separate second panel</p></agui-tab>
+  </agui-tabs>
+</context-provider>

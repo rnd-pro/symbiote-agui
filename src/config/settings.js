@@ -1,28 +1,13 @@
-import { readFileSync, realpathSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { mkdir, rename, unlink, writeFile } from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { errorMessage, hasErrorCode } from '../shared/system-error.js';
+import { canonicalPath } from '../shared/paths.js';
 
 export let CONFIG_FILE = '.agui.json';
-
-/**
- * @param {string} path
- * @returns {string}
- */
-function canonicalPath(path) {
-  try { return realpathSync(path); }
-  catch (error) {
-    if (hasErrorCode(error, 'ENOENT')) {
-      let absolute = resolve(path);
-      let parent = dirname(absolute);
-      return parent === absolute ? absolute : join(canonicalPath(parent), basename(absolute));
-    }
-    throw error;
-  }
-}
 
 /** @param {string} projectDirectory */
 function projectConfig(projectDirectory) {

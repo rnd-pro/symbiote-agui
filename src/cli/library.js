@@ -1,6 +1,9 @@
-import { configureFolder, getSettings } from '../config/settings.js';
+import { configureFolder, getProjectSettings, getSettings } from '../config/settings.js';
 import { listDefinitions } from '../library/catalog.js';
 import { CommandError } from '../shared/command-error.js';
+import { rememberProject } from '../projects/registry.js';
+import { errorMessage } from '../shared/system-error.js';
+import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 
 /**
  * @param {string[]} positionals
@@ -30,5 +33,12 @@ export function parseLibraryCommand(positionals, values) {
 export async function runLibraryCommand(request) {
   if (request.command === 'list') { return listDefinitions(request.query); }
   if (request.command === 'config show') { return { settings: getSettings() }; }
-  return { settings: await configureFolder(request.command === 'config folder' ? request.folder : undefined) };
+  let settings = await configureFolder(request.command === 'config folder' ? request.folder : undefined);
+  try { await rememberProject(getProjectSettings().folder); }
+  catch (error) {
+    throw new CommandError(`Folder configuration was saved, but project history could not be updated. ${errorMessage(error)}`, ERROR_CODE.CACHE_ERROR, EXIT_CODE.RUNTIME_ERROR);
+  }
+  return {
+    settings,
+  };
 }

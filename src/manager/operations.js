@@ -15,6 +15,9 @@ import { ERROR_CODE } from '../shared/constants.js';
 import { errorMessage } from '../shared/system-error.js';
 import { MANAGER_OPERATIONS, MANAGER_REQUEST_LIMIT, MANAGER_REQUEST_TTL_MS } from './constants.js';
 import { configureManagerStorage, managerStorageSettings } from './storage.js';
+import { PROJECT_OPERATIONS } from '../projects/constants.js';
+import { listProjects } from '../projects/registry.js';
+import { runProjectOperation, validateProjectRequest } from './projects.js';
 
 /** @param {unknown} error */
 function failure(error) {
@@ -35,6 +38,7 @@ export function validateManagerRequest(input) {
     'all',
     'confirm',
     'folder',
+    'projectId',
   ].includes(key))
     || typeof value.id !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(value.id)
     || typeof value.operation !== 'string' || !Object.hasOwn(MANAGER_OPERATIONS, value.operation)
@@ -44,6 +48,8 @@ export function validateManagerRequest(input) {
   }
   let request = /** @type {import('../../types/manager.js').ManagerRequest} */ (input);
   let operation = MANAGER_OPERATIONS[request.operation];
+  if (validateProjectRequest(request)) { return request; }
+  if (request.projectId !== undefined) { throw new CommandError('Project ID is only accepted by project operations.'); }
   if (request.operation === 'configure storage') {
     if (request.sessionId !== undefined || request.all || request.confirm
       || (request.folder !== null && (typeof request.folder !== 'string'
@@ -111,6 +117,7 @@ export class ManagerOperations {
       checkedAt: new Date().toISOString(),
       sessions,
       storage: managerStorageSettings(this.record),
+      projects: await listProjects(this.scope.settings.folder),
     };
   }
 
@@ -122,13 +129,14 @@ export class ManagerOperations {
     try {
       this.assertScope();
       let request = validateManagerRequest(input);
-      if (['snapshot', 'describe'].includes(request.operation)) { return await this.execute(request); }
+      if (['snapshot', 'describe', 'projects'].includes(request.operation)) { return await this.execute(request); }
       let fingerprint = JSON.stringify([
         request.operation,
         request.sessionId,
         !!request.all,
         !!request.confirm,
         request.folder,
+        request.projectId,
       ]);
       let previous = this.requests.get(request.id);
       if (previous) {
@@ -148,6 +156,9 @@ export class ManagerOperations {
 
   /** @param {import('../../types/manager.js').ManagerRequest} request */
   async execute(request) {
+    if (Object.hasOwn(PROJECT_OPERATIONS, request.operation)) {
+      return this.serialize('\0projects', () => runProjectOperation(request, this.record, this.scope));
+    }
     if (request.operation === 'configure storage') {
       return this.serialize('\0storage', () => configureManagerStorage(this.record, request.folder ?? null));
     }

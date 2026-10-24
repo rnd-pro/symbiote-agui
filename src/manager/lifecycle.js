@@ -11,6 +11,7 @@ import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { hasErrorCode } from '../shared/system-error.js';
 import { openPage } from '../browser/open.js';
 import { managerDirectory, readManager, releaseManager, reserveManager, writeManager } from './registry.js';
+import { rememberProject } from '../projects/registry.js';
 
 /**
  * @param {import('../../types/manager.js').ManagerRecord} record
@@ -131,6 +132,7 @@ export async function startManager(open = true) {
   let status = await statusManager();
   let record = await readManager();
   if (!record?.url) { throw new Error('Manager did not become ready.'); }
+  await rememberProject(record.settings.folder, true);
   let result = { ...status, launchUrl: `${record.url}#${record.token}` };
   if (open) {
     try { await openPage(result.launchUrl); return { ...result, opened: true }; }

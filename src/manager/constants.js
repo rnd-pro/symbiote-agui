@@ -1,3 +1,5 @@
+import { PROJECT_OPERATIONS } from '../projects/constants.js';
+
 export let MANAGER_PATH = '/manager/';
 export let MANAGER_SOCKET_PATH = '/manager/socket';
 export let MANAGER_REQUEST_LIMIT = 512;
@@ -6,6 +8,7 @@ export let MANAGER_CLIENT_TIMEOUT_MS = 120_000;
 export let MANAGER_REFRESH_MS = 5_000;
 
 export let MANAGER_OPERATIONS = Object.freeze({
+  ...PROJECT_OPERATIONS,
   'configure storage': {
     bulk: false,
     confirm: false,

@@ -1,10 +1,11 @@
 import type { StorageSettings, DefinitionInfo } from './library.js';
 import type { SessionOperationResult, TunnelStatus } from './session.js';
 import type { CommandFailure } from './cli.js';
+import type { ConnectedProject, ProjectListing } from './projects.js';
 
 export type ManagerTheme = 'system' | 'light' | 'dark';
 
-export type ManagerOperation = 'snapshot' | 'describe' | 'start' | 'stop' | 'clear' | 'sync' | 'share' | 'tunnel check' | 'tunnel renew' | 'configure storage';
+export type ManagerOperation = keyof typeof import('../src/manager/constants.js').MANAGER_OPERATIONS;
 
 export interface ManagerRequest {
   id: string;
@@ -13,6 +14,7 @@ export interface ManagerRequest {
   all?: boolean;
   confirm?: boolean;
   folder?: string | null;
+  projectId?: string;
 }
 
 export interface ManagerScope {
@@ -30,6 +32,7 @@ export interface ManagerSnapshot {
   checkedAt: string;
   sessions: ManagerSession[];
   storage: ManagerStorageSettings;
+  projects: ProjectListing;
 }
 
 export interface ManagerStorageSettings {
@@ -47,6 +50,8 @@ export interface ManagerResult {
   description?: DefinitionInfo;
   snapshot?: ManagerSnapshot;
   manager?: ManagerStatus;
+  project?: ConnectedProject;
+  projects?: ProjectListing;
   error?: CommandFailure['error'];
 }
 

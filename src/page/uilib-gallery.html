@@ -115,6 +115,16 @@
           "status": "",
           "sharedName": "Alex",
           "sharedStatus": "new",
+          "featureContactFirst": {
+            "featureTitle": "Design contact",
+            "contactName": "Avery",
+            "contactNotes": "Prepare the design brief."
+          },
+          "featureContactSecond": {
+            "featureTitle": "Engineering contact",
+            "contactName": "Morgan",
+            "contactNotes": "Review the integration requirements."
+          },
           "notifications": true,
           "notificationMessage": "",
           "statusOptions": [{"value":"new","label":"New"},{"value":"contacted","label":"Contacted"},{"value":"archived","label":"Archived","disabled":true}],
@@ -315,6 +325,27 @@
           </agui-tab>
           <agui-tab value="layouts" label="Layouts">
             <div class="space-y-6">
+              <section class="grid gap-4" aria-label="Reusable feature templates">
+                <h2>Reusable features with use-template</h2>
+                <p class="text-sm text-agui-muted">One template supplies the layout and bindings. Each provider reads a different APP contact object through state and publishes edits back with pub-to. No custom JavaScript is needed.</p>
+                <template id="contact-feature-template">
+                  <agui-panel class="grid content-start gap-4">
+                    <h3 class="text-lg font-semibold">{{^featureTitle}}</h3>
+                    <agui-field label="Contact name" name="feature_contact_name" pub-to="^contactName" bind="$.value: ^contactName"></agui-field>
+                    <agui-field label="Notes" name="feature_contact_notes" type="textarea" rows="3" pub-to="^contactNotes" bind="$.value: ^contactNotes"></agui-field>
+                    <agui-component class="text-sm text-agui-muted">
+                      Draft contact: <output>{{^contactName}}</output>
+                    </agui-component>
+                  </agui-panel>
+                </template>
+                <div class="grid gap-4 md:grid-cols-2">
+                  <context-provider id="feature-contact-first" use-template="#contact-feature-template"
+                    pub-to="APP/featureContactFirst" bind="state: APP/featureContactFirst"></context-provider>
+                  <context-provider id="feature-contact-second" use-template="#contact-feature-template"
+                    pub-to="APP/featureContactSecond" bind="state: APP/featureContactSecond"></context-provider>
+                </div>
+                <p class="text-sm text-agui-muted">Each feature owns a local view of its contact and publishes a fresh object to APP. These contact objects are transient and are not included in the gallery's Save action.</p>
+              </section>
               <agui-panel class="grid gap-4">
                 <h2 id="gallery-tabs-panel">Tabs</h2>
                 <agui-tabs id="gallery-tabs" label="Workspace views" pub-to="APP/galleryTab" bind="$.value: APP/galleryTab">

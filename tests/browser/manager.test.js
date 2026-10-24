@@ -142,22 +142,22 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.waitForFunction(() => document.querySelectorAll('.sessions agui-session-row').length === 0);
   await page.select('#manager-filter [data-field="status"] select', '');
   await page.waitForSelector('[data-session="desk"]');
-  assert.equal(await page.$eval('#manager-theme input', (element) => element.checked), false);
-  await page.click('#manager-theme input');
+  assert.equal(await page.$eval('#manager-theme button', (element) => element.getAttribute('aria-pressed') === 'true'), false);
+  await page.click('#manager-theme button');
   await page.reload();
   await page.waitForSelector('[data-session="desk"]');
   let second = await browser.newPage();
   await second.goto(manager.url);
   await second.waitForSelector('[data-session="desk"]');
-  assert.equal(await second.$eval('#manager-theme input', (element) => element.checked), true);
-  await second.click('#manager-theme input');
+  assert.equal(await second.$eval('#manager-theme button', (element) => element.getAttribute('aria-pressed') === 'true'), true);
+  await second.click('#manager-theme button');
   await page.bringToFront();
   await page.waitForFunction(() => document.body.dataset.theme === 'light');
-  assert.equal(await page.$eval('#manager-theme input', (element) => element.checked), false, 'Changes in another tab update the selection.');
+  assert.equal(await page.$eval('#manager-theme button', (element) => element.getAttribute('aria-pressed') === 'true'), false, 'Changes in another tab update the selection.');
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
   assert.equal(await page.$('#system-theme'), null);
   assert.equal(await page.evaluate(() => localStorage.getItem('agui-manager-theme')), 'light');
-  assert.equal(await page.$eval('#manager-theme input', (element) => element.checked), false, 'An explicit theme remains selected when the OS preference changes.');
+  assert.equal(await page.$eval('#manager-theme button', (element) => element.getAttribute('aria-pressed') === 'true'), false, 'An explicit theme remains selected when the OS preference changes.');
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
   await page.reload();
   await page.waitForSelector('[data-session="desk"]');
@@ -234,7 +234,7 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
     await page.screenshot({ path: `${process.env.AGUI_MANAGER_SCREENSHOT}.light.png`, fullPage: true });
-    await page.click('#manager-theme input');
+    await page.click('#manager-theme button');
     await page.screenshot({ path: process.env.AGUI_MANAGER_SCREENSHOT, fullPage: true });
   }
   await page.setViewport({ width: 390, height: 844 });

@@ -1,13 +1,23 @@
-import { Toggle } from '../toggle/toggle.js';
+import { Control } from '../../shared/control.js';
 import { CONTROL_ATTRIBUTE_BINDINGS } from '../../shared/constants.js';
+import { THEME_TOGGLE_TEMPLATE } from './template.js';
 
-export class ThemeToggle extends Toggle {
+export class ThemeToggle extends Control {
   /** @type {MediaQueryList | undefined} */
   schemeQuery;
 
   constructor() {
     super();
-    Object.assign(this.init$, { '*theme': 'system', lightLabel: undefined, darkLabel: undefined });
+    Object.assign(this.init$, {
+      '*theme': 'system',
+      lightLabel: undefined,
+      darkLabel: undefined,
+      showLabel: undefined,
+      showText: false,
+      buttonClass: 'agui-button-icon',
+      buttonLabel: '',
+      themeIcon: '',
+    });
   }
 
   get isDark() {
@@ -17,10 +27,19 @@ export class ThemeToggle extends Toggle {
   renderCallback() {
     this.schemeQuery = matchMedia('(prefers-color-scheme: dark)');
     super.renderCallback();
-    for (let [key, attribute] of [['lightLabel', 'light-label'], ['darkLabel', 'dark-label'], ['label', 'label']]) {
+    for (let [
+      attribute,
+      key,
+    ] of Object.entries({
+      'light-label': 'lightLabel',
+      'dark-label': 'darkLabel',
+      'show-label': 'showLabel',
+      label: 'label',
+    })) {
       this.sub(key, this.refreshLabel);
       this.sub(`attribute-${attribute}`, this.refreshLabel);
     }
+    this.sub('attribute-aria-label', this.refreshLabel);
     this.schemeQuery.addEventListener('change', this.refreshChecked);
     this.sub('*theme', this.refreshChecked);
   }
@@ -34,7 +53,15 @@ export class ThemeToggle extends Toggle {
 
   refreshLabel = () => {
     let actionLabel = this.isDark ? this.$.lightLabel ?? this.getAttribute('light-label') : this.$.darkLabel ?? this.getAttribute('dark-label');
-    this.$.fieldLabel = String(actionLabel ?? this.$.label ?? this.getAttribute('label') ?? '');
+    let label = String(actionLabel ?? this.$.label ?? this.getAttribute('label') ?? '');
+    let showText = !!(this.$.showLabel ?? this.hasAttribute('show-label')) && !!label;
+    this.set$({
+      fieldLabel: label,
+      buttonLabel: this.getAttribute('aria-label') ?? label,
+      showText,
+      buttonClass: showText ? '' : 'agui-button-icon',
+      themeIcon: this.isDark ? 'light_mode' : 'dark_mode',
+    });
   };
 
   /** @param {unknown} value */
@@ -54,5 +81,6 @@ ThemeToggle.bindAttributes({
   ...CONTROL_ATTRIBUTE_BINDINGS,
   'light-label': 'attribute-light-label',
   'dark-label': 'attribute-dark-label',
+  'show-label': 'attribute-show-label',
 });
-
+ThemeToggle.template = THEME_TOGGLE_TEMPLATE;

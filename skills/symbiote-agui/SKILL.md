@@ -47,7 +47,7 @@ The default JSDA page bundle includes and registers every available library comp
 - `agui-field`: renders its own native input and supplies a visible label, required marker, hints, errors, context synchronization, and tools. Set `type` to text (default), search, email, url, tel, number, date, checkbox, or radio; use `type="textarea"` for multiline text. Put native attributes such as `name`, `placeholder`, `autocomplete`, `min`, `max`, `step`, `minlength`, `maxlength`, `pattern`, `rows`, and `cols` on the field. Attribute changes propagate to the internal control; recreate the field to switch between input and textarea. Do not supply child inputs, light DOM slots, or a slot processor. Use `agui-select` for options.
 - `agui-select`: native single-select driven by an `options` property binding; provide `name` on the component. Each option is `{ "value": "new", "label": "New", "disabled": false }`; value/label are strings, disabled is optional. Use `placeholder` for a clear/empty option; reserve the empty value for it. No HTML option generation or modules are needed.
 - `agui-toggle`: reusable boolean control with a native checkbox styled as a 24px-high on/off switch inside a standard 40px-high clickable label. Use `label`, `name`, `checked`, `disabled`, `readonly`, `hint`, and `error` attributes or the same native `$.value` and `state` bindings as fields. Values are booleans, with local state and the usual control tools/change action. Example: `<agui-toggle label="Notifications" name="notifications" checked></agui-toggle>`.
-- `agui-theme-toggle`: specializes `agui-toggle`, inheriting its template, sizing, attributes, and boolean control tools/change action. On means dark theme; off means light theme. Supply proposed-action text through `light-label` and `dark-label` attributes or native `$.lightLabel` and `$.darkLabel` bindings. Supply `aria-label` or `aria-labelledby` explicitly; a plain `label` binding remains the fallback when action labels are absent. It reads and writes shared `*theme` through Symbiote's `ctx` contract, initially `system`, and applies that value to `document.body.dataset.theme`. For example, `<agui-theme-toggle ctx="APP" aria-label="Dark theme" light-label="Switch to light theme" dark-label="Switch to dark theme"></agui-theme-toggle>` controls the page and shares the `APP/theme` value. The body owns page colors and the system/light/dark theme; dashboards and other components inherit it. System mode follows the OS until toggled or externally updated. No dashboard theme binding, inline JavaScript, or persistence setup is needed.
+- `agui-theme-toggle`: round icon button, showing a moon in light mode and a sun in dark mode to indicate the next action. It uses the shared control sizing, attributes, boolean tools/change action, and optional `pub-to`; `value` and `aria-pressed` are true for dark theme. Text is hidden by default; opt into a text button with `show-label` or boolean `$.showLabel`. Supply proposed-action text through `light-label`/`dark-label` or native `$.lightLabel`/`$.darkLabel` bindings for the tooltip and optional visible text; plain `label` is the fallback. Supply a stable accessible name through `aria-label` or `aria-labelledby`; action text supplies a fallback accessible name when neither is set. It reads and writes shared `*theme` through Symbiote's `ctx` contract, initially `system`, and applies that value to `document.body.dataset.theme`. For example, `<agui-theme-toggle ctx="APP" aria-label="Dark theme" light-label="Switch to light theme" dark-label="Switch to dark theme"></agui-theme-toggle>` controls the page and shares the `APP/theme` value. The body owns page colors and the system/light/dark theme; dashboards and other components inherit it. System mode follows the OS until toggled or externally updated. No dashboard theme binding, inline JavaScript, or persistence setup is needed.
 - `agui-state`: attribute/property `status` is `ready` (hidden), `loading`, `empty`, or `error`; `message` supplies the visible text, with no built-in fallback. A nonempty `retryLabel` shows a Retry action only in error state. Retry emits intent; it does not perform or confirm an external operation.
 - `agui-message`: transient notification with a solid accent background and white text; `tone="alert"` uses the alert background and alert semantics. Supply `message`, `timeout` in milliseconds (default 5000), and `close-label` for its dismiss action. Use attributes, `bind="$.message: APP/notification"`, or `bind="state: APP/notificationState"` with `message`, `tone`, `timeout`, and `closeLabel`. Changing a nonempty message opens it; clearing it dismisses it. Messages animate, expire, and stack above the floating data toolbar. The toolbar and built-in system notifications reuse this component. No custom notification handlers are needed.
 - `agui-icon`: Material Symbols Outlined from the bundled collection. Use `<agui-icon name="search"></agui-icon>`, `bind="$.name: APP/iconName"`, or `bind="state: APP/iconState"` with `{ "name": "search" }`. No imports, font links, or executable session code are needed, including offline and in shared views. Unknown names render empty. Icons inherit text color and match the surrounding font size by default (`1em`); use Tailwind color utilities and `--agui-icon-size`, `--agui-icon-fill`, `--agui-icon-weight`, `--agui-icon-grade`, or `--agui-icon-optical-size` for customization. Decorative icons are hidden from assistive technology. For an informative icon, supply `aria-label` or `aria-labelledby`; for an icon-only button, put its accessible name on the button.
@@ -459,7 +459,41 @@ Inside modules, use Symbiote's native `$`, `set$()`, `add$()`, and `sub()` APIs.
 
 An anonymous `<context-provider>` exposes local fields to descendants through `^prop`. A provider with `ctx="map"` also mirrors fields into a named context. Consumers use `ctx="map"` with `*prop`, or explicit `map/prop` bindings. Use one provider per named context. Provider synchronization is bidirectional, including fields added through `add$()`.
 
-For custom reusable markup, include `<template id="card-template">...</template>` and a custom tag with `use-template="template#card-template"` in the same insertion. Unknown tags using `use-template` become generic components. Register custom subclasses through `YourComponent.reg('your-component')` to preserve Symbiote's WebMCP tag identity; registrations persist until page reload. Prefer the built-in foundation components above when they cover the task.
+Bind a provider's `state` to an object property, for example `bind="state: APP/contact"`, to expose that object's plain keys as local provider fields. Add `pub-to="APP/contact"` to publish local edits to imported fields as fresh objects. Without `pub-to`, edits stay in the provider's local draft. Incoming object replacements add fields and clear removed fields without echoing outward; unrelated local fields remain local. Change nested data by assigning fresh arrays/objects through native state APIs. `ctx` remains the optional named context, separate from the object binding. Persist the source object on its application provider when edits should join Save/Cancel.
+
+### Reusable features with use-template
+
+Attach `use-template="#contact-feature"` to a context provider or another Symbiote owner that enables `allowCustomTemplate`. The owner supplies state and behavior; the template supplies reusable presentation, including complete layouts and nested controls. Each instance renders its own copy. AGUI's `context-provider`, `agui-component`, and generic template-backed tags already enable this native feature. Custom classes opt in with `allowCustomTemplate = true`.
+
+Define the template and its instances in the same insertion. Supply instance data through a direct JSON script or a provider `state` binding. Inside nested components, use pop-up `^property` bindings and `pub-to="^property"` to read and edit the nearest owning ancestor. Avoid hardcoded named contexts in a reusable template when instances should stay independent:
+
+```html
+<template id="contact-feature">
+  <agui-panel class="grid gap-4">
+    <h3>{{^featureTitle}}</h3>
+    <agui-field label="Contact name" name="contact_name"
+      pub-to="^contactName" bind="$.value: ^contactName"></agui-field>
+    <agui-component>Draft contact: {{^contactName}}</agui-component>
+  </agui-panel>
+</template>
+
+<context-provider ctx="CONTACTS">
+  <script type="application/json">
+    {
+      "design":{"featureTitle":"Design contact","contactName":"Avery"},
+      "engineering":{"featureTitle":"Engineering contact","contactName":"Morgan"}
+    }
+  </script>
+  <context-provider use-template="#contact-feature"
+    pub-to="CONTACTS/design" bind="state: CONTACTS/design"></context-provider>
+  <context-provider use-template="#contact-feature"
+    pub-to="CONTACTS/engineering" bind="state: CONTACTS/engineering"></context-provider>
+</context-provider>
+```
+
+Editing either instance updates its preview and publishes the corresponding contact object to `CONTACTS`. The provider becomes a reusable feature owner without a new class, registration, event handler, or session module; the layout and controls retain their existing behavior. Keep repeated template markup free of fixed DOM IDs, or supply unique IDs through native bindings. To save these contacts, add `persist="design engineering"` to the application provider; feature instances need no persistence declarations.
+
+Unknown custom tags using `use-template` become generic components. For custom behavior, register subclasses through `YourComponent.reg('your-component')` to preserve Symbiote's WebMCP tag identity; registrations persist until page reload. Prefer the built-in foundation components when they cover the task.
 
 ## Local data commits
 

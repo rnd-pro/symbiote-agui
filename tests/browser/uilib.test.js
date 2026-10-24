@@ -51,7 +51,6 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').theme), 'system');
   let styleCount = await page.evaluate(() => document.adoptedStyleSheets.length);
   assert.ok(styleCount > 0);
-  assert.equal((html.match(/<context-provider/g) || []).length, 1);
   await page.$eval('#query-control', (element) => {
     element.setAttribute('placeholder', 'Find a contact');
     element.setAttribute('maxlength', '64');
@@ -69,26 +68,29 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#query-control input', (element) => element.maxLength), -1);
   assert.equal(await page.$eval('#query-control input', (element) => element.required), false);
   assert.equal(await page.$eval('#status-control select', (element) => element.options.length), 4);
-  assert.equal(await page.$eval('#theme-toggle input', (element) => element.checked), false);
-  assert.equal(await page.$eval('#theme-toggle input', (element) => element.getAttribute('role')), 'switch');
-  assert.equal(await page.$eval('#theme-toggle input', (element) => element.getAttribute('aria-label')), 'Dark theme');
-  assert.equal(await page.$eval('#theme-toggle label', (element) => element.innerText.trim()), 'Night');
-  await page.click('#theme-toggle input');
-  await page.waitForFunction(() => document.body.dataset.theme === 'dark' && document.querySelector('#theme-toggle input')?.matches(':checked'));
+  assert.equal(await page.$eval('#theme-toggle button', (element) => element.getAttribute('aria-pressed') === 'true'), false);
+  assert.equal(await page.$eval('#theme-toggle button', (element) => element.type), 'button');
+  assert.equal(await page.$eval('#theme-toggle button > span', (element) => element.hasAttribute('hidden')), true);
+  assert.equal(await page.$eval('#theme-toggle agui-icon', (element) => Reflect.get(element, '$').name), 'dark_mode');
+  assert.equal(await page.$eval('#theme-toggle button', (element) => element.getAttribute('aria-label')), 'Dark theme');
+  assert.equal(await page.$eval('#theme-toggle button > span', (element) => element.textContent.trim()), 'Night');
+  await page.click('#theme-toggle button');
+  await page.waitForFunction(() => document.body.dataset.theme === 'dark' && document.querySelector('#theme-toggle button')?.getAttribute('aria-pressed') === 'true');
   assert.equal(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').theme), 'dark');
-  assert.equal(await page.$eval('#theme-toggle label', (element) => element.innerText.trim()), 'Day');
-  await page.focus('#theme-toggle input');
+  assert.equal(await page.$eval('#theme-toggle button > span', (element) => element.textContent.trim()), 'Day');
+  assert.equal(await page.$eval('#theme-toggle agui-icon', (element) => Reflect.get(element, '$').name), 'light_mode');
+  await page.focus('#theme-toggle button');
   await page.keyboard.press('Space');
-  await page.waitForFunction(() => document.body.dataset.theme === 'light' && !document.querySelector('#theme-toggle input')?.matches(':checked'));
-  assert.equal(await page.$eval('#theme-toggle label', (element) => element.innerText.trim()), 'Night');
+  await page.waitForFunction(() => document.body.dataset.theme === 'light' && document.querySelector('#theme-toggle button')?.getAttribute('aria-pressed') === 'false');
+  assert.equal(await page.$eval('#theme-toggle button > span', (element) => element.textContent.trim()), 'Night');
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { theme: 'system' } }));
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
-  await page.waitForFunction(() => document.querySelector('#theme-toggle input')?.matches(':checked'));
-  await page.click('#theme-toggle label');
+  await page.waitForFunction(() => document.querySelector('#theme-toggle button')?.getAttribute('aria-pressed') === 'true');
+  await page.click('#theme-toggle button');
   assert.equal(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').theme), 'light');
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { theme: 'dark' } }));
-  assert.equal(await page.$eval('#theme-toggle input', (element) => element.checked), true);
+  assert.equal(await page.$eval('#theme-toggle button', (element) => element.getAttribute('aria-pressed') === 'true'), true);
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { density: 'compact' } }));
   await page.select('#status-control select', 'new');
   assert.equal(await page.$eval('#status-mirror select', (element) => element.value), '');
@@ -127,6 +129,15 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#query-control input', (element) => element.value), 'Grace');
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { componentState: { status: 'ready' } } }));
   assert.equal(await page.$eval('#retry-state > div', (element) => element.hidden), true);
+  await page.click('#gallery-sections [role="tab"][value="layouts"]');
+  assert.equal(await page.$eval('#feature-contact-first input', (element) => element.value), 'Avery');
+  assert.equal(await page.$eval('#feature-contact-second input', (element) => element.value), 'Morgan');
+  await page.focus('#feature-contact-first input');
+  await page.keyboard.press('End');
+  await page.type('#feature-contact-first input', ' Lee');
+  assert.equal(await page.$eval('#feature-contact-first output', (element) => element.textContent), 'Avery Lee');
+  assert.equal(await page.$eval('#feature-contact-second output', (element) => element.textContent), 'Morgan');
+  assert.equal(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').featureContactFirst.contactName), 'Avery Lee');
   await page.setViewport({ width: 390, height: 844 });
   await page.setViewport({ width: 1280, height: 900 });
   await page.$eval('#query-control', (element) => { Reflect.set(window, 'oldField', element); });
@@ -143,7 +154,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
     '<agui-field id="bound-field" ctx="binding-test" bind="$.label: *nameLabel; $.value: *dynamicValue"></agui-field>',
     '<agui-field id="state-field" bind="state: binding-test/fieldState"></agui-field>',
     '<agui-theme-toggle id="bound-theme" ctx="binding-test" bind="$.lightLabel: binding-test/lightAction; $.darkLabel: binding-test/darkAction; @aria-label: binding-test/themeName"></agui-theme-toggle>',
-    '<agui-theme-toggle id="plain-theme" ctx="binding-test" bind="$.label: binding-test/nameLabel"></agui-theme-toggle>',
+    '<agui-theme-toggle id="plain-theme" ctx="binding-test" show-label bind="$.label: binding-test/nameLabel"></agui-theme-toggle>',
     '<agui-state id="unlabeled-state" status="loading"></agui-state>',
     '<agui-toolbar id="unlabeled-toolbar"></agui-toolbar>',
     '<agui-data-toolbar id="custom-data" bind="$.texts: binding-test/toolbarTexts"></agui-data-toolbar>',
@@ -161,9 +172,11 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#bound-field input', (element) => element.value), 'Bound');
   assert.equal(await page.$eval('#state-field input', (element) => element.value), 'State value');
   assert.equal(await page.$eval('#state-field input', (element) => element.disabled), true);
-  assert.equal(await page.$eval('#bound-theme label', (element) => element.innerText.trim()), 'Use night mode');
-  assert.equal(await page.$eval('#bound-theme input', (element) => element.getAttribute('aria-label')), 'Color preference');
-  assert.equal(await page.$eval('#plain-theme label', (element) => element.innerText.trim()), 'Dynamic name');
+  assert.equal(await page.$eval('#bound-theme button > span', (element) => element.textContent.trim()), 'Use night mode');
+  assert.equal(await page.$eval('#bound-theme button', (element) => element.getAttribute('aria-label')), 'Color preference');
+  assert.equal(await page.$eval('#plain-theme button > span', (element) => element.textContent.trim()), 'Dynamic name');
+  assert.equal(await page.$eval('#plain-theme button > span', (element) => element.hasAttribute('hidden')), false);
+  assert.equal(await page.$eval('#plain-theme button', (element) => element.getAttribute('aria-label')), 'Dynamic name');
   assert.equal(await page.$eval('#unlabeled-state', (element) => element.textContent?.trim()), '');
   assert.equal(await page.$eval('#unlabeled-toolbar', (element) => element.getAttribute('aria-label')), null);
   assert.equal(await page.$eval('#custom-data button > span', (element) => element.textContent), 'Keep edits');
@@ -171,7 +184,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await page.$eval('#custom-data', (element) => Reflect.get(element, 'transfer').failed('import', new Error('Technical details must not become UI copy.')));
   assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Cannot read this file/);
   await page.$eval('#bound-theme', (element) => element.setAttribute('dark-label', 'Attribute fallback'));
-  assert.equal(await page.$eval('#bound-theme label', (element) => element.innerText.trim()), 'Use night mode');
+  assert.equal(await page.$eval('#bound-theme button > span', (element) => element.textContent.trim()), 'Use night mode');
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#binding-data', values: {
     nameLabel: 'Updated label', dynamicValue: 'Updated value', fieldState: { label: 'Updated state', value: 'Enabled', disabled: false },
     darkAction: 'Dim the interface', toolbarTexts: { save: 'Store changes', connected: 'Available', 'transfer.READ_FAILED': 'Try another file' },
@@ -180,16 +193,16 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#bound-field input', (element) => element.value), 'Updated value');
   assert.equal(await page.$eval('#state-field input', (element) => element.value), 'Enabled');
   assert.equal(await page.$eval('#state-field input', (element) => element.disabled), false);
-  assert.equal(await page.$eval('#bound-theme label', (element) => element.innerText.trim()), 'Dim the interface');
+  assert.equal(await page.$eval('#bound-theme button > span', (element) => element.textContent.trim()), 'Dim the interface');
   assert.equal(await page.$eval('#custom-data button > span', (element) => element.textContent), 'Store changes');
   assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Try another file/);
-  await page.click('#bound-theme input');
-  assert.equal(await page.$eval('#bound-theme label', (element) => element.innerText.trim()), 'Use daylight');
-  assert.equal(await page.$eval('#plain-theme label', (element) => element.innerText.trim()), 'Updated label');
+  await page.click('#bound-theme button');
+  assert.equal(await page.$eval('#bound-theme button > span', (element) => element.textContent.trim()), 'Use daylight');
+  assert.equal(await page.$eval('#plain-theme button > span', (element) => element.textContent.trim()), 'Updated label');
   await page.$eval('#bound-theme', (element) => {
     Reflect.get(element, '$').lightLabel = undefined;
     element.setAttribute('light-label', 'Restore daylight');
   });
-  await page.waitForFunction(() => document.querySelector('#bound-theme label')?.textContent?.trim() === 'Restore daylight');
+  await page.waitForFunction(() => document.querySelector('#bound-theme button > span')?.textContent?.trim() === 'Restore daylight');
   assert.deepEqual(errors, []);
 });

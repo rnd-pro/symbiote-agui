@@ -52,6 +52,7 @@ export interface ManagerResult {
   manager?: ManagerStatus;
   project?: ConnectedProject;
   projects?: ProjectListing;
+  folderPath?: string;
   error?: CommandFailure['error'];
 }
 

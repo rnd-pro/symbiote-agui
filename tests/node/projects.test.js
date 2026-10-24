@@ -150,6 +150,19 @@ test('project request validation restricts targets to their declared operation',
       operation: 'snapshot',
       projectId: id,
     },
+    {
+      operation: 'open folder',
+    },
+    {
+      operation: 'open folder',
+      projectId: 'default',
+      folder: '/unregistered',
+    },
+    {
+      operation: 'open folder',
+      projectId: id,
+      all: true,
+    },
   ]) { assert.throws(() => validateManagerRequest({
     id: 'validation',
     ...request,

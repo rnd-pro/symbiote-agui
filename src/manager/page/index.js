@@ -52,6 +52,7 @@ export class SessionManager extends ContextProvider {
     openSettings: () => { this.$.settingsOpen = true; },
     openProjects: () => this.projects?.open(),
     switchProject: () => { void this.projects?.run('switch project', String(this.$.projectChoice)); },
+    openProjectFolder: () => { void this.projects?.run('open folder', String(this.$.projectChoice)); },
     connectProject: (/** @type {Event} */ event) => {
       event.preventDefault();
       void this.projects?.run('connect project');

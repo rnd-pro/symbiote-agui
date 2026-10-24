@@ -302,3 +302,77 @@ test('project navigation survives session discovery failures and ignores delayed
   await page.waitForFunction(() => document.querySelector('.connection .agui-message-text')?.textContent === 'Connected');
   await waitForProject(page, projectId(folder));
 });
+
+test('Open folder targets the selected or listed project and recovers from a desktop failure', {
+  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
+  timeout: 45000,
+}, async (t) => {
+  let project = await temporaryManagerProject();
+  /** @type {import('puppeteer-core').Browser | undefined} */
+  let browser;
+  t.after(async () => { await browser?.close(); await project.close(); });
+  let folder = join(project.projectDirectory, 'team folder');
+  await mkdir(folder);
+  await project.cli([
+    'status',
+    'all',
+  ], folder);
+  let manager = await project.cli([
+    'manager',
+    '--no-open',
+  ]);
+  browser = await puppeteer.launch({
+    executablePath,
+    headless: true,
+  });
+  let page = await browser.newPage();
+  page.setDefaultTimeout(8000);
+  await page.goto(manager.launchUrl);
+  await waitForProject(page, 'default');
+  await page.evaluate((path) => {
+    let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
+    let connection = owner.connection;
+    if (!connection) { throw new Error('Missing connection.'); }
+    let request = connection.request.bind(connection);
+    /** @type {string[]} */
+    let requests = [];
+    Reflect.set(window, 'folderRequests', requests);
+    connection.request = (operation, options) => {
+      if (operation !== 'open folder') { return request(operation, options); }
+      requests.push(options?.projectId || '');
+      let folderPath = options?.projectId === 'default' ? owner.snapshot?.storage.defaultFolder : path;
+      return Promise.resolve(Reflect.get(window, 'folderFailure') ? {
+        ok: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: `Fixture desktop failure. Folder: ${folderPath}`,
+        },
+      } : {
+        ok: true,
+        folderPath,
+      });
+    };
+  }, folder);
+  await openProjects(page);
+  await connect(page, folder);
+  assert.deepEqual(await page.evaluate(() => Reflect.get(window, 'folderRequests')), [], 'Discovery and connection do not open OS windows.');
+  await page.click('#manager-projects button[aria-label="Close projects"]');
+  await page.click('#manager-open-project');
+  await page.waitForFunction((path) => document.querySelector('.notice')?.textContent?.includes(`Requested opening ${path}`), {}, folder);
+  assert.equal(page.url(), manager.url, 'Opening a selected folder does not switch the manager scope.');
+  await openProjects(page);
+  await page.locator('#manager-project-list [data-project="default"] ::-p-aria([name="Open folder"][role="button"])').click();
+  await page.waitForFunction(() => !document.querySelector('#manager-connect-project input')?.hasAttribute('disabled'));
+  await page.evaluate(() => Reflect.set(window, 'folderFailure', true));
+  await page.locator(`#manager-project-list [data-project="${projectId(folder)}"] ::-p-aria([name="Open folder"][role="button"])`).click();
+  await page.waitForFunction((path) => document.querySelector('#manager-projects [role="alert"]')?.textContent?.includes(`Fixture desktop failure. Folder: ${path}`), {}, folder);
+  await page.waitForFunction(() => !document.querySelector('#manager-connect-project input')?.hasAttribute('disabled'));
+  assert.deepEqual(await page.evaluate(() => Reflect.get(window, 'folderRequests')), [
+    projectId(folder),
+    'default',
+    projectId(folder),
+  ]);
+  assert.equal(page.url(), manager.url);
+  await page.click('#manager-projects button[aria-label="Close projects"]');
+  await switchProject(page, projectId(folder));
+});

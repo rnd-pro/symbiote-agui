@@ -9,6 +9,7 @@ export let PROJECT_STATE = {
   projectError: '',
   projectsDisabled: true,
   projectSwitchDisabled: true,
+  projectOpenDisabled: true,
 };
 
 export class ProjectNavigation {
@@ -45,6 +46,7 @@ export class ProjectNavigation {
       projectError: this.issue || this.discoveryError,
       projectsDisabled: disabled,
       projectSwitchDisabled: disabled || !choice?.available || choice.id === currentId,
+      projectOpenDisabled: disabled || !choice?.available,
       projectOptions: (listing?.projects || []).map((entry) => ({
         value: entry.id,
         label: entry.folder ? `${entry.name} - ${entry.folder}` : entry.name,
@@ -61,8 +63,10 @@ export class ProjectNavigation {
           error: entry.error || '',
           lastUsed: entry.lastUsedAt ? `Last used ${new Date(entry.lastUsedAt).toLocaleString()}` : 'Not opened yet',
           switchDisabled: disabled || !entry.available || entry.id === currentId,
+          openDisabled: disabled || !entry.available,
           forgetDisabled: disabled || entry.id === 'default' || entry.id === currentId,
-          openProject: () => { void this.run('switch project', entry.id, currentId); },
+          switchProject: () => { void this.run('switch project', entry.id, currentId); },
+          openFolder: () => { void this.run('open folder', entry.id, currentId); },
           forgetProject: () => { void this.run('forget project', entry.id, currentId); },
         },
       ])),
@@ -93,7 +97,7 @@ export class ProjectNavigation {
   }
 
   /**
-   * @param {'connect project' | 'switch project' | 'forget project'} operation
+   * @param {'connect project' | 'switch project' | 'forget project' | 'open folder'} operation
    * @param {string} [projectId]
    * @param {string} [sourceId]
    */
@@ -123,6 +127,9 @@ export class ProjectNavigation {
       if (operation === 'switch project') {
         if (!result.manager) { throw new Error('The selected project manager could not open.'); }
         if (!owner.navigate(result.manager)) { owner.$.projectsOpen = false; }
+      } else if (operation === 'open folder') {
+        if (!result.folderPath) { throw new Error('The manager did not return the requested folder path.'); }
+        owner.$.notice = `Requested opening ${result.folderPath} in the host file manager. Check the desktop for its window.`;
       } else {
         if (operation === 'connect project') {
           owner.$.projectFolder = '';

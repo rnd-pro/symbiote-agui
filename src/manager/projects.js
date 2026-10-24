@@ -3,6 +3,7 @@ import { PROJECT_OPERATIONS } from '../projects/constants.js';
 import { assertProjectFolder, validFolder, validProjectId } from '../projects/identity.js';
 import { connectProject, forgetProject, listProjects, registeredProject } from '../projects/registry.js';
 import { openProjectManager } from './launcher.js';
+import { openProjectFolder } from '../projects/open.js';
 
 /**
  * @param {import('../../types/manager.js').ManagerRequest} request
@@ -27,6 +28,7 @@ export function validateProjectRequest(request) {
 export async function runProjectOperation(request, record, scope) {
   let directory = record?.projectDirectory || process.cwd();
   let operations = {
+    'open folder': () => openProjectFolder(request.projectId || ''),
     projects: async () => ({
       ok: true,
       projects: await listProjects(scope.settings.folder),

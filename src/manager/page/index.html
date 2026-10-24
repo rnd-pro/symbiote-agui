@@ -24,6 +24,7 @@
               pub-to="MANAGER/projectChoice" bind="$.value: MANAGER/projectChoice; $.options: MANAGER/projectOptions; $.disabled: MANAGER/projectsDisabled"></agui-select>
             <agui-toolbar aria-label="Project navigation">
               <button id="manager-switch-project" type="button" class="agui-button-primary" bind="onclick: MANAGER/switchProject; disabled: MANAGER/projectSwitchDisabled"><agui-icon name="arrow_forward"></agui-icon>Switch</button>
+              <button id="manager-open-project" type="button" bind="onclick: MANAGER/openProjectFolder; disabled: MANAGER/projectOpenDisabled"><agui-icon name="open_in_new"></agui-icon>Open folder</button>
               <button type="button" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-icon name="home"></agui-icon>Manage projects</button>
             </agui-toolbar>
             <p class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/projectError"></p>
@@ -108,7 +109,8 @@
                       <p class="text-xs text-agui-muted">{{lastUsed}}</p>
                       <p class="break-words text-sm text-agui-danger empty:hidden">{{error}}</p>
                       <agui-toolbar aria-label="Project actions">
-                        <button type="button" bind="onclick: ^openProject; disabled: ^switchDisabled"><agui-icon name="arrow_forward"></agui-icon>Switch</button>
+                        <button type="button" bind="onclick: ^switchProject; disabled: ^switchDisabled"><agui-icon name="arrow_forward"></agui-icon>Switch</button>
+                        <button type="button" bind="onclick: ^openFolder; disabled: ^openDisabled"><agui-icon name="open_in_new"></agui-icon>Open folder</button>
                         <button type="button" bind="onclick: ^forgetProject; disabled: ^forgetDisabled"><agui-icon name="close"></agui-icon>Forget connection</button>
                       </agui-toolbar>
                     </section>

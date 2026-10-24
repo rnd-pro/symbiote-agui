@@ -19,4 +19,9 @@ export let PROJECT_OPERATIONS = Object.freeze({
     confirm: false,
     target: 'projectId',
   },
+  'open folder': {
+    bulk: false,
+    confirm: false,
+    target: 'projectId',
+  },
 });

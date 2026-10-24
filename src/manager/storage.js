@@ -1,6 +1,6 @@
-import { isAbsolute, join } from 'node:path';
+import { isAbsolute } from 'node:path';
 import { configureFolder, getProjectSettings } from '../config/settings.js';
-import { getDefaultStateRoot } from '../sessions/store.js';
+import { getDefaultDefinitionFolder } from '../library/paths.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { errorMessage } from '../shared/system-error.js';
@@ -30,7 +30,7 @@ export function managerStorageSettings(record) {
   return {
     editable,
     folder: settings?.folder,
-    defaultFolder: join(getDefaultStateRoot(), '.cache'),
+    defaultFolder: getDefaultDefinitionFolder(),
     projectDirectory: record?.projectDirectory,
     configPath: settings?.configPath,
     message,

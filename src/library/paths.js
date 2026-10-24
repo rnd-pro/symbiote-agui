@@ -8,11 +8,15 @@ import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { hasErrorCode } from '../shared/system-error.js';
 
+export function getDefaultDefinitionFolder() {
+  return join(getDefaultStateRoot(), '.cache');
+}
+
 /** @param {string} sessionId */
 export function definitionPaths(sessionId) {
   assertSessionId(sessionId);
   let folder = getSettings().folder;
-  let directory = folder || join(getDefaultStateRoot(), '.cache');
+  let directory = folder || getDefaultDefinitionFolder();
   let name = folder ? sessionId : sessionKey(sessionId);
   return { htmlPath: join(directory, `${name}.html`), descriptionPath: join(directory, `${name}.md`) };
 }
@@ -28,7 +32,7 @@ async function entries(directory) {
 
 export async function listDefinitionIds() {
   let folder = getSettings().folder;
-  let files = await entries(folder || join(getDefaultStateRoot(), '.cache'));
+  let files = await entries(folder || getDefaultDefinitionFolder());
   let names = files.filter((file) => file.isFile() && file.name.endsWith('.html')).map((file) => file.name.slice(0, -5));
   let ids = folder ? names : names.filter((key) => /^(?:[a-f0-9]{2}){1,64}$/.test(key)).map((key) => Buffer.from(key, 'hex').toString('utf8'));
   return ids.filter((id) => SESSION_ID_PATTERN.test(id)).sort();

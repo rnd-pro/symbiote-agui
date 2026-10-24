@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { getSettings } from '../config/settings.js';
 import { analyzeMarkup } from '../markup/analyze.js';
 import { readMarkup } from '../markup/read-input.js';
-import { definitionPaths, listDefinitionIds, assertPortableName } from './paths.js';
+import { definitionPaths, getDefaultDefinitionFolder, listDefinitionIds, assertPortableName } from './paths.js';
 import { definitionInfo } from './descriptions.js';
 import { prepareTextFile, readOptional } from './files.js';
 import { prepareCachedMarkup, readCachedMarkup } from '../sessions/cache.js';
-import { getDefaultStateRoot, isProcessAlive, readSession } from '../sessions/store.js';
+import { isProcessAlive, readSession } from '../sessions/store.js';
 import { sessionKey } from '../sessions/identity.js';
 import { requestSession } from '../sessions/client.js';
 import { INSERT_TIMEOUT_MS } from '../markup/constants.js';
@@ -49,8 +49,8 @@ export async function saveDefinition(sessionId, file) {
   let description;
   let html = file === undefined ? await readCachedMarkup(sessionId) : await readMarkup(file);
   if (html === undefined && getSettings().folder) {
-    html = await readOptional(join(getDefaultStateRoot(), '.cache', `${sessionKey(sessionId)}.html`));
-    description = await readOptional(join(getDefaultStateRoot(), '.cache', `${sessionKey(sessionId)}.md`));
+    html = await readOptional(join(getDefaultDefinitionFolder(), `${sessionKey(sessionId)}.html`));
+    description = await readOptional(join(getDefaultDefinitionFolder(), `${sessionKey(sessionId)}.md`));
   }
   if (html === undefined) { throw new CommandError(`No saved definition for ${sessionId}. Provide --file <HTML_PATH>.`); }
   analyzeMarkup(html);

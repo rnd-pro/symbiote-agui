@@ -1,4 +1,7 @@
+import { EXPLORER_OPERATIONS } from './explorer/constants.js';
+
 export let PROJECT_OPERATIONS = Object.freeze({
+  ...EXPLORER_OPERATIONS,
   projects: {
     bulk: false,
     confirm: false,

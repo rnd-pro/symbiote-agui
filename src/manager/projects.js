@@ -4,6 +4,8 @@ import { assertProjectFolder, validFolder, validProjectId } from '../projects/id
 import { connectProject, forgetProject, listProjects, registeredProject } from '../projects/registry.js';
 import { openProjectManager } from './launcher.js';
 import { openProjectFolder } from '../projects/open.js';
+import { listProjectEntries } from '../projects/explorer/list.js';
+import { previewProjectFile } from '../projects/explorer/preview.js';
 
 /**
  * @param {import('../../types/manager.js').ManagerRequest} request
@@ -28,6 +30,14 @@ export function validateProjectRequest(request) {
 export async function runProjectOperation(request, record, scope) {
   let directory = record?.projectDirectory || process.cwd();
   let operations = {
+    'project entries': async () => ({
+      ok: true,
+      directory: await listProjectEntries(request.projectId || '', request.path, request.offset, request.showHidden),
+    }),
+    'project preview': async () => ({
+      ok: true,
+      preview: await previewProjectFile(request.projectId || '', request.path || '', request.showHidden),
+    }),
     'open folder': () => openProjectFolder(request.projectId || ''),
     projects: async () => ({
       ok: true,

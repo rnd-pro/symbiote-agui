@@ -11,12 +11,14 @@ import { SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, DESC
 import { formatDataFlow } from '../../metadata/format.js';
 import { guardNativeRegistrations } from '../../page/client/native-webmcp.js';
 import { PROJECT_STATE, ProjectNavigation } from './projects.js';
+import { EXPLORER_STATE, ProjectExplorer } from './explorer.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
 export class SessionManager extends ContextProvider {
   init$ = {
     ...PROJECT_STATE,
+    ...EXPLORER_STATE,
     connection: 'Connecting...',
     connectionTone: 'info',
     scope: '',
@@ -49,6 +51,7 @@ export class SessionManager extends ContextProvider {
     description: '',
     descriptionTexts: DESCRIPTION_TEXTS,
     descriptionExtensions: false,
+    explorerRefresh: () => this.explorer?.reload(),
     openSettings: () => { this.$.settingsOpen = true; },
     openProjects: () => this.projects?.open(),
     switchProject: () => { void this.projects?.run('switch project', String(this.$.projectChoice)); },
@@ -66,7 +69,7 @@ export class SessionManager extends ContextProvider {
     storageDisabled: true,
     saveStorage: () => { void this.saveStorage(); },
     resetStorage: () => { void this.saveStorage(true); },
-    refresh: () => { void this.refresh(); },
+    refresh: () => { void this.refresh(); if (this.$.workspaceView === 'explorer') { this.explorer?.reload(); } },
     bulk: () => {
       void this.act(/** @type {import('../../../types/manager.js').ManagerOperation} */ (this.$.bulkOperation));
     },
@@ -82,6 +85,8 @@ export class SessionManager extends ContextProvider {
   viewEpoch = 0;
   /** @type {ProjectNavigation | undefined} */
   projects;
+  /** @type {ProjectExplorer | undefined} */
+  explorer;
   /** @type {ReturnType<typeof setInterval> | undefined} */
   interval;
   /** @type {ManagerConnection | undefined} */
@@ -91,6 +96,9 @@ export class SessionManager extends ContextProvider {
 
   renderCallback() {
     this.projects = new ProjectNavigation(this);
+    this.explorer = new ProjectExplorer(this);
+    this.sub('workspaceView', (view) => this.explorer?.activate(view === 'explorer'));
+    this.sub('explorerHidden', () => this.explorer?.reload(), false);
     this.sub('projectChoice', () => this.projects?.render(), false);
     this.sub('theme', (theme) => setTheme(String(theme)));
     this.stopThemeSync = watchTheme((theme) => { this.$.theme = theme; });
@@ -111,6 +119,7 @@ export class SessionManager extends ContextProvider {
       this.$.connectionTone = ready ? 'info' : 'alert';
       this.$.connection = message;
       this.$.refreshDisabled = !ready;
+      this.explorer?.connectionChanged(ready);
       this.renderRows();
     }, () => { void this.projects?.refresh(); void this.refresh(); });
     this.connection.connect();
@@ -167,6 +176,7 @@ export class SessionManager extends ContextProvider {
     this.$.controlsDisabled = disabled;
     this.$.storageDisabled = disabled || !this.snapshot?.storage.editable;
     this.projects?.render();
+    this.explorer?.render();
     this.$.counts = `${sessions.length} total / ${sessions.filter((row) => row.active === true).length} running / ${sessions.filter((row) => row.active === false).length} stopped / ${sessions.filter((row) => row.active === null).length} unknown`;
     let states = Object.fromEntries(sessions.map((row) => [
       row.sessionId,

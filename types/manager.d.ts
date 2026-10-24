@@ -2,6 +2,7 @@ import type { StorageSettings, DefinitionInfo } from './library.js';
 import type { SessionOperationResult, TunnelStatus } from './session.js';
 import type { CommandFailure } from './cli.js';
 import type { ConnectedProject, ProjectListing } from './projects.js';
+import type { ProjectDirectory, ProjectPreview } from './explorer.js';
 
 export type ManagerTheme = 'system' | 'light' | 'dark';
 
@@ -15,6 +16,9 @@ export interface ManagerRequest {
   confirm?: boolean;
   folder?: string | null;
   projectId?: string;
+  path?: string;
+  offset?: number;
+  showHidden?: boolean;
 }
 
 export interface ManagerScope {
@@ -53,6 +57,8 @@ export interface ManagerResult {
   project?: ConnectedProject;
   projects?: ProjectListing;
   folderPath?: string;
+  directory?: ProjectDirectory;
+  preview?: ProjectPreview;
   error?: CommandFailure['error'];
 }
 

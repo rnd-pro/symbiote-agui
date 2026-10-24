@@ -61,7 +61,7 @@
               <h2 class="text-2xl font-semibold">Sessions</h2>
               <p class="counts text-sm text-agui-muted" role="status">{{MANAGER/counts}}</p>
             </div>
-            <agui-tabs id="session-views" label="Session view" value="table">
+            <agui-tabs id="session-views" label="Workspace view" value="table" pub-to="MANAGER/workspaceView" bind="$.value: MANAGER/workspaceView">
               <agui-tab value="table" label="Table">
                 <div class="grid gap-4">
                   <agui-table id="manager-table" label="Sessions" selection="single" page-size="15" pub-to="MANAGER/selection"
@@ -74,6 +74,45 @@
                   <template>
                     <agui-session-row pub-to="MANAGER/selection" bind="state: card"></agui-session-row>
                   </template>
+                </div>
+              </agui-tab>
+              <agui-tab value="explorer" label="Project explorer">
+                <div id="manager-explorer" class="grid min-w-0 gap-4">
+                  <div class="grid gap-3">
+                    <h3 class="text-lg font-medium">Project explorer</h3>
+                    <p class="text-xs text-agui-muted">Read-only files from the current project. Source files are displayed as text.</p>
+                    <agui-toolbar aria-label="Explorer controls">
+                      <button type="button" bind="onclick: MANAGER/explorerRefresh; disabled: MANAGER/explorerDisabled"><agui-icon name="refresh"></agui-icon>Refresh files</button>
+                      <agui-toggle label="Show hidden files and dependencies" name="explorerHidden" pub-to="MANAGER/explorerHidden" bind="$.value: MANAGER/explorerHidden; $.disabled: MANAGER/explorerDisabled"></agui-toggle>
+                    </agui-toolbar>
+                    <nav aria-label="Project breadcrumbs" class="flex flex-wrap gap-2" itemize="MANAGER/explorerBreadcrumbs">
+                      <template>
+                        <button type="button" bind="textContent: label; onclick: invoke; disabled: disabled"></button>
+                      </template>
+                    </nav>
+                  </div>
+                  <div class="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                    <agui-panel class="min-w-0">
+                      <h4 class="mb-3 text-xs uppercase tracking-widest text-agui-muted">Project files</h4>
+                      <agui-state id="explorer-status" bind="$.status: MANAGER/explorerStatus; $.message: MANAGER/explorerMessage"></agui-state>
+                      <div id="explorer-entries" class="grid min-w-0 gap-1" role="list" aria-label="Project files" itemize="MANAGER/explorerRows">
+                        <template>
+                          <div role="listitem" class="grid min-w-0 gap-1" bind="style.paddingInlineStart: indent; @data-entry: path">
+                            <button type="button" class="w-full justify-start" bind="onclick: invoke; disabled: disabled; ariaExpanded: expanded; ariaCurrent: selected; @aria-label: actionLabel; @title: path">
+                              <agui-icon bind="@name: icon"></agui-icon><span class="truncate" bind="textContent: label"></span>
+                            </button>
+                            <p class="break-words text-xs text-agui-danger empty:hidden" bind="textContent: issue"></p>
+                          </div>
+                        </template>
+                      </div>
+                    </agui-panel>
+                    <agui-panel id="explorer-preview" class="min-w-0">
+                      <h4 class="mb-3 break-all text-sm font-medium" bind="textContent: MANAGER/previewPath"></h4>
+                      <agui-state bind="$.status: MANAGER/previewStatus; $.message: MANAGER/previewMessage"></agui-state>
+                      <pre class="max-h-[36rem] overflow-auto whitespace-pre text-xs" tabindex="0" aria-label="File source" bind="hidden: MANAGER/previewSourceHidden"><code bind="textContent: MANAGER/previewText"></code></pre>
+                      <agui-markdown label="File preview" bind="hidden: MANAGER/previewMarkdownHidden; $.value: MANAGER/previewMarkdown; $.texts: MANAGER/previewTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown>
+                    </agui-panel>
+                  </div>
                 </div>
               </agui-tab>
             </agui-tabs>

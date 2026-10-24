@@ -13,12 +13,23 @@ export function getDefaultDefinitionFolder() {
 }
 
 /** @param {string} sessionId */
+export function cachedDefinitionPaths(sessionId) {
+  let name = sessionKey(sessionId);
+  let directory = getDefaultDefinitionFolder();
+  return {
+    htmlPath: join(directory, `${name}.html`),
+    descriptionPath: join(directory, `${name}.md`),
+  };
+}
+
+/** @param {string} sessionId */
 export function definitionPaths(sessionId) {
   assertSessionId(sessionId);
   let folder = getSettings().folder;
-  let directory = folder || getDefaultDefinitionFolder();
-  let name = folder ? sessionId : sessionKey(sessionId);
-  return { htmlPath: join(directory, `${name}.html`), descriptionPath: join(directory, `${name}.md`) };
+  return folder ? {
+    htmlPath: join(folder, `${sessionId}.html`),
+    descriptionPath: join(folder, `${sessionId}.md`),
+  } : cachedDefinitionPaths(sessionId);
 }
 
 /** @param {string} directory */

@@ -31,6 +31,7 @@ export class ProjectNavigation {
     let choice = String(this.owner.$.projectChoice);
     if (!listing.projects.some((entry) => entry.id === choice)) { this.owner.$.projectChoice = listing.currentProjectId; }
     this.render();
+    this.owner.explorer?.setProject(listing.currentProjectId);
   }
 
   render() {

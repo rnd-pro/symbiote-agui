@@ -14,6 +14,20 @@
     <agui-app class="manager-app">
       <agui-sidebar label="Workspace" expand-label="Expand workspace" collapse-label="Collapse workspace">
         <div class="grid gap-6">
+          <agui-panel id="manager-project-navigation" class="grid gap-3" aria-label="Projects">
+            <div class="grid gap-1">
+              <h2 class="text-xs uppercase tracking-widest text-agui-muted">Current project</h2>
+              <p class="font-medium">{{MANAGER/projectName}}</p>
+              <p class="break-all text-xs text-agui-muted">{{MANAGER/projectPath}}</p>
+            </div>
+            <agui-select id="manager-project-switcher" label="Connected project" name="project" placeholder="Choose a project"
+              pub-to="MANAGER/projectChoice" bind="$.value: MANAGER/projectChoice; $.options: MANAGER/projectOptions; $.disabled: MANAGER/projectsDisabled"></agui-select>
+            <agui-toolbar aria-label="Project navigation">
+              <button id="manager-switch-project" type="button" class="agui-button-primary" bind="onclick: MANAGER/switchProject; disabled: MANAGER/projectSwitchDisabled"><agui-icon name="arrow_forward"></agui-icon>Switch</button>
+              <button type="button" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-icon name="home"></agui-icon>Manage projects</button>
+            </agui-toolbar>
+            <p class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/projectError"></p>
+          </agui-panel>
           <section class="grid gap-3" aria-labelledby="filters-heading">
             <h2 id="filters-heading" class="text-xs uppercase tracking-widest text-agui-muted">Find a session</h2>
             <agui-filter id="manager-filter" label="Session filters" results-to="MANAGER/matchingIds" pub-to="MANAGER/filters" query-pub-to="MANAGER/query"
@@ -27,11 +41,6 @@
               <button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; disabled: MANAGER/controlsDisabled"><agui-icon name="check"></agui-icon>Apply to all</button>
             </agui-toolbar>
           </section>
-          <agui-panel class="grid gap-2" aria-label="Storage scope">
-            <h2 class="text-xs uppercase tracking-widest text-agui-muted">AGUI folder</h2>
-            <p class="break-all text-xs text-agui-muted">{{MANAGER/scope}}</p>
-            <button type="button" bind="onclick: MANAGER/openSettings"><agui-icon name="settings"></agui-icon>Folder settings</button>
-          </agui-panel>
         </div>
       </agui-sidebar>
       <agui-viewport role="main" aria-label="Sessions" tabindex="0">
@@ -41,6 +50,7 @@
             <agui-toolbar class="toolbar" aria-label="Manager controls">
               <agui-theme-toggle id="manager-theme" ctx="MANAGER" aria-label="Dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
               <button type="button" class="agui-button-icon" aria-label="Refresh" title="Refresh" bind="onclick: MANAGER/refresh; disabled: MANAGER/refreshDisabled"><agui-icon name="refresh"></agui-icon></button>
+              <button type="button" class="agui-button-icon" aria-label="Projects" title="Projects" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-icon name="home"></agui-icon></button>
               <button type="button" class="agui-button-icon" aria-label="Settings" title="Settings" bind="onclick: MANAGER/openSettings"><agui-icon name="settings"></agui-icon></button>
             </agui-toolbar>
           </agui-header>
@@ -73,7 +83,43 @@
           </footer>
           <agui-message class="notice" close-label="Dismiss message" bind="$.tone: MANAGER/noticeTone; $.message: MANAGER/notice" hidden></agui-message>
           <agui-message class="connection" close-label="Dismiss message" bind="$.tone: MANAGER/connectionTone; $.message: MANAGER/connection" hidden></agui-message>
+          <agui-dialog id="manager-projects" label="Projects" close-label="Close projects" pub-to="MANAGER/projectsOpen" bind="$.value: MANAGER/projectsOpen">
+            <div class="grid gap-5">
+              <form id="manager-connect-project" class="grid gap-3" bind="onsubmit: MANAGER/connectProject">
+                <agui-field label="Existing project folder" name="projectFolder" required required-mark="*" maxlength="4096" autocomplete="off"
+                  pub-to="MANAGER/projectFolder" bind="$.value: MANAGER/projectFolder; $.disabled: MANAGER/projectsDisabled"></agui-field>
+                <p class="text-xs text-agui-muted">Connect an existing AGUI folder. Relative paths use the manager's launch directory. This does not change save-folder configuration.</p>
+                <agui-toolbar aria-label="Connect a project">
+                  <button type="submit" class="agui-button-primary" bind="disabled: MANAGER/projectsDisabled"><agui-icon name="add"></agui-icon>Connect project</button>
+                </agui-toolbar>
+              </form>
+              <p class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/projectError"></p>
+              <section class="grid gap-3" aria-labelledby="connected-projects-title">
+                <h2 id="connected-projects-title" class="font-medium">Connected projects</h2>
+                <div id="manager-project-list" class="grid gap-3" itemize="MANAGER/projectRows" item-tag="context-provider">
+                  <template>
+                    <section class="grid min-w-0 gap-3 rounded-agui-panel border border-agui-border p-4" bind="@data-project: id">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="font-medium">{{name}}</h3>
+                        <span class="agui-chip" bind="hidden: !current">Current</span>
+                        <span class="text-xs text-agui-muted">{{availability}}</span>
+                      </div>
+                      <p class="break-all text-xs text-agui-muted">{{path}}</p>
+                      <p class="text-xs text-agui-muted">{{lastUsed}}</p>
+                      <p class="break-words text-sm text-agui-danger empty:hidden">{{error}}</p>
+                      <agui-toolbar aria-label="Project actions">
+                        <button type="button" bind="onclick: ^openProject; disabled: ^switchDisabled"><agui-icon name="arrow_forward"></agui-icon>Switch</button>
+                        <button type="button" bind="onclick: ^forgetProject; disabled: ^forgetDisabled"><agui-icon name="close"></agui-icon>Forget connection</button>
+                      </agui-toolbar>
+                    </section>
+                  </template>
+                </div>
+              </section>
+              <p class="text-xs text-agui-muted">Forgetting a connection keeps its files and running sessions. Default and the current project cannot be forgotten.</p>
+            </div>
+          </agui-dialog>
           <agui-dialog id="manager-settings" label="AGUI folder settings" close-label="Close settings" pub-to="MANAGER/settingsOpen" bind="$.value: MANAGER/settingsOpen">
+            <p class="text-xs text-agui-muted">Configure where the launch project saves AGUIs. Use Projects to connect or revisit folders without changing this setting.</p>
             <agui-field label="Save path" name="saveFolder" maxlength="4096" placeholder="Default private cache" pub-to="MANAGER/storageFolder" bind="$.value: MANAGER/storageFolder; $.disabled: MANAGER/storageDisabled"></agui-field>
             <p class="break-words text-xs text-agui-muted">{{MANAGER/storageHint}}</p>
             <p class="break-all text-xs text-agui-muted">{{MANAGER/storageContext}}</p>

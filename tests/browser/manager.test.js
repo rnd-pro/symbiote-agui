@@ -52,7 +52,7 @@ test('manager save-folder controls persist the project setting and open the sele
   let navigation = page.waitForNavigation();
   await page.locator('::-p-aria([name="Save folder and open"][role="button"])').click();
   await navigation;
-  await page.waitForFunction((selected) => document.querySelector('agui-panel[aria-label="Storage scope"]')?.textContent?.includes(selected), {}, folder);
+  await page.waitForFunction((selected) => document.querySelector('#manager-project-navigation')?.textContent?.includes(selected), {}, folder);
   assert.notEqual(page.url(), manager.url);
   assert.equal(await page.$('[data-session="original"]'), null, 'Source definitions are not silently copied to the new scope.');
   await page.reload();

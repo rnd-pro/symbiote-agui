@@ -1,5 +1,7 @@
 import { MANAGER_SOCKET_PATH, MANAGER_CLIENT_TIMEOUT_MS } from '../constants.js';
 
+export const CONNECTION_LOST_MESSAGE = 'Connection lost. The operation outcome may be unknown. Reconnecting will refresh status; actions are not replayed.';
+
 export class ManagerConnection {
   /** @type {WebSocket | undefined} */
   socket;
@@ -53,7 +55,7 @@ export class ManagerConnection {
       this.ready = false;
       for (let request of this.pending.values()) {
         clearTimeout(request.timer);
-        request.reject(new Error('Connection lost. The operation outcome may be unknown. Reconnecting will refresh status; actions are not replayed.'));
+        request.reject(new Error(CONNECTION_LOST_MESSAGE));
       }
       this.pending.clear();
       if (this.closed) { return; }

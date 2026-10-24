@@ -1,20 +1,22 @@
 import { ContextProvider } from '../../page/client/context-provider.js';
 import { registerUiLibComponents } from '../../page/client/uilib/index.js';
-import { ManagerConnection } from './connection.js';
+import { CONNECTION_LOST_MESSAGE, ManagerConnection } from './connection.js';
 import './rows.js';
 import './controls.js';
 import { rowState } from './session-state.js';
-import { MANAGER_REFRESH_MS } from '../constants.js';
+import { MANAGER_PATH, MANAGER_REFRESH_MS } from '../constants.js';
 import { getTheme, setTheme, watchTheme } from './theme.js';
 import { BULK_OPTIONS } from './options.js';
 import { SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, DESCRIPTION_TEXTS, sessionRecords } from './view.js';
 import { formatDataFlow } from '../../metadata/format.js';
 import { guardNativeRegistrations } from '../../page/client/native-webmcp.js';
+import { PROJECT_STATE, ProjectNavigation } from './projects.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
-class SessionManager extends ContextProvider {
+export class SessionManager extends ContextProvider {
   init$ = {
+    ...PROJECT_STATE,
     connection: 'Connecting...',
     connectionTone: 'info',
     scope: '',
@@ -48,6 +50,12 @@ class SessionManager extends ContextProvider {
     descriptionTexts: DESCRIPTION_TEXTS,
     descriptionExtensions: false,
     openSettings: () => { this.$.settingsOpen = true; },
+    openProjects: () => this.projects?.open(),
+    switchProject: () => { void this.projects?.run('switch project', String(this.$.projectChoice)); },
+    connectProject: (/** @type {Event} */ event) => {
+      event.preventDefault();
+      void this.projects?.run('connect project');
+    },
     bulkOptions: BULK_OPTIONS,
     query: '',
     bulkOperation: 'start',
@@ -68,6 +76,11 @@ class SessionManager extends ContextProvider {
   refreshing = false;
   refreshAgain = false;
   loaded = false;
+  disposed = false;
+  navigating = false;
+  viewEpoch = 0;
+  /** @type {ProjectNavigation | undefined} */
+  projects;
   /** @type {ReturnType<typeof setInterval> | undefined} */
   interval;
   /** @type {ManagerConnection | undefined} */
@@ -76,6 +89,8 @@ class SessionManager extends ContextProvider {
   stopThemeSync;
 
   renderCallback() {
+    this.projects = new ProjectNavigation(this);
+    this.sub('projectChoice', () => this.projects?.render(), false);
     this.sub('theme', (theme) => setTheme(String(theme)));
     this.stopThemeSync = watchTheme((theme) => { this.$.theme = theme; });
     this.sub('matchingIds', () => this.renderRows(), false);
@@ -84,11 +99,19 @@ class SessionManager extends ContextProvider {
       this.$.inspectorOpen = !this.$.noSelection;
     }, false);
     this.connection = new ManagerConnection((ready, message) => {
+      if (this.disposed) { return; }
+      if (!ready) {
+        this.viewEpoch += 1;
+        if (this.busy) {
+          this.$.noticeTone = 'alert';
+          this.$.notice = CONNECTION_LOST_MESSAGE;
+        }
+      }
       this.$.connectionTone = ready ? 'info' : 'alert';
       this.$.connection = message;
       this.$.refreshDisabled = !ready;
       this.renderRows();
-    }, () => { void this.refresh(); });
+    }, () => { void this.projects?.refresh(); void this.refresh(); });
     this.connection.connect();
     this.interval = setInterval(() => {
       if (document.visibilityState === 'visible' && this.connection?.ready && !this.busy) { void this.refresh(); }
@@ -96,13 +119,16 @@ class SessionManager extends ContextProvider {
   }
 
   async refresh() {
-    if (!this.connection?.ready) { return; }
+    if (!this.connection?.ready || this.navigating || this.disposed) { return; }
     if (this.refreshing) { this.refreshAgain = true; return; }
     this.refreshing = true;
+    let epoch = this.viewEpoch;
     try {
       let result = await this.connection.request('snapshot');
+      if (!this.isCurrentView(epoch)) { return; }
       if (!result.ok || !result.snapshot) { throw new Error(result.error?.message || 'Session discovery failed.'); }
       this.snapshot = result.snapshot;
+      this.projects?.apply(result.snapshot.projects);
       let selection = /** @type {string[]} */ (this.$.selection);
       let retained = selection.filter((id) => result.snapshot?.sessions.some((row) => row.sessionId === id));
       if (retained.length !== selection.length) { this.$.selection = retained; }
@@ -119,11 +145,13 @@ class SessionManager extends ContextProvider {
       this.$.checkedAt = `Updated ${new Date(result.snapshot.checkedAt).toLocaleTimeString()}`;
       this.renderRows();
     } catch (error) {
+      if (!this.isCurrentView(epoch)) { return; }
       this.$.noticeTone = 'alert';
       this.$.notice = String(error instanceof Error ? error.message : error);
       this.$.discoveryError = 'Session discovery failed. Refresh to try again.';
       this.$.loading = false;
       this.renderRows();
+      void this.projects?.refresh();
     } finally {
       this.refreshing = false;
       if (this.refreshAgain) { this.refreshAgain = false; void this.refresh(); }
@@ -137,6 +165,7 @@ class SessionManager extends ContextProvider {
     let disabled = !this.connection?.ready || this.busy || !this.loaded;
     this.$.controlsDisabled = disabled;
     this.$.storageDisabled = disabled || !this.snapshot?.storage.editable;
+    this.projects?.render();
     this.$.counts = `${sessions.length} total / ${sessions.filter((row) => row.active === true).length} running / ${sessions.filter((row) => row.active === false).length} stopped / ${sessions.filter((row) => row.active === null).length} unknown`;
     let states = Object.fromEntries(sessions.map((row) => [
       row.sessionId,
@@ -160,12 +189,36 @@ class SessionManager extends ContextProvider {
     this.$.empty = this.$.discoveryError || (this.loaded ? sessions.length ? 'No sessions match these filters.' : 'No sessions saved or running in this scope.' : 'Loading sessions...');
   }
 
+  /** @param {number} epoch */
+  isCurrentView(epoch) {
+    return !this.disposed && this.isConnected && epoch === this.viewEpoch;
+  }
+
+  /** @param {import('../../../types/manager.js').ManagerStatus} manager */
+  navigate(manager) {
+    let url = new URL(manager.url || '');
+    let launch = new URL(manager.launchUrl || '');
+    if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !url.port || url.pathname !== MANAGER_PATH
+      || url.search || url.hash || launch.origin !== url.origin || launch.pathname !== url.pathname
+      || launch.search || !/^#[a-f0-9]{64}$/.test(launch.hash)) { throw new Error('The manager returned an invalid project destination.'); }
+    if (url.href === `${location.origin}${location.pathname}`) { return false; }
+    this.navigating = true;
+    this.viewEpoch += 1;
+    this.$.selection = [];
+    this.$.inspectorOpen = false;
+    this.renderRows();
+    try { location.assign(launch.href); }
+    catch (error) { this.navigating = false; throw error; }
+    return true;
+  }
+
   /**
    * @param {boolean} [reset]
    */
   async saveStorage(reset = false) {
     if (this.busy || !this.connection?.ready || !this.snapshot?.storage.editable) { return; }
     this.busy = true;
+    let epoch = ++this.viewEpoch;
     this.$.noticeTone = 'info';
     this.$.notice = 'Saving the folder setting and opening its manager...';
     this.renderRows();
@@ -173,22 +226,21 @@ class SessionManager extends ContextProvider {
       let result = await this.connection.request('configure storage', {
         folder: reset ? null : String(this.$.storageFolder).trim() || null,
       });
+      if (!this.isCurrentView(epoch)) { return; }
       if (!result.ok || !result.manager?.url || !result.manager.launchUrl) {
         throw new Error(result.error?.message || 'The selected save folder could not open.');
       }
       this.$.notice = 'Save folder updated. Existing files and sessions remain in their original scope.';
-      if (result.manager.url !== `${location.origin}${location.pathname}`) {
-        location.assign(result.manager.launchUrl);
-      } else {
+      if (!this.navigate(result.manager)) {
         if (reset) { this.$.storageFolder = ''; }
         await this.refresh();
       }
     } catch (error) {
+      if (!this.isCurrentView(epoch)) { return; }
       this.$.noticeTone = 'alert';
       this.$.notice = error instanceof Error ? error.message : String(error);
     } finally {
-      this.busy = false;
-      this.renderRows();
+      if (!this.navigating) { this.busy = false; this.renderRows(); }
     }
   }
 
@@ -207,11 +259,13 @@ class SessionManager extends ContextProvider {
     let warning = confirmations[/** @type {keyof typeof confirmations} */ (operation)];
     if (warning && !confirm(warning)) { return; }
     this.busy = true;
+    let epoch = this.viewEpoch;
     this.$.noticeTone = 'info';
     this.$.notice = `${operation}: working on ${target}...`;
     this.renderRows();
     try {
       let result = await this.connection.request(operation, { ...(sessionId ? { sessionId } : { all: true }), ...(warning ? { confirm: true } : {}) });
+      if (!this.isCurrentView(epoch)) { return; }
       if (result.description) {
         this.$.description = [result.description.description || 'No description.',
           formatDataFlow(result.description.metadata?.dataFlow)].filter(Boolean).join('\n\n');
@@ -222,6 +276,7 @@ class SessionManager extends ContextProvider {
         || result.error?.message || 'No matching sessions for this operation.';
       await this.refresh();
     } catch (error) {
+      if (!this.isCurrentView(epoch)) { return; }
       this.$.noticeTone = 'alert';
       this.$.notice = error instanceof Error ? error.message : String(error);
     }
@@ -229,6 +284,8 @@ class SessionManager extends ContextProvider {
   }
 
   destroyCallback() {
+    this.disposed = true;
+    this.viewEpoch += 1;
     this.stopThemeSync?.();
     clearInterval(this.interval);
     this.connection?.close();

@@ -109,6 +109,8 @@ test('initial registry recovers only valid known manager scopes and does not res
   assert.equal((await readFile(join(state.directory, '.projects.json'), 'utf8')).includes('private-capability'), false);
   await forgetProject(id, undefined);
   assert.equal((await listProjects(undefined)).projects.some((entry) => entry.id === id), false);
+  assert.equal((await listProjects(folder)).projects.some((entry) => entry.id === id), true, 'An open manager retains its own scope.');
+  assert.equal((await listProjects(undefined)).projects.some((entry) => entry.id === id), false, 'An open manager refresh must not reconnect a forgotten project.');
   let malformed = join(state.directory, 'not-a-directory');
   await writeFile(malformed, 'file');
   await assert.rejects(connectProject(malformed), /unavailable/);

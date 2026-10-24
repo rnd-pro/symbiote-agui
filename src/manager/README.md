@@ -8,6 +8,10 @@ Connected projects use a shared private `.projects.json` under the base state di
 
 Project switching launches or reuses the destination's scoped manager and returns its private launch URL. It does not rewrite configuration, move definitions/data, or change live workers. Only successful launches update last-used time. Forgetting removes the connection without stopping sessions or deleting files, and the current project must be left before it can be forgotten. Successful CLI folder configuration also remembers its resolved folder; history failures explicitly report when configuration was already saved.
 
+An already open manager retains its own scope if another manager forgets that connection. Its refreshes do not restore the shared connection; explicit connection or launch can remember it again.
+
+The workspace Projects control shows the active scope, Default, and remembered folders. Switch opens a selected scope; Manage projects opens a connection dialog with folder paths, availability, last-used times, and per-project Switch and Forget connection actions. Save-folder configuration remains in Settings. Project discovery is independent of session discovery, so a failed session listing does not disable navigation. Navigation consumes the destination's private launch URL and clears previous session selection. Responses from before navigation or disconnect cannot populate the new view, and reconnect never replays accepted actions.
+
 The server serves packaged assets on a dedicated loopback origin. Browser authorization consumes the launch URL fragment and retains the credential in origin-scoped storage. Every WebSocket requires the exact origin and an initial authentication message. HTTP lifecycle requests verify the private credential and process identity. Generated pages and tunnel routes do not carry manager capabilities.
 
 The operation dictionary restricts requests to named session functions. Session mutations are serialized; mutation request IDs retain their result for ten minutes. Worker functions still perform their existing authenticated identity checks. Browser disconnects never cancel or replay accepted operations.

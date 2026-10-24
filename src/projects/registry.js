@@ -104,8 +104,11 @@ export async function forgetProject(id, currentFolder) {
  * @returns {Promise<import('../../types/projects.js').ProjectListing>}
  */
 export async function listProjects(currentFolder) {
-  await rememberProject(currentFolder);
   let projects = await changeRegistry((registry) => structuredClone(registry.projects));
+  let current = projectEntry(currentFolder);
+  // An open manager can still show its scope after another tab forgets it.
+  // Listing must not silently reconnect that scope in the shared registry.
+  if (!projects.some((entry) => entry.id === current.id)) { projects.push(current); }
   let entries = await Promise.all(projects.map(async (entry) => {
     try {
       if (entry.folder) { await assertProjectFolder(entry.folder); }

@@ -72,15 +72,15 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#theme-toggle input', (element) => element.checked), false);
   assert.equal(await page.$eval('#theme-toggle input', (element) => element.getAttribute('role')), 'switch');
   assert.equal(await page.$eval('#theme-toggle input', (element) => element.getAttribute('aria-label')), 'Dark theme');
-  assert.equal(await page.$eval('#theme-toggle label', (element) => element.innerText.trim()), 'Switch to dark theme');
+  assert.equal(await page.$eval('#theme-toggle label', (element) => element.innerText.trim()), 'Night');
   await page.click('#theme-toggle input');
   await page.waitForFunction(() => document.body.dataset.theme === 'dark' && document.querySelector('#theme-toggle input')?.matches(':checked'));
   assert.equal(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').theme), 'dark');
-  assert.equal(await page.$eval('#theme-toggle label', (element) => element.innerText.trim()), 'Switch to light theme');
+  assert.equal(await page.$eval('#theme-toggle label', (element) => element.innerText.trim()), 'Day');
   await page.focus('#theme-toggle input');
   await page.keyboard.press('Space');
   await page.waitForFunction(() => document.body.dataset.theme === 'light' && !document.querySelector('#theme-toggle input')?.matches(':checked'));
-  assert.equal(await page.$eval('#theme-toggle label', (element) => element.innerText.trim()), 'Switch to dark theme');
+  assert.equal(await page.$eval('#theme-toggle label', (element) => element.innerText.trim()), 'Night');
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { theme: 'system' } }));
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
   await page.waitForFunction(() => document.querySelector('#theme-toggle input')?.matches(':checked'));
@@ -102,6 +102,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   } }));
   assert.equal(await page.$eval('#status-control select', (element) => element.value), 'contacted');
   assert.equal(await page.$eval('#status-mirror select', (element) => element.value), 'contacted');
+  await page.click('#gallery-sections [role="tab"][value="bindings"]');
   await cli('events', 'widgets');
   await page.click('#retry-state button');
   let events = (await cli('events', 'widgets')).events;

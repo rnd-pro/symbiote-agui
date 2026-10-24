@@ -70,6 +70,7 @@ process.once('message', async (message) => {
       sync: (resetData) => runtime.sync(resetData),
       share: () => runtime.share(),
       tunnelRenew: () => runtime.share(true),
+      transferSnapshot: () => runtime.transferSnapshot(),
       feedbackConfigure: (input) => runtime.configureFeedback(input),
       feedbackStatus: () => runtime.feedbackStatus(),
       feedbackDisable: (input) => runtime.disableFeedback(input),

@@ -4,7 +4,7 @@ import { CONTROL_TIMEOUT_MS, SESSION_STATE } from './constants.js';
 
 /**
  * @param {import('../../types/session.js').SessionRecord} record
- * @param {'status' | 'stop' | 'insert' | 'update' | 'events' | 'tools' | 'clear' | 'share' | 'tunnel-renew' | 'sync' | 'feedback' | 'feedback/configure' | 'feedback/disable'} action
+ * @param {'status' | 'stop' | 'insert' | 'update' | 'events' | 'tools' | 'clear' | 'share' | 'tunnel-renew' | 'sync' | 'transfer-snapshot' | 'feedback' | 'feedback/configure' | 'feedback/disable'} action
  * @param {number} timeout
  * @param {string} [html]
  * @returns {Promise<import('../../types/session.js').SessionStatus>}
@@ -34,6 +34,9 @@ export async function requestSession(record, action, timeout = CONTROL_TIMEOUT_M
     }
     if (action === 'sync' && response.status === 404) {
       throw new CommandError('Sync is unavailable in this worker. Stop and restart the session.', ERROR_CODE.UPDATE_FAILED, EXIT_CODE.RUNTIME_ERROR);
+    }
+    if (action === 'transfer-snapshot' && response.status === 404) {
+      throw new CommandError('Transfer snapshots are unavailable in this worker. Stop and restart the session before copying.', ERROR_CODE.NOT_IMPLEMENTED, EXIT_CODE.RUNTIME_ERROR);
     }
     let reply = /** @type {import('../../types/session.js').ControlReply} */ (await response.json());
 

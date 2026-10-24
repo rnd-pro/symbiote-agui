@@ -20,6 +20,9 @@ import { listProjects } from '../projects/registry.js';
 import { runProjectOperation, validateProjectRequest } from './projects.js';
 import { validateExplorerRequest } from '../projects/explorer/requests.js';
 import { EXPLORER_OPERATIONS } from '../projects/explorer/constants.js';
+import { TRANSFER_OPERATIONS } from '../projects/transfer/constants.js';
+import { validateTransferRequest } from '../projects/transfer/requests.js';
+import { runManagerTransfer } from './transfer.js';
 
 /** @param {unknown} error */
 function failure(error) {
@@ -44,6 +47,11 @@ export function validateManagerRequest(input) {
     'path',
     'offset',
     'showHidden',
+    'destinationProjectId',
+    'destinationSessionId',
+    'includeData',
+    'includeMetadata',
+    'transferId',
   ].includes(key))
     || typeof value.id !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(value.id)
     || typeof value.operation !== 'string' || !Object.hasOwn(MANAGER_OPERATIONS, value.operation)
@@ -54,6 +62,7 @@ export function validateManagerRequest(input) {
   let request = /** @type {import('../../types/manager.js').ManagerRequest} */ (input);
   let operation = MANAGER_OPERATIONS[request.operation];
   validateExplorerRequest(request);
+  if (validateTransferRequest(request)) { return request; }
   if (validateProjectRequest(request)) { return request; }
   if (request.projectId !== undefined) { throw new CommandError('Project ID is only accepted by project operations.'); }
   if (request.operation === 'configure storage') {
@@ -135,7 +144,7 @@ export class ManagerOperations {
     try {
       this.assertScope();
       let request = validateManagerRequest(input);
-      if (['snapshot', 'describe', 'projects'].includes(request.operation) || Object.hasOwn(EXPLORER_OPERATIONS, request.operation)) { return await this.execute(request); }
+      if (['snapshot', 'describe', 'projects', 'transfer history'].includes(request.operation) || Object.hasOwn(EXPLORER_OPERATIONS, request.operation)) { return await this.execute(request); }
       let fingerprint = JSON.stringify([
         request.operation,
         request.sessionId,
@@ -143,6 +152,11 @@ export class ManagerOperations {
         !!request.confirm,
         request.folder,
         request.projectId,
+        request.destinationProjectId,
+        request.destinationSessionId,
+        request.includeData,
+        request.includeMetadata,
+        request.transferId,
       ]);
       let previous = this.requests.get(request.id);
       if (previous) {
@@ -162,6 +176,9 @@ export class ManagerOperations {
 
   /** @param {import('../../types/manager.js').ManagerRequest} request */
   async execute(request) {
+    if (Object.hasOwn(TRANSFER_OPERATIONS, request.operation)) {
+      return this.serialize(request.sessionId || '\0transfers', () => runManagerTransfer(request, this.scope));
+    }
     if (Object.hasOwn(PROJECT_OPERATIONS, request.operation)) {
       return this.serialize('\0projects', () => runProjectOperation(request, this.record, this.scope));
     }

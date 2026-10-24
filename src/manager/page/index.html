@@ -52,6 +52,7 @@
               <agui-theme-toggle id="manager-theme" ctx="MANAGER" aria-label="Dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
               <button type="button" class="agui-button-icon" aria-label="Refresh" title="Refresh" bind="onclick: MANAGER/refresh; disabled: MANAGER/refreshDisabled"><agui-icon name="refresh"></agui-icon></button>
               <button type="button" class="agui-button-icon" aria-label="Projects" title="Projects" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-icon name="home"></agui-icon></button>
+              <button type="button" class="agui-button-icon" aria-label="Transfers" title="Transfers" bind="onclick: MANAGER/showTransfers; disabled: MANAGER/refreshDisabled"><agui-icon name="content_copy"></agui-icon></button>
               <button type="button" class="agui-button-icon" aria-label="Settings" title="Settings" bind="onclick: MANAGER/openSettings"><agui-icon name="settings"></agui-icon></button>
             </agui-toolbar>
           </agui-header>
@@ -60,6 +61,7 @@
               <p class="text-xs uppercase tracking-widest text-agui-muted">Your workspace</p>
               <h2 class="text-2xl font-semibold">Sessions</h2>
               <p class="counts text-sm text-agui-muted" role="status">{{MANAGER/counts}}</p>
+              <p id="transfer-recovery-notice" class="text-sm text-agui-danger empty:hidden" role="status" bind="textContent: MANAGER/transferRecoveryNotice"></p>
             </div>
             <agui-tabs id="session-views" label="Workspace view" value="table" pub-to="MANAGER/workspaceView" bind="$.value: MANAGER/workspaceView">
               <agui-tab value="table" label="Table">
@@ -171,6 +173,48 @@
           </agui-dialog>
           <agui-dialog id="manager-description" label="Session description" close-label="Close description" pub-to="MANAGER/descriptionOpen" bind="$.value: MANAGER/descriptionOpen">
             <agui-markdown label="Session description" bind="$.value: MANAGER/description; $.texts: MANAGER/descriptionTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown>
+          </agui-dialog>
+          <agui-dialog id="manager-transfer" close-label="Close transfer" pub-to="MANAGER/transferOpen" bind="$.value: MANAGER/transferOpen; $.label: MANAGER/transferTitle">
+            <form id="manager-transfer-form" class="grid min-w-0 gap-4" bind="onsubmit: MANAGER/submitTransfer">
+              <p class="break-all text-sm" bind="textContent: MANAGER/transferSource"></p>
+              <p class="text-xs text-agui-muted" bind="textContent: MANAGER/transferPolicy"></p>
+              <agui-select label="Destination project" name="transferDestination" required required-mark="*" pub-to="MANAGER/transferDestination"
+                bind="$.value: MANAGER/transferDestination; $.options: MANAGER/transferOptions; $.disabled: MANAGER/transferDisabled"></agui-select>
+              <agui-field label="Destination session ID" name="transferSessionId" required required-mark="*" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" pub-to="MANAGER/transferSessionId"
+                bind="$.value: MANAGER/transferSessionId; $.disabled: MANAGER/transferDisabled"></agui-field>
+              <agui-toggle label="Include saved data" name="transferIncludeData" pub-to="MANAGER/transferIncludeData" bind="$.value: MANAGER/transferIncludeData; $.disabled: MANAGER/transferDisabled"></agui-toggle>
+              <agui-toggle label="Include private metadata" name="transferIncludeMetadata" pub-to="MANAGER/transferIncludeMetadata" bind="$.value: MANAGER/transferIncludeMetadata; $.disabled: MANAGER/transferDisabled"></agui-toggle>
+              <details>
+                <summary>Associated private metadata</summary>
+                <p class="text-xs text-agui-muted">Includes existing data-source and destination references. Copying them grants no external access and changes no external resource.</p>
+                <pre class="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs"><code bind="textContent: MANAGER/transferMetadata"></code></pre>
+              </details>
+              <p id="transfer-error" class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/transferError"></p>
+              <p id="transfer-message" class="break-all text-sm empty:hidden" role="status" bind="textContent: MANAGER/transferMessage"></p>
+              <agui-toolbar aria-label="Transfer actions">
+                <button type="submit" class="agui-button-primary" bind="textContent: MANAGER/transferTitle; disabled: MANAGER/transferDisabled"></button>
+                <button id="transfer-open-destination" type="button" bind="onclick: MANAGER/openTransferDestination; disabled: MANAGER/transferDestinationDisabled">Open destination project</button>
+                <button type="button" bind="onclick: MANAGER/showTransfers">Review transfers</button>
+              </agui-toolbar>
+            </form>
+          </agui-dialog>
+          <agui-dialog id="manager-transfers" label="Transfers" close-label="Close transfers" pub-to="MANAGER/transferHistoryOpen" bind="$.value: MANAGER/transferHistoryOpen">
+            <div class="grid min-w-0 gap-4">
+              <p class="text-sm" bind="textContent: MANAGER/transferHistoryMessage"></p>
+              <p class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/transferHistoryError"></p>
+              <div id="manager-transfer-history" class="grid gap-4" itemize="MANAGER/transferHistoryRows">
+                <template>
+                  <section class="grid min-w-0 gap-2 rounded-agui-panel border border-agui-border p-4">
+                    <h3 class="break-words font-medium" bind="textContent: title"></h3>
+                    <p class="text-sm" bind="textContent: state"></p>
+                    <p class="break-all text-xs text-agui-muted" bind="textContent: receipt"></p>
+                    <p class="break-all text-xs text-agui-muted empty:hidden" bind="textContent: backup"></p>
+                    <p class="break-words text-sm text-agui-danger empty:hidden" bind="textContent: error"></p>
+                    <button type="button" bind="onclick: recover; disabled: recoverDisabled">Recover incomplete transfer</button>
+                  </section>
+                </template>
+              </div>
+            </div>
           </agui-dialog>
         </agui-session-manager>
       </agui-viewport>

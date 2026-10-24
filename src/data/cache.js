@@ -10,18 +10,22 @@ let prefix = '<!--agui-data-cache ';
 /** @param {string} source */
 export function sourceHash(source) { return createHash('sha256').update(source).digest('hex'); }
 
-/** @param {string} sessionId */
-export function runtimeCachePath(sessionId) {
+/**
+ * @param {string} sessionId
+ * @param {string} [root]
+ */
+export function runtimeCachePath(sessionId, root = getStateRoot()) {
   assertSessionId(sessionId);
-  return join(getStateRoot(), '.runtime', `${sessionKey(sessionId)}.html`);
+  return join(root, '.runtime', `${sessionKey(sessionId)}.html`);
 }
 
 /**
  * @param {string} sessionId
  * @returns {Promise<import('../../types/data.js').RuntimeDataCache | undefined>}
+ * @param {string} [root]
  */
-export async function readRuntimeCache(sessionId) {
-  let path = runtimeCachePath(sessionId);
+export async function readRuntimeCache(sessionId, root = getStateRoot()) {
+  let path = runtimeCachePath(sessionId, root);
   let raw = await readOptional(path, MAX_HTML_BYTES + 1024);
   if (raw === undefined) { return; }
   try {
@@ -43,10 +47,20 @@ export async function readRuntimeCache(sessionId) {
  * @param {string | undefined} expected
  */
 export async function prepareRuntimeCache(sessionId, html, source, revision, expected) {
-  let raw = `${prefix}${JSON.stringify({ version: 1, sourceHash: sourceHash(source), revision })}-->\n${html}`;
-  if (Buffer.byteLength(html) > MAX_HTML_BYTES) { throw storageError(runtimeCachePath(sessionId), new Error('Saved markup exceeds 1 MiB.')); }
+  let raw = runtimeCacheText(html, source, revision);
   let pending = await prepareTextFile(runtimeCachePath(sessionId), raw, { text: expected, maxBytes: MAX_HTML_BYTES + 1024 });
   return { ...pending, raw };
+}
+
+/**
+ * @param {string} html
+ * @param {string} source
+ * @param {string} revision
+ */
+export function runtimeCacheText(html, source, revision) {
+  let raw = `${prefix}${JSON.stringify({ version: 1, sourceHash: sourceHash(source), revision })}-->\n${html}`;
+  if (Buffer.byteLength(html) > MAX_HTML_BYTES) { throw new Error('Saved markup exceeds 1 MiB.'); }
+  return raw;
 }
 
 /** @param {string} sessionId */

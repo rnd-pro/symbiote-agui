@@ -19,6 +19,11 @@ import { SessionTunnel } from '../tunnel/session-tunnel.js';
 import { recordDirectory } from './store.js';
 import { SessionFeedback } from '../feedback/session-feedback.js';
 import { SessionData } from '../data/commits.js';
+import { withSessionLock } from './storage-lock.js';
+import { captureTransferSnapshot } from '../projects/transfer/snapshot.js';
+import { getSettings } from '../config/settings.js';
+import { getStateRoot } from './store.js';
+import { projectEntry } from '../projects/identity.js';
 
 export class SessionRuntime {
   /** @type {import('node:http').Server | undefined} */
@@ -104,7 +109,7 @@ export class SessionRuntime {
    * @returns {Promise<T>}
    */
   enqueue(task) {
-    let result = this.updates.then(task);
+    let result = this.updates.then(() => withSessionLock(this.record.sessionId, task));
     this.updates = result.then(() => {}, () => {});
     return result;
   }
@@ -112,6 +117,20 @@ export class SessionRuntime {
   /** @param {string} html */
   insert(html) {
     return this.replaceMarkup(html, true);
+  }
+
+  transferSnapshot() {
+    return this.enqueue(async () => {
+      if (this.closing || this.data.warning) { throw new CommandError('Reconcile or restart this session before copying its saved snapshot.'); }
+      let scope = {
+        ...projectEntry(getSettings().folder),
+        stateRoot: getStateRoot(),
+      };
+      return {
+        ...this.status(),
+        transferSnapshot: await captureTransferSnapshot(scope, this.record.sessionId, this.data.source, this.data.raw),
+      };
+    });
   }
 
   async clear() {

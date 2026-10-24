@@ -16,14 +16,21 @@ export function getDefaultStateRoot() {
 
 export function getStateRoot() {
   if (process.env.AGUI_WORKER_STATE_DIR) { return resolve(process.env.AGUI_WORKER_STATE_DIR); }
+  return stateRootForFolder(getSettings().folder);
+}
+
+/** @param {string} [folder] */
+export function stateRootForFolder(folder) {
   let root = getDefaultStateRoot();
-  let folder = getSettings().folder;
   return folder ? join(root, '.libraries', createHash('sha256').update(folder).digest('hex')) : root;
 }
 
-/** @param {string} sessionId */
-function sessionPath(sessionId) {
-  return join(getStateRoot(), sessionKey(sessionId));
+/**
+ * @param {string} sessionId
+ * @param {string} [root]
+ */
+function sessionPath(sessionId, root = getStateRoot()) {
+  return join(root, sessionKey(sessionId));
 }
 
 /** @param {import('../../types/session.js').SessionRecord} record */
@@ -63,8 +70,17 @@ export async function reserveSession(sessionId) {
  * @param {string} sessionId
  * @returns {Promise<import('../../types/session.js').SessionRecord | undefined>}
  */
-export async function readSession(sessionId) {
-  let directory = sessionPath(sessionId);
+export function readSession(sessionId) {
+  return readScopedSession(sessionId, getStateRoot());
+}
+
+/**
+ * @param {string} sessionId
+ * @param {string} root
+ * @returns {Promise<import('../../types/session.js').SessionRecord | undefined>}
+ */
+export async function readScopedSession(sessionId, root) {
+  let directory = sessionPath(sessionId, root);
 
   try {
     let entries = await readdir(directory);
@@ -107,7 +123,15 @@ export async function writeSession(record) {
 
 /** @param {import('../../types/session.js').SessionRecord} record */
 export async function releaseSession(record) {
-  let directory = recordDirectory(record);
+  return releaseScopedSession(record, getStateRoot());
+}
+
+/**
+ * @param {import('../../types/session.js').SessionRecord} record
+ * @param {string} root
+ */
+export async function releaseScopedSession(record, root) {
+  let directory = join(sessionPath(record.sessionId, root), record.instanceId);
   await rm(directory, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
 
   try {

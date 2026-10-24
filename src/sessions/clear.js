@@ -6,18 +6,24 @@ import { clearCachedMarkup } from './cache.js';
 import { requestSession } from './client.js';
 import { SESSION_STATE } from './constants.js';
 import { isProcessAlive, readSession, releaseSession, reserveSession } from './store.js';
-import { clearMetadata } from '../metadata/store.js';
-import { clearRuntimeCache } from '../data/cache.js';
+import { withSessionLock } from './storage-lock.js';
 
-/** @param {string} sessionId */
+/**
+ * @param {string} sessionId
+ * @returns {Promise<import('../../types/session.js').SessionStatus>}
+ */
 export async function clearSession(sessionId) {
   let record = await readSession(sessionId);
   if (record && isProcessAlive(record.pid)) {
-    let result = await requestSession(record, 'clear', INSERT_TIMEOUT_MS);
-    await clearMetadata(sessionId);
-    await clearRuntimeCache(sessionId);
-    return result;
+    return requestSession(record, 'clear', INSERT_TIMEOUT_MS);
   }
+  return withSessionLock(sessionId, () => clearStopped(sessionId));
+}
+
+/** @param {string} sessionId */
+async function clearStopped(sessionId) {
+  let record = await readSession(sessionId);
+  if (record && isProcessAlive(record.pid)) { throw new CommandError('The session started while clearing. Check status before retrying.'); }
   if (record) { await releaseSession(record); }
   let reservation;
   try {

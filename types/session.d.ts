@@ -25,6 +25,7 @@ export interface SessionStatus {
   toolResponse?: import('./tools.js').ToolResponse;
   feedback?: import('./feedback.js').FeedbackStatus;
   data?: import('./data.js').DataStatus;
+  transferSnapshot?: import('./transfer.js').TransferSnapshot;
 }
 
 export type SessionFeedbackStatus = SessionStatus & {
@@ -81,6 +82,7 @@ export interface ControlActions {
   sync?(resetData?: boolean): Promise<SessionStatus>;
   share?(): Promise<SessionStatus>;
   tunnelRenew?(): Promise<SessionStatus>;
+  transferSnapshot?(): Promise<SessionStatus>;
   feedbackConfigure?(input: unknown): Promise<SessionFeedbackStatus>;
   feedbackStatus?(): SessionFeedbackStatus;
   feedbackDisable?(input: unknown): Promise<SessionFeedbackStatus>;

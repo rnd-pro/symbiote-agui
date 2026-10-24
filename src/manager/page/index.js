@@ -12,6 +12,7 @@ import { formatDataFlow } from '../../metadata/format.js';
 import { guardNativeRegistrations } from '../../page/client/native-webmcp.js';
 import { PROJECT_STATE, ProjectNavigation } from './projects.js';
 import { EXPLORER_STATE, ProjectExplorer } from './explorer.js';
+import { TRANSFER_STATE, SessionTransfers } from './transfers.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
@@ -19,6 +20,7 @@ export class SessionManager extends ContextProvider {
   init$ = {
     ...PROJECT_STATE,
     ...EXPLORER_STATE,
+    ...TRANSFER_STATE,
     connection: 'Connecting...',
     connectionTone: 'info',
     scope: '',
@@ -52,6 +54,9 @@ export class SessionManager extends ContextProvider {
     descriptionTexts: DESCRIPTION_TEXTS,
     descriptionExtensions: false,
     explorerRefresh: () => this.explorer?.reload(),
+    showTransfers: () => this.transfers?.showHistory(),
+    submitTransfer: (/** @type {Event} */ event) => { event.preventDefault(); void this.transfers?.submit(); },
+    openTransferDestination: () => { void this.transfers?.openDestination(); },
     openSettings: () => { this.$.settingsOpen = true; },
     openProjects: () => this.projects?.open(),
     switchProject: () => { void this.projects?.run('switch project', String(this.$.projectChoice)); },
@@ -87,6 +92,8 @@ export class SessionManager extends ContextProvider {
   projects;
   /** @type {ProjectExplorer | undefined} */
   explorer;
+  /** @type {SessionTransfers | undefined} */
+  transfers;
   /** @type {ReturnType<typeof setInterval> | undefined} */
   interval;
   /** @type {ManagerConnection | undefined} */
@@ -97,6 +104,7 @@ export class SessionManager extends ContextProvider {
   renderCallback() {
     this.projects = new ProjectNavigation(this);
     this.explorer = new ProjectExplorer(this);
+    this.transfers = new SessionTransfers(this);
     this.sub('workspaceView', (view) => this.explorer?.activate(view === 'explorer'));
     this.sub('explorerHidden', () => this.explorer?.reload(), false);
     this.sub('projectChoice', () => this.projects?.render(), false);
@@ -121,7 +129,7 @@ export class SessionManager extends ContextProvider {
       this.$.refreshDisabled = !ready;
       this.explorer?.connectionChanged(ready);
       this.renderRows();
-    }, () => { void this.projects?.refresh(); void this.refresh(); });
+    }, () => { void this.projects?.refresh(); void this.refresh(); void this.transfers?.refreshHistory(); });
     this.connection.connect();
     this.interval = setInterval(() => {
       if (document.visibilityState === 'visible' && this.connection?.ready && !this.busy) { void this.refresh(); }
@@ -177,6 +185,7 @@ export class SessionManager extends ContextProvider {
     this.$.storageDisabled = disabled || !this.snapshot?.storage.editable;
     this.projects?.render();
     this.explorer?.render();
+    this.transfers?.render();
     this.$.counts = `${sessions.length} total / ${sessions.filter((row) => row.active === true).length} running / ${sessions.filter((row) => row.active === false).length} stopped / ${sessions.filter((row) => row.active === null).length} unknown`;
     let states = Object.fromEntries(sessions.map((row) => [
       row.sessionId,
@@ -261,6 +270,10 @@ export class SessionManager extends ContextProvider {
    */
   async act(operation, sessionId) {
     if (this.busy || !this.connection?.ready) { return; }
+    if (operation === 'copy session' || operation === 'move session') {
+      this.transfers?.open(operation === 'copy session' ? 'copy' : 'move', sessionId || '');
+      return;
+    }
     let target = sessionId || 'all sessions in this scope';
     let confirmations = {
       clear: `Clear ${target}? This deletes saved HTML and Markdown, including files in your Git library, and clears live content.`,

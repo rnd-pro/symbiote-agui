@@ -61,7 +61,7 @@ test('startup failure releases resources and permits reusing the ID', async (t) 
   for (let attempt of [1, 2]) {
     await assert.rejects(startSession('failure'), { code: 'START_FAILED' });
     assert.equal(await readSession('failure'), undefined);
-    assert.deepEqual(await readdir(state.directory), []);
+    assert.equal((await readdir(state.directory)).some((name) => name.startsWith('.pending-')), false);
   }
 });
 

@@ -22,6 +22,8 @@ export let SESSION_STATE = {
   shareDisabled: true,
   tunnelDisabled: true,
   describeDisabled: true,
+  copyDisabled: true,
+  moveDisabled: true,
   shareLabel: 'Attach tunnel',
   shareHint: 'Start this session to attach a public tunnel.',
   start: () => {},
@@ -32,6 +34,8 @@ export let SESSION_STATE = {
   check: () => {},
   renew: () => {},
   describe: () => {},
+  copy: () => {},
+  move: () => {},
 };
 
 /**
@@ -72,6 +76,8 @@ export function rowState(row, disabled, act) {
     shareHint: !active ? 'Start this session to attach a public tunnel.' : tunnel?.state === 'ready' ? 'Use the public user or viewer links, or Renew tunnel to replace an inactive link.' : 'Create public user and read-only viewer links without restarting this session.',
     tunnelDisabled: disabled || !active || !tunnel || unknown,
     describeDisabled: disabled || !saved,
+    copyDisabled: disabled || !saved || unknown,
+    moveDisabled: disabled || !saved || active || unknown,
     start: () => act('start', row.sessionId),
     stop: () => act('stop', row.sessionId),
     sync: () => act('sync', row.sessionId),
@@ -80,5 +86,7 @@ export function rowState(row, disabled, act) {
     check: () => act('tunnel check', row.sessionId),
     renew: () => act('tunnel renew', row.sessionId),
     describe: () => act('describe', row.sessionId),
+    copy: () => act('copy session', row.sessionId),
+    move: () => act('move session', row.sessionId),
   };
 }

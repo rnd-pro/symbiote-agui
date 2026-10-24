@@ -24,8 +24,15 @@ export function cachedDefinitionPaths(sessionId) {
 
 /** @param {string} sessionId */
 export function definitionPaths(sessionId) {
+  return scopedDefinitionPaths(sessionId, getSettings().folder);
+}
+
+/**
+ * @param {string} sessionId
+ * @param {string} [folder]
+ */
+export function scopedDefinitionPaths(sessionId, folder) {
   assertSessionId(sessionId);
-  let folder = getSettings().folder;
   return folder ? {
     htmlPath: join(folder, `${sessionId}.html`),
     descriptionPath: join(folder, `${sessionId}.md`),

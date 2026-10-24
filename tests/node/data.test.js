@@ -200,8 +200,10 @@ test('submitted values stay outside team libraries and near-limit private HTML r
 test('queue and receipt history stay bounded and shutdown rejects queued commits', async (t) => {
   let { runtime } = await setup(t);
   let release = () => {};
-  let gate = runtime.enqueue(() => new Promise((resolve) => { release = () => resolve(undefined); }));
-  await new Promise((resolve) => setImmediate(resolve));
+  let entered = () => {};
+  let ready = new Promise((resolve) => { entered = () => resolve(undefined); });
+  let gate = runtime.enqueue(() => new Promise((resolve) => { release = () => resolve(undefined); entered(); }));
+  await ready;
   let inputs = Array.from({ length: DATA_LIMITS.pending }, () => dataCommit(runtime.data.status()));
   for (let input of inputs) { assert.equal(runtime.data.submit(input).state, 'queued'); }
   assert.equal(runtime.data.submit(dataCommit(runtime.data.status())).failure?.code, 'QUEUE_FULL');

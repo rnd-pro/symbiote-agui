@@ -11,6 +11,7 @@ import { SESSION_STATE, SHUTDOWN_TIMEOUT_MS, STARTUP_TIMEOUT_MS } from './consta
 import { statusSession } from './lifecycle.js';
 import { getSettings } from '../config/settings.js';
 import { requestSession } from './client.js';
+import { withSessionLock } from './storage-lock.js';
 import { getDefaultStateRoot, getStateRoot, isProcessAlive, readSession, recordDirectory, releaseSession, reserveSession, writeSession } from './store.js';
 
 /**
@@ -101,6 +102,11 @@ function waitForStartup(child) {
  * @param {string} sessionId
  */
 export async function startSession(sessionId) {
+  return withSessionLock(sessionId, () => startLocked(sessionId));
+}
+
+/** @param {string} sessionId */
+async function startLocked(sessionId) {
   let record = await reserveAvailableSession(sessionId);
   /** @type {import('node:child_process').ChildProcess | undefined} */
   let child;

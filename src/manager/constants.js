@@ -1,4 +1,5 @@
 import { PROJECT_OPERATIONS } from '../projects/constants.js';
+import { TRANSFER_OPERATIONS } from '../projects/transfer/constants.js';
 
 export let MANAGER_PATH = '/manager/';
 export let MANAGER_SOCKET_PATH = '/manager/socket';
@@ -9,6 +10,7 @@ export let MANAGER_REFRESH_MS = 5_000;
 
 export let MANAGER_OPERATIONS = Object.freeze({
   ...PROJECT_OPERATIONS,
+  ...TRANSFER_OPERATIONS,
   'configure storage': {
     bulk: false,
     confirm: false,

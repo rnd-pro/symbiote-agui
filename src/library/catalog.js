@@ -12,6 +12,7 @@ import { requestSession } from '../sessions/client.js';
 import { INSERT_TIMEOUT_MS } from '../markup/constants.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
+import { withSessionLock } from '../sessions/storage-lock.js';
 
 /** @param {string} [query] */
 export async function listDefinitions(query = '') {
@@ -27,6 +28,14 @@ export async function listDefinitions(query = '') {
  * @param {string} [file]
  */
 export async function describeDefinition(sessionId, file) {
+  return withSessionLock(sessionId, () => describeLocked(sessionId, file));
+}
+
+/**
+ * @param {string} sessionId
+ * @param {string} [file]
+ */
+async function describeLocked(sessionId, file) {
   if (await readCachedMarkup(sessionId) === undefined) {
     throw new CommandError(`No saved AGUI named ${sessionId}. Use save or insert first.`);
   }
@@ -46,6 +55,14 @@ export async function describeDefinition(sessionId, file) {
  * @param {string} [file]
  */
 export async function saveDefinition(sessionId, file) {
+  return withSessionLock(sessionId, () => saveLocked(sessionId, file));
+}
+
+/**
+ * @param {string} sessionId
+ * @param {string} [file]
+ */
+async function saveLocked(sessionId, file) {
   let description;
   let html = file === undefined ? await readCachedMarkup(sessionId) : await readMarkup(file);
   if (html === undefined && getSettings().folder) {

@@ -19,6 +19,11 @@ export interface ManagerRequest {
   path?: string;
   offset?: number;
   showHidden?: boolean;
+  destinationProjectId?: string;
+  destinationSessionId?: string;
+  includeData?: boolean;
+  includeMetadata?: boolean;
+  transferId?: string;
 }
 
 export interface ManagerScope {
@@ -59,6 +64,8 @@ export interface ManagerResult {
   folderPath?: string;
   directory?: ProjectDirectory;
   preview?: ProjectPreview;
+  transfer?: import('./transfer.js').TransferResult;
+  transfers?: import('./transfer.js').TransferResult[];
   error?: CommandFailure['error'];
 }
 

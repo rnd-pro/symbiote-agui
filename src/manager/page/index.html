@@ -111,7 +111,9 @@
                     <agui-panel id="explorer-preview" class="min-w-0">
                       <h4 class="mb-3 break-all text-sm font-medium" bind="textContent: MANAGER/previewPath"></h4>
                       <agui-state bind="$.status: MANAGER/previewStatus; $.message: MANAGER/previewMessage"></agui-state>
-                      <pre class="max-h-[36rem] overflow-auto whitespace-pre text-xs" tabindex="0" aria-label="File source" bind="hidden: MANAGER/previewSourceHidden"><code bind="textContent: MANAGER/previewText"></code></pre>
+                      <div class="agui-markdown-content" bind="hidden: MANAGER/previewSourceHidden">
+                        <pre class="max-h-[36rem] overflow-auto whitespace-pre text-xs" tabindex="0" aria-label="File source"><code bind="textContent: MANAGER/previewText"></code></pre>
+                      </div>
                       <agui-markdown label="File preview" bind="hidden: MANAGER/previewMarkdownHidden; $.value: MANAGER/previewMarkdown; $.texts: MANAGER/previewTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown>
                     </agui-panel>
                   </div>

@@ -1,3 +1,5 @@
+import { highlightHtmlPreview } from './source-preview.js';
+
 export let EXPLORER_STATE = {
   workspaceView: 'table',
   explorerRows: {},
@@ -210,6 +212,12 @@ export class ProjectExplorer {
         previewStatus: preview.message ? 'empty' : 'ready',
         previewMessage: preview.message || '',
       });
+      if (preview.kind === 'text' && /\.html?$/i.test(path)) {
+        let code = this.owner.querySelector('#explorer-preview pre code');
+        if (code instanceof HTMLElement) {
+          void highlightHtmlPreview(code, preview.text || '', () => !!this.current(revision) && version === this.previewVersion);
+        }
+      }
     } catch (error) {
       if (this.current(revision) && version === this.previewVersion) {
         this.owner.$.previewStatus = 'error';

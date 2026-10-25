@@ -64,13 +64,14 @@ test('manager lazily expands project folders and previews source or inert Markdo
     folder,
     browser,
   } = await fixture(t);
+  let htmlSource = '<script>window.explorerExecuted = true;</script>\n````\n<explorer-probe></explorer-probe><agui-field label="Must stay inert"></agui-field>';
   await Promise.all([
     mkdir(join(folder, 'docs')),
     mkdir(join(folder, 'empty')),
     mkdir(join(folder, 'pages')),
     writeFile(join(folder, '.hidden.txt'), 'Hidden fixture.'),
     writeFile(join(folder, 'data.json'), '{"fixture":"current"}'),
-    writeFile(join(folder, 'source.html'), '<script>window.explorerExecuted = true;</script><agui-field label="Must stay inert"></agui-field>'),
+    writeFile(join(folder, 'source.html'), htmlSource),
     writeFile(join(folder, 'draft.html'), '<agui-field label="Draft" name="draft" value="Keep"></agui-field>'),
   ]);
   await writeFile(join(folder, 'docs', 'guide.md'), '# Project guide\n\nRead-only preview.\n\n<explorer-probe>Fallback document content</explorer-probe>\n<agui-field label="Do not instantiate"></agui-field>\n<script>window.explorerExecuted = true;</script>');
@@ -127,6 +128,10 @@ test('manager lazily expands project folders and previews source or inert Markdo
   assert.ok(await page.$('nav[aria-label="Project breadcrumbs"] button'));
   await page.click('#explorer-entries [data-entry="source.html"] button');
   await page.waitForFunction(() => document.querySelector('#explorer-preview pre code')?.textContent?.includes('<script>'));
+  await page.waitForSelector('#explorer-preview pre code .hljs-tag');
+  assert.equal(await page.$eval('#explorer-preview pre code', (element) => element.textContent), htmlSource);
+  assert.equal(await page.$('#explorer-preview pre :is(script, explorer-probe, agui-field)'), null);
+  assert.equal(await page.evaluate(() => !!Reflect.get(window, 'explorerConstructed')), false);
   assert.equal(await page.evaluate(() => !!Reflect.get(window, 'explorerExecuted')), false);
   await page.click('#explorer-entries [data-entry="empty"] button');
   await page.waitForFunction(() => document.querySelector('#explorer-entries')?.textContent?.includes('This folder is empty.'));

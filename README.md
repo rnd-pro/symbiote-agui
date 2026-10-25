@@ -61,6 +61,8 @@ npx symbiote-agui manager
 
 See running and saved interfaces, search their descriptions, and start, stop, sync, clear, or share them directly. The manager refreshes session status automatically and can check or renew public tunnels. It works independently of your agent and stays available when you stop all sessions.
 
+Connect your AGUI folders once, then revisit them or the default cache through Projects. Browse their saved files and copy or move interfaces between projects, choosing whether to include saved data and metadata. Switching projects keeps running interfaces and drafts in place.
+
 The manager uses the same UI library and theme as generated interfaces. It is local to your computer and uses your current library folder or private cache. See [manager controls](./docs/reference.md#session-manager) for lifecycle commands and access details.
 
 ## Internet sharing

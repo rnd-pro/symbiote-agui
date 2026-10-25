@@ -13,11 +13,19 @@ npx symbiote-agui config show
 
 The folder setting is saved in `.agui.json` using a relative path. Commands discover the nearest configuration in the current directory or its parents. Include that configuration and the chosen folder in Git. No dependency or Git repository initialization is required.
 
-You can also open AGUI folder settings under Storage scope in the [session manager](./reference.md#session-manager). Saving opens the selected folder's manager; existing files and live sessions remain in their original scope. Use default cache returns to private caching without deleting the library.
+You can also open Settings in the [session manager](./reference.md#session-manager) to choose the save folder. Save folder and open updates the launch project's configuration and opens the selected folder's manager. Use default cache returns to private caching without deleting the library. Existing files and live sessions remain in their original scope.
 
 An absolute `AGUI_LIBRARY_DIR` environment variable overrides the project setting. An empty value explicitly selects private caching. `npx symbiote-agui config reset` removes the project folder setting; it does not delete interfaces or stop workers. Environment overrides remain in effect until unset.
 
 Without a folder setting, definitions stay in the private cache under `~/.symbiote-agui/sessions/.cache/` or the selected `AGUI_STATE_DIR`. Markdown descriptions are stored beside the cached HTML.
+
+## Revisit and transfer projects
+
+Use Projects in the manager to connect existing AGUI folders and revisit them or Default without re-entering paths. Switch navigates to that folder's manager without changing `.agui.json` or the scope of CLI commands. Running pages, URLs, and drafts remain in their original project. Forget connection removes only the remembered connection.
+
+Open folder requests the host's file manager. Project explorer browses the current project with read-only source and Markdown previews. Default presents saved definitions under readable session names and excludes private runtime records.
+
+Select a saved session to Copy to project or Move to project. Choose the destination and session ID; saved data and private metadata are explicit options. Copy preserves the original, including a running page. Move requires a stopped source, verifies the destination before removing source files, and retains excluded saved artifacts in a private backup. The destination stays stopped. Review incomplete operations in Transfers; see the [transfer and recovery controls](./reference.md#session-manager) for limits and recovery behavior.
 
 ## Discover and evolve interfaces
 
@@ -54,7 +62,7 @@ npx symbiote-agui sync all
 
 `sync` reads the latest saved HTML and applies it without rewriting the source or description. It rebuilds styles, reruns marked modules, and refreshes tool registrations. Rediscover tools before invoking them again. Unsaved form values and `update` changes reset; explicitly committed provider data is retained when declarations remain compatible.
 
-[Local data commits](./reference.md#local-data-commits) update private cached HTML under `.runtime/`, scoped to this library on this machine. They never write application records into shared source definitions. Copying or importing HTML/Markdown does not transfer those snapshots. Adding providers or keys preserves existing committed values; removing or renaming them, or changing a non-null top-level type, requires reconciliation. Conflicting sync fails without discarding the previous snapshot. After backing up any needed data, `npx symbiote-agui sync leads --reset-data` explicitly resets committed data to the saved source defaults. Reset applies to one running session at a time.
+[Local data commits](./reference.md#local-data-commits) update private cached HTML under `.runtime/`, scoped to this library on this machine. They never write application records into shared source definitions. Copying HTML/Markdown through Git or importing it with `save` does not transfer those snapshots; the manager can include them explicitly during Copy or Move. Adding providers or keys preserves existing committed values; removing or renaming them, or changing a non-null top-level type, requires reconciliation. Conflicting sync fails without discarding the previous snapshot. After backing up any needed data, `npx symbiote-agui sync leads --reset-data` explicitly resets committed data to the saved source defaults. Reset applies to one running session at a time.
 
 `sync all` targets running sessions with saved definitions in the selected storage scope. It does not open or start other sessions. Results report per-session success or failure; other sessions continue after a failure. Nothing is watched or synced in the background.
 
@@ -64,7 +72,7 @@ Session IDs are scoped to the selected library folder. Different checkouts can u
 
 Workers keep the folder selected at startup, even if configuration later changes. Reselect that folder to manage those workers. Runtime metadata, logs, control tokens, and tunnel processes remain in private storage under `AGUI_STATE_DIR` or `~/.symbiote-agui/sessions/`; none are written to the team folder. Public links and live state are not shared through Git.
 
-[Data-flow metadata](./reference.md#session-data-flow-metadata) records the initial source, bindings, and intended destinations without editing the Markdown description. It is private to this library's local storage scope, survives stop/start and sync, and is removed by session clear. Copying definitions or using `save` to import them does not transfer that metadata. Transfer selected metadata explicitly with `metadata get` and `metadata set` after reviewing its local references.
+[Data-flow metadata](./reference.md#session-data-flow-metadata) records the initial source, bindings, and intended destinations without editing the Markdown description. It is private to this library's local storage scope, survives stop/start and sync, and is removed by session clear. Copying definition files or using `save` to import them does not transfer metadata. Use the manager's Include private metadata option, or `metadata get` and `metadata set`, after reviewing the existing source and destination references. Including metadata grants no external access and changes no external resource.
 
 `stop` retains HTML and Markdown. `clear` removes both files and clears a running interface; `clear-all` does this throughout the selected scope. Review these deletions in Git before committing. Atomic saves detect a source file changed during preparation and fail rather than intentionally overwrite the newer contents. Resolve Git conflicts before loading a definition.
 

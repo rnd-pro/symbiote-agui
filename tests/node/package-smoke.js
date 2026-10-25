@@ -8,6 +8,10 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { Client } from '@modelcontextprotocol/client';
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
+import { WebSocket } from 'ws';
+import { randomUUID } from 'node:crypto';
+import { once } from 'node:events';
+import { MCP_TOOLS } from '../../src/mcp/catalog.js';
 
 let execute = promisify(execFile);
 let root = fileURLToPath(new URL('../../', import.meta.url));
@@ -19,10 +23,12 @@ test('the production tarball runs through npm exec outside the checkout', { time
   let caller = join(directory, 'caller');
   let cache = join(directory, 'cache');
   let started = false;
+  /** @type {NodeJS.ProcessEnv} */
   let environment = {
     ...process.env,
     PATH: process.env.PATH?.split(delimiter).filter((entry) => !entry.startsWith(root)).join(delimiter),
     AGUI_STATE_DIR: join(directory, 'state'),
+    AGUI_LIBRARY_DIR: '',
     npm_config_cache: cache,
     npm_config_omit: 'dev',
     npm_config_audit: 'false',
@@ -30,6 +36,7 @@ test('the production tarball runs through npm exec outside the checkout', { time
     npm_config_fetch_retries: '0',
     npm_config_fetch_timeout: '30000',
   };
+  delete environment.AGUI_WORKER_STATE_DIR;
   await mkdir(caller);
   t.after(async () => {
     try {
@@ -89,6 +96,9 @@ test('the production tarball runs through npm exec outside the checkout', { time
   started = true;
   assert.equal(session.state, 'waiting');
   assert.equal((await cli('status', 'package-smoke')).url, session.url);
+  let managerSource = '<h1>Packaged project workflow</h1>';
+  await writeFile(join(caller, 'manager-source.html'), managerSource);
+  await cli('insert', 'package-smoke', '--file', 'manager-source.html');
   let manager = await cli('manager', '--no-open');
   assert.equal(manager.active, true);
   assert.equal((await cli('manager', 'status')).url, manager.url);
@@ -96,6 +106,72 @@ test('the production tarball runs through npm exec outside the checkout', { time
     let response = await fetch(new URL(path, manager.url));
     assert.equal(response.status, 200, `Packaged manager asset: ${path}`);
     assert.ok((await response.text()).length);
+  }
+  let managerUrl = new URL(manager.url);
+  let socket = new WebSocket(new URL('socket', manager.url), {
+    origin: managerUrl.origin,
+  });
+  await once(socket, 'open');
+  let authorized = once(socket, 'message');
+  socket.send(JSON.stringify({
+    type: 'authenticate',
+    token: new URL(manager.launchUrl).hash.slice(1),
+  }));
+  assert.equal(JSON.parse(String((await authorized)[0])).type, 'authorized');
+  /**
+   * @param {import('../../types/manager.js').ManagerOperation} operation
+   * @param {Partial<import('../../types/manager.js').ManagerRequest>} [options]
+   * @returns {Promise<import('../../types/manager.js').ManagerResult>}
+   */
+  async function manage(operation, options = {}) {
+    let id = randomUUID();
+    let reply = once(socket, 'message', {
+      signal: AbortSignal.timeout(15000),
+    });
+    socket.send(JSON.stringify({
+      ...options,
+      id,
+      operation,
+    }));
+    let message = JSON.parse(String((await reply)[0]));
+    assert.equal(message.id, id);
+    assert.equal(message.result.ok, true, message.result.error?.message);
+    return message.result;
+  }
+  try {
+    let team = join(caller, 'team folder');
+    await mkdir(team);
+    let connected = await manage('connect project', {
+      folder: team,
+    });
+    assert.ok(connected.project);
+    let listing = await manage('project entries', {
+      projectId: 'default',
+      path: '',
+    });
+    assert.ok(listing.directory?.entries.some((entry) => entry.path === 'package-smoke.html'));
+    let preview = await manage('project preview', {
+      projectId: 'default',
+      path: 'package-smoke.html',
+    });
+    assert.equal(preview.preview?.text, managerSource);
+    let copied = await manage('copy session', {
+      sessionId: 'package-smoke',
+      destinationProjectId: connected.project.id,
+      destinationSessionId: 'package-copy',
+      includeData: false,
+      includeMetadata: false,
+      confirm: true,
+    });
+    assert.equal(copied.transfer?.state, 'complete');
+    assert.equal(await readFile(join(team, 'package-copy.html'), 'utf8'), managerSource);
+    assert.equal((await manage('switch project', {
+      projectId: 'default',
+    })).manager?.url, manager.url, 'The packaged scoped launcher reuses the selected manager.');
+    assert.equal((await cli('status', 'package-smoke')).url, session.url);
+  } finally {
+    socket.close();
+    await once(socket, 'close');
   }
   assert.equal((await cli('manager', 'stop')).active, false);
   assert.deepEqual((await cli('pages', 'package-smoke')).pages, []);
@@ -118,7 +194,8 @@ test('the production tarball runs through npm exec outside the checkout', { time
   let mcp = new Client({ name: 'package-smoke', version: '1.0.0' });
   try {
     await mcp.connect(transport);
-    assert.deepEqual((await mcp.listTools()).tools.map((tool) => tool.name).sort(), ['call_tool', 'list_pages', 'list_tools']);
+    let catalog = (await mcp.listTools()).tools.map((tool) => tool.name);
+    for (let name of Object.keys(MCP_TOOLS)) { assert.ok(catalog.includes(name), `Packaged MCP tool: ${name}`); }
     let result = await mcp.callTool({ name: 'list_pages', arguments: { sessionId: 'package-smoke' } });
     assert.partialDeepStrictEqual(result, { structuredContent: { sessionId: 'package-smoke', pages: [] }, isError: false });
   } finally {

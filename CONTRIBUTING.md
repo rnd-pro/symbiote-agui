@@ -52,6 +52,8 @@ npm run test:browser
 
 Browser checks are skipped when that variable is unset. They start local servers and browser processes, so the environment must permit both. Restart the manager after changing its templates or styles to rebuild its assets.
 
+Before release, run `npm run test:package`. It installs the production tarball in a temporary npm cache outside the checkout and verifies CLI, MCP, manager assets, and project operations without development dependencies. It requires npm registry access.
+
 Add tests for concrete bugs and critical behavior. Review appearance, animation, and narrow layouts manually; do not add automated style assertions. Check whitespace with `git diff --check`.
 
 ## Submit a pull request

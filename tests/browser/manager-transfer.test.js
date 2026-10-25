@@ -60,6 +60,28 @@ test('manager copies live sessions with explicit options, handles collisions, mo
     browser,
   } = await fixture(t);
   let files = await writeTransferFixture(a, 'desk', dataHtml + '<agui-field label="Draft" name="draft" value="Initial"></agui-field>');
+  let unrelatedPages = [];
+  for (let scope of [
+    b,
+    await transferScope('default'),
+  ]) {
+    await writeTransferFixture(scope, 'watcher', dataHtml + '<agui-field label="Notes" name="notes" value="Keep"></agui-field>');
+    let running = await project.cli([
+      'start',
+      'watcher',
+      '--no-open',
+    ], scope.folder || '');
+    let watcher = await browser.newPage();
+    await watcher.goto(running.url);
+    await watcher.waitForSelector('input[name="notes"]');
+    await watcher.type('input[name="notes"]', ' this draft');
+    unrelatedPages.push({
+      scope,
+      running,
+      page: watcher,
+      draft: await watcher.$eval('input[name="notes"]', (element) => element.value),
+    });
+  }
   let started = await project.cli([
     'start',
     'desk',
@@ -163,6 +185,15 @@ test('manager copies live sessions with explicit options, handles collisions, mo
   await page.waitForSelector('#manager-table tr[data-row-id="moved"]');
   assert.notEqual(page.url(), manager.url);
   assert.equal(new URL(page.url()).hash, '');
+  for (let watcher of unrelatedPages) {
+    assert.equal(await watcher.page.$eval('input[name="notes"]', (element) => element.value), watcher.draft);
+    let status = await project.cli([
+      'status',
+      'watcher',
+    ], watcher.scope.folder || '');
+    assert.equal(status.url, watcher.running.url);
+    assert.equal(status.feedback.instanceId, watcher.running.feedback.instanceId);
+  }
 });
 
 test('manager discovers an interrupted move after restart and explicitly restores it without overwriting other files', {

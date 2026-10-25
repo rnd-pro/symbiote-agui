@@ -5,7 +5,7 @@
 [![MIT license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![Node.js 24 or newer](https://img.shields.io/badge/Node.js-%3E%3D24-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/en/download)
 
-![Symbiote AGUI](https://rnd-pro.com/idn/4a7be2ee-b771-436e-23a2-4050ffdad800/1024)
+![Symbiote AGUI](https://rnd-pro.com/idn/59820cd6-1dae-42f3-f346-4de003cb7c00/1024)
 
 > An interactive workspace for your AI conversation.
 

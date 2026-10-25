@@ -65,6 +65,7 @@ export class SessionManager extends ContextProvider {
       event.preventDefault();
       void this.projects?.run('connect project');
     },
+    chooseProject: () => { void this.projects?.run('choose project'); },
     bulkOptions: BULK_OPTIONS,
     query: '',
     bulkOperation: 'start',

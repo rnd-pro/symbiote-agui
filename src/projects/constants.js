@@ -12,6 +12,11 @@ export let PROJECT_OPERATIONS = Object.freeze({
     confirm: false,
     target: 'folder',
   },
+  'choose project': {
+    bulk: false,
+    confirm: false,
+    target: 'none',
+  },
   'forget project': {
     bulk: false,
     confirm: false,

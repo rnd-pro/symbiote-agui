@@ -129,14 +129,23 @@
           <agui-message class="connection" close-label="Dismiss message" bind="$.tone: MANAGER/connectionTone; $.message: MANAGER/connection" hidden></agui-message>
           <agui-dialog id="manager-projects" label="Projects" close-label="Close projects" pub-to="MANAGER/projectsOpen" bind="$.value: MANAGER/projectsOpen">
             <div class="grid gap-5">
-              <form id="manager-connect-project" class="grid gap-3" bind="onsubmit: MANAGER/connectProject">
-                <agui-field label="Existing project folder" name="projectFolder" required required-mark="*" maxlength="4096" autocomplete="off"
-                  pub-to="MANAGER/projectFolder" bind="$.value: MANAGER/projectFolder; $.disabled: MANAGER/projectsDisabled"></agui-field>
-                <p class="text-xs text-agui-muted">Connect an existing AGUI folder. Relative paths use the manager's launch directory. This does not change save-folder configuration.</p>
-                <agui-toolbar aria-label="Connect a project">
-                  <button type="submit" class="agui-button-primary" bind="disabled: MANAGER/projectsDisabled"><agui-icon name="add"></agui-icon>Connect project</button>
+              <section class="grid gap-3" aria-label="Connect a project">
+                <agui-toolbar aria-label="Choose a project folder">
+                  <button id="manager-choose-project" type="button" class="agui-button-primary" bind="onclick: MANAGER/chooseProject; disabled: MANAGER/projectsDisabled"><agui-icon name="add"></agui-icon>Choose folder</button>
                 </agui-toolbar>
-              </form>
+                <p class="text-xs text-agui-muted">Choose an existing AGUI folder on the computer running AGUI. Connecting does not change save-folder configuration.</p>
+                <details bind="open: MANAGER/projectPathOpen">
+                  <summary>Enter folder path</summary>
+                  <form id="manager-connect-project" class="mt-3 grid gap-3" bind="onsubmit: MANAGER/connectProject">
+                    <agui-field label="Existing project folder" name="projectFolder" required required-mark="*" maxlength="4096" autocomplete="off"
+                      pub-to="MANAGER/projectFolder" bind="$.value: MANAGER/projectFolder; $.disabled: MANAGER/projectsDisabled"></agui-field>
+                    <p class="text-xs text-agui-muted">Relative paths use the manager's launch directory.</p>
+                    <agui-toolbar aria-label="Connect by folder path">
+                      <button type="submit" bind="disabled: MANAGER/projectsDisabled"><agui-icon name="add"></agui-icon>Connect project</button>
+                    </agui-toolbar>
+                  </form>
+                </details>
+              </section>
               <p class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/projectError"></p>
               <section class="grid gap-3" aria-labelledby="connected-projects-title">
                 <h2 id="connected-projects-title" class="font-medium">Connected projects</h2>

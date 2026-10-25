@@ -55,6 +55,7 @@ export interface ManagerStorageSettings {
 
 export interface ManagerResult {
   ok: boolean;
+  cancelled?: boolean;
   sessions?: SessionOperationResult[];
   description?: DefinitionInfo;
   snapshot?: ManagerSnapshot;

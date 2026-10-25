@@ -4,6 +4,7 @@ import { assertProjectFolder, validFolder, validProjectId } from '../projects/id
 import { connectProject, forgetProject, listProjects, registeredProject } from '../projects/registry.js';
 import { openProjectManager } from './launcher.js';
 import { openProjectFolder } from '../projects/open.js';
+import { chooseProject } from '../projects/choose.js';
 import { listProjectEntries } from '../projects/explorer/list.js';
 import { previewProjectFile } from '../projects/explorer/preview.js';
 
@@ -39,6 +40,7 @@ export async function runProjectOperation(request, record, scope) {
       preview: await previewProjectFile(request.projectId || '', request.path || '', request.showHidden),
     }),
     'open folder': () => openProjectFolder(request.projectId || ''),
+    'choose project': () => chooseProject(directory),
     projects: async () => ({
       ok: true,
       projects: await listProjects(scope.settings.folder),

@@ -31,6 +31,10 @@
   }
   select {
     @apply appearance-none pe-10;
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .agui-select-control {
     @apply relative block min-w-0;

@@ -10,6 +10,7 @@ export let PROJECT_STATE = {
   projectsDisabled: true,
   projectSwitchDisabled: true,
   projectOpenDisabled: true,
+  projectPathOpen: false,
 };
 
 export class ProjectNavigation {
@@ -50,7 +51,7 @@ export class ProjectNavigation {
       projectOpenDisabled: disabled || !choice?.available,
       projectOptions: (listing?.projects || []).map((entry) => ({
         value: entry.id,
-        label: entry.folder ? `${entry.name} - ${entry.folder}` : entry.name,
+        label: entry.name,
         disabled: !entry.available,
       })),
       projectRows: Object.fromEntries((listing?.projects || []).map((entry) => [
@@ -98,7 +99,7 @@ export class ProjectNavigation {
   }
 
   /**
-   * @param {'connect project' | 'switch project' | 'forget project' | 'open folder'} operation
+   * @param {'connect project' | 'choose project' | 'switch project' | 'forget project' | 'open folder'} operation
    * @param {string} [projectId]
    * @param {string} [sourceId]
    */
@@ -109,39 +110,43 @@ export class ProjectNavigation {
     let folder = String(owner.$.projectFolder).trim();
     if (operation === 'connect project' && !folder) { this.issue = 'Enter an existing folder path.'; this.render(); return; }
     let selected = this.listing?.projects.find((entry) => entry.id === projectId);
-    if (operation !== 'connect project' && !selected) { this.issue = 'Refresh projects before selecting this connection.'; this.render(); return; }
+    let connecting = operation === 'connect project' || operation === 'choose project';
+    if (!connecting && !selected) { this.issue = 'Refresh projects before selecting this connection.'; this.render(); return; }
     if (operation === 'switch project' && (selected?.id === sourceId || !selected?.available)) { return; }
     let epoch = ++owner.viewEpoch;
     owner.busy = true;
     this.issue = '';
     owner.$.noticeTone = 'info';
-    owner.$.notice = `${operation}: working...`;
+    owner.$.notice = operation === 'choose project' ? 'Choose a folder in the Node host\'s desktop dialog.' : `${operation}: working...`;
     owner.renderRows();
     try {
       let result = await connection.request(operation, operation === 'connect project' ? {
         folder,
-      } : {
+      } : operation === 'choose project' ? {} : {
         projectId,
       });
       if (!owner.isCurrentView(epoch)) { return; }
       if (!result.ok) { throw new Error(result.error?.message || 'The project operation failed.'); }
-      if (operation === 'switch project') {
+      if (result.cancelled) {
+        owner.$.notice = 'Folder selection canceled. Connections are unchanged.';
+      } else if (operation === 'switch project') {
         if (!result.manager) { throw new Error('The selected project manager could not open.'); }
         if (!owner.navigate(result.manager)) { owner.$.projectsOpen = false; }
       } else if (operation === 'open folder') {
         if (!result.folderPath) { throw new Error('The manager did not return the requested folder path.'); }
         owner.$.notice = `Requested opening ${result.folderPath} in the host file manager. Check the desktop for its window.`;
       } else {
-        if (operation === 'connect project') {
+        if (connecting) {
           owner.$.projectFolder = '';
           owner.$.projectChoice = result.project?.id || owner.$.projectChoice;
         }
         if (result.projects) { this.apply(result.projects); }
-        owner.$.notice = operation === 'connect project' ? 'Project connected. Select Switch to open it.' : 'Connection forgotten. Files and sessions are unchanged.';
+        owner.$.notice = connecting ? 'Project connected. Select Switch to open it.' : 'Connection forgotten. Files and sessions are unchanged.';
       }
     } catch (error) {
       if (owner.isCurrentView(epoch)) {
         this.issue = error instanceof Error ? error.message : String(error);
+        if (operation === 'choose project') { owner.$.projectPathOpen = true; }
         owner.$.noticeTone = 'alert';
         owner.$.notice = this.issue;
       }

@@ -31,12 +31,15 @@ async function openProjects(page) {
  * @param {string} folder
  */
 async function connect(page, folder) {
+  if (!await page.$eval('#manager-connect-project', (form) => form.closest('details')?.open)) {
+    await page.locator('#manager-projects details > summary').click();
+  }
   await page.waitForFunction(() => {
     let input = document.querySelector('#manager-connect-project input');
     return input instanceof HTMLInputElement && !input.disabled && input.value === '';
   });
-  await page.type('#manager-connect-project input', folder);
-  await page.click('#manager-connect-project button[type="submit"]');
+  await page.locator('#manager-connect-project input').fill(folder);
+  await page.locator('#manager-connect-project button[type="submit"]').click();
   await page.waitForSelector(`#manager-project-list [data-project="${projectId(folder)}"]`);
   await page.waitForFunction(() => {
     let input = document.querySelector('#manager-connect-project input');
@@ -141,8 +144,9 @@ test('manager connects projects, switches remembered scopes and Default, and pre
   let urlB = second.url();
   assert.equal(page.url(), urlA, 'Another manager tab keeps its selected project.');
   await openProjects(second);
-  await second.type('#manager-connect-project input', join(project.projectDirectory, 'missing'));
-  await second.click('#manager-connect-project button[type="submit"]');
+  await second.locator('#manager-projects details > summary').click();
+  await second.locator('#manager-connect-project input').fill(join(project.projectDirectory, 'missing'));
+  await second.locator('#manager-connect-project button[type="submit"]').click();
   await second.waitForFunction(() => document.querySelector('#manager-projects [role="alert"]')?.textContent?.includes('unavailable'));
   assert.equal(second.url(), urlB, 'A connection failure does not navigate away.');
   await second.$eval('#manager-connect-project input', (element) => { element.value = ''; element.dispatchEvent(new Event('input', {

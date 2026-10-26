@@ -60,6 +60,16 @@ export default css`
     .agui-table-scroll tbody tr:hover {
       background: var(--agui-hover);
     }
+    .agui-table-scroll tbody tr[data-selectable] {
+      cursor: pointer;
+    }
+    .agui-table-scroll tbody tr[aria-selected='true'] {
+      background: var(--agui-accent-soft);
+    }
+    .agui-table-scroll tbody tr:focus-visible {
+      outline: 2px solid var(--agui-accent);
+      outline-offset: -2px;
+    }
     .agui-table-heading-content {
       display: flex;
       align-items: center;

@@ -19,6 +19,8 @@ Supply `texts` keys `results`, `selected`, `selection`, `selectRow`, `selectAll`
 
 Pair `value` with `pub-to` and `sort` with `sort-pub-to`. Initialization, incoming replacements, and effective selection/page fallback do not publish. User edits publish fresh arrays/objects; equivalent selection sets are no-ops. Removed IDs remain untouched in the provider but are ignored by effective selection. Select-all includes every matching row across pages, preserving selected IDs outside the result. Keep selection and view settings transient unless explicitly required otherwise.
 
+Click a row or focus it and press Space/Enter to select it. Multiple selection toggles that row without clearing other IDs; single selection replaces the previous ID and keeps an already selected row selected. Row interactions and the existing checkbox/radio controls publish through the same `pub-to` target, always as an ID array. Links, embedded controls, and text selection do not activate the row. `selection="none"` leaves rows inert. Selected rows expose `aria-selected`; keyboard focus and selected state use shared theme colors.
+
 Disabled/read-only, loading, external errors, and invalid input block mutations. Invalid records/configuration show caller-owned error text. Closing a dialog or switching tabs does not commit table state. The table does not edit records or perform external writes.
 
 ## Tools and viewers

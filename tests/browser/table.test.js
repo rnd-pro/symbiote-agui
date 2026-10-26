@@ -111,6 +111,48 @@ test('independent filters compose with provider-backed tables, sorting and selec
   assert.deepEqual((await call('read_result', {}, 'independent-filter')).items, []);
   await cli('events', 'table');
 
+  await page.click(`${table} tr[data-row-id="a"] td[data-column="name"]`);
+  assert.deepEqual(await data('ids'), [
+    'd',
+    'a',
+  ]);
+  assert.equal(await page.$eval(`${table} tr[data-row-id="a"]`, (element) => element.getAttribute('aria-selected')), 'true');
+  await page.click(`${table} tr[data-row-id="b"] td[data-column="name"]`);
+  await page.click(`${table} tr[data-row-id="a"] td[data-column="name"]`);
+  assert.deepEqual(await data('ids'), [
+    'd',
+    'b',
+  ]);
+  await page.focus(`${table} tr[data-row-id="b"]`);
+  await page.keyboard.press('Enter');
+  assert.deepEqual(await data('ids'), [
+    'd',
+  ]);
+  await page.keyboard.press('Space');
+  assert.deepEqual(await data('ids'), [
+    'd',
+    'b',
+  ]);
+  await page.keyboard.press('Space');
+  await page.$eval(`${table} tr[data-row-id="a"] td[data-column="name"]`, (cell) => {
+    let button = document.createElement('button');
+    button.type = 'button';
+    button.id = 'row-action-fixture';
+    button.textContent = 'Row action';
+    cell.append(button);
+  });
+  await page.click('#row-action-fixture');
+  assert.deepEqual(await data('ids'), [
+    'd',
+  ], 'An embedded control does not select its row.');
+  await page.$eval('#row-action-fixture', (element) => element.remove());
+  await page.$eval(table, (element) => element.setAttribute('selection', 'none'));
+  await page.click(`${table} tr[data-row-id="a"] td[data-column="name"]`);
+  assert.deepEqual(await data('ids'), [
+    'd',
+  ]);
+  assert.equal(await page.$eval(`${table} tr[data-row-id="a"]`, (element) => element.hasAttribute('aria-selected')), false);
+  await page.$eval(table, (element) => element.setAttribute('selection', 'multiple'));
   await page.click(`${table} tr[data-row-id="a"] td[data-column=""] input`);
   assert.deepEqual(await data('ids'), [
     'd',
@@ -247,7 +289,18 @@ test('independent filters compose with provider-backed tables, sorting and selec
   ]);
   await page.select(`${filter} fieldset[data-field="active"] select`, '');
   await page.click('#single-table tr[data-row-id="a"] td[data-column=""] input');
-  await page.click('#single-table tr[data-row-id="b"] td[data-column=""] input');
+  await page.click('#single-table tr[data-row-id="b"] td[data-column="name"]');
+  await page.click('#single-table tr[data-row-id="b"] td[data-column="name"]');
+  assert.deepEqual(await data('singleIds'), [
+    'b',
+  ]);
+  await page.focus('#single-table tr[data-row-id="a"]');
+  await page.keyboard.press('Space');
+  assert.deepEqual(await data('singleIds'), [
+    'a',
+  ]);
+  await page.focus('#single-table tr[data-row-id="b"]');
+  await page.keyboard.press('Enter');
   assert.deepEqual(await data('singleIds'), [
     'b',
   ]);
@@ -263,6 +316,9 @@ test('independent filters compose with provider-backed tables, sorting and selec
     try { Reflect.get(element, 'selectRow')('a', true); return false; }
     catch { return true; }
   }), true);
+  let readOnlyIds = await data('ids');
+  await page.click(`${table} tr[data-row-id="a"] td[data-column="name"]`);
+  assert.deepEqual(await data('ids'), readOnlyIds, 'Read-only rows cannot publish selection changes.');
 
   await cli('events', 'table');
   await update({

@@ -90,6 +90,11 @@ export function presentTable(table, state) {
       return {
         id: rowId,
         rowId,
+        selectionType: base.selectionType,
+        selected: selected.has(rowId),
+        selectable: selectable && !unavailable,
+        selectedText: selectable ? String(selected.has(rowId)) : false,
+        tabIndex: selectable && !unavailable ? 0 : -1,
         cells: [
           ...(selectable ? [
             cell,

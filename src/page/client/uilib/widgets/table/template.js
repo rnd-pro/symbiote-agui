@@ -35,7 +35,7 @@ export let TABLE_HEADING_TEMPLATE = html`
 `;
 
 export let TABLE_ROW_TEMPLATE = html`
-  <tr bind="@data-row-id: rowId" itemize="cells" item-tag="agui-table-cell"></tr>
+  <tr ref="row" bind="@data-row-id: rowId; @data-selectable: selectable; @aria-selected: selectedText; tabIndex: tabIndex" itemize="cells" item-tag="agui-table-cell"></tr>
 `;
 
 export let TABLE_CELL_TEMPLATE = html`

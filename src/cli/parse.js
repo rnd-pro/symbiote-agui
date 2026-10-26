@@ -28,6 +28,9 @@ export function parseCommand(args) {
         query: { type: 'string' },
         key: { type: 'string' },
         'reset-data': { type: 'boolean' },
+        conversation: {
+          type: 'string',
+        },
       },
     });
   } catch (error) {

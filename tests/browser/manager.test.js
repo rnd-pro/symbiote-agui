@@ -162,7 +162,7 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.reload();
   await page.waitForSelector('[data-session="desk"]');
   await page.click('#session-views [role="tab"][value="table"]');
-  await page.click('#manager-table input[type="radio"]');
+  await page.click('#manager-table tr[data-row-id="desk"] td[data-column="id"]');
   await page.waitForSelector('#session-inspector [data-session="desk"]');
   await page.locator('#session-inspector ::-p-aria([name="Start"][role="button"])').click();
   await notice(page, 'start completed');
@@ -317,7 +317,7 @@ test('manager disconnects reconcile status without replaying a mutation; generat
   await isolated.close();
 });
 
-test('cards and table share session selection and inspector actions target only the selected session', {
+test('cards and selectable table rows share session selection and inspector actions target only the selected session', {
   skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 35_000,
 }, async (t) => {
@@ -375,7 +375,7 @@ test('cards and table share session selection and inspector actions target only 
   await fallback.evaluateOnNewDocument(() => { Reflect.deleteProperty(Element.prototype, 'setHTML'); });
   await fallback.goto(manager.launchUrl);
   await fallback.waitForSelector('#manager-table tr[data-row-id="alpha"] td[data-column=""] input');
-  await fallback.click('#manager-table tr[data-row-id="alpha"] td[data-column=""] input');
+  await fallback.click('#manager-table tr[data-row-id="alpha"] td[data-column="id"]');
   await fallback.locator('#session-inspector ::-p-aria([name="Description"][role="button"])').click();
   await fallback.waitForSelector('#manager-description strong');
   assert.equal(await fallback.$('#manager-description x-manager-description-probe, #manager-description script'), null);
@@ -387,8 +387,17 @@ test('cards and table share session selection and inspector actions target only 
   await page.click('.sessions [data-session="alpha"] .manager-session-select');
   await page.click('#session-views [role="tab"][value="table"]');
   assert.equal(await page.$eval('#manager-table tr[data-row-id="alpha"] td[data-column=""] input', (element) => Reflect.get(element, 'checked')), true);
-  await page.click('#manager-table tr[data-row-id="beta"] td[data-column=""] input');
+  await page.click('#manager-table tr[data-row-id="beta"] td[data-column="id"]');
   await page.waitForSelector('#session-inspector [data-session="beta"]');
+  await page.focus('#manager-table tr[data-row-id="alpha"]');
+  await page.keyboard.press('Space');
+  await page.waitForSelector('#session-inspector [data-session="alpha"]');
+  await page.focus('#manager-table tr[data-row-id="beta"]');
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('#session-inspector [data-session="beta"]');
+  assert.deepEqual(await page.$eval('agui-session-manager', (element) => Reflect.get(element, '$').selection), [
+    'beta',
+  ]);
   assert.equal(await page.$eval('.sessions [data-session="alpha"] .manager-session-select', (element) => element.getAttribute('aria-pressed')), 'false');
   assert.equal(await page.$eval('.sessions [data-session="beta"] .manager-session-select', (element) => element.getAttribute('aria-pressed')), 'true');
   await page.locator('#session-inspector ::-p-aria([name="Start"][role="button"])').click();

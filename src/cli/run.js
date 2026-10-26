@@ -36,7 +36,28 @@ export async function run(args) {
       return EXIT_CODE.SUCCESS;
     }
     if (request.kind === 'feedback') {
-      printResult({ ok: true, ...await runFeedbackCommand(request) });
+      let result = await runFeedbackCommand(request);
+      if (request.command === 'check' && !result.feedbackCheck?.ready) {
+        let messages = {
+          configure: 'Feedback is not configured. Establish delivery to the current chat before making changes.',
+          reconnect: 'Feedback is not ready. Reestablish delivery to the current chat before making changes.',
+          restart: 'This worker belongs to another conversation. Preserve drafts and obtain approval for a new worker instance before reconnecting.',
+          none: 'Feedback readiness could not be verified.',
+        };
+        printResult({
+          ...result,
+          ok: false,
+          error: {
+            code: ERROR_CODE.FEEDBACK_NOT_READY,
+            message: messages[result.feedbackCheck?.action || 'none'],
+          },
+        });
+        return EXIT_CODE.RUNTIME_ERROR;
+      }
+      printResult({
+        ok: true,
+        ...result,
+      });
       return EXIT_CODE.SUCCESS;
     }
     if (request.kind === 'manager') {

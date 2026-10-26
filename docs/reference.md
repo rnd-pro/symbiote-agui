@@ -13,6 +13,8 @@ npx symbiote-agui manager stop
 
 The built-in Symbiote page calls AGUI functions directly over its own authenticated WebSocket. It does not need an agent, MCP setup, or browser debugging. It lists running and saved sessions, descriptions, clients, process IDs, and current links. Search, status filters, individual controls, and scoped bulk actions use the shared UI library. The theme toggle selects light/dark; the initial theme follows your operating system when no preference is saved. Your choice is remembered across reloads and synchronized between tabs in the same browser at the manager URL.
 
+Click a session row in Table, or focus it and press Space/Enter, to open its controls in the right sidebar. Table and Cards share one selected session; sidebar actions apply to that session.
+
 One detached manager runs per private state directory and resolved library folder. Repeating `manager` reuses it. Its storage scope is fixed at startup; changing the project folder setting selects a separate manager on the next launch. Session stop/clear-all commands leave the manager running. `manager stop` stops only the manager and waits for accepted operations to finish.
 
 Use Projects to connect existing AGUI folders and revisit them or Default. Choose folder opens a native picker on the computer running Node and connects the selected folder; canceling leaves connections unchanged. Enter folder path provides optional manual entry. Desktop pickers use macOS or Windows system dialogs, or an installed Zenity/KDialog on Linux; if unavailable, use manual entry. Switch opens the selected folder's manager without changing save-folder configuration or moving files, sessions, or data. Manage projects shows paths and availability; Forget connection removes only the remembered connection. Default and the current project cannot be forgotten.
@@ -157,11 +159,14 @@ The CLI can register a private command for the current worker. Explicit browser 
 
 ```sh
 npx symbiote-agui feedback status my-workspace
+npx symbiote-agui feedback check my-workspace --conversation <CURRENT_CHAT_ID>
 npx symbiote-agui feedback configure my-workspace --file /private/path/feedback.json
 npx symbiote-agui feedback disable my-workspace
 ```
 
-All three commands require a running session. `configure` accepts JSON from `--file` or stdin:
+These commands require a running session. `check` compares the supplied chat ID with the worker's private binding without sending a message or changing configuration. Its `feedbackCheck` reports `instanceId`, readiness `state`, `binding` (`unbound`, `matching`, or `different`), `ready`, and recommended `action` (`none`, `configure`, `reconnect`, or `restart`). Exit code 0 means a ready matching registration; exit 1 with `FEEDBACK_NOT_READY` means setup is required, and invalid arguments exit 2. It reveals neither the actual bound chat ID nor the handler. This is a registration check, not proof of native delivery or external persistence. Older workers return `NOT_IMPLEMENTED`; preserve drafts and review a restart before upgrading a live worker.
+
+`configure` accepts JSON from `--file` or stdin:
 
 ```json
 {

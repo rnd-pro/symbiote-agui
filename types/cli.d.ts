@@ -13,6 +13,7 @@ export type LibraryRequest =
   | { kind: 'library'; command: 'list'; query?: string };
 
 export type FeedbackCliRequest =
+  | { kind: 'feedback'; command: 'check'; sessionId: string; conversationId: string }
   | { kind: 'feedback'; command: 'configure'; sessionId: string; file?: string }
   | { kind: 'feedback'; command: 'status' | 'disable'; sessionId: string };
 
@@ -50,6 +51,7 @@ export interface CommandFailure {
 }
 
 export type CommandResult = ({ ok: true } & (SessionStatus | import('./tools.js').SessionToolResponse))
+  | (CommandFailure & SessionStatus)
   | ({ ok: true } & import('./manager.js').ManagerStatus)
   | CommandFailure
   | import('./session.js').AllSessionsResult

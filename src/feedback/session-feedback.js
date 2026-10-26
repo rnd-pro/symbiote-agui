@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { CommandError } from '../shared/command-error.js';
 import { executeFeedback } from './execute.js';
-import { validateFeedbackIdentity, validateFeedbackRegistration } from './validate.js';
+import { validateFeedbackCheck, validateFeedbackIdentity, validateFeedbackRegistration } from './validate.js';
 import { validateFeedbackSubmission, validateFeedbackReference } from './submission.js';
 import { DELIVERY_STATE, FEEDBACK_STATE, FEEDBACK_LIMITS, feedbackFailure } from './constants.js';
 
@@ -40,6 +40,29 @@ export class SessionFeedback extends EventEmitter {
       pending: this.#queue.length + Number(!!this.#active),
       ...(this.#lastDelivery ? { lastDelivery: this.#lastDelivery } : {}),
       ...(this.#failure ? { failure: this.#failure } : {}) });
+  }
+
+  /**
+   * @param {unknown} input
+   * @returns {import('../../types/feedback.js').FeedbackCheck}
+   */
+  check(input) {
+    let conversationId = validateFeedbackCheck(input, this.identity);
+    /** @type {import('../../types/feedback.js').FeedbackCheck['binding']} */
+    let binding = !this.#conversationId ? 'unbound' : this.#conversationId === conversationId ? 'matching' : 'different';
+    let ready = binding === 'matching' && this.#state === FEEDBACK_STATE.READY;
+    let actions = /** @type {const} */ ({
+      unbound: 'configure',
+      matching: 'reconnect',
+      different: 'restart',
+    });
+    return {
+      instanceId: this.identity.instanceId,
+      state: this.#state,
+      binding,
+      ready,
+      action: ready ? 'none' : actions[binding],
+    };
   }
 
   /** @param {unknown} input */

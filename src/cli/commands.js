@@ -68,6 +68,12 @@ export let ALL_COMMANDS = Object.freeze({
 });
 
 export let FEEDBACK_COMMANDS = Object.freeze({
+  check: {
+    usage: 'feedback check <SESSION_ID> --conversation <CONVERSATION_ID>',
+    options: [
+      'conversation',
+    ],
+  },
   configure: { usage: 'feedback configure <SESSION_ID> [--file <PATH>]', options: ['file'] },
   status: { usage: 'feedback status <SESSION_ID>', options: [] },
   disable: { usage: 'feedback disable <SESSION_ID>', options: [] },
@@ -111,6 +117,7 @@ export let HELP = [
   'events returns and clears buffered interface events.',
   'feedback configure reads private JSON from file or stdin; registration lasts only for the current worker.',
   'feedback status and disable require a running session; only explicit browser submissions invoke the handler.',
+  'feedback check verifies the current conversation binding without delivery; exits 1 when configuration or reconnection is needed.',
   'start all restores saved sessions, reuses running workers, and opens their pages unless --no-open.',
   'status all lists running and saved sessions with active flags and current links for running sessions.',
   'pages lists connected tabs; tools discovers one tab (use --page with several tabs).',

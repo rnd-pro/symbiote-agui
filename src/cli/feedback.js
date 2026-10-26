@@ -7,6 +7,7 @@ import { readMarkup } from '../markup/read-input.js';
 import { FEEDBACK_LIMITS } from '../feedback/constants.js';
 import { CONTROL_TIMEOUT_MS } from '../sessions/constants.js';
 import { FEEDBACK_COMMANDS } from './commands.js';
+import { text } from '../feedback/validate-shape.js';
 
 /**
  * @param {string[]} positionals
@@ -17,11 +18,24 @@ export function parseFeedbackCommand(positionals, values) {
   if (positionals[0] !== 'feedback') { return; }
   let command = positionals[1];
   let sessionId = positionals[2];
+  let definition = FEEDBACK_COMMANDS[/** @type {keyof typeof FEEDBACK_COMMANDS} */ (command)];
   if (!Object.hasOwn(FEEDBACK_COMMANDS, command) || positionals.length !== 3 || !sessionId
-    || Object.keys(values).some((key) => key !== 'file' || command !== 'configure') || values.file === '') {
-    throw new CommandError('Usage: symbiote-agui feedback configure <SESSION_ID> [--file <PATH>] | feedback status <SESSION_ID> | feedback disable <SESSION_ID>');
+    || Object.entries(values).some(([
+      key,
+      value,
+    ]) => !(/** @type {readonly string[]} */ (definition.options)).includes(key) || value === '')) {
+    throw new CommandError(`Usage: symbiote-agui ${Object.values(FEEDBACK_COMMANDS).map((entry) => entry.usage).join(' | ')}`);
   }
   assertSessionId(sessionId);
+  if (command === 'check') {
+    text(values.conversation);
+    return {
+      kind: 'feedback',
+      command,
+      sessionId,
+      conversationId: values.conversation,
+    };
+  }
   return command === 'configure' ? { kind: 'feedback', command, sessionId, file: /** @type {string | undefined} */ (values.file) }
     : { kind: 'feedback', command: /** @type {'status' | 'disable'} */ (command), sessionId };
 }
@@ -40,7 +54,19 @@ export async function runFeedbackCommand(request) {
     catch { throw new CommandError('Feedback configuration must be valid JSON.'); }
   } else if (request.command === 'disable') {
     body = JSON.stringify({ sessionId: record.sessionId, instanceId: record.instanceId });
+  } else if (request.command === 'check') {
+    text(request.conversationId);
+    body = JSON.stringify({
+      sessionId: record.sessionId,
+      instanceId: record.instanceId,
+      conversationId: request.conversationId,
+    });
   }
-  let action = /** @type {const} */ ({ configure: 'feedback/configure', status: 'feedback', disable: 'feedback/disable' });
+  let action = /** @type {const} */ ({
+    configure: 'feedback/configure',
+    status: 'feedback',
+    disable: 'feedback/disable',
+    check: 'feedback/check',
+  });
   return requestSession(record, action[request.command], CONTROL_TIMEOUT_MS, body);
 }

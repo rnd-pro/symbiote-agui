@@ -73,6 +73,7 @@ process.once('message', async (message) => {
       transferSnapshot: () => runtime.transferSnapshot(),
       feedbackConfigure: (input) => runtime.configureFeedback(input),
       feedbackStatus: () => runtime.feedbackStatus(),
+      feedbackCheck: (input) => runtime.checkFeedback(input),
       feedbackDisable: (input) => runtime.disableFeedback(input),
     });
     control = endpoint.server;

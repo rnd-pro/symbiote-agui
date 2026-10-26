@@ -147,6 +147,14 @@ export class SessionRuntime {
   }
 
   /** @param {unknown} input */
+  checkFeedback(input) {
+    return {
+      ...this.feedbackStatus(),
+      feedbackCheck: this.feedback.check(input),
+    };
+  }
+
+  /** @param {unknown} input */
   async configureFeedback(input) {
     if (this.closing || this.clearing) { throw new CommandError('Feedback cannot be configured during clear or shutdown.'); }
     await this.feedback.configure(input);

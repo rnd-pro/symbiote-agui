@@ -106,3 +106,10 @@ export interface FeedbackStatus {
   lastDelivery?: FeedbackDelivery;
   failure?: FeedbackFailure;
 }
+
+/** Private control check; never exposes the bound conversation or handler. */
+export interface FeedbackCheck extends Pick<FeedbackStatus, 'instanceId' | 'state'> {
+  binding: 'unbound' | 'matching' | 'different';
+  ready: boolean;
+  action: 'none' | 'configure' | 'reconnect' | 'restart';
+}

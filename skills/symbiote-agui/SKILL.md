@@ -356,10 +356,10 @@ Keep Git commits, pulls, and conflict resolution in the user's normal workflow. 
 Choose a session ID matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`. Reuse it for the same interface. Private-cache IDs are case-sensitive and shared across working directories for the current OS user; team-library IDs are scoped to their folder and must differ beyond letter case for portability.
 
 1. Run `npx symbiote-agui start demo`. Check `ok` and `restored`. If `SESSION_EXISTS` is returned, use `npx symbiote-agui status demo` once and reuse a session belonging to this task, or choose another ID.
-2. Reuse an owned running session or a `restored: true` interface without regenerating or reinserting it. For a new or deliberately changed definition, use `npx symbiote-agui insert demo --file /absolute/path/view.html` using a prepared file. Use `update` for small state changes.
+2. Complete the [feedback preflight](#check-before-editing) before changing the interface or application state. Reuse an owned running session or a `restored: true` interface without regenerating or reinserting it. For a new or deliberately changed definition, use `npx symbiote-agui insert demo --file /absolute/path/view.html` using a prepared file. Use `update` for small state changes.
 3. Run `npx symbiote-agui tools demo`. It selects a single interactive page automatically, ignoring viewers. With several interactive local-only pages, run `npx symbiote-agui pages demo`, then `npx symbiote-agui tools demo --page <PAGE_ID>`. Keep the returned `pageId`, `discoveryId`, tool names, and schemas.
 4. Prepare a JSON file containing `{ "pageId": "...", "discoveryId": "...", "name": "...", "input": {} }`, then run `npx symbiote-agui call demo --file /absolute/path/call.json`. Use the exact discovered name and schema-compatible arguments. Check `ok` and use `result` as confirmation. Native tool errors preserve `result` and return `ok: false` with exit code 1. Reuse the selected page and discovery IDs for further calls while they remain current.
-5. For task actions that require the agent, configure the native feedback workflow below when supported. Explicit submissions then reach this conversation without another chat prompt. Without feedback, use `npx symbiote-agui events demo` when interaction is expected; it returns immediately and clears the queue. An empty batch means no new input, not completion. Avoid tight polling. Keep the session available while the user interacts; stop it when the user is finished or requests cleanup.
+5. Verified feedback delivers explicit submissions to this conversation without another chat prompt. If the user explicitly accepts working without automatic delivery, use `npx symbiote-agui events demo` when interaction is expected; it returns immediately and clears the queue. An empty batch means no new input, not completion. Avoid tight polling. Keep the session available while the user interacts; stop it when the user is finished or requests cleanup.
 
 Use tool results or CLI events when they answer the task; avoid repeated status checks, DOM inspection, screenshots, or unrelated commands. After replacement or catalog changes, rediscover tools. After reload, reconnection, or worker restart, select the current page again. Do not retry an invocation automatically when its outcome is unknown.
 
@@ -584,11 +584,25 @@ Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete
 
 ## Agent session feedback
 
+### Check before editing
+
+When beginning or resuming work with an AGUI, obtain the current conversation ID from the native harness and run:
+
+```sh
+npx symbiote-agui feedback check <SESSION_ID> --conversation <CURRENT_CHAT_ID>
+```
+
+For a new or stopped session, start its worker first, then check before inserting an interface or changing application state. Exit 0 with `feedbackCheck.ready: true` means registration is ready and matches the supplied conversation. Exit 1 requires setup; inspect `feedbackCheck.binding` and `action` (`configure`, `reconnect`, or `restart`). Invalid arguments exit 2. The check is read-only, sends no message, and keeps the actual bound conversation ID and handler private. It compares worker registration, not native delivery health; retain the initialization workflow's delivery verification. A connected page alone does not prove feedback ownership.
+
+If feedback is missing, disabled, unavailable, bound to another conversation, or its destination cannot be verified, explain the issue and prompt the user to establish feedback with the current chat before making changes. Continue read-only diagnosis and prepare reconnection steps, but defer interface/state mutations until delivery is verified or the user explicitly accepts working without automatic delivery. Do not silently skip this check or assume an existing handler targets this chat.
+
+A worker bound to another conversation requires a new worker instance. Preserve or export drafts and explain the restart before requesting approval; do not silently restart a live AGUI, discard edits, or redirect another chat's feedback. Recheck feedback after any restart using the new instance ID and the initialization workflow below.
+
 ### Initialize delivery
 
 1. Identify the current harness and originating conversation ID from its native environment or API. Reuse previously verified delivery routes, checking current ownership and installed protocol compatibility instead of repeating the investigation. Follow the setup recovery guidance if a direct CLI candidate fails. Verify receipt in that same conversation while busy and idle, including wake-up or native queuing behavior. A successful process exit, owner discovery, or an active-turn probe alone is insufficient.
 2. If supported, generate a private, session-specific command that calls that native interface. Recheck ownership before delivery; never fall back to another conversation. Do not start or resume an independent agent, add a harness adapter, broker, or messaging service, or assume a similarly named socket uses the same protocol. Validate access from the actual worker environment and respect host permissions.
-3. Run `npx symbiote-agui feedback status demo` for the current worker's `feedback.instanceId`. Prepare a private registration file and configure it:
+3. Use the current `feedback.instanceId` from the check result, or run `npx symbiote-agui feedback status demo`. Prepare a private registration file and configure it:
 
 ```json
 {
@@ -606,7 +620,7 @@ Named `PubSub` contexts can own descriptors shared by multiple consumers. Delete
 
 ```sh
 npx symbiote-agui feedback configure demo --file /private/path/feedback.json
-npx symbiote-agui feedback status demo
+npx symbiote-agui feedback check demo --conversation <CURRENT_CHAT_ID>
 npx symbiote-agui feedback disable demo
 ```
 
@@ -616,7 +630,7 @@ Wait for native acknowledgement before printing exactly one JSON object to stdou
 
 Registration belongs only to this running worker. Restart requires fresh capability checks and registration; a conversation cannot be rebound within one worker. Disable when the conversation becomes unavailable or before changing tasks. Clear, stop, and shutdown disable it. Configuration is excluded from saved definitions and public status.
 
-If native delivery, idle wake-up, worker support, or permission remains unavailable after checking supported alternatives, omit the handler and retain normal UI, local drafts, tools, and events. Report automatic transfer as an unresolved setup requirement when the task needs it; do not silently drop the documented external saving rule or display a local save as externally persisted. An old worker can return `NOT_IMPLEMENTED`; do not restart it silently and lose its address or drafts. AGUI itself needs no MCP connection.
+If native delivery, idle wake-up, worker support, or permission remains unavailable after checking supported alternatives, report the limitation and follow the preflight's agreement requirement before editing without feedback. Retain normal UI, local drafts, tools, and events. Report automatic transfer as an unresolved setup requirement when the task needs it; do not silently drop the documented external saving rule or display a local save as externally persisted. An old worker can return `NOT_IMPLEMENTED`; do not restart it silently and lose its address or drafts. AGUI itself needs no MCP connection.
 
 ### Submit consolidated changes
 

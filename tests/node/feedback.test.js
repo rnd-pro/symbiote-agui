@@ -52,6 +52,53 @@ test('registration validates identity and command without leaking or sharing pri
   assert.equal((await result)[0].state, 'accepted');
 });
 
+test('feedback checks validate exact identity and compare private ownership without mutating it', async (t) => {
+  let config = registration();
+  let feedback = new SessionFeedback(config);
+  t.after(() => feedback.close());
+  let input = {
+    ...feedback.identity,
+    conversationId: config.conversationId,
+  };
+  let initial = feedback.status();
+  assert.equal(feedback.check(input).action, 'configure');
+  assert.deepEqual(feedback.status(), initial);
+  for (let invalid of [
+    null,
+    {
+      ...input,
+      instanceId: randomUUID(),
+    },
+    {
+      ...input,
+      sessionId: 'another-session',
+    },
+    {
+      ...input,
+      conversationId: '',
+    },
+    {
+      ...input,
+      command: config.command,
+    },
+  ]) {
+    assert.throws(() => feedback.check(invalid), {
+      code: 'INVALID_INPUT',
+    });
+  }
+  await feedback.configure(config);
+  let result = feedback.check(input);
+  assert.equal(result.ready, true);
+  assert.equal(result.action, 'none');
+  assert.ok(!JSON.stringify(result).includes(config.conversationId));
+  await feedback.disable(feedback.identity);
+  assert.equal(feedback.check(input).action, 'reconnect');
+  assert.equal(feedback.check({
+    ...input,
+    conversationId: randomUUID(),
+  }).action, 'restart');
+});
+
 test('submissions are ordered and duplicates or stale instances cannot execute again', async (t) => {
   let directory = await mkdtemp(join(tmpdir(), 'agui-feedback-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
@@ -152,5 +199,9 @@ test('conversation unavailability disables later submissions without changing th
   feedback.submit(submission(config.instanceId));
   assert.equal((await completed)[0].failure.code, 'UNAVAILABLE');
   assert.equal(feedback.status().state, 'unavailable');
+  assert.equal(feedback.check({
+    ...feedback.identity,
+    conversationId: config.conversationId,
+  }).action, 'reconnect');
   assert.equal(feedback.submit(submission(config.instanceId)).failure?.code, 'UNAVAILABLE');
 });

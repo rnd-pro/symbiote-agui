@@ -21,6 +21,25 @@ export function validateFeedbackIdentity(input, identity, registration = false) 
 /**
  * @param {unknown} input
  * @param {import('../../types/feedback.js').FeedbackSessionIdentity} identity
+ */
+export function validateFeedbackCheck(input, identity) {
+  object(input);
+  keys(input, [
+    'sessionId',
+    'instanceId',
+    'conversationId',
+  ]);
+  validateFeedbackIdentity({
+    sessionId: input.sessionId,
+    instanceId: input.instanceId,
+  }, identity);
+  text(input.conversationId);
+  return input.conversationId;
+}
+
+/**
+ * @param {unknown} input
+ * @param {import('../../types/feedback.js').FeedbackSessionIdentity} identity
  * @returns {Promise<import('../../types/feedback.js').FeedbackRegistration>}
  */
 export async function validateFeedbackRegistration(input, identity) {

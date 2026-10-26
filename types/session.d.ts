@@ -24,6 +24,8 @@ export interface SessionStatus {
   dropped?: number;
   toolResponse?: import('./tools.js').ToolResponse;
   feedback?: import('./feedback.js').FeedbackStatus;
+  /** Only returned by the authenticated feedback check operation. */
+  feedbackCheck?: import('./feedback.js').FeedbackCheck;
   data?: import('./data.js').DataStatus;
   transferSnapshot?: import('./transfer.js').TransferSnapshot;
 }
@@ -85,6 +87,7 @@ export interface ControlActions {
   transferSnapshot?(): Promise<SessionStatus>;
   feedbackConfigure?(input: unknown): Promise<SessionFeedbackStatus>;
   feedbackStatus?(): SessionFeedbackStatus;
+  feedbackCheck?(input: unknown): SessionFeedbackStatus;
   feedbackDisable?(input: unknown): Promise<SessionFeedbackStatus>;
 }
 

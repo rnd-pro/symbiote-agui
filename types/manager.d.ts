@@ -24,6 +24,9 @@ export interface ManagerRequest {
   includeData?: boolean;
   includeMetadata?: boolean;
   transferId?: string;
+  instanceId?: string;
+  conversationId?: string;
+  command?: import('./feedback.js').FeedbackCommand;
 }
 
 export interface ManagerScope {
@@ -67,6 +70,7 @@ export interface ManagerResult {
   preview?: ProjectPreview;
   transfer?: import('./transfer.js').TransferResult;
   transfers?: import('./transfer.js').TransferResult[];
+  feedbackSettings?: import('./feedback.js').FeedbackSettings;
   error?: CommandFailure['error'];
 }
 

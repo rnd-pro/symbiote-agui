@@ -10,6 +10,7 @@ import { setFeedbackSender, setFeedbackConnected, setFeedbackRole, receiveFeedba
 import { withoutFeedback } from './feedback-guard.js';
 import { setDataSender, setDataConnected, setDataRole, setDataRendered, receiveData } from './data.js';
 import { updateSessionContext } from './session-context.js';
+import { setInformationSender, receiveSessionInformation, failInformationRequest } from './session-information.js';
 
 export function connectSession() {
   syncPageIdentity();
@@ -48,6 +49,7 @@ export function connectSession() {
     return true;
   };
   setEventSender(send);
+  setInformationSender(send);
   setFeedbackSender(send);
   setDataSender((message) => {
     if (shared.role === PAGE_ROLE.VIEWER || socket?.readyState !== WebSocket.OPEN
@@ -83,6 +85,10 @@ export function connectSession() {
       let message;
       try { message = /** @type {import('../../../types/transport.js').ServerMessage} */ (JSON.parse(event.data)); }
       catch { showStatus('Connection error: invalid server message.', 'alert'); return; }
+      if (message.type === 'session-info') {
+        withoutFeedback(() => receiveSessionInformation(message));
+        return;
+      }
       if (message.type === 'feedback-status' || message.type === 'feedback-result') {
         withoutFeedback(() => receiveFeedback(message));
         return;
@@ -106,6 +112,7 @@ export function connectSession() {
           return;
         }
         if (message.type === 'stop') {
+          failInformationRequest();
           updateSessionContext({ connected: false });
           setFeedbackConnected(false);
           setDataConnected(false);
@@ -138,6 +145,7 @@ export function connectSession() {
       }).catch((error) => showStatus(`Connection error: ${error.message}`, 'alert'));
     };
     current.onclose = (event) => {
+      if (current === socket) { failInformationRequest(); }
       if (current === socket) { updateSessionContext({ connected: false }); shared.disconnect(); setFeedbackConnected(false); setDataConnected(false); }
       if (event.code === 1000 && event.reason === 'Session ended') { ended = true; }
       if (ended) { showStatus('Session ended.'); return; }
@@ -153,6 +161,7 @@ export function connectSession() {
   }
 
   window.addEventListener('pagehide', () => {
+    failInformationRequest();
     updateSessionContext({ connected: false });
     setFeedbackConnected(false);
     setDataConnected(false);

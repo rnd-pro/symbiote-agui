@@ -13,7 +13,8 @@ import { checkSessionTunnel, renewSessionTunnel } from '../sessions/tunnel.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE } from '../shared/constants.js';
 import { errorMessage } from '../shared/system-error.js';
-import { MANAGER_OPERATIONS, MANAGER_REQUEST_LIMIT, MANAGER_REQUEST_TTL_MS } from './constants.js';
+import { MANAGER_OPERATIONS, MANAGER_REQUEST_LIMIT, MANAGER_REQUEST_TTL_MS, MANAGER_FEEDBACK_OPERATIONS } from './constants.js';
+import { validateManagerFeedback, runManagerFeedback } from './feedback.js';
 import { configureManagerStorage, managerStorageSettings } from './storage.js';
 import { PROJECT_OPERATIONS } from '../projects/constants.js';
 import { listProjects } from '../projects/registry.js';
@@ -52,6 +53,9 @@ export function validateManagerRequest(input) {
     'includeData',
     'includeMetadata',
     'transferId',
+    'instanceId',
+    'conversationId',
+    'command',
   ].includes(key))
     || typeof value.id !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(value.id)
     || typeof value.operation !== 'string' || !Object.hasOwn(MANAGER_OPERATIONS, value.operation)
@@ -61,6 +65,7 @@ export function validateManagerRequest(input) {
   }
   let request = /** @type {import('../../types/manager.js').ManagerRequest} */ (input);
   let operation = MANAGER_OPERATIONS[request.operation];
+  if (validateManagerFeedback(request)) { return request; }
   validateExplorerRequest(request);
   if (validateTransferRequest(request)) { return request; }
   if (validateProjectRequest(request)) { return request; }
@@ -144,7 +149,7 @@ export class ManagerOperations {
     try {
       this.assertScope();
       let request = validateManagerRequest(input);
-      if (['snapshot', 'describe', 'projects', 'transfer history'].includes(request.operation) || Object.hasOwn(EXPLORER_OPERATIONS, request.operation)) { return await this.execute(request); }
+      if (['snapshot', 'describe', 'projects', 'transfer history', 'feedback settings'].includes(request.operation) || Object.hasOwn(EXPLORER_OPERATIONS, request.operation)) { return await this.execute(request); }
       let fingerprint = JSON.stringify([
         request.operation,
         request.sessionId,
@@ -157,6 +162,9 @@ export class ManagerOperations {
         request.includeData,
         request.includeMetadata,
         request.transferId,
+        request.instanceId,
+        request.conversationId,
+        request.command,
       ]);
       let previous = this.requests.get(request.id);
       if (previous) {
@@ -176,6 +184,9 @@ export class ManagerOperations {
 
   /** @param {import('../../types/manager.js').ManagerRequest} request */
   async execute(request) {
+    if (Object.hasOwn(MANAGER_FEEDBACK_OPERATIONS, request.operation)) {
+      return this.serialize(request.sessionId || '', () => runManagerFeedback(request));
+    }
     if (Object.hasOwn(TRANSFER_OPERATIONS, request.operation)) {
       return this.serialize(request.sessionId || '\0transfers', () => runManagerTransfer(request, this.scope));
     }

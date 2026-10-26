@@ -34,6 +34,14 @@ export let DATA_TOOLBAR_TEMPLATE = html`
         <agui-icon name="refresh" aria-hidden="true"></agui-icon>
         <span bind="textContent: ^checkSaveLabel"></span>
       </button>
+      <button type="button" aria-haspopup="dialog" bind="onclick: ^showDescription; disabled: ^informationDisabled">
+        <agui-icon name="info" aria-hidden="true"></agui-icon>
+        <span bind="textContent: ^descriptionLabel"></span>
+      </button>
+      <button type="button" aria-haspopup="dialog" bind="onclick: ^showMetadata; disabled: ^informationDisabled">
+        <agui-icon name="settings" aria-hidden="true"></agui-icon>
+        <span bind="textContent: ^metadataLabel"></span>
+      </button>
     </agui-toolbar>
     <div class="agui-data-markers">
       <span class="agui-chip" bind="textContent: roleLabel"></span>
@@ -48,6 +56,12 @@ export let DATA_TOOLBAR_TEMPLATE = html`
       <p class="agui-data-error" bind="textContent: errorMessage; hidden: !errorMessage"></p>
     </div>
   </div>
+  <agui-dialog ref="information" pub-to="^informationOpen"
+    bind="$.value: informationOpen; $.label: informationLabel; $.closeLabel: closeInformationLabel">
+    <p role="status" aria-live="polite" bind="textContent: ^informationMessage; hidden: !^informationMessage"></p>
+    <agui-markdown bind="hidden: ^descriptionHidden; $.value: ^description; $.label: ^descriptionLabel; $.texts: ^descriptionTexts; $.extensions: ^descriptionExtensions"></agui-markdown>
+    <pre class="agui-data-metadata" bind="hidden: ^metadataHidden"><code bind="textContent: ^metadata"></code></pre>
+  </agui-dialog>
   <agui-message ref="messages" hidden></agui-message>
   <input ref="file" type="file" hidden bind="@aria-label: fileLabel">
 `;

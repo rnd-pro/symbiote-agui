@@ -10,6 +10,9 @@ import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { readRuntimeCache, runtimeCachePath } from '../../src/data/cache.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { clickDataAction } from './helpers.js';
+import { updateMetadata } from '../../src/metadata/store.js';
+import { sampleMetadata } from '../node/metadata-fixture.js';
+import { definitionPaths } from '../../src/library/paths.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
@@ -202,5 +205,63 @@ test('declarative data toolbar saves, cancels, imports offline, delivers one bou
   assert.deepEqual(JSON.parse(await readFile(join(restoredDownloads, 'agui-data.json'), 'utf8')), {
     version: 1, changes: [{ provider: 'APP', values: { name: 'Imported changed', email: '' } }],
   });
+  assert.deepEqual(errors, []);
+});
+
+test('session information dialogs read fresh files without changing drafts or activating description components', {
+  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
+  timeout: 30_000,
+}, async (t) => {
+  let state = await temporaryState();
+  let runtime = createRuntime();
+  /** @type {import('puppeteer-core').Browser | undefined} */
+  let browser;
+  t.after(async () => {
+    await browser?.close();
+    await runtime.close();
+    await state.close();
+  });
+  let saved = await prepareCachedMarkup('toolbar-test', await readFile(new URL('./data-toolbar.html', import.meta.url), 'utf8'));
+  try { await saved.commit(); } finally { await saved.discard(); }
+  let paths = definitionPaths('toolbar-test');
+  await writeFile(paths.descriptionPath, '# Session briefing\n\nTask data flow.\n\n<agui-button id="untrusted-control">Do not activate</agui-button>');
+  await runtime.start(new AbortController().signal);
+  browser = await puppeteer.launch({
+    executablePath,
+    headless: true,
+    timeout: 10_000,
+    protocolTimeout: 10_000,
+  });
+  let page = await browser.newPage();
+  /** @type {string[]} */
+  let errors = [];
+  page.on('pageerror', (error) => errors.push(String(error)));
+  assert.ok(runtime.record.url);
+  await page.goto(runtime.record.url);
+  await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, '$')?.connectionLabel === 'Connected');
+  await page.type('#name input', 'Unsaved draft');
+  await clickDataAction(page, '#data', 'Description');
+  await page.waitForFunction(() => document.querySelector('#data dialog[open] article')?.textContent?.includes('Session briefing'));
+  assert.equal(await page.$('#data dialog[open] agui-button'), null);
+  assert.equal(await page.$eval('#data dialog[open]', (element) => element.getAttribute('aria-label')), 'Description');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#data dialog[open]'));
+  let metadata = sampleMetadata();
+  await updateMetadata('toolbar-test', () => metadata);
+  await clickDataAction(page, '#data', 'Metadata');
+  await page.waitForFunction(() => document.querySelector('#data dialog[open] pre code')?.textContent?.includes('demo.inventory'));
+  assert.deepEqual(JSON.parse(await page.$eval('#data dialog[open] pre code', (element) => element.textContent || '')), metadata);
+  assert.equal(await page.$eval('#data agui-markdown', (element) => element.hasAttribute('hidden')), true);
+  await page.locator('#data dialog[open] .agui-dialog-heading button').click();
+  await page.waitForFunction(() => !document.querySelector('#data dialog[open]'));
+  await writeFile(paths.descriptionPath, '# Updated briefing');
+  await clickDataAction(page, '#data', 'Description');
+  await page.waitForFunction(() => document.querySelector('#data dialog[open] article')?.textContent?.includes('Updated briefing'));
+  assert.equal(await page.$eval('#data dialog pre', (element) => element.hidden), true);
+  await page.keyboard.press('Escape');
+  assert.equal(await page.$eval('#name input', (element) => Reflect.get(element, 'value')), 'Unsaved draft');
+  assert.equal(await page.$eval('#data', (element) => Reflect.get(element, '$').dirty), true);
+  assert.equal(await readRuntimeCache('toolbar-test'), undefined);
+  assert.equal(runtime.feedback.status().pending, 0);
   assert.deepEqual(errors, []);
 });

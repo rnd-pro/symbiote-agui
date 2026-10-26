@@ -81,7 +81,7 @@ export class PageConnection {
             return;
           }
           if (page.role === PAGE_ROLE.VIEWER) { throw new Error('Viewers cannot send actions or state.'); }
-          if (message.type === 'data-commit' || message.type === 'data-read') {
+          if (message.type === 'data-commit' || message.type === 'data-read' || message.type === 'session-info-read') {
             if (!this.data) { throw new Error('Data commits are unavailable.'); }
             this.data.receive(socket, message, Buffer.byteLength(data.toString()));
             return;

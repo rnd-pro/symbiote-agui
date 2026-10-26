@@ -291,7 +291,7 @@
                 <h2 id="gallery-markdown-panel">Markdown</h2>
                 <p class="text-sm text-agui-muted">Use an external Markdown URL or edit the inline source. JSDA renders native HTML, highlighted code, and wrappers with readable fallbacks; registered components can enhance them. Document checkboxes remain disabled.</p>
                 <agui-field id="gallery-markdown-url" type="url" label="Markdown URL" hint="Leave empty to use the inline source. External servers must allow browser CORS access." pub-to="APP/markdownUrl" bind="$.value: APP/markdownUrl"></agui-field>
-                <agui-field id="gallery-markdown-source" type="textarea" label="Inline Markdown source" pub-to="APP/markdownSource" bind="$.value: APP/markdownSource"></agui-field>
+                <agui-field id="gallery-markdown-source" type="textarea" data-code label="Inline Markdown source" pub-to="APP/markdownSource" bind="$.value: APP/markdownSource"></agui-field>
                 <agui-markdown id="gallery-markdown" label="Project briefing" bind="$.value: APP/markdownSource; $.src: APP/markdownUrl; $.texts: APP/markdownTexts"></agui-markdown>
               </agui-panel>
             </div>

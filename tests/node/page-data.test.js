@@ -7,6 +7,10 @@ import { SessionRuntime } from '../../src/sessions/runtime.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { temporaryState } from './state-fixture.js';
 import { dataHtml, dataCommit } from './data-fixture.js';
+import { writeFile } from 'node:fs/promises';
+import { definitionPaths } from '../../src/library/paths.js';
+import { updateMetadata, metadataPath } from '../../src/metadata/store.js';
+import { sampleMetadata } from './metadata-fixture.js';
 
 /**
  * @param {WebSocket} socket
@@ -97,10 +101,28 @@ test('viewers cannot commit or query private snapshots and invalid targets canno
   access.sharing = true;
   pages.shared.enable(0);
   let user = await connect();
-  for (let type of ['data-commit', 'data-read']) {
+  for (let type of [
+    'data-commit',
+    'data-read',
+    'session-info-read',
+  ]) {
     let viewer = await connect(true);
     let closed = once(viewer, 'close');
-    viewer.send(JSON.stringify(type === 'data-commit' ? { type, commit: dataCommit(runtime.data.status()) } : { type, references: [] }));
+    let input = {
+      'data-commit': {
+        type,
+        commit: dataCommit(runtime.data.status()),
+      },
+      'data-read': {
+        type,
+        references: [],
+      },
+      'session-info-read': {
+        type,
+        id: randomUUID(),
+      },
+    }[type];
+    viewer.send(JSON.stringify(input));
     assert.equal((await closed)[0], 1008);
   }
   let input = dataCommit(runtime.data.status(), { theme: 'dark' });
@@ -108,4 +130,33 @@ test('viewers cannot commit or query private snapshots and invalid targets canno
   user.send(JSON.stringify({ type: 'data-commit', commit: input }));
   assert.equal((await denied).result.failure.code, 'INVALID_TARGET');
   assert.equal(runtime.data.raw, undefined);
+});
+
+test('session information reads fresh description and metadata without private worker fields or storage errors', async (t) => {
+  let {
+    connect,
+  } = await setup(t);
+  let socket = await connect();
+  let paths = definitionPaths('page-data');
+  let metadata = sampleMetadata();
+  await updateMetadata('page-data', () => metadata);
+  await writeFile(paths.descriptionPath, '# Current description');
+  async function read() {
+    let id = randomUUID();
+    let result = message(socket, (entry) => entry.type === 'session-info' && entry.id === id);
+    socket.send(JSON.stringify({
+      type: 'session-info-read',
+      id,
+    }));
+    return (await result).info;
+  }
+  assert.deepEqual(await read(), {
+    sessionId: 'page-data',
+    description: '# Current description',
+    metadata,
+  });
+  await writeFile(paths.descriptionPath, '# Revised description');
+  assert.equal((await read()).description, '# Revised description');
+  await writeFile(metadataPath('page-data'), '{invalid');
+  assert.equal(await read(), null);
 });

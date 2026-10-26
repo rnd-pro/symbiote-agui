@@ -8,6 +8,8 @@ export function presentToolbar(toolbar) {
   let data = getDataState();
   let viewer = toolbar.$['AGUI_SESSION/role'] === 'viewer';
   let connected = toolbar.$['AGUI_SESSION/connected'] === true;
+  let information = /** @type {import('../../../../../../types/transport.js').SessionInformation | null} */ (toolbar.$['AGUI_SESSION/information']);
+  let informationState = toolbar.$['AGUI_SESSION/informationState'];
   let submission = toolbar.submission;
   let local = submission?.result;
   let delivery = submission?.delivery;
@@ -48,6 +50,26 @@ export function presentToolbar(toolbar) {
       indicatorMessage,
     ].filter(Boolean).join('. '),
     closeActionsLabel: text('closeActions'),
+    descriptionLabel: text('description'),
+    metadataLabel: text('metadata'),
+    informationLabel: text(String(toolbar.$.informationKind)),
+    closeInformationLabel: text('closeInformation'),
+    descriptionHidden: toolbar.$.informationKind !== 'description',
+    metadataHidden: toolbar.$.informationKind !== 'metadata',
+    informationMessage: informationState === 'loading' ? text('informationLoading')
+      : informationState === 'failed' ? text('informationFailed') : '',
+    informationDisabled: viewer || !connected || informationState === 'loading',
+    description: information?.description || (informationState === 'ready' ? text('description.empty') : ''),
+    metadata: information ? JSON.stringify(information.metadata, null, 2) : '',
+    descriptionTexts: Object.fromEntries(Object.entries(/** @type {import('../../../../../../types/uilib.js').UiTexts} */ (toolbar.$.texts) || {}).filter(([
+      key,
+    ]) => key.startsWith('description.')).map(([
+      key,
+      value,
+    ]) => [
+      key.slice('description.'.length),
+      value,
+    ])),
     actionsLabel: text('actions'),
     saveLabel: text('save'),
     cancelLabel: text('cancel'),

@@ -68,6 +68,13 @@ export interface FeedbackRegistration extends FeedbackSessionIdentity {
   command: FeedbackCommand;
 }
 
+/** Private manager editor state; never included in public status or page messages. */
+export interface FeedbackSettings extends FeedbackSessionIdentity {
+  conversationId: string;
+  command: FeedbackCommand | null;
+  status: FeedbackStatus;
+}
+
 export interface FeedbackFailure {
   code: keyof typeof FEEDBACK_FAILURES;
   /** AGUI-owned explanation, never raw command output. */

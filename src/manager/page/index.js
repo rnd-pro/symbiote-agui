@@ -13,6 +13,7 @@ import { guardNativeRegistrations } from '../../page/client/native-webmcp.js';
 import { PROJECT_STATE, ProjectNavigation } from './projects.js';
 import { EXPLORER_STATE, ProjectExplorer } from './explorer.js';
 import { TRANSFER_STATE, SessionTransfers } from './transfers.js';
+import { FEEDBACK_SETTINGS_STATE, SessionFeedbackSettings } from './feedback.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
@@ -21,6 +22,7 @@ export class SessionManager extends ContextProvider {
     ...PROJECT_STATE,
     ...EXPLORER_STATE,
     ...TRANSFER_STATE,
+    ...FEEDBACK_SETTINGS_STATE,
     connection: 'Connecting...',
     connectionTone: 'info',
     scope: '',
@@ -58,6 +60,9 @@ export class SessionManager extends ContextProvider {
     submitTransfer: (/** @type {Event} */ event) => { event.preventDefault(); void this.transfers?.submit(); },
     openTransferDestination: () => { void this.transfers?.openDestination(); },
     openSettings: () => { this.$.settingsOpen = true; },
+    saveFeedback: (/** @type {Event} */ event) => this.feedbackSettings?.submit(event),
+    disableFeedback: (/** @type {Event} */ event) => this.feedbackSettings?.submit(event, true),
+    refreshFeedback: () => { void this.feedbackSettings?.run('feedback settings'); },
     openProjects: () => this.projects?.open(),
     switchProject: () => { void this.projects?.run('switch project', String(this.$.projectChoice)); },
     openProjectFolder: () => { void this.projects?.run('open folder', String(this.$.projectChoice)); },
@@ -103,6 +108,7 @@ export class SessionManager extends ContextProvider {
   stopThemeSync;
 
   renderCallback() {
+    this.feedbackSettings = new SessionFeedbackSettings(this);
     this.projects = new ProjectNavigation(this);
     this.explorer = new ProjectExplorer(this);
     this.transfers = new SessionTransfers(this);
@@ -187,6 +193,7 @@ export class SessionManager extends ContextProvider {
     this.projects?.render();
     this.explorer?.render();
     this.transfers?.render();
+    this.feedbackSettings?.render();
     this.$.counts = `${sessions.length} total / ${sessions.filter((row) => row.active === true).length} running / ${sessions.filter((row) => row.active === false).length} stopped / ${sessions.filter((row) => row.active === null).length} unknown`;
     let states = Object.fromEntries(sessions.map((row) => [
       row.sessionId,
@@ -271,6 +278,10 @@ export class SessionManager extends ContextProvider {
    */
   async act(operation, sessionId) {
     if (this.busy || !this.connection?.ready) { return; }
+    if (operation === 'feedback settings') {
+      this.feedbackSettings?.open(sessionId || '');
+      return;
+    }
     let transferKinds = /** @type {const} */ ({
       'copy session': 'copy',
       'move session': 'move',

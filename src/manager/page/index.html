@@ -185,6 +185,25 @@
           <agui-dialog id="manager-description" label="Session description" close-label="Close description" pub-to="MANAGER/descriptionOpen" bind="$.value: MANAGER/descriptionOpen">
             <agui-markdown label="Session description" bind="$.value: MANAGER/description; $.texts: MANAGER/descriptionTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown>
           </agui-dialog>
+          <agui-dialog id="manager-feedback" label="Feedback command" close-label="Close feedback settings" pub-to="MANAGER/feedbackOpen" bind="$.value: MANAGER/feedbackOpen">
+            <form id="manager-feedback-form" class="grid min-w-0 gap-4" bind="onsubmit: MANAGER/saveFeedback">
+              <p class="break-all text-sm" bind="textContent: MANAGER/feedbackSession"></p>
+              <p class="text-xs text-agui-muted">Private delivery settings for this running session. Saving the command does not run it. Settings are cleared when the session stops.</p>
+              <agui-field label="Conversation ID" name="feedbackConversation" required required-mark="*" maxlength="256"
+                pub-to="MANAGER/feedbackConversation" bind="$.value: MANAGER/feedbackConversation; $.readonly: MANAGER/feedbackOwnerBound; $.disabled: MANAGER/feedbackDisabled"></agui-field>
+              <p class="text-xs text-agui-muted">A bound conversation cannot change in this worker. Save browser drafts and restart the session before binding another conversation.</p>
+              <agui-field label="Command (JSON)" name="feedbackCommand" type="textarea" data-code rows="12" spellcheck="false" required required-mark="*"
+                hint="Use an absolute executable path, fixed args, optional cwd, and input with channel stdin or argument. No shell parsing is performed."
+                pub-to="MANAGER/feedbackCommand" bind="$.value: MANAGER/feedbackCommand; $.disabled: MANAGER/feedbackDisabled"></agui-field>
+              <p id="feedback-error" class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/feedbackError"></p>
+              <p id="feedback-message" class="text-sm empty:hidden" role="status" bind="textContent: MANAGER/feedbackMessage"></p>
+              <agui-toolbar aria-label="Feedback settings actions">
+                <button id="feedback-save" type="submit" class="agui-button-primary" bind="disabled: MANAGER/feedbackDisabled"><agui-icon name="save"></agui-icon>Save command</button>
+                <button id="feedback-disable" type="button" bind="onclick: MANAGER/disableFeedback; disabled: MANAGER/feedbackDisableDisabled">Disable feedback</button>
+                <button id="feedback-refresh" type="button" bind="onclick: MANAGER/refreshFeedback; disabled: MANAGER/controlsDisabled"><agui-icon name="refresh"></agui-icon>Refresh</button>
+              </agui-toolbar>
+            </form>
+          </agui-dialog>
           <agui-dialog id="manager-transfer" close-label="Close transfer" pub-to="MANAGER/transferOpen" bind="$.value: MANAGER/transferOpen; $.label: MANAGER/transferTitle">
             <form id="manager-transfer-form" class="grid min-w-0 gap-4" bind="onsubmit: MANAGER/submitTransfer">
               <p class="break-all text-sm" bind="textContent: MANAGER/transferSource"></p>

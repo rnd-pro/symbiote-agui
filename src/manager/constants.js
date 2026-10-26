@@ -8,9 +8,28 @@ export let MANAGER_REQUEST_TTL_MS = 10 * 60_000;
 export let MANAGER_CLIENT_TIMEOUT_MS = 120_000;
 export let MANAGER_REFRESH_MS = 5_000;
 
+export let MANAGER_FEEDBACK_OPERATIONS = Object.freeze({
+  'feedback settings': {
+    bulk: false,
+    confirm: false,
+    action: 'feedback/settings',
+  },
+  'feedback configure': {
+    bulk: false,
+    confirm: false,
+    action: 'feedback/configure',
+  },
+  'feedback disable': {
+    bulk: false,
+    confirm: false,
+    action: 'feedback/disable',
+  },
+});
+
 export let MANAGER_OPERATIONS = Object.freeze({
   ...PROJECT_OPERATIONS,
   ...TRANSFER_OPERATIONS,
+  ...MANAGER_FEEDBACK_OPERATIONS,
   'configure storage': {
     bulk: false,
     confirm: false,

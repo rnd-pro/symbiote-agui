@@ -5,6 +5,7 @@ import { FEEDBACK_LIMITS } from '../feedback/constants.js';
 
 export let FEEDBACK_CONTROL_ROUTES = Object.freeze([
   'GET /feedback',
+  'GET /feedback/settings',
   'POST /feedback/configure',
   'POST /feedback/disable',
   'POST /feedback/check',
@@ -16,6 +17,13 @@ export let FEEDBACK_CONTROL_ROUTES = Object.freeze([
  * @param {import('../../types/session.js').ControlActions} actions
  */
 export async function handleFeedbackControl(action, request, actions) {
+  if (action === 'GET /feedback/settings') {
+    if (!actions.feedbackSettings || !actions.feedbackStatus) { throw new CommandError('Restart this session to manage its feedback command.', ERROR_CODE.NOT_IMPLEMENTED, EXIT_CODE.RUNTIME_ERROR); }
+    return {
+      ...actions.feedbackStatus(),
+      feedbackSettings: actions.feedbackSettings(),
+    };
+  }
   if (action === 'GET /feedback') {
     if (!actions.feedbackStatus) { throw new CommandError('Feedback is unavailable in this worker.', ERROR_CODE.NOT_IMPLEMENTED, EXIT_CODE.RUNTIME_ERROR); }
     return actions.feedbackStatus();

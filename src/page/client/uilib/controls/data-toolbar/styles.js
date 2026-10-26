@@ -81,6 +81,10 @@ export default css`
     .agui-data-error {
       color: var(--agui-danger);
     }
+    .agui-data-metadata {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
     html:has(agui-data-toolbar) {
       --agui-data-trigger-size: 3.25rem;
       --agui-data-toolbar-height: calc(var(--agui-data-trigger-size) + max(1rem, env(safe-area-inset-bottom)));

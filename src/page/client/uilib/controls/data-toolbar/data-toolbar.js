@@ -46,6 +46,7 @@ import {
   MESSAGE_TIMEOUT_MS,
 } from '../../feedback/message/constants.js';
 import styles from './styles.js';
+import { requestSessionInformation } from '../../../session-information.js';
 
 let nextToolbarId = 0;
 
@@ -78,6 +79,20 @@ export class DataToolbar extends UiComponent {
     indicatorMessage: '',
     indicatorBusy: false,
     closeActionsLabel: '',
+    informationOpen: false,
+    informationKind: 'description',
+    informationLabel: '',
+    closeInformationLabel: '',
+    informationMessage: '',
+    informationDisabled: true,
+    descriptionLabel: '',
+    metadataLabel: '',
+    description: '',
+    descriptionHidden: false,
+    metadata: '',
+    metadataHidden: true,
+    descriptionTexts: {},
+    descriptionExtensions: false,
     roleLabel: '',
     socketConnected: 'false',
     connectionLabel: '',
@@ -109,6 +124,8 @@ export class DataToolbar extends UiComponent {
     importJson: () => { if (!this.$.importDisabled) { this.transfer?.pickImport(); } },
     exportJson: () => { if (!this.$.exportDisabled) { this.transfer?.exportFile(); } },
     checkSave: () => { void this.checkSave(); },
+    showDescription: () => this.showInformation('description'),
+    showMetadata: () => this.showInformation('metadata'),
     ...submissionTools(this),
   };
 
@@ -158,6 +175,8 @@ export class DataToolbar extends UiComponent {
     for (let property of [
       'AGUI_SESSION/role',
       'AGUI_SESSION/connected',
+      'AGUI_SESSION/information',
+      'AGUI_SESSION/informationState',
       'AGUI_DATA/current',
       'AGUI_DATA/connected',
       'AGUI_DATA/stale',
@@ -199,6 +218,15 @@ export class DataToolbar extends UiComponent {
   /** @param {string} key */
   text(key) {
     return String((/** @type {import('../../../../../../types/uilib.js').UiTexts | undefined} */ (this.$.texts))?.[key] ?? '');
+  }
+
+  /** @param {'description' | 'metadata'} kind */
+  showInformation(kind) {
+    if (this.$.informationDisabled) { return; }
+    this.$.informationKind = kind;
+    requestSessionInformation();
+    this.refresh();
+    this.$.informationOpen = true;
   }
 
   /** @param {Event} event */

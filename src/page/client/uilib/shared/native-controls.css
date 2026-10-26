@@ -29,6 +29,10 @@
   textarea {
     @apply h-auto min-h-24 resize-y;
   }
+  agui-field[data-code] textarea,
+  textarea[data-code] {
+    @apply font-mono;
+  }
   select {
     @apply appearance-none pe-10;
     max-inline-size: 100%;
@@ -197,6 +201,7 @@
     @apply inline-flex items-center justify-center gap-2 rounded-agui-control border border-agui-border bg-agui-surface px-3 py-1.5 text-sm font-normal text-agui-text;
     height: var(--agui-control-height);
     min-width: var(--agui-control-height);
+    white-space: nowrap;
   }
   button:enabled {
     @apply cursor-pointer;

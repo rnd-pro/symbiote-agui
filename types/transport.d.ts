@@ -10,6 +10,23 @@ export type DataServerMessage =
   | { type: 'data-status'; data: DataStatus }
   | { type: 'data-result'; result: DataResult };
 
+export type SessionInformationPageMessage = { type: 'session-info-read'; id: string };
+export type SessionInformationServerMessage = { type: 'session-info'; id: string; info: SessionInformation | null };
+
+export interface SessionInformation {
+  sessionId: string;
+  description: string;
+  metadata: import('./metadata.js').SessionMetadata;
+}
+
+export interface SessionUiState {
+  connected: boolean;
+  role: PageRole;
+  userConnected: boolean;
+  information: SessionInformation | null;
+  informationState: 'idle' | 'loading' | 'ready' | 'failed';
+}
+
 export type FeedbackPageMessage =
   | { type: 'feedback-submit'; submission: FeedbackSubmission }
   | { type: 'feedback-read'; references: FeedbackReference[] };
@@ -53,11 +70,12 @@ export type PageCommand =
   | { type: 'call'; discoveryId: string; name: string; input: Record<string, unknown>; deadline: number };
 
 export type ServerMessage = (PageCommand & { id: string }) | { type: 'stop' }
-  | PageRoleMessage | ({ type: 'snapshot' } & MirrorSnapshot) | FeedbackServerMessage | DataServerMessage;
+  | PageRoleMessage | ({ type: 'snapshot' } & MirrorSnapshot) | FeedbackServerMessage | DataServerMessage | SessionInformationServerMessage;
 
 export type PageMessage =
   | FeedbackPageMessage
   | DataPageMessage
+  | SessionInformationPageMessage
   | ({ type: 'snapshot' } & MirrorSnapshot)
   | { type: 'result'; id: string; result?: unknown; error?: string }
   | { type: 'hello'; title: string }

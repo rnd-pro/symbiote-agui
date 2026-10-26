@@ -42,6 +42,16 @@ export class SessionFeedback extends EventEmitter {
       ...(this.#failure ? { failure: this.#failure } : {}) });
   }
 
+  /** @returns {import('../../types/feedback.js').FeedbackSettings} */
+  settings() {
+    return structuredClone({
+      ...this.identity,
+      conversationId: this.#conversationId ?? '',
+      command: this.#registration?.command ?? null,
+      status: this.status(),
+    });
+  }
+
   /**
    * @param {unknown} input
    * @returns {import('../../types/feedback.js').FeedbackCheck}

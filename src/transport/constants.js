@@ -15,3 +15,18 @@ export let MIRROR_INTERVAL_MS = 100;
 export let MIRROR_REFRESH_MS = 1_000;
 export let PAGE_ROLE = Object.freeze({ USER: 'user', VIEWER: 'viewer' });
 export let SESSION_CONTEXT = 'AGUI_SESSION';
+
+export const ANNOTATION_LIMITS = Object.freeze({
+  messageBytes: 8 * 1024,
+  messagesPerSecond: 40,
+  pointsPerMessage: 32,
+  pointsPerStroke: 256,
+  strokeMs: 2_000,
+  holdMs: 3_000,
+  fadeMs: 2_000,
+  participants: 128,
+  strokes: 64,
+  points: 4_096,
+  bufferBytes: 64 * 1024,
+  sweepMs: 250,
+});

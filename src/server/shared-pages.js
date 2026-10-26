@@ -1,6 +1,7 @@
 import { WebSocket } from 'ws';
 import { PAGE_ROLE } from '../transport/constants.js';
 import { STYLESHEET_PATH } from '../markup/constants.js';
+import { PageAnnotations } from './page-annotations.js';
 
 export class SharedPages {
   enabled = false;
@@ -13,6 +14,7 @@ export class SharedPages {
   /** @param {Map<string, import('../../types/tools.js').PagePeer>} pages */
   constructor(pages) {
     this.pages = pages;
+    this.annotations = new PageAnnotations(pages);
   }
 
   user() {
@@ -24,6 +26,7 @@ export class SharedPages {
     if (this.enabled) { return; }
     this.enabled = true;
     this.revision = revision;
+    this.annotations.reset(revision);
     for (let page of this.pages.values()) { this.assign(page); }
   }
 
@@ -33,6 +36,7 @@ export class SharedPages {
     page.role = !page.viewerRequested && !this.user() ? PAGE_ROLE.USER : PAGE_ROLE.VIEWER;
     this.notify();
     if (page.role === PAGE_ROLE.VIEWER) { this.send(page.socket); }
+    this.annotations.connect(page);
   }
 
   notify() {
@@ -50,6 +54,7 @@ export class SharedPages {
   /** @param {number} revision */
   reset(revision) {
     this.revision = revision;
+    this.annotations.reset(revision);
     this.latest = { html: '', revision, stylesheetUrl: `${STYLESHEET_PATH}?revision=${revision}` };
     if (this.enabled) {
       for (let page of this.pages.values()) {
@@ -93,5 +98,12 @@ export class SharedPages {
       if (error) { socket.terminate(); return; }
       if (this.latest !== snapshot) { this.send(socket); }
     });
+  }
+
+  close() {
+    this.annotations.close();
+    this.enabled = false;
+    this.latest = undefined;
+    this.sending.clear();
   }
 }

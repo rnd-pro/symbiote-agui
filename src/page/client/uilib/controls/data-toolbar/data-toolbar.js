@@ -76,7 +76,6 @@ export class DataToolbar extends UiComponent {
     indicatorIcon: 'save',
     indicatorTone: 'neutral',
     indicatorLabel: '',
-    indicatorMessage: '',
     indicatorBusy: false,
     closeActionsLabel: '',
     informationOpen: false,

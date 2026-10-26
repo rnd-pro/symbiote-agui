@@ -166,6 +166,9 @@ test('declarative data toolbar saves, cancels, imports offline, delivers one bou
   await viewer.goto(runtime.record.url + '?mode=viewer');
   await viewer.waitForFunction(() => document.querySelector('agui-data-toolbar')?.textContent?.includes('Viewer'));
   assert.match(await viewer.$eval('agui-data-toolbar', (element) => element.textContent || ''), /Connected/);
+  assert.equal(await viewer.$('agui-data-toolbar > [role="status"]'), null);
+  assert.equal(await viewer.$eval('agui-data-toolbar .agui-data-panel [data-kind="edit"]', (element) => element.textContent), 'Read-only');
+  assert.match(await viewer.$eval('agui-data-toolbar .agui-data-trigger', (element) => element.getAttribute('aria-label') || ''), /Read-only/);
   assert.equal(await viewer.$$eval('agui-data-toolbar agui-toolbar button:not([hidden])', (buttons) => buttons.every((button) => Reflect.get(button, 'disabled'))), true);
   await viewer.locator('agui-data-toolbar .agui-data-trigger').click();
   await viewer.waitForFunction(() => document.querySelector('agui-data-toolbar .agui-data-panel')?.matches(':popover-open'));

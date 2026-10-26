@@ -5,7 +5,6 @@ export let DATA_TOOLBAR_TEMPLATE = html`
     bind="@popovertarget: popupId; @aria-label: indicatorLabel; @title: indicatorLabel; @data-state: indicatorState; @data-tone: indicatorTone; @data-busy: indicatorBusy">
     <agui-icon bind="$.name: indicatorIcon" aria-hidden="true"></agui-icon>
   </button>
-  <span class="sr-only" role="status" aria-live="polite" aria-atomic="true" bind="textContent: indicatorMessage"></span>
   <div ref="panel" popover="auto" class="agui-data-panel agui-popover" role="group" bind="id: popupId; @aria-label: actionsLabel">
     <div class="agui-data-heading">
       <h2 bind="textContent: actionsLabel"></h2>

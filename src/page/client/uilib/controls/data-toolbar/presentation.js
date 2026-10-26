@@ -34,7 +34,6 @@ export function presentToolbar(toolbar) {
     indicatorIcon: indicator.icon,
     indicatorTone: indicator.tone,
     indicatorBusy: indicator.state === 'busy',
-    indicatorMessage,
     indicatorLabel: [
       text('actions'),
       text(viewer ? 'viewer' : 'user'),

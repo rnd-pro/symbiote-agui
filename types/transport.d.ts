@@ -63,6 +63,57 @@ export interface PageRoleMessage {
   capture: boolean;
 }
 
+export interface AnnotationPoint {
+  anchor: string;
+  x: number;
+  y: number;
+}
+
+export interface AnnotationParticipant {
+  id: string;
+  color: string;
+}
+
+export interface AnnotationPresence extends AnnotationParticipant {
+  point: AnnotationPoint | null;
+  updatedAt: number;
+}
+
+export interface AnnotationStroke {
+  id: string;
+  viewerId: string;
+  color: string;
+  points: AnnotationPoint[];
+  createdAt: number;
+  updatedAt: number;
+  expiresAt: number;
+  ended: boolean;
+}
+
+export type AnnotationPageMessage = {
+  type: 'annotation';
+  revision: number;
+  sequence: number;
+} & (
+  | { action: 'cursor'; point: AnnotationPoint | null }
+  | { action: 'stroke'; phase: 'start' | 'append' | 'end'; points: AnnotationPoint[] }
+  | { action: 'sync' }
+);
+
+export type AnnotationServerMessage = {
+  type: 'annotations';
+  revision: number;
+  time: number;
+} & (
+  | { action: 'state'; self: AnnotationParticipant | null; participants: AnnotationPresence[]; strokes: AnnotationStroke[] }
+  | { action: 'join'; participant: AnnotationPresence }
+  | { action: 'leave'; viewerId: string }
+  | { action: 'cursor'; viewerId: string; point: AnnotationPoint | null }
+  | { action: 'stroke'; stroke: AnnotationStroke; append: boolean }
+  | { action: 'remove'; ids: string[] }
+  | { action: 'reset' }
+);
+
 export type PageCommand =
   | ({ type: 'render' } & RenderUpdate)
   | ({ type: 'update' } & StateUpdate)
@@ -70,12 +121,13 @@ export type PageCommand =
   | { type: 'call'; discoveryId: string; name: string; input: Record<string, unknown>; deadline: number };
 
 export type ServerMessage = (PageCommand & { id: string }) | { type: 'stop' }
-  | PageRoleMessage | ({ type: 'snapshot' } & MirrorSnapshot) | FeedbackServerMessage | DataServerMessage | SessionInformationServerMessage;
+  | PageRoleMessage | ({ type: 'snapshot' } & MirrorSnapshot) | FeedbackServerMessage | DataServerMessage | SessionInformationServerMessage | AnnotationServerMessage;
 
 export type PageMessage =
   | FeedbackPageMessage
   | DataPageMessage
   | SessionInformationPageMessage
+  | AnnotationPageMessage
   | ({ type: 'snapshot' } & MirrorSnapshot)
   | { type: 'result'; id: string; result?: unknown; error?: string }
   | { type: 'hello'; title: string }

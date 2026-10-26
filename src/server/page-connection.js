@@ -62,6 +62,7 @@ export class PageConnection {
       socket.on('close', () => {
         this.clients.delete(socket);
         this.pages.delete(pageId);
+        this.shared.annotations.disconnect(page);
         this.feedback?.disconnect(socket);
         this.data?.disconnect(socket);
         this.shared.notify();
@@ -78,6 +79,11 @@ export class PageConnection {
           let message = /** @type {import('../../types/transport.js').PageMessage} */ (JSON.parse(data.toString()));
           if (message.type === 'hello' && typeof message.title === 'string') {
             page.title = message.title.slice(0, 200);
+            return;
+          }
+          if (message.type === 'annotation') {
+            if (!this.shared.enabled) { throw new Error('Annotations require a shared page.'); }
+            this.shared.annotations.receive(page, message, Buffer.byteLength(data.toString()));
             return;
           }
           if (page.role === PAGE_ROLE.VIEWER) { throw new Error('Viewers cannot send actions or state.'); }
@@ -173,6 +179,7 @@ export class PageConnection {
   }
 
   async close() {
+    this.shared.close();
     this.feedback?.close();
     this.data?.close();
     clearInterval(this.heartbeat);

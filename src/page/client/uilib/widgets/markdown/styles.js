@@ -10,7 +10,7 @@ export default css`
     .agui-markdown-content {
       min-inline-size: 0;
       overflow-wrap: anywhere;
-      line-height: 1.7;
+      line-height: 1.2;
     }
     .agui-markdown-content > * + * {
       margin-block-start: 1rem;

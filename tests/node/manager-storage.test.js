@@ -108,10 +108,13 @@ test('manager save-folder changes open the selected scope and reset without movi
   };
   let result = await requestManager(manager, request);
   assert.equal(result.ok, true);
-  assert.ok(result.manager?.launchUrl);
-  assert.equal(result.manager.settings.folder, folder);
-  assert.notEqual(result.manager.url, manager.url);
-  assert.deepEqual(await requestManager(manager, request), result, 'A repeated request returns the same manager.');
+  assert.equal(result.project?.folder, folder);
+  assert.equal(result.projects?.currentProjectId, result.project?.id);
+  assert.deepEqual(await requestManager(manager, request), result, 'A repeated request returns the same folder selection.');
+  assert.equal((await project.cli([
+    'manager',
+    'status',
+  ])).pid, manager.pid);
   assert.deepEqual(JSON.parse(await readFile(configPath, 'utf8')), {
     label: 'keep',
     folder: 'shared aguis',
@@ -144,13 +147,17 @@ test('manager save-folder changes open the selected scope and reset without movi
     label: 'keep',
     folder: 'shared aguis',
   }));
-  let reset = await requestManager(result.manager, {
+  let reset = await requestManager(manager, {
     id: 'reset-folder',
     operation: 'configure storage',
     folder: null,
   });
   assert.equal(reset.ok, true);
-  assert.equal(reset.manager?.url, manager.url, 'Reset reuses the still-running cache manager.');
+  assert.equal(reset.projects?.currentProjectId, 'default');
+  assert.equal((await project.cli([
+    'manager',
+    'status',
+  ])).url, manager.url, 'Reset retains the same manager.');
   assert.deepEqual(JSON.parse(await readFile(configPath, 'utf8')), {
     label: 'keep',
   });

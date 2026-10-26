@@ -1,6 +1,6 @@
 {
   "name": "symbiote-agui",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "description": "Local interactive interfaces for AI agents, built with Symbiote.js.",
   "license": "MIT",
   "keywords": [

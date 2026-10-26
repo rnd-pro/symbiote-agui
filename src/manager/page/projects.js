@@ -29,6 +29,7 @@ export class ProjectNavigation {
   apply(listing) {
     this.listing = listing;
     this.discoveryError = '';
+    this.owner.connection?.setProject(listing.currentProjectId);
     let choice = String(this.owner.$.projectChoice);
     if (!listing.projects.some((entry) => entry.id === choice)) { this.owner.$.projectChoice = listing.currentProjectId; }
     this.render();
@@ -38,7 +39,7 @@ export class ProjectNavigation {
   render() {
     let owner = this.owner;
     let listing = this.listing;
-    let disabled = !owner.connection?.ready || owner.busy || owner.navigating;
+    let disabled = !owner.connection?.ready || owner.busy;
     let currentId = listing?.currentProjectId;
     let current = listing?.projects.find((entry) => entry.id === currentId);
     let choice = listing?.projects.find((entry) => entry.id === owner.$.projectChoice);
@@ -77,7 +78,7 @@ export class ProjectNavigation {
 
   async refresh() {
     let owner = this.owner;
-    if (!owner.connection?.ready || this.refreshing || owner.navigating) { return; }
+    if (!owner.connection?.ready || this.refreshing) { return; }
     let epoch = owner.viewEpoch;
     this.refreshing = true;
     try {
@@ -106,7 +107,7 @@ export class ProjectNavigation {
   async run(operation, projectId, sourceId = this.listing?.currentProjectId) {
     let owner = this.owner;
     let connection = owner.connection;
-    if (!connection?.ready || owner.busy || owner.navigating || sourceId !== this.listing?.currentProjectId) { return; }
+    if (!connection?.ready || owner.busy || sourceId !== this.listing?.currentProjectId) { return; }
     let folder = String(owner.$.projectFolder).trim();
     if (operation === 'connect project' && !folder) { this.issue = 'Enter an existing folder path.'; this.render(); return; }
     let selected = this.listing?.projects.find((entry) => entry.id === projectId);
@@ -130,8 +131,12 @@ export class ProjectNavigation {
       if (result.cancelled) {
         owner.$.notice = 'Folder selection canceled. Connections are unchanged.';
       } else if (operation === 'switch project') {
-        if (!result.manager) { throw new Error('The selected project manager could not open.'); }
-        if (!owner.navigate(result.manager)) { owner.$.projectsOpen = false; }
+        if (!result.project || !result.projects) { throw new Error('The selected project could not open.'); }
+        owner.selectProject(result.project.id);
+        this.apply(result.projects);
+        owner.$.projectsOpen = false;
+        owner.$.notice = `Selected ${result.project.name}.`;
+        void owner.transfers?.refreshHistory();
       } else if (operation === 'open folder') {
         if (!result.folderPath) { throw new Error('The manager did not return the requested folder path.'); }
         owner.$.notice = `Requested opening ${result.folderPath} in the host file manager. Check the desktop for its window.`;
@@ -151,7 +156,7 @@ export class ProjectNavigation {
         owner.$.notice = this.issue;
       }
     } finally {
-      if (!owner.disposed && !owner.navigating) {
+      if (!owner.disposed) {
         owner.busy = false;
         owner.renderRows();
         await this.refresh();

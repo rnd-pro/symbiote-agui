@@ -6,6 +6,7 @@ import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { errorMessage, hasErrorCode } from '../shared/system-error.js';
 import { canonicalPath } from '../shared/paths.js';
+import { currentStorageScope } from './storage-scope.js';
 
 export let CONFIG_FILE = '.agui.json';
 
@@ -58,6 +59,14 @@ export function getProjectSettings(projectDirectory = process.cwd()) {
  * @returns {import('../../types/library.js').StorageSettings}
  */
 export function getSettings(projectDirectory = process.cwd()) {
+  let scope = currentStorageScope();
+  if (scope) {
+    return {
+      mode: scope.folder ? 'folder' : 'cache',
+      folder: scope.folder,
+      source: 'manager',
+    };
+  }
   if (process.env.AGUI_LIBRARY_DIR !== undefined) {
     let value = process.env.AGUI_LIBRARY_DIR;
     if (value && !isAbsolute(value)) {

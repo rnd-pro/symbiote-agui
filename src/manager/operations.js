@@ -6,18 +6,21 @@ import { statusSession, stopSession } from '../sessions/lifecycle.js';
 import { ensureSessionStarted } from '../sessions/start.js';
 import { clearSession } from '../sessions/clear.js';
 import { listSessionIds } from '../sessions/list.js';
-import { getStateRoot } from '../sessions/store.js';
+import { getStateRoot, getDefaultStateRoot } from '../sessions/store.js';
+import { currentStorageScope, withStorageFolder } from '../config/storage-scope.js';
 import { assertSessionId } from '../sessions/identity.js';
 import { shareSession } from '../sessions/share.js';
 import { checkSessionTunnel, renewSessionTunnel } from '../sessions/tunnel.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE } from '../shared/constants.js';
 import { errorMessage } from '../shared/system-error.js';
+import { canonicalPath } from '../shared/paths.js';
 import { MANAGER_OPERATIONS, MANAGER_REQUEST_LIMIT, MANAGER_REQUEST_TTL_MS, MANAGER_FEEDBACK_OPERATIONS } from './constants.js';
 import { validateManagerFeedback, runManagerFeedback } from './feedback.js';
 import { configureManagerStorage, managerStorageSettings } from './storage.js';
 import { PROJECT_OPERATIONS } from '../projects/constants.js';
-import { listProjects } from '../projects/registry.js';
+import { listProjects, registeredProject } from '../projects/registry.js';
+import { validProjectId, projectId } from '../projects/identity.js';
 import { runProjectOperation, validateProjectRequest } from './projects.js';
 import { validateExplorerRequest } from '../projects/explorer/requests.js';
 import { EXPLORER_OPERATIONS } from '../projects/explorer/constants.js';
@@ -45,6 +48,7 @@ export function validateManagerRequest(input) {
     'confirm',
     'folder',
     'projectId',
+    'scopeProjectId',
     'path',
     'offset',
     'showHidden',
@@ -59,11 +63,21 @@ export function validateManagerRequest(input) {
   ].includes(key))
     || typeof value.id !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(value.id)
     || typeof value.operation !== 'string' || !Object.hasOwn(MANAGER_OPERATIONS, value.operation)
+    || (value.scopeProjectId !== undefined && !validProjectId(value.scopeProjectId))
     || (value.all !== undefined && typeof value.all !== 'boolean')
     || (value.confirm !== undefined && typeof value.confirm !== 'boolean')) {
     throw new CommandError('Invalid management request.');
   }
-  let request = /** @type {import('../../types/manager.js').ManagerRequest} */ (input);
+  let {
+    scopeProjectId,
+    ...request
+  } = /** @type {import('../../types/manager.js').ManagerRequest} */ (input);
+  validateScopedRequest(request);
+  return /** @type {import('../../types/manager.js').ManagerRequest} */ (input);
+}
+
+/** @param {import('../../types/manager.js').ManagerRequest} request */
+function validateScopedRequest(request) {
   let operation = MANAGER_OPERATIONS[request.operation];
   if (validateManagerFeedback(request)) { return request; }
   validateExplorerRequest(request);
@@ -92,7 +106,10 @@ export function validateManagerRequest(input) {
 }
 
 export class ManagerOperations {
-  scope = { stateRoot: getStateRoot(), settings: getSettings() };
+  defaultFolder = getSettings().folder;
+  managerRoot = getDefaultStateRoot();
+  /** @type {Map<string, string | undefined>} */
+  folders = new Map();
   /** @type {Map<string, Promise<unknown>>} */
   locks = new Map();
   /** @type {Map<string, import('../../types/manager.js').TunnelCheck>} */
@@ -103,15 +120,26 @@ export class ManagerOperations {
   /** @param {import('../../types/manager.js').ManagerRecord} [record] */
   constructor(record) {
     this.record = record;
+    if (record) { this.defaultFolder = record.settings.folder; }
+    this.folders.set(projectId(this.defaultFolder), this.defaultFolder);
+  }
+
+  get scope() {
+    return {
+      stateRoot: getStateRoot(),
+      settings: getSettings(),
+    };
   }
 
   assertScope() {
-    if (getStateRoot() !== this.scope.stateRoot || getSettings().folder !== this.scope.settings.folder) {
-      throw new CommandError('The manager storage scope changed. Restart the manager.');
+    if (getDefaultStateRoot() !== this.managerRoot) {
+      throw new CommandError('The manager state directory changed. Restart the manager.');
     }
   }
 
+  /** @returns {Promise<import('../../types/manager.js').ManagerSnapshot>} */
   async snapshot() {
+    if (!currentStorageScope()) { return withStorageFolder(this.defaultFolder, () => this.snapshot()); }
     this.assertScope();
     let [ids, saved] = await Promise.all([listSessionIds(true), listDefinitionIds()]);
     let definitions = new Set(saved);
@@ -120,7 +148,7 @@ export class ManagerOperations {
       let row;
       try {
         let status = await statusSession(sessionId, false);
-        let check = this.tunnelChecks.get(sessionId);
+        let check = this.tunnelChecks.get(this.sessionKey(sessionId));
         if (status.tunnel && check?.publicUrl === status.publicUrl && check) {
           status.tunnel = { ...status.tunnel, ...check.tunnel, state: status.tunnel.state };
         }
@@ -149,6 +177,29 @@ export class ManagerOperations {
     try {
       this.assertScope();
       let request = validateManagerRequest(input);
+      let folder = this.defaultFolder;
+      if (request.scopeProjectId) {
+        if (!this.folders.has(request.scopeProjectId)) {
+          try {
+            let project = await registeredProject(request.scopeProjectId);
+            this.folders.set(project.id, project.folder);
+          } catch (error) {
+            if (request.operation !== 'projects') { throw error; }
+          }
+        }
+        if (this.folders.has(request.scopeProjectId)) { folder = this.folders.get(request.scopeProjectId); }
+      }
+      if (folder && !Object.hasOwn(PROJECT_OPERATIONS, request.operation) && request.operation !== 'configure storage'
+        && canonicalPath(folder) !== folder) {
+        throw new CommandError('The project folder now resolves to a different location. Reconnect it explicitly.');
+      }
+      return await withStorageFolder(folder, () => this.dispatchScoped(request));
+    } catch (error) { return failure(error); }
+  }
+
+  /** @param {import('../../types/manager.js').ManagerRequest} request */
+  async dispatchScoped(request) {
+    try {
       if (['snapshot', 'describe', 'projects', 'transfer history', 'feedback settings'].includes(request.operation) || Object.hasOwn(EXPLORER_OPERATIONS, request.operation)) { return await this.execute(request); }
       let fingerprint = JSON.stringify([
         request.operation,
@@ -166,7 +217,8 @@ export class ManagerOperations {
         request.conversationId,
         request.command,
       ]);
-      let previous = this.requests.get(request.id);
+      let requestKey = this.sessionKey(request.id);
+      let previous = this.requests.get(requestKey);
       if (previous) {
         if (previous.fingerprint !== fingerprint) { throw new CommandError('Request ID was already used for another operation.'); }
         return previous.result;
@@ -176,7 +228,7 @@ export class ManagerOperations {
       }
       if (this.requests.size >= MANAGER_REQUEST_LIMIT) { throw new CommandError('Request history is full. Wait before sending another operation.'); }
       let entry = { fingerprint, result: this.execute(request).catch(failure), completedAt: /** @type {number | undefined} */ (undefined) };
-      this.requests.set(request.id, entry);
+      this.requests.set(requestKey, entry);
       void entry.result.then(() => { entry.completedAt = Date.now(); });
       return entry.result;
     } catch (error) { return failure(error); }
@@ -222,9 +274,9 @@ export class ManagerOperations {
         let operation = /** @type {keyof typeof operations} */ (request.operation);
         let result = await operations[operation]();
         if (request.operation.startsWith('tunnel ') && result.tunnel) {
-          this.tunnelChecks.set(sessionId, { publicUrl: result.publicUrl, tunnel: result.tunnel });
+          this.tunnelChecks.set(this.sessionKey(sessionId), { publicUrl: result.publicUrl, tunnel: result.tunnel });
           if (result.tunnel.active === false) { return { ok: false, ...result, error: { code: ERROR_CODE.TUNNEL_FAILED, message: result.tunnel.checkError || 'The tunnel is inactive.' } }; }
-        } else if (['stop', 'clear', 'share'].includes(request.operation)) { this.tunnelChecks.delete(sessionId); }
+        } else if (['stop', 'clear', 'share'].includes(request.operation)) { this.tunnelChecks.delete(this.sessionKey(sessionId)); }
         return { ok: true, ...result };
       } catch (error) { return { ...failure(error), ok: false, sessionId }; }
     })));
@@ -237,12 +289,18 @@ export class ManagerOperations {
    * @template T
    * @param {string} sessionId
    * @param {() => Promise<T>} task
+   * @returns {Promise<T>}
    */
   serialize(sessionId, task) {
-    let result = (this.locks.get(sessionId) || Promise.resolve()).then(task);
+    if (!currentStorageScope()) { return withStorageFolder(this.defaultFolder, () => this.serialize(sessionId, task)); }
+    let key = this.sessionKey(sessionId);
+    let result = (this.locks.get(key) || Promise.resolve()).then(task);
     let settled = result.then(() => {}, () => {});
-    this.locks.set(sessionId, settled);
-    void settled.then(() => { if (this.locks.get(sessionId) === settled) { this.locks.delete(sessionId); } });
+    this.locks.set(key, settled);
+    void settled.then(() => { if (this.locks.get(key) === settled) { this.locks.delete(key); } });
     return result;
   }
+
+  /** @param {string} sessionId */
+  sessionKey(sessionId) { return `${getStateRoot()}\0${sessionId}`; }
 }

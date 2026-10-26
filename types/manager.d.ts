@@ -16,6 +16,7 @@ export interface ManagerRequest {
   confirm?: boolean;
   folder?: string | null;
   projectId?: string;
+  scopeProjectId?: string;
   path?: string;
   offset?: number;
   showHidden?: boolean;
@@ -77,6 +78,7 @@ export interface ManagerResult {
 export type ManagerReply = { id: string; result: ManagerResult };
 
 export interface ManagerRecord extends ManagerScope {
+  protocolVersion?: number;
   projectDirectory?: string;
   instanceId: string;
   token: string;
@@ -85,6 +87,7 @@ export interface ManagerRecord extends ManagerScope {
 }
 
 export interface ManagerStatus extends ManagerScope {
+  protocolVersion?: number;
   active: boolean;
   pid?: number;
   url?: string;

@@ -1,4 +1,5 @@
 import { MANAGER_SOCKET_PATH, MANAGER_CLIENT_TIMEOUT_MS } from '../constants.js';
+import { validProjectId } from '../../projects/identifiers.js';
 
 export const CONNECTION_LOST_MESSAGE = 'Connection lost. The operation outcome may be unknown. Reconnecting will refresh status; actions are not replayed.';
 
@@ -10,6 +11,8 @@ export class ManagerConnection {
   ready = false;
   closed = false;
   retry = 500;
+  /** @type {string | undefined} */
+  projectId;
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   reconnect;
 
@@ -21,12 +24,16 @@ export class ManagerConnection {
     this.status = status;
     this.connected = connected;
     let fragment = location.hash.slice(1);
-    history.replaceState(null, '', location.pathname);
+    let requestedProject = new URL(location.href).searchParams.get('project');
+    if (validProjectId(requestedProject)) { this.projectId = requestedProject || undefined; }
     this.token = '';
     try {
       if (/^[a-f0-9]{64}$/.test(fragment)) { localStorage.setItem('agui-manager-token', fragment); }
       this.token = localStorage.getItem('agui-manager-token') || '';
+      let project = requestedProject || sessionStorage.getItem('agui-manager-project');
+      if (validProjectId(project)) { this.projectId = project || undefined; }
     } catch { this.token = fragment; }
+    history.replaceState(null, '', `${location.pathname}${location.search}`);
   }
 
   connect() {
@@ -38,6 +45,7 @@ export class ManagerConnection {
     socket.addEventListener('message', (event) => {
       let reply = JSON.parse(event.data);
       if (reply.type === 'authorized') {
+        if (!this.projectId && validProjectId(reply.projectId)) { this.setProject(reply.projectId); }
         this.ready = true;
         this.retry = 500;
         this.status(true, 'Connected');
@@ -86,8 +94,20 @@ export class ManagerConnection {
         socket.close();
       }, MANAGER_CLIENT_TIMEOUT_MS);
       this.pending.set(id, { resolve, reject, timer });
-      socket.send(JSON.stringify({ ...options, id, operation }));
+      socket.send(JSON.stringify({ ...options, scopeProjectId: this.projectId, id, operation }));
     });
+  }
+
+  /** @param {string} projectId */
+  setProject(projectId) {
+    if (!validProjectId(projectId)) { throw new Error('Choose a connected project.'); }
+    this.projectId = projectId;
+    let url = new URL(location.href);
+    if (projectId === 'default') { url.searchParams.delete('project'); }
+    else { url.searchParams.set('project', projectId); }
+    url.hash = '';
+    history.replaceState(null, '', `${url.pathname}${url.search}`);
+    try { sessionStorage.setItem('agui-manager-project', projectId); } catch { /* The URL retains this tab's selection. */ }
   }
 
   close() {

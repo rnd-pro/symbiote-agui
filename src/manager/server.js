@@ -6,8 +6,9 @@ import { jsBuild } from 'jsda-kit/server/build-asset.js';
 import { WebSocketServer, WebSocket } from 'ws';
 import { closeServer, waitForServer } from '../shared/server.js';
 import { ManagerOperations } from './operations.js';
-import { MANAGER_PATH, MANAGER_SOCKET_PATH } from './constants.js';
+import { MANAGER_PATH, MANAGER_SOCKET_PATH, MANAGER_PROTOCOL_VERSION } from './constants.js';
 import { createManagerStyles } from './styles.js';
+import { projectId, validProjectId } from '../projects/identity.js';
 import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../page/client/uilib/widgets/markdown/constants.js';
 
 /**
@@ -55,13 +56,18 @@ export async function startManagerServer(record, stop) {
     if (request.headers.host !== host || (request.headers.origin && request.headers.origin !== origin)) {
       response.writeHead(403).end(); return;
     }
-    let path = request.url || '';
+    let endpoint = new URL(request.url || '', origin);
+    let path = endpoint.pathname;
+    if (endpoint.search && (path !== MANAGER_PATH || [...endpoint.searchParams.keys()].some((key) => key !== 'project')
+      || endpoint.searchParams.getAll('project').length !== 1 || !validProjectId(endpoint.searchParams.get('project')))) {
+      response.writeHead(404).end(); return;
+    }
     if ([`${MANAGER_PATH}status`, `${MANAGER_PATH}stop`].includes(path)) {
       if (!authorized(request.headers.authorization, `Bearer ${record.token}`)) { response.writeHead(403).end(); return; }
       if ((path.endsWith('/status') && request.method !== 'GET') || (path.endsWith('/stop') && request.method !== 'POST')) {
         response.writeHead(405).end(); return;
       }
-      response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ instanceId: record.instanceId, pid: process.pid }));
+      response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ instanceId: record.instanceId, pid: process.pid, protocolVersion: MANAGER_PROTOCOL_VERSION }));
       if (path.endsWith('/stop')) { setImmediate(stop); }
       return;
     }
@@ -119,7 +125,7 @@ export async function startManagerServer(record, stop) {
           if (message.type !== 'authenticate' || !authorized(message.token, record.token)) { socket.close(1008, 'Unauthorized'); return; }
           authenticated = true;
           clearTimeout(timer);
-          socket.send(JSON.stringify({ type: 'authorized' }));
+          socket.send(JSON.stringify({ type: 'authorized', projectId: projectId(operations.defaultFolder) }));
           return;
         }
         if (pending >= 16) { socket.close(1008, 'Too many pending requests'); return; }

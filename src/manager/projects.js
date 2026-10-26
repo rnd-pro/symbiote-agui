@@ -1,8 +1,7 @@
 import { CommandError } from '../shared/command-error.js';
 import { PROJECT_OPERATIONS } from '../projects/constants.js';
 import { assertProjectFolder, validFolder, validProjectId } from '../projects/identity.js';
-import { connectProject, forgetProject, listProjects, registeredProject } from '../projects/registry.js';
-import { openProjectManager } from './launcher.js';
+import { connectProject, forgetProject, listProjects, registeredProject, rememberProject } from '../projects/registry.js';
 import { openProjectFolder } from '../projects/open.js';
 import { chooseProject } from '../projects/choose.js';
 import { listProjectEntries } from '../projects/explorer/list.js';
@@ -59,11 +58,11 @@ export async function runProjectOperation(request, record, scope) {
     'switch project': async () => {
       let project = await registeredProject(request.projectId || '');
       if (project.folder) { await assertProjectFolder(project.folder); }
-      let manager = await openProjectManager(directory, project.folder ?? null);
+      await rememberProject(project.folder, true);
       return {
         ok: true,
         project: await registeredProject(project.id),
-        manager,
+        projects: await listProjects(project.folder),
       };
     },
   };

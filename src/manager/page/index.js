@@ -4,7 +4,7 @@ import { CONNECTION_LOST_MESSAGE, ManagerConnection } from './connection.js';
 import './rows.js';
 import './controls.js';
 import { rowState } from './session-state.js';
-import { MANAGER_PATH, MANAGER_REFRESH_MS } from '../constants.js';
+import { MANAGER_REFRESH_MS } from '../constants.js';
 import { getTheme, setTheme, watchTheme } from './theme.js';
 import { BULK_OPTIONS } from './options.js';
 import { SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, DESCRIPTION_TEXTS, sessionRecords } from './view.js';
@@ -92,7 +92,6 @@ export class SessionManager extends ContextProvider {
   refreshAgain = false;
   loaded = false;
   disposed = false;
-  navigating = false;
   viewEpoch = 0;
   /** @type {ProjectNavigation | undefined} */
   projects;
@@ -144,7 +143,7 @@ export class SessionManager extends ContextProvider {
   }
 
   async refresh() {
-    if (!this.connection?.ready || this.navigating || this.disposed) { return; }
+    if (!this.connection?.ready || this.disposed) { return; }
     if (this.refreshing) { this.refreshAgain = true; return; }
     this.refreshing = true;
     let epoch = this.viewEpoch;
@@ -222,22 +221,42 @@ export class SessionManager extends ContextProvider {
     return !this.disposed && this.isConnected && epoch === this.viewEpoch;
   }
 
-  /** @param {import('../../../types/manager.js').ManagerStatus} manager */
-  navigate(manager) {
-    let url = new URL(manager.url || '');
-    let launch = new URL(manager.launchUrl || '');
-    if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !url.port || url.pathname !== MANAGER_PATH
-      || url.search || url.hash || launch.origin !== url.origin || launch.pathname !== url.pathname
-      || launch.search || !/^#[a-f0-9]{64}$/.test(launch.hash)) { throw new Error('The manager returned an invalid project destination.'); }
-    if (url.href === `${location.origin}${location.pathname}`) { return false; }
-    this.navigating = true;
+  /** @param {string} projectId */
+  selectProject(projectId) {
+    if (this.connection?.projectId === projectId) { return; }
     this.viewEpoch += 1;
-    this.$.selection = [];
-    this.$.inspectorOpen = false;
+    this.connection?.setProject(projectId);
+    this.snapshot = undefined;
+    this.loaded = false;
+    this.set$({
+      projectChoice: projectId,
+      selection: [],
+      matchingIds: [],
+      records: [],
+      rows: {},
+      selectedRows: {},
+      filters: {},
+      query: '',
+      inspectorOpen: false,
+      noSelection: true,
+      loading: true,
+      discoveryError: '',
+      descriptionOpen: false,
+      feedbackOpen: false,
+      transferOpen: false,
+      transferHistoryOpen: false,
+    });
+    if (this.feedbackSettings) {
+      this.feedbackSettings.settings = undefined;
+      this.feedbackSettings.sessionId = '';
+    }
+    if (this.transfers) {
+      this.transfers.history = [];
+      this.transfers.result = undefined;
+      this.transfers.sourceId = '';
+    }
+    this.explorer?.setProject(projectId);
     this.renderRows();
-    try { location.assign(launch.href); }
-    catch (error) { this.navigating = false; throw error; }
-    return true;
   }
 
   /**
@@ -248,27 +267,28 @@ export class SessionManager extends ContextProvider {
     this.busy = true;
     let epoch = ++this.viewEpoch;
     this.$.noticeTone = 'info';
-    this.$.notice = 'Saving the folder setting and opening its manager...';
+    this.$.notice = 'Saving the folder setting...';
     this.renderRows();
     try {
       let result = await this.connection.request('configure storage', {
         folder: reset ? null : String(this.$.storageFolder).trim() || null,
       });
       if (!this.isCurrentView(epoch)) { return; }
-      if (!result.ok || !result.manager?.url || !result.manager.launchUrl) {
+      if (!result.ok || !result.project || !result.projects) {
         throw new Error(result.error?.message || 'The selected save folder could not open.');
       }
       this.$.notice = 'Save folder updated. Existing files and sessions remain in their original scope.';
-      if (!this.navigate(result.manager)) {
-        if (reset) { this.$.storageFolder = ''; }
-        await this.refresh();
-      }
+      this.selectProject(result.project.id);
+      this.projects?.apply(result.projects);
+      if (reset) { this.$.storageFolder = ''; }
+      await this.refresh();
     } catch (error) {
       if (!this.isCurrentView(epoch)) { return; }
       this.$.noticeTone = 'alert';
       this.$.notice = error instanceof Error ? error.message : String(error);
     } finally {
-      if (!this.navigating) { this.busy = false; this.renderRows(); }
+      this.busy = false;
+      this.renderRows();
     }
   }
 

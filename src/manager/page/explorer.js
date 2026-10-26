@@ -1,4 +1,4 @@
-import { highlightHtmlPreview } from './source-preview.js';
+import { highlightSourcePreview } from './source-preview.js';
 
 export let EXPLORER_STATE = {
   workspaceView: 'table',
@@ -109,7 +109,7 @@ export class ProjectExplorer {
 
   /** @param {number} revision */
   current(revision) {
-    return revision === this.revision && !this.owner.disposed && !this.owner.navigating && this.owner.connection?.ready;
+    return revision === this.revision && !this.owner.disposed && this.owner.connection?.ready;
   }
 
   /**
@@ -212,10 +212,10 @@ export class ProjectExplorer {
         previewStatus: preview.message ? 'empty' : 'ready',
         previewMessage: preview.message || '',
       });
-      if (preview.kind === 'text' && /\.html?$/i.test(path)) {
+      if (preview.kind === 'text') {
         let code = this.owner.querySelector('#explorer-preview pre code');
         if (code instanceof HTMLElement) {
-          void highlightHtmlPreview(code, preview.text || '', () => !!this.current(revision) && version === this.previewVersion);
+          void highlightSourcePreview(code, preview.text || '', path, () => !!this.current(revision) && version === this.previewVersion);
         }
       }
     } catch (error) {
@@ -227,7 +227,7 @@ export class ProjectExplorer {
   }
 
   render() {
-    let disabled = !this.owner.connection?.ready || this.owner.navigating;
+    let disabled = !this.owner.connection?.ready;
     /** @type {[string, object][]} */
     let rows = [];
     /**

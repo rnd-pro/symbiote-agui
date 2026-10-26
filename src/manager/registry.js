@@ -1,25 +1,31 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, rmdir, writeFile } from 'node:fs/promises';
 import { join, dirname, isAbsolute } from 'node:path';
-import { getStateRoot, isProcessAlive } from '../sessions/store.js';
+import { getDefaultStateRoot, isProcessAlive, stateRootForFolder } from '../sessions/store.js';
 import { getSettings } from '../config/settings.js';
 import { hasErrorCode } from '../shared/system-error.js';
+import { MANAGER_PROTOCOL_VERSION } from './constants.js';
 
-function registryPath() { return join(getStateRoot(), '.manager'); }
+/** @param {string} [root] */
+function registryPath(root = getDefaultStateRoot()) { return join(root, '.manager'); }
 
 /** @param {import('../../types/manager.js').ManagerRecord} record */
-export function managerDirectory(record) { return join(registryPath(), record.instanceId); }
+export function managerDirectory(record) { return join(registryPath(record.stateRoot), record.instanceId); }
 
-/** @returns {Promise<import('../../types/manager.js').ManagerRecord | undefined>} */
-export async function readManager() {
+/**
+ * @param {string} [root]
+ * @returns {Promise<import('../../types/manager.js').ManagerRecord | undefined>}
+ */
+export async function readManager(root = getDefaultStateRoot()) {
   try {
-    let entries = await readdir(registryPath());
+    let entries = await readdir(registryPath(root));
     let instanceId = entries[0];
     if (entries.length !== 1 || !instanceId || !/^[a-f0-9-]{36}$/.test(instanceId)) { throw new Error('Invalid manager registry.'); }
-    let record = JSON.parse(await readFile(join(registryPath(), instanceId, 'manager.json'), 'utf8'));
+    let record = JSON.parse(await readFile(join(registryPath(root), instanceId, 'manager.json'), 'utf8'));
     if (record.instanceId !== instanceId || !/^[a-f0-9]{64}$/.test(record.token)
-      || !Number.isSafeInteger(record.pid) || record.pid <= 0 || record.stateRoot !== getStateRoot()
-      || record.settings?.folder !== getSettings().folder
+      || !Number.isSafeInteger(record.pid) || record.pid <= 0 || record.stateRoot !== root
+      || !record.settings || (record.settings.folder !== undefined && (typeof record.settings.folder !== 'string' || !isAbsolute(record.settings.folder)))
+      || (root !== getDefaultStateRoot() && stateRootForFolder(record.settings.folder) !== root)
       || (record.projectDirectory !== undefined && (typeof record.projectDirectory !== 'string' || !isAbsolute(record.projectDirectory)))
       || (record.url && !/^http:\/\/127\.0\.0\.1:[0-9]+\/manager\/$/.test(record.url))) {
       throw new Error('Invalid manager metadata.');
@@ -50,10 +56,11 @@ export async function releaseManager(record) {
 export async function reserveManager() {
   let existing = await readManager();
   if (existing && !isProcessAlive(existing.pid)) { await releaseManager(existing); }
-  let root = getStateRoot();
+  let root = getDefaultStateRoot();
   await mkdir(root, { recursive: true, mode: 0o700 });
   let pending = await mkdtemp(join(root, '.manager-pending-'));
   let record = {
+    protocolVersion: MANAGER_PROTOCOL_VERSION,
     stateRoot: root,
     settings: getSettings(),
     projectDirectory: process.cwd(),

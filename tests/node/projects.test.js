@@ -274,7 +274,8 @@ test('manager switches connected scopes without changing configuration, workers 
   };
   let switched = await operations.dispatch(request);
   assert.equal(switched.ok, true, switched.error?.message);
-  assert.equal(switched.manager?.settings.folder, folders[0]);
+  assert.equal(switched.project?.folder, folders[0]);
+  assert.equal(switched.projects?.currentProjectId, projectId(folders[0]));
   assert.ok(switched.project?.lastUsedAt);
   assert.deepEqual(await operations.dispatch(request), switched);
   assert.equal((await operations.dispatch({
@@ -285,14 +286,14 @@ test('manager switches connected scopes without changing configuration, workers 
     'manager',
     '--no-open',
   ], folders[0]);
-  assert.equal(destination.url, switched.manager?.url, 'Navigation reuses the existing scoped manager.');
-  assert.notEqual(destination.url, initial.url);
+  assert.equal(destination.url, initial.url, 'Every project reuses the same manager.');
+  assert.equal(destination.pid, initial.pid);
   let reset = await operations.dispatch({
     id: randomUUID(),
     operation: 'switch project',
     projectId: 'default',
   });
-  assert.equal(reset.manager?.url, initial.url);
+  assert.equal(reset.projects?.currentProjectId, 'default');
   for (let [index, folder] of folders.entries()) {
     let status = await project.cli([
       'status',
@@ -305,6 +306,7 @@ test('manager switches connected scopes without changing configuration, workers 
   assert.equal(process.env.AGUI_LIBRARY_DIR, environment.library);
   assert.equal(process.env.AGUI_WORKER_STATE_DIR, environment.worker);
   let unused = await connectProject(join(project.projectDirectory, 'b'));
+  let previousLastUsed = unused.lastUsedAt;
   await rm(folders[1], {
     recursive: true,
   });
@@ -314,7 +316,7 @@ test('manager switches connected scopes without changing configuration, workers 
     projectId: unused.id,
   });
   assert.equal(failed.ok, false);
-  assert.equal((await registeredProject(unused.id)).lastUsedAt, null, 'A failed switch does not mark the folder used.');
+  assert.equal((await registeredProject(unused.id)).lastUsedAt, previousLastUsed, 'A failed switch does not mark the folder used.');
   assert.ok((await operations.snapshot()).projects.projects.some((entry) => entry.id === unused.id && !entry.available));
   await assert.rejects(stat(folders[1]));
 });

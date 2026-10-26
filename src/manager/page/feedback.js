@@ -46,7 +46,7 @@ export class SessionFeedbackSettings {
   render() {
     let owner = this.owner;
     let active = owner.snapshot?.sessions.some((row) => row.sessionId === this.sessionId && row.active === true && row.ok);
-    let disabled = !owner.connection?.ready || owner.busy || owner.navigating || !active || !this.settings;
+    let disabled = !owner.connection?.ready || owner.busy || !active || !this.settings;
     owner.set$({
       feedbackDisabled: disabled,
       feedbackDisableDisabled: disabled || this.settings?.status.state === 'disabled',

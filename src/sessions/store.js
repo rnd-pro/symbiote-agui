@@ -7,6 +7,7 @@ import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { hasErrorCode } from '../shared/system-error.js';
 import { sessionKey } from './identity.js';
 import { getSettings } from '../config/settings.js';
+import { currentStorageScope } from '../config/storage-scope.js';
 
 export function getDefaultStateRoot() {
   return process.env.AGUI_STATE_DIR
@@ -15,6 +16,8 @@ export function getDefaultStateRoot() {
 }
 
 export function getStateRoot() {
+  let scope = currentStorageScope();
+  if (scope) { return stateRootForFolder(scope.folder); }
   if (process.env.AGUI_WORKER_STATE_DIR) { return resolve(process.env.AGUI_WORKER_STATE_DIR); }
   return stateRootForFolder(getSettings().folder);
 }

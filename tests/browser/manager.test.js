@@ -49,11 +49,9 @@ test('manager save-folder controls persist the project setting and open the sele
   await page.waitForSelector('[data-session="original"]');
   await page.locator('::-p-aria([name="Settings"][role="button"])').click();
   await page.type('agui-field[name="saveFolder"] input', './saved interfaces');
-  let navigation = page.waitForNavigation();
   await page.locator('::-p-aria([name="Save folder and open"][role="button"])').click();
-  await navigation;
   await page.waitForFunction((selected) => document.querySelector('#manager-project-navigation')?.textContent?.includes(selected), {}, folder);
-  assert.notEqual(page.url(), manager.url);
+  assert.equal(new URL(page.url()).origin, new URL(manager.url).origin);
   assert.equal(await page.$('[data-session="original"]'), null, 'Source definitions are not silently copied to the new scope.');
   await page.reload();
   await page.waitForFunction(() => !document.querySelector('agui-field[name="saveFolder"] input')?.hasAttribute('disabled'));
@@ -63,9 +61,7 @@ test('manager save-folder controls persist the project setting and open the sele
     'config',
     'show',
   ])).settings.folder, folder);
-  navigation = page.waitForNavigation();
   await page.locator('::-p-aria([name="Use default cache"][role="button"])').click();
-  await navigation;
   await page.waitForSelector('[data-session="original"]');
   assert.equal(page.url(), manager.url);
   assert.equal((await project.cli([

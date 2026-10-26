@@ -16,6 +16,7 @@ import { readSession, writeSession } from '../../src/sessions/store.js';
 import { stopSession, statusSession } from '../../src/sessions/lifecycle.js';
 import { runAllSessions } from '../../src/sessions/all.js';
 import { parseCommand } from '../../src/cli/parse.js';
+import { connectProject } from '../../src/projects/registry.js';
 
 /** @param {string} sessionId */
 async function save(sessionId) {
@@ -113,7 +114,7 @@ test('manager bulk results retain failures and reject mismatched worker identity
   await writeSession(record);
 });
 
-test('manager storage is pinned and independent across team folders', async (t) => {
+test('one manager registry serves independent folder scopes', async (t) => {
   let state = await temporaryState();
   t.after(() => state.close());
   let folderA = join(state.directory, 'a');
@@ -123,9 +124,26 @@ test('manager storage is pinned and independent across team folders', async (t) 
   await save('only-a');
   let operations = new ManagerOperations();
   let record = await reserveManager();
+  let projectA = await connectProject(folderA);
+  let projectB = await connectProject(folderB);
   process.env.AGUI_LIBRARY_DIR = folderB;
-  assert.equal(await readManager(), undefined);
-  assert.equal((await operations.dispatch({ id: 'scope', operation: 'snapshot' })).ok, false);
+  assert.equal((await readManager())?.instanceId, record.instanceId);
+  let a = await operations.dispatch({
+    id: 'scope',
+    operation: 'snapshot',
+    scopeProjectId: projectA.id,
+  });
+  assert.equal(a.ok, true);
+  assert.deepEqual(a.snapshot?.sessions.map((row) => row.sessionId), [
+    'only-a',
+  ]);
+  let b = await operations.dispatch({
+    id: 'scope',
+    operation: 'snapshot',
+    scopeProjectId: projectB.id,
+  });
+  assert.equal(b.ok, true);
+  assert.deepEqual(b.snapshot?.sessions, []);
   let other = new ManagerOperations();
   assert.deepEqual((await other.snapshot()).sessions, []);
   process.env.AGUI_LIBRARY_DIR = folderA;

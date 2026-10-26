@@ -9,8 +9,9 @@ let pending;
  * @param {string} headingPrefix
  * @param {string} baseUrl
  * @param {boolean} [extensions]
+ * @param {{ nodes: number, depth: number, outputBytes: number }} [limits]
  */
-export async function markdownFragment(html, headingPrefix, baseUrl, extensions = true) {
+export async function markdownFragment(html, headingPrefix, baseUrl, extensions = true, limits = MARKDOWN_LIMITS) {
   let policy = markdownPolicy(html, extensions);
   let inert = document.implementation.createHTMLDocument('');
   let root = inert.createElement('div');
@@ -114,9 +115,9 @@ export async function markdownFragment(html, headingPrefix, baseUrl, extensions 
     let depth = 0;
     let parent = nodes.currentNode.parentNode;
     while (parent && parent !== root) { depth += 1; parent = parent.parentNode; }
-    if (count > MARKDOWN_LIMITS.nodes || depth > MARKDOWN_LIMITS.depth) { throw new Error('outputTooLarge'); }
+    if (count > limits.nodes || depth > limits.depth) { throw new Error('outputTooLarge'); }
   }
-  if (new TextEncoder().encode(root.innerHTML).byteLength > MARKDOWN_LIMITS.outputBytes) { throw new Error('outputTooLarge'); }
+  if (new TextEncoder().encode(root.innerHTML).byteLength > limits.outputBytes) { throw new Error('outputTooLarge'); }
   let fragment = document.createDocumentFragment();
   for (let child of root.childNodes) { fragment.append(document.importNode(child, true)); }
   for (let element of fragment.querySelectorAll('*')) {

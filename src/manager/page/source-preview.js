@@ -1,30 +1,50 @@
 import { loadMarkdownRuntime } from '../../page/client/uilib/widgets/markdown/loader.js';
+import { EXPLORER_PREVIEW_BYTES } from '../../projects/explorer/constants.js';
+
+let languages = {
+  html: 'html',
+  htm: 'html',
+  svg: 'xml',
+  xml: 'xml',
+  js: 'javascript',
+  mjs: 'javascript',
+  cjs: 'javascript',
+  jsx: 'javascript',
+  ts: 'typescript',
+  tsx: 'typescript',
+  json: 'json',
+  jsonl: 'json',
+  css: 'css',
+  scss: 'scss',
+  yaml: 'yaml',
+  yml: 'yaml',
+  toml: 'ini',
+  ini: 'ini',
+  sql: 'sql',
+  sh: 'bash',
+  py: 'python',
+  go: 'go',
+  rs: 'rust',
+  vue: 'html',
+  svelte: 'html',
+};
 
 /**
  * @param {HTMLElement} code
  * @param {string} source
+ * @param {string} path
  * @param {() => boolean} current
  */
-export async function highlightHtmlPreview(code, source, current) {
+export async function highlightSourcePreview(code, source, path, current) {
+  let extension = path.split('.').pop()?.toLowerCase() || '';
+  let language = languages[/** @type {keyof typeof languages} */ (extension)];
+  if (!language) { return; }
   try {
-    // A fence longer than any source run keeps embedded Markdown inert too.
-    let length = 3;
-    for (let match of source.matchAll(/`+/g)) { length = Math.max(length, match[0].length + 1); }
-    let fence = '`'.repeat(length);
     let runtime = await loadMarkdownRuntime();
-    let fragment = await runtime.renderMarkdown(`${fence}html\n${source}\n${fence}`, 'explorer-source', document.baseURI, false);
-    let highlighted = fragment.querySelector('pre code');
-    if (!highlighted || !current()) { return; }
-    // Marked adds a code-block newline. Keep the original source unchanged.
-    if (highlighted.textContent === `${source}\n`) {
-      let walker = document.createTreeWalker(highlighted, NodeFilter.SHOW_TEXT);
-      let last;
-      while (walker.nextNode()) { last = walker.currentNode; }
-      if (last) { last.textContent = last.textContent?.slice(0, -1) || ''; }
-    }
-    if (highlighted.textContent !== source) { return; }
+    let highlighted = await runtime.renderCode(source, language, EXPLORER_PREVIEW_BYTES);
+    if (!current()) { return; }
     code.replaceChildren(...highlighted.childNodes);
   } catch {
-    // Source remains readable if loading fails or renderer bounds are exceeded.
+    // Keep the original source readable if loading or highlighting fails.
   }
 }

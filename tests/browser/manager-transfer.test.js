@@ -229,27 +229,9 @@ test('manager copies live sessions with explicit options, handles collisions, mo
     let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
     return !owner.busy;
   });
-  let navigation = page.waitForNavigation();
-  void navigation.catch(() => {});
   await page.click('#transfer-open-destination');
-  try { await navigation; }
-  catch (error) {
-    let state = await page.evaluate(() => {
-      let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
-      return {
-        busy: owner.busy,
-        projectError: owner.$.projectError,
-        notice: owner.$.notice,
-        result: owner.transfers?.result?.state,
-        destination: owner.transfers?.result?.destination.id,
-      };
-    });
-    throw new Error(JSON.stringify(state), {
-      cause: error,
-    });
-  }
   await page.waitForSelector('#manager-table tr[data-row-id="moved"]');
-  assert.notEqual(page.url(), manager.url);
+  assert.equal(new URL(page.url()).origin, new URL(manager.url).origin);
   assert.equal(new URL(page.url()).hash, '');
   for (let watcher of unrelatedPages) {
     assert.equal(await watcher.page.$eval('input[name="notes"]', (element) => element.value), watcher.draft);

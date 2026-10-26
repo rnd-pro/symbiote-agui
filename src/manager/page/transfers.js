@@ -84,7 +84,7 @@ export class SessionTransfers {
 
   render() {
     let owner = this.owner;
-    let disabled = !owner.connection?.ready || owner.busy || owner.navigating;
+    let disabled = !owner.connection?.ready || owner.busy;
     owner.set$({
       transferDisabled: disabled || !this.sourceId,
       transferProjectDisabled: disabled || this.kind === 'rename',
@@ -172,7 +172,7 @@ export class SessionTransfers {
 
   async refreshHistory() {
     let owner = this.owner;
-    if (!owner.connection?.ready || this.refreshing || owner.navigating) { return; }
+    if (!owner.connection?.ready || this.refreshing) { return; }
     this.refreshing = true;
     let epoch = owner.viewEpoch;
     try {

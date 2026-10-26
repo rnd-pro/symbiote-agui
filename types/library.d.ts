@@ -1,6 +1,6 @@
 export interface StorageSettings {
   mode: 'folder' | 'cache';
-  source: 'environment' | 'project';
+  source: 'environment' | 'project' | 'manager';
   folder?: string;
   configPath?: string;
 }

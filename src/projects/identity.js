@@ -4,11 +4,9 @@ import { opendir, realpath } from 'node:fs/promises';
 import { canonicalPath } from '../shared/paths.js';
 import { CommandError } from '../shared/command-error.js';
 import { errorMessage } from '../shared/system-error.js';
+import { validProjectId } from './identifiers.js';
 
-/** @param {unknown} value */
-export function validProjectId(value) {
-  return typeof value === 'string' && /^(?:default|[a-f0-9]{64})$/.test(value);
-}
+export { validProjectId };
 
 /** @param {unknown} value */
 export function validFolder(value) {

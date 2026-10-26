@@ -65,6 +65,7 @@ test('manager lazily expands project folders and previews source or inert Markdo
     browser,
   } = await fixture(t);
   let htmlSource = '<script>window.explorerExecuted = true;</script>\n````\n<explorer-probe></explorer-probe><agui-field label="Must stay inert"></agui-field>';
+  let javascriptSource = `/* ${'Long source comment. '.repeat(3600)} */\r\nexport let label = '🌍';\r\n// Keep Windows line endings.\r`;
   await Promise.all([
     mkdir(join(folder, 'docs')),
     mkdir(join(folder, 'empty')),
@@ -72,6 +73,8 @@ test('manager lazily expands project folders and previews source or inert Markdo
     writeFile(join(folder, '.hidden.txt'), 'Hidden fixture.'),
     writeFile(join(folder, 'data.json'), '{"fixture":"current"}'),
     writeFile(join(folder, 'source.html'), htmlSource),
+    writeFile(join(folder, 'source.JS'), javascriptSource),
+    writeFile(join(folder, 'styles.css'), '.example { color: red; }\n'),
     writeFile(join(folder, 'draft.html'), '<agui-field label="Draft" name="draft" value="Keep"></agui-field>'),
   ]);
   await writeFile(join(folder, 'docs', 'guide.md'), '# Project guide\n\nRead-only preview.\n\n<explorer-probe>Fallback document content</explorer-probe>\n<agui-field label="Do not instantiate"></agui-field>\n<script>window.explorerExecuted = true;</script>');
@@ -133,6 +136,27 @@ test('manager lazily expands project folders and previews source or inert Markdo
   assert.equal(await page.$('#explorer-preview pre :is(script, explorer-probe, agui-field)'), null);
   assert.equal(await page.evaluate(() => !!Reflect.get(window, 'explorerConstructed')), false);
   assert.equal(await page.evaluate(() => !!Reflect.get(window, 'explorerExecuted')), false);
+  for (let preview of [
+    {
+      path: 'source.JS',
+      token: '.hljs-keyword',
+      source: javascriptSource,
+    },
+    {
+      path: 'data.json',
+      token: '.hljs-attr',
+      source: '{"fixture":"current"}',
+    },
+    {
+      path: 'styles.css',
+      token: '.hljs-selector-class',
+      source: '.example { color: red; }\n',
+    },
+  ]) {
+    await page.click(`#explorer-entries [data-entry="${preview.path}"] button`);
+    await page.waitForSelector(`#explorer-preview pre code ${preview.token}`);
+    assert.equal(await page.$eval('#explorer-preview pre code', (element) => element.textContent), preview.source);
+  }
   await page.click('#explorer-entries [data-entry="empty"] button');
   await page.waitForFunction(() => document.querySelector('#explorer-entries')?.textContent?.includes('This folder is empty.'));
   await page.click('#explorer-entries [data-entry="pages"] button');

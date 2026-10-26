@@ -15,7 +15,9 @@ let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 async function waitForProject(page, id) {
   await page.waitForFunction((expected) => {
     let control = document.querySelector('#manager-project-switcher select');
-    return control instanceof HTMLSelectElement && control.value === expected && !control.disabled;
+    let owner = /** @type {import('../../src/manager/page/index.js').SessionManager | null} */ (document.querySelector('agui-session-manager'));
+    return control instanceof HTMLSelectElement && control.value === expected && !control.disabled
+      && owner?.projects?.listing?.currentProjectId === expected && owner.snapshot?.projects.currentProjectId === expected && owner.loaded && !owner.busy;
   }, {}, id);
   assert.equal(new URL(page.url()).hash, '', 'Authorization removes the private launch fragment.');
 }
@@ -54,9 +56,7 @@ async function connect(page, folder) {
 async function switchProject(page, id) {
   await page.select('#manager-project-switcher select', id);
   await page.waitForFunction(() => !document.querySelector('#manager-switch-project')?.hasAttribute('disabled'));
-  let navigation = page.waitForNavigation();
   await page.click('#manager-switch-project');
-  await navigation;
   await waitForProject(page, id);
 }
 
@@ -125,12 +125,12 @@ test('manager connects projects, switches remembered scopes and Default, and pre
   await connect(page, folderA);
   await connect(page, folderB);
   assert.equal(await page.$eval('#manager-project-list [data-project="default"] button:last-child', (element) => element.hasAttribute('disabled')), true);
-  let navigation = page.waitForNavigation();
+  await page.evaluate(() => Reflect.set(window, 'managerPageMarker', 'retained'));
   await page.locator(`#manager-project-list [data-project="${projectId(folderA)}"] ::-p-aria([name="Switch"][role="button"])`).click();
-  await navigation;
   await waitForProject(page, projectId(folderA));
   let urlA = page.url();
-  assert.notEqual(urlA, manager.url);
+  assert.equal(new URL(urlA).origin, new URL(manager.url).origin);
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'managerPageMarker')), 'retained', 'Switching projects retains the same page instance.');
   await page.waitForSelector('#manager-table tr[data-row-id="desk"]');
   assert.equal(await page.$eval('#manager-table tr[data-row-id="desk"] td[data-column=""] input', (element) => Reflect.get(element, 'checked')), false);
   assert.equal(await page.$eval('#session-inspector', (element) => element.hasAttribute('hidden')), true);
@@ -229,7 +229,7 @@ test('project navigation survives session discovery failures and ignores delayed
     let connection = owner.connection;
     if (!connection) { throw new Error('Missing connection.'); }
     let request = connection.request.bind(connection);
-    connection.request = (operation, options) => operation === 'snapshot' ? Promise.resolve({
+    connection.request = (operation, options) => operation === 'snapshot' && connection.projectId === 'default' ? Promise.resolve({
       ok: false,
       error: {
         code: 'INTERNAL_ERROR',

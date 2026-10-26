@@ -6,6 +6,9 @@ import { PAGE_TEXT_CONTEXT } from '../../markup/constants.js';
 /** @type {import('../../../types/uilib.js').UiTexts} */
 export let dataToolbarTexts = Object.freeze({
   actions: 'Data actions',
+  closeActions: 'Close data actions',
+  'status.failed': 'Data action failed',
+  'status.uncertain': 'Data outcome uncertain',
   save: 'Save',
   cancel: 'Cancel changes',
   import: 'Import JSON',

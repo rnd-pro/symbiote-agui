@@ -1,6 +1,7 @@
 import {
   getDataState,
 } from '../../../data-context.js';
+import { toolbarIndicator } from './indicator.js';
 
 /** @param {import('./data-toolbar.js').DataToolbar} toolbar */
 export function presentToolbar(toolbar) {
@@ -24,7 +25,29 @@ export function presentToolbar(toolbar) {
     toolbar.transferState?.failure ? text(`transfer.${toolbar.transferState.failure.code}`) : '',
   ].filter(Boolean);
   if (data.stale && !viewer) { errors.push(text('stale')); }
+  let indicator = toolbarIndicator({
+    viewer,
+    connected: connected && (viewer || data.connected),
+    dirty: !!toolbar.$.dirty,
+    stale: !viewer && data.stale,
+    issue: !!toolbar.issue,
+    submission,
+    transfer: toolbar.transferState,
+  });
+  let indicatorMessage = text(indicator.textKey);
   toolbar.set$({
+    indicatorState: indicator.state,
+    indicatorIcon: indicator.icon,
+    indicatorTone: indicator.tone,
+    indicatorBusy: indicator.state === 'busy',
+    indicatorMessage,
+    indicatorLabel: [
+      text('actions'),
+      text(viewer ? 'viewer' : 'user'),
+      text(connected ? 'connected' : 'disconnected'),
+      indicatorMessage,
+    ].filter(Boolean).join('. '),
+    closeActionsLabel: text('closeActions'),
     actionsLabel: text('actions'),
     saveLabel: text('save'),
     cancelLabel: text('cancel'),

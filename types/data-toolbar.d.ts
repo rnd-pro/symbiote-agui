@@ -18,6 +18,16 @@ export interface ToolbarSubmission {
   external?: ExternalAcknowledgement;
 }
 
+export interface ToolbarIndicatorInput {
+  viewer: boolean;
+  connected: boolean;
+  dirty: boolean;
+  stale: boolean;
+  issue: boolean;
+  submission?: ToolbarSubmission;
+  transfer?: import('./data.js').DataTransferState;
+}
+
 export interface SavedDataSelection extends SavedReference {
   provider: string;
   key: string;

@@ -5,7 +5,7 @@ import puppeteer from 'puppeteer-core';
 import { readRuntimeCache } from '../../src/data/cache.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';
-import { cli, insertStdin, sendStdin } from './helpers.js';
+import { cli, insertStdin, sendStdin, clickDataAction } from './helpers.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 let trigger = '#record-editor > button';
@@ -61,12 +61,12 @@ test('dialogs publish dismissal once, preserve drafts, and mirror native overlay
   assert.equal(await page.$eval('#dialog-name input', (element) => element === Reflect.get(window, 'originalDraft') && Reflect.get(element, 'value') === 'Baseline draft'), true);
   await page.click('#form-close');
   await page.waitForFunction(() => Reflect.get(document.querySelector('#dialog-data') || {}, '$')?.editorOpen === false);
-  await page.click('#editor-toolbar button:nth-child(2)');
+  await clickDataAction(page, '#editor-toolbar', 'Cancel changes');
   assert.equal(await page.$eval('#dialog-name input', (element) => Reflect.get(element, 'value')), 'Baseline');
   await page.click(trigger);
   await page.type('#dialog-name input', ' saved');
   await page.click('#record-editor .agui-dialog-heading button');
-  await page.click('#editor-toolbar button');
+  await clickDataAction(page, '#editor-toolbar', 'Save');
   await page.waitForFunction(() => Reflect.get(document.querySelector('#editor-toolbar') || {}, 'submission')?.result?.state === 'committed');
   assert.match((await readRuntimeCache('dialogs'))?.html || '', /"name":"Baseline saved"/);
 

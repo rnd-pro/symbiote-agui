@@ -5,7 +5,7 @@ import puppeteer from 'puppeteer-core';
 import { readRuntimeCache } from '../../src/data/cache.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';
-import { cli, insertStdin, sendStdin } from './helpers.js';
+import { cli, insertStdin, sendStdin, clickDataAction } from './helpers.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 let board = '#work-board';
@@ -167,21 +167,21 @@ test('kanban drag and keyboard moves share table records, preserve drafts until 
     id: 'a',
     status: 'locked',
   }));
-  await page.click('#work-toolbar button:nth-child(2)');
+  await clickDataAction(page, '#work-toolbar', 'Cancel changes');
   assert.deepEqual(await rows(), initial);
   assert.equal(await page.$eval(cardA, (element) => element.parentElement?.closest('li[data-status]')?.getAttribute('data-status')), 'todo');
   await call('move_item', {
     id: 'a',
     status: 'done',
   });
-  await page.click('#work-toolbar button');
+  await clickDataAction(page, '#work-toolbar', 'Save');
   await page.waitForFunction(() => Reflect.get(document.querySelector('#work-toolbar') || {}, 'submission')?.result?.state === 'committed');
   assert.match((await readRuntimeCache('kanban'))?.html || '', /"stage":"done"/);
   await call('move_item', {
     id: 'a',
     status: 'todo',
   });
-  await page.click('#work-toolbar button:nth-child(2)');
+  await clickDataAction(page, '#work-toolbar', 'Cancel changes');
   assert.equal((await rows())[0].stage, 'done');
   let discovery = await cli('tools', 'kanban');
   let cardTool = discovery.tools.find((/** @type {import('../../types/tools.js').PageTool} */ item) => item.ownerName === 'agui-kanban-card' && item.key === 'set_status'

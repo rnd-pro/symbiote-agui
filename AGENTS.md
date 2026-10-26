@@ -22,12 +22,14 @@ Read [README.md](./README.md) for the project purpose and main workflows.
 - Prefer object lookups for mapping known keys to values or handlers. Use `switch` only when it provides a demonstrated, noticeable performance benefit.
 - Format array and object literals and destructuring patterns across multiple lines, even when short. Put each item or property on its own line and closing brackets/braces on separate lines. Import/export declarations are exempt from this rule; named import/export lists may stay on one line. Exported array and object values still follow the multiline rule.
 - Format CSS rules across multiple lines, with each declaration and closing brace on its own line. Put declarations in inline style attributes on separate lines when there is more than one. JavaScript style objects follow the object formatting rule.
-- Prefer clear names and function signatures. Use comments to explain non-obvious intent or constraints, and keep the implementation simple enough for a human developer to maintain. Follow KISS and DRY.
+- Prefer clear names and function signatures. Use comments to explain non-obvious intent or constraints, and keep the implementation simple enough for a human developer to maintain. 
+- Follow KISS and DRY.
 
 ## Symbiote and uilib
 
 - Before implementing component behavior, consult `node_modules/@symbiotejs/symbiote/llms.txt` and the relevant documentation in that package. Prefer native Symbiote APIs. Before adding a helper or wrapper, verify that Symbiote does not already provide that capability. If the contract is unclear, inspect its implementation before proceeding.
 - Never hardcode user-facing text in uilib components, including labels, accessible names, hints, statuses, errors, and fallback messages. Supply text through host attributes or native Symbiote bindings. Keep application copy outside uilib and preserve caller-provided text bindings.
+- Use library items instead of reinvent them when possible.
 
 ## Validation
 

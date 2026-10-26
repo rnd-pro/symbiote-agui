@@ -179,7 +179,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#plain-theme button', (element) => element.getAttribute('aria-label')), 'Dynamic name');
   assert.equal(await page.$eval('#unlabeled-state', (element) => element.textContent?.trim()), '');
   assert.equal(await page.$eval('#unlabeled-toolbar', (element) => element.getAttribute('aria-label')), null);
-  assert.equal(await page.$eval('#custom-data button > span', (element) => element.textContent), 'Keep edits');
+  assert.equal(await page.$eval('#custom-data .agui-data-actions button > span', (element) => element.textContent), 'Keep edits');
   assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Online/);
   await page.$eval('#custom-data', (element) => Reflect.get(element, 'transfer').failed('import', new Error('Technical details must not become UI copy.')));
   assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Cannot read this file/);

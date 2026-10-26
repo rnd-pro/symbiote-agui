@@ -25,6 +25,8 @@ export function mirrorOverlays(root, copy) {
   let copies = copy.querySelectorAll('dialog, [popover]');
   originals.forEach((element, index) => {
     let target = /** @type {HTMLElement} */ (copies[index]);
+    // Viewers render their own data status and actions outside the mirror.
+    if (element.closest('agui-data-toolbar')) { return; }
     let modal = element instanceof HTMLDialogElement && element.matches(':modal');
     let popover = element.hasAttribute('popover');
     let visiblePopover = popover && 'showPopover' in HTMLElement.prototype && element.matches(':popover-open');

@@ -81,7 +81,7 @@ Browser tabs show the session ID as their title and use a stable colored emoji f
 
 Ask your agent to reopen a session by name, stop it when you are finished, or clear it when you want to discard the saved interface and data. Reopening restores the interface and explicitly committed data. Ordinary edits remain unsaved until a Save action commits declared provider properties to the [private data cache](./docs/reference.md#local-data-commits).
 
-Data-editing interfaces use one floating toolbar for Save, Cancel changes, and manual JSON import/export. Import stays a draft until Save; export includes unsaved edits and remains available while disconnected. Local saving, agent delivery, and verified external writes have separate statuses.
+Data-editing interfaces use one floating status button that opens Save, Cancel changes, and manual JSON import/export controls. Import stays a draft until Save; export includes unsaved edits and remains available while disconnected. Local saving, agent delivery, and verified external writes have separate statuses.
 
 List all sessions with active/inactive status and current links for running sessions, check one session, or stop it yourself:
 

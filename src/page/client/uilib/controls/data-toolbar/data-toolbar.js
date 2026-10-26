@@ -47,6 +47,8 @@ import {
 } from '../../feedback/message/constants.js';
 import styles from './styles.js';
 
+let nextToolbarId = 0;
+
 export class DataToolbar extends UiComponent {
   /** @type {import('../../../../../../types/data.js').DataTarget[]} */
   targets = [];
@@ -60,8 +62,6 @@ export class DataToolbar extends UiComponent {
   transferState;
   /** @type {JsonTransfer | undefined} */
   transfer;
-  /** @type {ResizeObserver | undefined} */
-  sizeObserver;
   /** @type {ToolbarMessages | undefined} */
   messages;
   issue = '';
@@ -70,6 +70,14 @@ export class DataToolbar extends UiComponent {
     texts: undefined,
     externalResult: undefined,
     dirty: false,
+    popupId: `agui-data-actions-${++nextToolbarId}`,
+    indicatorState: 'clean',
+    indicatorIcon: 'save',
+    indicatorTone: 'neutral',
+    indicatorLabel: '',
+    indicatorMessage: '',
+    indicatorBusy: false,
+    closeActionsLabel: '',
     roleLabel: '',
     socketConnected: 'false',
     connectionLabel: '',
@@ -175,8 +183,6 @@ export class DataToolbar extends UiComponent {
       try { this.acknowledge(/** @type {import('../../../../../../types/data-toolbar.js').ExternalAcknowledgement} */ (value)); }
       catch { this.issue = 'ackMismatch'; this.refresh(true); }
     });
-    this.sizeObserver = new ResizeObserver(() => this.updateSize());
-    this.sizeObserver.observe(this.ref.bar);
     this.refresh();
   }
 
@@ -188,13 +194,6 @@ export class DataToolbar extends UiComponent {
     catch { this.$.dirty = true; }
     presentToolbar(this);
     this.messages?.update(notify);
-  }
-
-  updateSize() {
-    if (this.disposed) { return; }
-    let height = this.ref.bar.getBoundingClientRect().height;
-    this.style.setProperty('--agui-data-bar-height', `${height}px`);
-    document.documentElement.style.setProperty('--agui-data-toolbar-height', `${height}px`);
   }
 
   /** @param {string} key */
@@ -333,8 +332,6 @@ export class DataToolbar extends UiComponent {
     this.disposed = true;
     this.messages?.dispose();
     this.transfer?.dispose();
-    this.sizeObserver?.disconnect();
-    if (!document.querySelector('agui-data-toolbar')) { document.documentElement.style.removeProperty('--agui-data-toolbar-height'); }
   }
 }
 

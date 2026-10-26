@@ -5,6 +5,17 @@ import { promisify } from 'node:util';
 let execute = promisify(execFile);
 let cliPath = fileURLToPath(new URL('../../bin/symbiote-agui.js', import.meta.url));
 
+/**
+ * @param {import('puppeteer-core').Page} page
+ * @param {string} selector
+ * @param {string} label
+ */
+export async function clickDataAction(page, selector, label) {
+  let open = await page.$eval(`${selector} .agui-data-panel`, (element) => element.matches(':popover-open'));
+  if (!open) { await page.locator(`${selector} .agui-data-trigger`).click(); }
+  await page.locator(`${selector} .agui-data-actions ::-p-aria([name="${label}"][role="button"])`).click();
+}
+
 /** @param {string[]} args */
 export async function cli(...args) {
   let { stdout } = await execute(process.execPath, [cliPath, ...args], { timeout: 45_000 });

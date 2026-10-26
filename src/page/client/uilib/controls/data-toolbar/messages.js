@@ -10,6 +10,7 @@ export class ToolbarMessages {
   constructor(toolbar) {
     this.toolbar = toolbar;
     this.element = /** @type {import('../../feedback/message/message.js').Message} */ (toolbar.ref.messages);
+    toolbar.ref.panel.addEventListener('toggle', this.toggled);
   }
 
   /** @param {boolean} [force] */
@@ -21,7 +22,8 @@ export class ToolbarMessages {
       closeLabel: this.toolbar.$.closeLabel,
       timeout: this.toolbar.$.messageTimeout,
     });
-    if (!messages.some(Boolean)) {
+    let panelOpen = 'showPopover' in HTMLElement.prototype && this.toolbar.ref.panel.matches(':popover-open');
+    if (panelOpen || !messages.some(Boolean)) {
       void this.element.hide();
       return;
     }
@@ -33,7 +35,10 @@ export class ToolbarMessages {
     this.element.show();
   }
 
+  toggled = () => this.update();
+
   dispose() {
+    this.toolbar.ref.panel.removeEventListener('toggle', this.toggled);
     void this.element.hide(true);
   }
 }

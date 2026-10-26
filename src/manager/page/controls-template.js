@@ -10,7 +10,9 @@ export let SESSION_CONTROLS_TEMPLATE = html`
     <p class="text-xs text-agui-muted">{{^tunnel}}</p>
     <p class="error text-sm text-agui-danger">{{^error}}</p>
     <agui-toolbar aria-label="Session actions" class="grid grid-cols-1">
-      <a class="agui-button no-underline" target="_blank" rel="noopener noreferrer" bind="href: ^url; hidden: ^noLocal"><agui-icon name="open_in_new"></agui-icon>Open page</a>
+      <a class="agui-button no-underline" target="_blank" rel="noopener noreferrer" bind="href: ^url; hidden: ^noLocal"><agui-icon name="open_in_new"></agui-icon>Local page</a>
+      <a class="agui-button no-underline" target="_blank" rel="noopener noreferrer" aria-label="Public link"
+        bind="href: ^userUrl; title: ^userUrl; hidden: ^noPublic"><agui-icon name="open_in_new"></agui-icon>Public link</a>
       <button type="button" class="agui-button-primary" bind="onclick: ^start; disabled: ^startDisabled"><agui-icon name="arrow_forward"></agui-icon>Start</button>
       <button type="button" bind="onclick: ^stop; disabled: ^stopDisabled"><agui-icon name="cancel"></agui-icon>Stop</button>
       <button type="button" bind="onclick: ^sync; disabled: ^syncDisabled"><agui-icon name="sync"></agui-icon>Sync</button>

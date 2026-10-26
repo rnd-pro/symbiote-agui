@@ -182,6 +182,8 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await local.waitForSelector('#notes');
   await local.type('#notes', 'Keep this live input');
   await page.bringToFront();
+  let internetLink = '#session-inspector a[aria-label="Public link"]';
+  assert.equal(await page.$eval(internetLink, (element) => element.hasAttribute('hidden')), true);
   await fixture.setMode('fail');
   await action(page, 'Attach tunnel');
   await notice(page, 'Expected tunnel fixture failure');
@@ -193,6 +195,10 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.waitForSelector('[data-session="desk"] a[href*="trycloudflare.com"]');
   await page.locator('#session-inspector [data-session="desk"] ::-p-aria([name="Tunnel attached"][role="button"])').filter((button) => button.hasAttribute('disabled')).wait();
   let shared = await cli('status', 'desk');
+  await page.waitForSelector(internetLink, {
+    visible: true,
+  });
+  assert.equal(await page.$eval(internetLink, (element) => element.getAttribute('href')), shared.publicUserUrl);
   assert.equal(shared.pid, pid, 'Attaching a tunnel preserves the running worker.');
   assert.equal(shared.url, running.url, 'The local session URL does not change.');
   assert.equal(await local.$eval('input#notes', (element) => element.value), 'Keep this live input');
@@ -209,6 +215,8 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await action(page, 'Renew tunnel');
   await notice(page, 'tunnel renew completed');
   await page.waitForSelector('a[href*="renewed-manager.trycloudflare.com"]');
+  let renewed = await cli('status', 'desk');
+  await page.waitForFunction((selector, url) => document.querySelector(selector)?.getAttribute('href') === url, {}, internetLink, renewed.publicUserUrl);
   let connectors = (await fixture.pids()).length;
   await fixture.setMode('slow-ready');
   await fixture.setOrigin('https://reconnected-manager.trycloudflare.com');

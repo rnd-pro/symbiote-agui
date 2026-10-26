@@ -23,6 +23,7 @@ export type MetadataCliRequest =
   | { kind: 'metadata'; command: 'clear'; sessionId: string; key: string };
 
 export type CliRequest =
+  | { kind: 'rename'; sessionId: string; destinationSessionId: string }
   | LibraryRequest
   | FeedbackCliRequest
   | MetadataCliRequest
@@ -51,6 +52,7 @@ export interface CommandFailure {
 }
 
 export type CommandResult = ({ ok: true } & (SessionStatus | import('./tools.js').SessionToolResponse))
+  | import('./session.js').SessionRenameResult
   | (CommandFailure & SessionStatus)
   | ({ ok: true } & import('./manager.js').ManagerStatus)
   | CommandFailure

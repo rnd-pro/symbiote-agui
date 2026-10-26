@@ -190,12 +190,12 @@
               <p class="break-all text-sm" bind="textContent: MANAGER/transferSource"></p>
               <p class="text-xs text-agui-muted" bind="textContent: MANAGER/transferPolicy"></p>
               <agui-select label="Destination project" name="transferDestination" required required-mark="*" pub-to="MANAGER/transferDestination"
-                bind="$.value: MANAGER/transferDestination; $.options: MANAGER/transferOptions; $.disabled: MANAGER/transferDisabled"></agui-select>
-              <agui-field label="Destination session ID" name="transferSessionId" required required-mark="*" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" pub-to="MANAGER/transferSessionId"
-                bind="$.value: MANAGER/transferSessionId; $.disabled: MANAGER/transferDisabled"></agui-field>
-              <agui-toggle label="Include saved data" name="transferIncludeData" pub-to="MANAGER/transferIncludeData" bind="$.value: MANAGER/transferIncludeData; $.disabled: MANAGER/transferDisabled"></agui-toggle>
-              <agui-toggle label="Include private metadata" name="transferIncludeMetadata" pub-to="MANAGER/transferIncludeMetadata" bind="$.value: MANAGER/transferIncludeMetadata; $.disabled: MANAGER/transferDisabled"></agui-toggle>
-              <details>
+                bind="hidden: MANAGER/transferIsRename; $.value: MANAGER/transferDestination; $.options: MANAGER/transferOptions; $.disabled: MANAGER/transferProjectDisabled"></agui-select>
+              <agui-field name="transferSessionId" required required-mark="*" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" pub-to="MANAGER/transferSessionId"
+                bind="$.label: MANAGER/transferIdLabel; $.value: MANAGER/transferSessionId; $.disabled: MANAGER/transferDisabled"></agui-field>
+              <agui-toggle label="Include saved data" name="transferIncludeData" pub-to="MANAGER/transferIncludeData" bind="hidden: MANAGER/transferIsRename; $.value: MANAGER/transferIncludeData; $.disabled: MANAGER/transferDisabled"></agui-toggle>
+              <agui-toggle label="Include private metadata" name="transferIncludeMetadata" pub-to="MANAGER/transferIncludeMetadata" bind="hidden: MANAGER/transferIsRename; $.value: MANAGER/transferIncludeMetadata; $.disabled: MANAGER/transferDisabled"></agui-toggle>
+              <details bind="hidden: MANAGER/transferIsRename">
                 <summary>Associated private metadata</summary>
                 <p class="text-xs text-agui-muted">Includes existing data-source and destination references. Copying them grants no external access and changes no external resource.</p>
                 <pre class="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs"><code bind="textContent: MANAGER/transferMetadata"></code></pre>
@@ -204,7 +204,7 @@
               <p id="transfer-message" class="break-all text-sm empty:hidden" role="status" bind="textContent: MANAGER/transferMessage"></p>
               <agui-toolbar aria-label="Transfer actions">
                 <button type="submit" class="agui-button-primary" bind="textContent: MANAGER/transferTitle; disabled: MANAGER/transferDisabled"></button>
-                <button id="transfer-open-destination" type="button" bind="onclick: MANAGER/openTransferDestination; disabled: MANAGER/transferDestinationDisabled">Open destination project</button>
+                <button id="transfer-open-destination" type="button" bind="hidden: MANAGER/transferIsRename; onclick: MANAGER/openTransferDestination; disabled: MANAGER/transferDestinationDisabled">Open destination project</button>
                 <button type="button" bind="onclick: MANAGER/showTransfers">Review transfers</button>
               </agui-toolbar>
             </form>

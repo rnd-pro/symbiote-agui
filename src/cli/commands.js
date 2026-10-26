@@ -56,6 +56,8 @@ export let COMMANDS = Object.freeze({
   },
 });
 
+export let RENAME_USAGE = 'rename <SESSION_ID> <NEW_SESSION_ID>';
+
 export let ALL_COMMANDS = Object.freeze({
   'sync all': { usage: 'sync all', options: [] },
   'tunnel renew all': { usage: 'tunnel renew all', options: [] },
@@ -89,6 +91,7 @@ export let HELP = [
   'Usage: symbiote-agui <command>',
   '',
   ...Object.values(COMMANDS).map(({ usage }) => `  ${usage}`),
+  `  ${RENAME_USAGE}`,
   ...Object.values(ALL_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(FEEDBACK_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(METADATA_COMMANDS).map(({ usage }) => `  ${usage}`),
@@ -125,6 +128,7 @@ export let HELP = [
   'call targets one page, validates tool input, and never retries automatically.',
   'Open the returned URL directly; browser authorization is not required.',
   'stop retains cached markup; clear removes the saved interface and live content.',
+  'rename requires a stopped saved session; it retains description, committed data, and metadata in the same scope.',
   'stop all (also stop-all) stops recorded sessions; clear-all clears running and cached interfaces.',
   'Both use the current state directory and report per-session results.',
   'start --tunnel or share creates a public Quick Tunnel with user and viewer links.',

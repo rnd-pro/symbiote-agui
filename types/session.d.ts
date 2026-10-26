@@ -45,6 +45,12 @@ export interface TunnelStatus {
 export type SessionOperationResult = ({ ok: true } & SessionStatus)
   | (CommandFailure & Omit<Partial<SessionStatus>, 'active'> & { sessionId: string; active?: boolean | null });
 
+export type SessionRenameResult = SessionOperationResult & {
+  previousSessionId: string;
+  renamed: boolean;
+  transfer?: import('./transfer.js').TransferResult;
+};
+
 export type AllSessionsResult = {
   command: import('./cli.js').AllSessionsCommand;
   total: number;

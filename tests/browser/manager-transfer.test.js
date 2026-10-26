@@ -9,6 +9,7 @@ import { dataHtml } from '../node/data-fixture.js';
 import { connectProject } from '../../src/projects/registry.js';
 import { transferScope, transferPaths } from '../../src/projects/transfer/scope.js';
 import { readTransferFiles } from '../../src/projects/transfer/snapshot.js';
+import { readRuntimeCache } from '../../src/data/cache.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
@@ -48,6 +49,71 @@ async function openTransfer(page, label) {
   await page.locator(`#session-inspector ::-p-aria([name="${label}"][role="button"])`).click();
   await page.waitForSelector('#manager-transfer dialog[open]');
 }
+
+test('manager renames saved IDs with all artifacts, selects the renamed session, and protects unrelated live drafts', {
+  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
+  timeout: 45000,
+}, async (t) => {
+  let {
+    project,
+    a,
+    b,
+    browser,
+  } = await fixture(t);
+  let files = await writeTransferFixture(a);
+  await writeTransferFixture(a, 'occupied');
+  await writeTransferFixture(b, 'watcher', dataHtml + '<agui-field label="Draft" name="draft" value="Keep"></agui-field>');
+  let watcher = await project.cli([
+    'start',
+    'watcher',
+    '--no-open',
+  ], b.folder);
+  let draft = await browser.newPage();
+  await draft.goto(watcher.url);
+  await draft.waitForSelector('input[name="draft"]');
+  await draft.type('input[name="draft"]', ' unsaved');
+  let originalDraft = await draft.$eval('input[name="draft"]', (element) => element.value);
+  let manager = await project.cli([
+    'manager',
+    '--no-open',
+  ], a.folder);
+  let page = await browser.newPage();
+  page.setDefaultTimeout(8000);
+  await page.goto(manager.launchUrl);
+  await openTransfer(page, 'Rename');
+  assert.equal(await page.$eval('#manager-transfer agui-select', (element) => Reflect.get(element, 'hidden')), true);
+  await page.locator('#manager-transfer input[name="transferSessionId"]').fill('occupied');
+  await page.click('#manager-transfer-form button[type="submit"]');
+  await page.waitForFunction(() => document.querySelector('#transfer-error')?.textContent?.includes('already'));
+  assert.equal((await readTransferFiles(transferPaths(a, 'desk'))).html, files.html);
+  await page.locator('#manager-transfer input[name="transferSessionId"]').fill('renamed');
+  await page.click('#manager-transfer-form button[type="submit"]');
+  await page.waitForSelector('#manager-table tr[data-row-id="renamed"]');
+  await page.waitForSelector('#session-inspector [data-session="renamed"]');
+  assert.equal(await page.$('#manager-table tr[data-row-id="desk"]'), null);
+  assert.equal(await page.$('#manager-transfer dialog[open]'), null);
+  let saved = await readTransferFiles(transferPaths(a, 'renamed'));
+  assert.equal(saved.html, files.html);
+  assert.equal(saved.description, files.description);
+  assert.equal(saved.metadata, files.metadata);
+  assert.match((await readRuntimeCache('renamed', a.stateRoot))?.html || '', /committed/);
+  await page.locator('#session-inspector ::-p-aria([name="Start"][role="button"])').click();
+  await page.waitForFunction(() => document.querySelector('.notice')?.textContent?.includes('start completed'));
+  assert.equal(await page.$eval('#session-inspector button[title*="before renaming"]', (element) => Reflect.get(element, 'disabled')), true);
+  let running = await project.cli([
+    'status',
+    'renamed',
+  ], a.folder);
+  assert.equal(running.active, true);
+  assert.ok(running.url.includes('/renamed/'));
+  let after = await project.cli([
+    'status',
+    'watcher',
+  ], b.folder);
+  assert.equal(after.url, watcher.url);
+  assert.equal(after.feedback.instanceId, watcher.feedback.instanceId);
+  assert.equal(await draft.$eval('input[name="draft"]', (element) => element.value), originalDraft);
+});
 
 test('manager copies live sessions with explicit options, handles collisions, moves stopped sources and opens the destination separately', {
   skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',

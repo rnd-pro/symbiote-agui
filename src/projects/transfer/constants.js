@@ -7,6 +7,10 @@ export const TRANSFER_FILE_KEYS = [
 ];
 
 export let TRANSFER_OPERATIONS = Object.freeze({
+  'rename session': {
+    bulk: false,
+    confirm: true,
+  },
   'copy session': {
     bulk: false,
     confirm: true,

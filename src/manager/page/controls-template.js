@@ -18,6 +18,7 @@ export let SESSION_CONTROLS_TEMPLATE = html`
       <button type="button" bind="onclick: ^check; disabled: ^tunnelDisabled"><agui-icon name="check_circle"></agui-icon>Check tunnel</button>
       <button type="button" bind="onclick: ^renew; disabled: ^tunnelDisabled"><agui-icon name="refresh"></agui-icon>Renew tunnel</button>
       <button type="button" bind="onclick: ^describe; disabled: ^describeDisabled"><agui-icon name="info"></agui-icon>Description</button>
+      <button type="button" title="Save or export browser drafts and stop the session before renaming it." bind="onclick: ^rename; disabled: ^renameDisabled"><agui-icon name="edit"></agui-icon>Rename</button>
       <button type="button" bind="onclick: ^copy; disabled: ^copyDisabled"><agui-icon name="content_copy"></agui-icon>Copy to project</button>
       <button type="button" title="Save or export browser drafts and stop the session before moving it." bind="onclick: ^move; disabled: ^moveDisabled"><agui-icon name="arrow_forward"></agui-icon>Move to project</button>
       <button type="button" class="agui-button-danger" bind="onclick: ^clear; disabled: ^clearDisabled"><agui-icon name="delete"></agui-icon>Clear</button>

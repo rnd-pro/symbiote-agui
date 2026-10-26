@@ -45,6 +45,8 @@ Every connection loads fresh backend state. While visible, the page refreshes ro
 
 Operation results include individual bulk failures. Repeated mutation request IDs reuse their result for ten minutes; conflicting operations on a session run in sequence. A disconnect or timeout can leave an unknown outcome. The page refreshes after reconnecting and never automatically replays an action. Review current status before deliberately submitting it again.
 
+Rename in the selected session's sidebar changes its ID and saved filenames within the current project. Save or export browser drafts and stop the session first. The description, committed data, and private metadata are retained automatically; the renamed session stays stopped and becomes selected. Name collisions, including case-only changes, are rejected. Display titles from Markdown and references inside HTML/Markdown are preserved; existing links do not redirect. On its next start, the renamed session gets a new worker identity and URL. Incomplete renames use the same Transfers receipts and recovery controls as moves.
+
 ## Session controls
 
 Local, shared user, and viewer tabs use the session ID as their browser title. A colored emoji favicon is selected from a fixed palette by session ID and stays the same across reloads and restarts. Colors can repeat between sessions.
@@ -57,6 +59,7 @@ npx symbiote-agui start all
 npx symbiote-agui status all
 npx symbiote-agui status my-workspace
 npx symbiote-agui stop my-workspace
+npx symbiote-agui rename my-workspace renamed-workspace
 npx symbiote-agui stop all
 npx symbiote-agui clear my-workspace
 ```
@@ -66,6 +69,7 @@ npx symbiote-agui clear my-workspace
 - `status` reports `waiting` without connected pages, `ready` with connected pages, or `stopped`. A shared session can have viewers connected while waiting for an interactive user.
 - `status all` lists all recorded and saved sessions in the current storage root. Each successful result has `active: true` for a running session or `active: false` with `state: "stopped"` for an inactive session. Running sessions include verified OS process IDs (`pid`), local URLs, and current public user/viewer URLs when sharing is active. Inactive sessions have no live links or PID. Unreachable sessions report individual failures with `active: null` (unknown) without hiding other results. Results contain `command`, `total`, and a `sessions` array; partial failures set `ok: false` and exit with code 1. The word `all` selects the bulk operation for `start`, `status`, and `stop`.
 - `stop` ends the session and its tunnel, retaining the saved interface. Tabs remain open with `Session ended.`.
+- `rename <SESSION_ID> <NEW_SESSION_ID>` renames a stopped saved session in the current scope, retaining its description, committed data, and metadata. It does not overwrite existing files, start a worker, or rewrite embedded references. Results include `previousSessionId`, the resulting `sessionId`, `renamed`, and a transfer receipt. A partial failure returns `ok: false`; review its receipt through Transfers before retrying.
 - `clear` discards the saved interface and clears live content. A running session and its tunnel stay available. Clearing also works while stopped.
 
 `stop all` (also available as `stop-all`) stops every session and its tunnel in the current storage root, retaining saved interfaces. `clear-all` discards every saved definition and clears live interfaces while keeping workers running. Both include sessions created from other directories and report per-session results, continuing after individual failures. `all` is reserved for the bulk operation in `start all`, `status all`, and `stop all`.

@@ -23,7 +23,7 @@ import { checkTransferDependencies } from './dependencies.js';
 export async function assertStopped(scope, sessionId) {
   let record = await readScopedSession(sessionId, scope.stateRoot);
   if (record && isProcessAlive(record.pid)) {
-    throw new CommandError('The session is running, starting, or unreachable. Save or export browser drafts and stop it before moving or recovering it.');
+    throw new CommandError('The session is running, starting, or unreachable. Save or export browser drafts and stop it before moving, renaming, or recovering it.');
   }
   return record;
 }

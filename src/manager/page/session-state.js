@@ -24,6 +24,7 @@ export let SESSION_STATE = {
   describeDisabled: true,
   copyDisabled: true,
   moveDisabled: true,
+  renameDisabled: true,
   shareLabel: 'Attach tunnel',
   shareHint: 'Start this session to attach a public tunnel.',
   start: () => {},
@@ -36,6 +37,7 @@ export let SESSION_STATE = {
   describe: () => {},
   copy: () => {},
   move: () => {},
+  rename: () => {},
 };
 
 /**
@@ -78,6 +80,7 @@ export function rowState(row, disabled, act) {
     describeDisabled: disabled || !saved,
     copyDisabled: disabled || !saved || unknown,
     moveDisabled: disabled || !saved || active || unknown,
+    renameDisabled: disabled || !saved || active || unknown,
     start: () => act('start', row.sessionId),
     stop: () => act('stop', row.sessionId),
     sync: () => act('sync', row.sessionId),
@@ -88,5 +91,6 @@ export function rowState(row, disabled, act) {
     describe: () => act('describe', row.sessionId),
     copy: () => act('copy session', row.sessionId),
     move: () => act('move session', row.sessionId),
+    rename: () => act('rename session', row.sessionId),
   };
 }

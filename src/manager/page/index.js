@@ -271,8 +271,13 @@ export class SessionManager extends ContextProvider {
    */
   async act(operation, sessionId) {
     if (this.busy || !this.connection?.ready) { return; }
-    if (operation === 'copy session' || operation === 'move session') {
-      this.transfers?.open(operation === 'copy session' ? 'copy' : 'move', sessionId || '');
+    let transferKinds = /** @type {const} */ ({
+      'copy session': 'copy',
+      'move session': 'move',
+      'rename session': 'rename',
+    });
+    if (Object.hasOwn(transferKinds, operation)) {
+      this.transfers?.open(transferKinds[/** @type {keyof typeof transferKinds} */ (operation)], sessionId || '');
       return;
     }
     let target = sessionId || 'all sessions in this scope';

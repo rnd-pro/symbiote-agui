@@ -24,6 +24,11 @@ export function validateTransferRequest(request) {
   } else {
     assertSessionId(request.sessionId || '');
     assertSessionId(request.destinationSessionId || '');
+    if (request.operation === 'rename session') {
+      if (request.destinationProjectId !== undefined || request.includeData !== undefined || request.includeMetadata !== undefined
+        || request.transferId !== undefined || request.confirm !== true) { throw new CommandError('Rename requires one new session ID and confirmation, retaining all data in the current scope.'); }
+      return true;
+    }
     if (!validProjectId(request.destinationProjectId) || typeof request.includeData !== 'boolean'
       || typeof request.includeMetadata !== 'boolean' || request.confirm !== true || request.transferId !== undefined) {
       throw new CommandError('Choose a connected destination and explicitly confirm data and metadata inclusion.');

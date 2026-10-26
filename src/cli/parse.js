@@ -1,7 +1,7 @@
 import { parseArgs } from 'node:util';
 import { assertSessionId } from '../sessions/identity.js';
 import { CommandError } from '../shared/command-error.js';
-import { COMMANDS, ALL_COMMANDS } from './commands.js';
+import { COMMANDS, ALL_COMMANDS, RENAME_USAGE } from './commands.js';
 import { parseLibraryCommand } from './library.js';
 import { parseFeedbackCommand } from './feedback.js';
 import { parseMetadataCommand } from './metadata.js';
@@ -60,6 +60,16 @@ export function parseCommand(args) {
   if (feedback) { return feedback; }
   let metadata = parseMetadataCommand(positionals, values);
   if (metadata) { return metadata; }
+  if (positionals[0] === 'rename') {
+    if (positionals.length !== 3 || Object.keys(values).length) { throw new CommandError(`Usage: symbiote-agui ${RENAME_USAGE}`); }
+    assertSessionId(positionals[1]);
+    assertSessionId(positionals[2]);
+    return {
+      kind: 'rename',
+      sessionId: positionals[1],
+      destinationSessionId: positionals[2],
+    };
+  }
 
   let commandLength = positionals[0] === 'tunnel' ? 2 : 1;
   let name = positionals.slice(0, commandLength).join(' ');

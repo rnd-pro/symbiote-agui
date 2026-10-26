@@ -34,6 +34,7 @@
   agui-session-controls {
     @apply block min-w-0;
   }
+  #manager-project-navigation agui-toolbar > button,
   #session-inspector agui-toolbar > button,
   #session-inspector agui-toolbar > .agui-button {
     @apply justify-start text-start;

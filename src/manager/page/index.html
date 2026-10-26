@@ -22,7 +22,7 @@
             </div>
             <agui-select id="manager-project-switcher" label="Connected project" name="project" placeholder="Choose a project"
               pub-to="MANAGER/projectChoice" bind="$.value: MANAGER/projectChoice; $.options: MANAGER/projectOptions; $.disabled: MANAGER/projectsDisabled"></agui-select>
-            <agui-toolbar aria-label="Project navigation">
+            <agui-toolbar class="grid grid-cols-1" aria-label="Project navigation">
               <button id="manager-switch-project" type="button" class="agui-button-primary" bind="onclick: MANAGER/switchProject; disabled: MANAGER/projectSwitchDisabled"><agui-icon name="arrow_forward"></agui-icon>Switch</button>
               <button id="manager-open-project" type="button" bind="onclick: MANAGER/openProjectFolder; disabled: MANAGER/projectOpenDisabled"><agui-icon name="open_in_new"></agui-icon>Open folder</button>
               <button type="button" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-icon name="home"></agui-icon>Manage projects</button>

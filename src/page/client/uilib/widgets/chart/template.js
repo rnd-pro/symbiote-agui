@@ -1,7 +1,7 @@
 import { html } from '@symbiotejs/symbiote/core/html.js';
 
 export let CHART_TEMPLATE = html`
-  <p role="status" aria-live="polite" bind="textContent: statusMessage; hidden: !statusMessage"></p>
+  <agui-state bind="$.status: statusState; $.message: statusMessage; hidden: !statusMessage"></agui-state>
   <figure>
     <figcaption bind="textContent: chartLabel"></figcaption>
     <p class="agui-chart-description" bind="textContent: chartDescription; hidden: !chartDescription"></p>

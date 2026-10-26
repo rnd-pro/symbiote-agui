@@ -6,6 +6,13 @@ import { FIELD_TEMPLATE, TEXTAREA_TEMPLATE } from './template.js';
 export class Field extends Control {
   static observedAttributes = ['type', 'checked'];
 
+  constructor() {
+    super();
+    Object.assign(this.init$, {
+      indeterminate: false,
+    });
+  }
+
   /**
    * @param {string | DocumentFragment} [template]
    * @param {boolean} [shadow]
@@ -34,6 +41,9 @@ export class Field extends Control {
       this.defineAccessor('checked', (/** @type {string | null | undefined} */ value) => { control.defaultChecked = value != null; });
     }
     super.renderCallback();
+    this.sub('indeterminate', (value) => {
+      if (control instanceof HTMLInputElement) { control.indeterminate = !!value; }
+    });
   }
 }
 

@@ -47,9 +47,6 @@ export default css`
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .agui-table-scroll td > input:not([hidden]) {
-      display: block;
-    }
     .agui-table-scroll th {
       position: sticky;
       inset-block-start: 0;

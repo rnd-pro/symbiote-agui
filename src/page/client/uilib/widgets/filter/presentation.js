@@ -11,6 +11,7 @@ export function presentFilter(filter, state) {
     queryLabel: text('search'),
     queryText: state.query,
     resultIds: state.loading || state.error ? [] : filter.model?.ids ?? [],
+    statusState: state.loading ? 'loading' : state.error || filter.issue ? 'error' : !filter.model?.ids.length ? 'empty' : 'ready',
     statusMessage: state.loading ? text('loading') : state.error || (filter.issue ? text(filter.issue) : !filter.model?.ids.length ? text('empty') : ''),
     fieldItems: (filter.model ? state.fields : []).filter((field) => field.filter).map((field) => ({
       id: field.key,

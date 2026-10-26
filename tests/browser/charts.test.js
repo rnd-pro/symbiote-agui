@@ -59,7 +59,7 @@ test('chart dependencies load once on initialization, render SVG, select source 
   assert.equal(runtimeRequests.length, 0);
   let html = await readFile(new URL('./charts.html', import.meta.url), 'utf8');
   await insertStdin('charts', html);
-  await page.waitForFunction(() => document.querySelector('#line-chart > p[role="status"]')?.textContent === 'Loading chart');
+  await page.waitForFunction(() => document.querySelector('#line-chart > agui-state p')?.textContent === 'Loading chart');
   assert.equal(runtimeRequests.length, 1);
   assert.equal((await cli('tools', 'charts')).tools.some((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.ownerName === 'agui-chart' && tool.key === 'set_selection'), false);
   /** @param {Record<string, unknown>} values */
@@ -239,12 +239,12 @@ test('chart dependencies load once on initialization, render SVG, select source 
       rows[0],
     ],
   });
-  assert.equal(await page.$eval('#bar-chart > p[role="status"]', (element) => element.textContent), 'Invalid chart records');
+  assert.equal(await page.$eval('#bar-chart > agui-state p', (element) => element.textContent), 'Invalid chart records');
   await update({
     rows,
     loading: true,
   });
-  assert.equal(await page.$eval('#bar-chart > p[role="status"]', (element) => element.textContent), 'Loading chart');
+  assert.equal(await page.$eval('#bar-chart > agui-state p', (element) => element.textContent), 'Loading chart');
   await update({
     loading: false,
   });
@@ -272,7 +272,7 @@ test('chart dependencies load once on initialization, render SVG, select source 
   await failed.setRequestInterception(true);
   failed.on('request', (request) => new URL(request.url()).pathname === CHART_RUNTIME_PATH ? request.abort() : request.continue());
   await failed.goto(session.url);
-  await failed.waitForFunction(() => document.querySelector('#bar-chart > p[role="status"]')?.textContent === 'Chart dependency failed');
+  await failed.waitForFunction(() => document.querySelector('#bar-chart > agui-state p')?.textContent === 'Chart dependency failed');
   assert.equal(await failed.$('agui-chart svg'), null);
   await failed.close();
   await cli('share', 'charts');

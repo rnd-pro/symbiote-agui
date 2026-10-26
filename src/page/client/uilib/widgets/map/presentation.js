@@ -25,6 +25,7 @@ export function presentMap(map) {
     selectionUnavailable: unavailable || state.selection === 'none',
     fitUnavailable: unavailable || !model?.points.length,
     mapHidden: !model || busy || !!state.error || !!map.runtimeError,
+    statusState: state.error || map.runtimeError || map.issue ? 'error' : busy ? 'loading' : map.tileError ? 'error' : !model?.points.length ? 'empty' : 'ready',
     statusMessage: state.error || (map.runtimeError ? text(map.runtimeError) : map.issue ? text(map.issue) : busy ? text('loading') : map.tileError ? text('tileFailed') : !model?.points.length ? text('empty') : ''),
     effectiveSelected: model?.selected ?? [],
     dataRows: model?.points.map((point) => ({

@@ -1,26 +1,24 @@
 import { html } from '@symbiotejs/symbiote/core/html.js';
-import { SELECT_CHEVRON } from '../../shared/control-template.js';
 
 export let FILTER_TEMPLATE = html`
-  <label class="agui-filter-query">
-    <span bind="textContent: queryLabel"></span>
-    <input ref="query" type="search" maxlength="2048" bind="value: queryText; disabled: unavailable; @aria-label: queryLabel">
-  </label>
+  <agui-field class="agui-filter-query" type="search" maxlength="2048" pub-to="^queryText"
+    bind="$.label: queryLabel; $.value: queryText; $.disabled: unavailable"></agui-field>
   <div class="agui-filter-fields" itemize="fieldItems" item-tag="agui-filter-field"></div>
-  <p role="status" aria-live="polite" bind="textContent: statusMessage; hidden: !statusMessage"></p>
+  <agui-state bind="$.status: statusState; $.message: statusMessage; hidden: !statusMessage"></agui-state>
 `;
 
 export let FILTER_FIELD_TEMPLATE = html`
   <fieldset bind="disabled: unavailable; @data-field: fieldKey">
-    <legend bind="textContent: label"></legend>
-    <input ref="contains" type="search" maxlength="2048" bind="hidden: !isContains; @aria-label: label">
-    <span class="agui-select-control" bind="hidden: !isEquals">
-      <select ref="equals" bind="@aria-label: label"></select>
-      ${SELECT_CHEVRON}
-    </span>
+    <legend bind="textContent: label; hidden: !isRange"></legend>
+    <agui-field type="search" maxlength="2048" pub-to="^containsValue"
+      bind="hidden: !isContains; $.label: label; $.value: containsValue; $.disabled: unavailable"></agui-field>
+    <agui-select pub-to="^equalsValue"
+      bind="hidden: !isEquals; $.label: label; $.value: equalsValue; $.options: selectOptions; $.disabled: unavailable"></agui-select>
     <div class="agui-filter-range" bind="hidden: !isRange">
-      <label><span bind="textContent: minLabel"></span><input ref="min" bind="type: rangeType"></label>
-      <label><span bind="textContent: maxLabel"></span><input ref="max" bind="type: rangeType"></label>
+      <agui-field ref="min" pub-to="^minValue"
+        bind="@type: rangeType; $.label: minLabel; $.value: minValue; $.disabled: unavailable; @max: maxValue; @step: rangeStep"></agui-field>
+      <agui-field ref="max" pub-to="^maxValue"
+        bind="@type: rangeType; $.label: maxLabel; $.value: maxValue; $.disabled: unavailable; @min: minValue; @step: rangeStep"></agui-field>
     </div>
   </fieldset>
 `;

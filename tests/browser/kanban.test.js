@@ -229,18 +229,20 @@ test('kanban drag and keyboard moves share table records, preserve drafts until 
       initial[0],
     ],
   });
-  assert.equal(await page.$eval(`${board} > p[role="status"]`, (element) => element.textContent), 'Invalid record IDs');
+  assert.equal(await page.$eval(`${board} > agui-state p`, (element) => element.textContent), 'Invalid record IDs');
+  assert.equal(await page.$eval(`${board} > agui-state [role]`, (element) => element.getAttribute('role')), 'alert');
   await update({
     records: initial,
     loading: true,
   });
-  assert.equal(await page.$eval(`${board} > p[role="status"]`, (element) => element.textContent), 'Loading work');
+  assert.equal(await page.$eval(`${board} > agui-state p`, (element) => element.textContent), 'Loading work');
+  assert.equal(await page.$eval(`${board} > agui-state [aria-busy]`, (element) => element.getAttribute('aria-busy')), 'true');
   assert.deepEqual((await call('read_view')).items, []);
   await update({
     loading: false,
     error: 'External board error',
   });
-  assert.equal(await page.$eval(`${board} > p[role="status"]`, (element) => element.textContent), 'External board error');
+  assert.equal(await page.$eval(`${board} > agui-state p`, (element) => element.textContent), 'External board error');
   await update({
     error: '',
   });

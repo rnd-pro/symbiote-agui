@@ -58,11 +58,6 @@ export default css`
     agui-map .leaflet-popup-tip {
       background: var(--agui-surface);
     }
-    .agui-map-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .5rem;
-    }
     agui-map agui-map-data {
       margin-block-start: 1rem;
     }

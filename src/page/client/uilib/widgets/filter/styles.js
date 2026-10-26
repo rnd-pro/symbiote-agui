@@ -11,8 +11,7 @@ export default css`
     .agui-filter-query,
     .agui-filter-fields,
     agui-filter-field,
-    agui-filter-field fieldset,
-    .agui-filter-range label {
+    agui-filter-field fieldset {
       display: grid;
       min-inline-size: 0;
       gap: .25rem;
@@ -26,9 +25,6 @@ export default css`
     .agui-filter-range {
       display: grid;
       gap: .75rem;
-    }
-    .agui-filter-range label {
-      color: var(--agui-muted);
     }
   }
 `;

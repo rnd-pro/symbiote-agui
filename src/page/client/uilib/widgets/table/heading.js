@@ -20,6 +20,7 @@ export class TableHeading extends UiComponent {
     selectAll: false,
     selectAllLabel: '',
     selected: false,
+    selectionValue: false,
     mixed: false,
     unavailable: false,
     sort_column: new ToolDescriptor({
@@ -41,12 +42,21 @@ export class TableHeading extends UiComponent {
         'unavailable',
       ],
       when: () => !!this.$.selectAll && !this.$.unavailable,
-      execute: () => {
-        let select = /** @type {import('./table.js').Table['selectFiltered']} */ (this.$['^selectFiltered']);
-        return select();
-      },
+      execute: () => this.selectFiltered(),
     }),
   };
+
+  renderCallback() {
+    this.sub('selected', (value) => { this.$.selectionValue = value; });
+    this.sub('selectionValue', (value) => {
+      if (value !== this.$.selected) { this.selectFiltered(); }
+    });
+  }
+
+  selectFiltered() {
+    let select = /** @type {import('./table.js').Table['selectFiltered']} */ (this.$['^selectFiltered']);
+    return select();
+  }
 }
 
 TableHeading.template = TABLE_HEADING_TEMPLATE;

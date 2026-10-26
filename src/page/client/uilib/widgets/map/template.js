@@ -1,7 +1,7 @@
 import { html } from '@symbiotejs/symbiote/core/html.js';
 
 export let MAP_TEMPLATE = html`
-  <p role="status" aria-live="polite" bind="textContent: statusMessage; hidden: !statusMessage"></p>
+  <agui-state bind="$.status: statusState; $.message: statusMessage; hidden: !statusMessage"></agui-state>
   <figure>
     <figcaption bind="textContent: mapLabel"></figcaption>
     <p class="agui-map-description" bind="textContent: mapDescription; hidden: !mapDescription"></p>
@@ -12,11 +12,11 @@ export let MAP_TEMPLATE = html`
     </p>
     <p class="agui-map-skipped" bind="hidden: !skippedCount"><span bind="textContent: skippedLabel"></span>: <span bind="textContent: skippedCount"></span></p>
   </figure>
-  <div class="agui-map-actions">
-    <button type="button" bind="textContent: fitLabel; disabled: fitUnavailable; onclick: onFit"></button>
-    <button type="button" bind="textContent: zoomInLabel; disabled: unavailable; onclick: onZoomIn"></button>
-    <button type="button" bind="textContent: zoomOutLabel; disabled: unavailable; onclick: onZoomOut"></button>
-  </div>
+  <agui-toolbar bind="@aria-label: mapLabel">
+    <button type="button" bind="textContent: ^fitLabel; disabled: ^fitUnavailable; onclick: ^onFit"></button>
+    <button type="button" bind="textContent: ^zoomInLabel; disabled: ^unavailable; onclick: ^onZoomIn"></button>
+    <button type="button" bind="textContent: ^zoomOutLabel; disabled: ^unavailable; onclick: ^onZoomOut"></button>
+  </agui-toolbar>
   <details bind="hidden: !modelValid">
     <summary bind="textContent: dataLabel"></summary>
     <agui-map-data ref="data" page-size="20"

@@ -2,7 +2,7 @@ import { html } from '@symbiotejs/symbiote/core/html.js';
 
 export let KANBAN_TEMPLATE = html`
   <p class="agui-kanban-hint" bind="textContent: moveHint; hidden: !moveHint"></p>
-  <p role="status" aria-live="polite" bind="textContent: statusMessage; hidden: !statusMessage"></p>
+  <agui-state bind="$.status: statusState; $.message: statusMessage; hidden: !statusMessage"></agui-state>
   <div class="agui-kanban-scroll" role="region" tabindex="0" bind="@aria-label: boardLabel; @aria-busy: busyText; hidden: surfaceHidden">
     <ul class="agui-kanban-columns" itemize="columnItems" item-tag="agui-kanban-column"></ul>
   </div>

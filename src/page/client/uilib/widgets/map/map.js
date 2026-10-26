@@ -57,6 +57,7 @@ export class AguiMap extends UiComponent {
     modelValid: false,
     mapHidden: true,
     statusMessage: '',
+    statusState: 'ready',
     mapLabel: '',
     mapDescription: '',
     attribution: '',

@@ -46,6 +46,7 @@ export class Filter extends UiComponent {
     queryLabel: '',
     queryText: '',
     statusMessage: '',
+    statusState: 'ready',
     editField: (
       /** @type {string} */ key,
       /** @type {unknown} */ value,
@@ -59,7 +60,9 @@ export class Filter extends UiComponent {
   }
 
   renderCallback() {
-    this.ref.query.addEventListener('input', this.onQuery);
+    this.sub('queryText', (value) => {
+      if (value !== this.$.query) { this.edit('query', value); }
+    });
     for (let key of [
       'rows',
       'fields',
@@ -188,11 +191,8 @@ export class Filter extends UiComponent {
     return result();
   }
 
-  onQuery = () => this.edit('query', /** @type {HTMLInputElement} */ (this.ref.query).value);
-
   destroyCallback() {
     this.disposed = true;
-    this.ref.query.removeEventListener('input', this.onQuery);
   }
 }
 

@@ -46,6 +46,7 @@ export class Chart extends UiComponent {
     modelValid: false,
     plotHidden: true,
     statusMessage: '',
+    statusState: 'ready',
     chartLabel: '',
     chartDescription: '',
     dataLabel: '',

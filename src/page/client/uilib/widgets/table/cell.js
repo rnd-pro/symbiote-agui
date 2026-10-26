@@ -19,6 +19,7 @@ export class TableCell extends UiComponent {
     cellClass: '',
     isSelection: false,
     selected: false,
+    selectionValue: false,
     selectionType: 'checkbox',
     groupName: '',
     selectLabel: '',
@@ -49,19 +50,26 @@ export class TableCell extends UiComponent {
   };
 
   renderCallback() {
-    this.ref.selector.addEventListener('change', this.onChange);
+    for (let key of [
+      'selected',
+      'selectionType',
+      'rowId',
+    ]) {
+      this.sub(key, () => {
+        this.$.selectionValue = this.$.selectionType === 'radio'
+          ? this.$.selected ? String(this.$.rowId) : '' : !!this.$.selected;
+      });
+    }
+    this.sub('selectionValue', (value) => {
+      let selected = this.$.selectionType === 'radio' ? value === String(this.$.rowId) : value === true;
+      if (selected !== this.$.selected) { this.select(selected); }
+    });
   }
 
   /** @param {boolean} selected */
   select(selected) {
     let select = /** @type {import('./table.js').Table['selectRow']} */ (this.$['^selectRow']);
     return select(String(this.$.rowId), selected);
-  }
-
-  onChange = () => this.select(/** @type {HTMLInputElement} */ (this.ref.selector).checked);
-
-  destroyCallback() {
-    this.ref.selector.removeEventListener('change', this.onChange);
   }
 }
 

@@ -16,7 +16,7 @@ Read [README.md](./README.md) for the project purpose and main workflows.
 - Use modern JavaScript, ESM, `.js` file extensions, single-quoted JavaScript strings, and semicolons. Do not use CommonJS or introduce a build phase for Node.js runtime code.
 - Use JSDoc for JavaScript types, with `checkJs: true` and `noEmit: true`. Put shared or complex type definitions in `types/*.d.ts`. Put each JSDoc parameter on its own line.
 - Define each shared data model and its types in one authoritative location. Keep definitions with a single consumer near that consumer. Reuse shared types, enums, and dictionaries instead of duplicating them across modules.
-- Search for existing components, utilities, models, and definitions before creating equivalents.
+- NEVER reimplement existing components, behavior, or styles. Before adding markup, helpers, or CSS, search the library and shared utilities. Compose or extend the existing implementation, reuse its styles and design tokens, and add missing reusable capabilities there instead of creating parallel copies.
 - Split code by functional responsibility and keep the hierarchy easy to navigate. Keep source files, classes, and functions under 500 lines; split earlier when responsibilities or readability require it.
 - Prefer `let`. Use `const` when preventing reassignment expresses an intentional invariant in the logic.
 - Prefer object lookups for mapping known keys to values or handlers. Use `switch` only when it provides a demonstrated, noticeable performance benefit.
@@ -29,7 +29,6 @@ Read [README.md](./README.md) for the project purpose and main workflows.
 
 - Before implementing component behavior, consult `node_modules/@symbiotejs/symbiote/llms.txt` and the relevant documentation in that package. Prefer native Symbiote APIs. Before adding a helper or wrapper, verify that Symbiote does not already provide that capability. If the contract is unclear, inspect its implementation before proceeding.
 - Never hardcode user-facing text in uilib components, including labels, accessible names, hints, statuses, errors, and fallback messages. Supply text through host attributes or native Symbiote bindings. Keep application copy outside uilib and preserve caller-provided text bindings.
-- Use library items instead of reinvent them when possible.
 
 ## Validation
 

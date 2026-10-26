@@ -45,6 +45,7 @@ export class Table extends UiComponent {
     busyText: 'false',
     surfaceHidden: true,
     statusMessage: '',
+    statusState: 'ready',
     resultsLabel: '',
     selectedLabel: '',
     pageLabel: '',

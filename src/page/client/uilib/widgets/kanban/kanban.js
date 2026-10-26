@@ -36,6 +36,7 @@ export class Kanban extends UiComponent {
     busyText: 'false',
     surfaceHidden: true,
     statusMessage: '',
+    statusState: 'ready',
     columnItems: [],
     moveItem: (
       /** @type {string} */ id,

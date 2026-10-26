@@ -236,6 +236,20 @@ test('independent filters compose with provider-backed tables, sorting and selec
   })).changed, false);
   assert.equal((await cli('events', 'table')).events.length, 0);
   assert.equal((await call('read_view')).items.length, 2);
+  let selectAll = `${table} th[data-column=""] agui-field input`;
+  assert.equal(await page.$eval(selectAll, (element) => Reflect.get(element, 'indeterminate')), true);
+  await page.click(selectAll);
+  assert.deepEqual(new Set(await data('ids')), new Set(originalRows.map((/** @type {{key: string}} */ row) => row.key)));
+  assert.equal(await page.$eval(selectAll, (element) => Reflect.get(element, 'indeterminate')), false);
+  assert.equal(await page.$eval(selectAll, (element) => Reflect.get(element, 'checked')), true);
+  await page.click(selectAll);
+  assert.deepEqual(await data('ids'), []);
+  await call('set_selection', {
+    ids: [
+      'b',
+      'c',
+    ],
+  });
   let selectionTools = await cli('tools', 'table');
   let selectB = selectionTools.tools.find((/** @type {import('../../types/tools.js').PageTool} */ tool) => {
     if (tool.ownerName !== 'agui-table-cell' || tool.key !== 'set_selected') { return false; }
@@ -268,13 +282,13 @@ test('independent filters compose with provider-backed tables, sorting and selec
     'c',
   ]);
   await page.select(`${filter} fieldset[data-field="status"] select`, '');
-  await input(`${filter} fieldset[data-field="score"] label:first-child input`, '0');
-  await input(`${filter} fieldset[data-field="score"] label:last-child input`, '0');
+  await input(`${filter} fieldset[data-field="score"] .agui-filter-range agui-field:first-child input`, '0');
+  await input(`${filter} fieldset[data-field="score"] .agui-filter-range agui-field:last-child input`, '0');
   assert.deepEqual(await visible(), [
     'a',
   ]);
-  await input(`${filter} fieldset[data-field="score"] label:last-child input`, '');
-  await input(`${filter} fieldset[data-field="score"] label:first-child input`, '');
+  await input(`${filter} fieldset[data-field="score"] .agui-filter-range agui-field:last-child input`, '');
+  await input(`${filter} fieldset[data-field="score"] .agui-filter-range agui-field:first-child input`, '');
   await page.type(`${filter} fieldset[data-field="name"] input[type="search"]`, 'Gamma');
   assert.deepEqual(await visible(), [
     'c',
@@ -340,14 +354,14 @@ test('independent filters compose with provider-backed tables, sorting and selec
       originalRows[0],
     ],
   });
-  assert.equal(await page.$eval(`${table} > p`, (element) => element.textContent), 'Invalid record identities');
+  assert.equal(await page.$eval(`${table} > agui-state p`, (element) => element.textContent), 'Invalid record identities');
   await update({
     rows: originalRows,
     query: '',
     sort: null,
     loading: true,
   });
-  assert.equal(await page.$eval(`${table} > p`, (element) => element.textContent), 'Loading records');
+  assert.equal(await page.$eval(`${table} > agui-state p`, (element) => element.textContent), 'Loading records');
   await update({
     loading: false,
   });

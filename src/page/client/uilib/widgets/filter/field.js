@@ -4,6 +4,7 @@ import { FILTER_VALUE_SCHEMA } from './schemas.js';
 import { FILTER_FIELD_TEMPLATE } from './template.js';
 
 export class FilterField extends UiComponent {
+  refreshing = true;
   componentDescription = () => JSON.stringify({
     filterId: this.closest('agui-filter')?.id || '',
     field: this.$.fieldKey,
@@ -22,6 +23,12 @@ export class FilterField extends UiComponent {
     rangeType: 'number',
     filterValue: '',
     options: [],
+    containsValue: '',
+    equalsValue: '',
+    minValue: '',
+    maxValue: '',
+    rangeStep: 'any',
+    selectOptions: [],
     unavailable: false,
     set_filter: new ToolDescriptor({
       description: 'Set this filter field to text, an option value, or inclusive min/max bounds.',
@@ -46,42 +53,48 @@ export class FilterField extends UiComponent {
   };
 
   renderCallback() {
-    this.ref.contains.addEventListener('input', this.onInput);
-    this.ref.equals.addEventListener('change', this.onInput);
-    this.ref.min.addEventListener('input', this.onInput);
-    this.ref.max.addEventListener('input', this.onInput);
     for (let key of [
       'filterValue',
       'options',
       'allLabel',
     ]) { this.sub(key, () => this.refresh()); }
+    for (let key of [
+      'containsValue',
+      'equalsValue',
+      'minValue',
+      'maxValue',
+    ]) { this.sub(key, () => { if (!this.refreshing) { this.onInput(); } }); }
+    this.refreshing = false;
   }
 
   refresh() {
     let value = this.$.filterValue;
     /** @type {import('../../../../../../types/uilib-filter.js').UiFilterRange} */
     let range = value && typeof value === 'object' ? value : {};
-    let input = /** @type {HTMLInputElement} */ (this.ref.contains);
-    input.value = typeof value === 'string' ? value : '';
-    let select = /** @type {HTMLSelectElement} */ (this.ref.equals);
     let options = /** @type {import('../../../../../../types/uilib.js').UiOption[]} */ (this.$.options);
-    select.replaceChildren(new Option(String(this.$.allLabel), ''), ...options.map((item) => {
-      let option = new Option(item.label, item.value);
-      option.disabled = !!item.disabled;
-      return option;
-    }));
-    select.value = typeof value === 'string' ? value : '';
-    for (let key of [
-      'min',
-      'max',
-    ]) {
-      let bound = range[/** @type {'min' | 'max'} */ (key)];
-      let control = /** @type {HTMLInputElement} */ (this.ref[key]);
-      control.value = bound === undefined ? '' : String(bound).slice(0, this.$.rangeType === 'date' ? 10 : undefined);
-      control.step = this.$.rangeType === 'date' ? '1' : 'any';
+    let text = typeof value === 'string' ? value : '';
+    let bound = (/** @type {number | string | undefined} */ value) => value === undefined ? '' : String(value).slice(0, this.$.rangeType === 'date' ? 10 : undefined);
+    // Incoming filter values update controls without publishing another edit.
+    let refreshing = this.refreshing;
+    this.refreshing = true;
+    try {
+      this.set$({
+        containsValue: text,
+        equalsValue: text,
+        minValue: bound(range.min),
+        maxValue: bound(range.max),
+        rangeStep: this.$.rangeType === 'date' ? '1' : 'any',
+        selectOptions: [
+          {
+            value: '',
+            label: String(this.$.allLabel),
+          },
+          ...options,
+        ],
+      });
+    } finally {
+      this.refreshing = refreshing;
     }
-    /** @type {HTMLInputElement} */ (this.ref.min).max = /** @type {HTMLInputElement} */ (this.ref.max).value;
-    /** @type {HTMLInputElement} */ (this.ref.max).min = /** @type {HTMLInputElement} */ (this.ref.min).value;
   }
 
   /** @param {unknown} value */
@@ -91,13 +104,12 @@ export class FilterField extends UiComponent {
   }
 
   onInput = () => {
-    if (this.$.isContains) { this.edit(/** @type {HTMLInputElement} */ (this.ref.contains).value); }
-    else if (this.$.isEquals) { this.edit(/** @type {HTMLSelectElement} */ (this.ref.equals).value); }
+    if (this.$.isContains) { this.edit(this.$.containsValue); }
+    else if (this.$.isEquals) { this.edit(this.$.equalsValue); }
     else {
-      let min = /** @type {HTMLInputElement} */ (this.ref.min);
-      let max = /** @type {HTMLInputElement} */ (this.ref.max);
-      min.max = max.value;
-      max.min = min.value;
+      let min = /** @type {import('../../controls/field/field.js').Field} */ (this.ref.min).control;
+      let max = /** @type {import('../../controls/field/field.js').Field} */ (this.ref.max).control;
+      if (!(min instanceof HTMLInputElement) || !(max instanceof HTMLInputElement)) { return; }
       if (!min.checkValidity() || !max.checkValidity()) { return; }
       /** @type {import('../../../../../../types/uilib-filter.js').UiFilterRange} */
       let range = {};
@@ -106,13 +118,6 @@ export class FilterField extends UiComponent {
       this.edit(range);
     }
   };
-
-  destroyCallback() {
-    this.ref.contains.removeEventListener('input', this.onInput);
-    this.ref.equals.removeEventListener('change', this.onInput);
-    this.ref.min.removeEventListener('input', this.onInput);
-    this.ref.max.removeEventListener('input', this.onInput);
-  }
 }
 
 FilterField.template = FILTER_FIELD_TEMPLATE;

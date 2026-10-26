@@ -31,6 +31,7 @@ export class Markdown extends UiComponent {
     loading: undefined,
     error: undefined,
     statusMessage: '',
+    statusState: 'ready',
     documentLabel: '',
     busy: false,
     contentHidden: true,
@@ -165,11 +166,13 @@ export class Markdown extends UiComponent {
       documentLabel: String(this.$.label ?? this.getAttribute('label') ?? ''),
       contentHidden: true,
       busy,
+      statusState: error ? 'error' : loading ? 'loading' : issue ? issue === 'empty' ? 'empty' : 'error' : busy ? 'loading' : 'ready',
       statusMessage: error || this.text(loading ? 'loading' : issue || (busy ? 'loading' : '')),
     });
     if (issue || error || loading || !this.runtime) { return; }
     this.set$({
       busy: true,
+      statusState: 'loading',
       statusMessage: this.text('loading'),
     });
     try {
@@ -181,6 +184,7 @@ export class Markdown extends UiComponent {
       this.set$({
         busy: false,
         contentHidden: false,
+        statusState: 'ready',
         statusMessage: '',
       });
     } catch (error) {
@@ -192,6 +196,7 @@ export class Markdown extends UiComponent {
       this.set$({
         busy: false,
         statusMessage: this.text(issue),
+        statusState: 'error',
       });
     }
   }

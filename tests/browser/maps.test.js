@@ -67,7 +67,7 @@ test('maps load packaged dependencies once, synchronize stable IDs and view with
   assert.equal(asset.headers.get('content-type'), 'image/png');
   assert.equal((await fetch(new URL(`${MAP_ASSET_PREFIX}unknown.png`, session.url))).status, 404);
   await insertStdin('maps', await readFile(new URL('./maps.html', import.meta.url), 'utf8'));
-  await page.waitForFunction(() => document.querySelector('#first-map > p[role="status"]')?.textContent === 'Loading map');
+  await page.waitForFunction(() => document.querySelector('#first-map > agui-state p')?.textContent === 'Loading map');
   await page.waitForFunction(() => !Reflect.get(document.querySelector('#first-map') || {}, '$')?.runtimeReady);
   /** @param {Record<string, unknown>} values */
   let update = (values) => sendStdin('update', 'maps', JSON.stringify({
@@ -154,10 +154,10 @@ test('maps load packaged dependencies once, synchronize stable IDs and view with
   assert.deepEqual((await call('read_view')).view, polarView);
   await call('set_view', view);
   await cli('events', 'maps');
-  await page.click('#first-map .agui-map-actions button:nth-child(2)');
+  await page.click('#first-map agui-toolbar button:nth-child(2)');
   await page.waitForFunction(() => Reflect.get(document.querySelector('#map-data') || {}, '$')?.view.zoom === 14);
   assert.equal((await cli('events', 'maps')).events.filter((/** @type {{ data?: { action?: string } }} */ event) => event.data?.action === 'map-view-change').length, 1);
-  await page.click('#first-map .agui-map-actions button:nth-child(3)');
+  await page.click('#first-map agui-toolbar button:nth-child(3)');
   await page.waitForFunction(() => Reflect.get(document.querySelector('#map-data') || {}, '$')?.view.zoom === 13);
   await cli('events', 'maps');
   let canvas = await page.$('#first-map .agui-map-canvas');
@@ -195,7 +195,7 @@ test('maps load packaged dependencies once, synchronize stable IDs and view with
     readonly: false,
     loading: true,
   });
-  assert.equal(await page.$eval('#first-map > p[role="status"]', (element) => element.textContent), 'Loading map');
+  assert.equal(await page.$eval('#first-map > agui-state p', (element) => element.textContent), 'Loading map');
   await update({
     loading: false,
   });
@@ -206,7 +206,7 @@ test('maps load packaged dependencies once, synchronize stable IDs and view with
   await failure.setRequestInterception(true);
   failure.on('request', (request) => new URL(request.url()).pathname === MAP_CSS_PATH ? request.abort() : request.continue());
   await failure.goto(session.url);
-  await failure.waitForFunction(() => document.querySelector('#first-map > p[role="status"]')?.textContent === 'Map dependency failed');
+  await failure.waitForFunction(() => document.querySelector('#first-map > agui-state p')?.textContent === 'Map dependency failed');
   assert.equal(await failure.$('.leaflet-container'), null);
   await failure.close();
   await cli('share', 'maps');

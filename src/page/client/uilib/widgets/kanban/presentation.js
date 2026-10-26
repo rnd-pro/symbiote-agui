@@ -17,6 +17,7 @@ export function presentKanban(board, state) {
     moveHint: text('moveHint'),
     busyText: String(state.loading),
     surfaceHidden: hidden,
+    statusState: state.loading ? 'loading' : state.error || board.issue ? 'error' : !state.value.length ? 'empty' : 'ready',
     statusMessage: state.loading ? text('loading') : state.error || (board.issue ? text(board.issue) : !state.value.length ? text('empty') : ''),
     columnItems: (hidden ? [] : model?.groups ?? []).map((group) => ({
       id: group.id,

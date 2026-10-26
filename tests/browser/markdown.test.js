@@ -70,7 +70,7 @@ test('Markdown loads on demand, sanitizes with native/fallback paths, bounds out
   assert.equal(runtimeRequests.length, 0);
   assert.equal(sanitizerRequests.length, 0);
   await insertStdin('markdown', await readFile(new URL('./markdown.html', import.meta.url), 'utf8'));
-  await page.waitForFunction(() => document.querySelector('#first-document > p[role="status"]')?.textContent === 'Loading document');
+  await page.waitForFunction(() => document.querySelector('#first-document > agui-state p')?.textContent === 'Loading document');
   /** @param {unknown} source */
   let update = (source) => sendStdin('update', 'markdown', JSON.stringify({
     selector: '#markdown-data',
@@ -156,22 +156,22 @@ test('Markdown loads on demand, sanitizes with native/fallback paths, bounds out
   assert.ok(externalRequests.length);
   assert.ok(externalRequests.every((url) => url.endsWith('.png')));
   await update('x'.repeat(MARKDOWN_LIMITS.inputBytes + 1));
-  await page.waitForFunction(() => document.querySelector('#first-document > p')?.textContent === 'Document source is too large');
+  await page.waitForFunction(() => document.querySelector('#first-document > agui-state p')?.textContent === 'Document source is too large');
   assert.equal(await page.$eval('#first-document article', (element) => element.childNodes.length), 0);
   await update('&'.repeat(MARKDOWN_LIMITS.inputBytes));
-  await page.waitForFunction(() => document.querySelector('#first-document > p')?.textContent === 'Rendered document is too large');
+  await page.waitForFunction(() => document.querySelector('#first-document > agui-state p')?.textContent === 'Rendered document is too large');
   await update('**x** '.repeat(2000));
-  await page.waitForFunction(() => document.querySelector('#first-document > p')?.textContent === 'Rendered document is too large');
+  await page.waitForFunction(() => document.querySelector('#first-document > agui-state p')?.textContent === 'Rendered document is too large');
   await update(`${'> '.repeat(MARKDOWN_LIMITS.depth + 1)}Nested document`);
-  await page.waitForFunction(() => document.querySelector('#first-document > p')?.textContent === 'Rendered document is too large');
+  await page.waitForFunction(() => document.querySelector('#first-document > agui-state p')?.textContent === 'Rendered document is too large');
   await update(null);
-  await page.waitForFunction(() => document.querySelector('#first-document > p')?.textContent === 'Document must be text');
+  await page.waitForFunction(() => document.querySelector('#first-document > agui-state p')?.textContent === 'Document must be text');
   await update('');
-  await page.waitForFunction(() => document.querySelector('#first-document > p')?.textContent === 'No document');
+  await page.waitForFunction(() => document.querySelector('#first-document > agui-state p')?.textContent === 'No document');
   await page.$eval('#first-document', (element) => element.setAttribute('loading', ''));
-  await page.waitForFunction(() => document.querySelector('#first-document > p')?.textContent === 'Loading document');
+  await page.waitForFunction(() => document.querySelector('#first-document > agui-state p')?.textContent === 'Loading document');
   await page.$eval('#first-document', (element) => element.setAttribute('error', 'Source request failed'));
-  await page.waitForFunction(() => document.querySelector('#first-document > p')?.textContent === 'Source request failed');
+  await page.waitForFunction(() => document.querySelector('#first-document > agui-state p')?.textContent === 'Source request failed');
   await page.$eval('#first-document', (element) => { element.removeAttribute('loading'); element.removeAttribute('error'); });
   await update(source);
   await page.waitForSelector('#first-document h1');
@@ -201,7 +201,7 @@ test('Markdown loads on demand, sanitizes with native/fallback paths, bounds out
     await failure.setRequestInterception(true);
     failure.on('request', (request) => new URL(request.url()).pathname === path ? request.abort() : request.continue());
     await failure.goto(session.url);
-    await failure.waitForFunction(() => document.querySelector('#first-document > p')?.textContent === 'Document dependency failed');
+    await failure.waitForFunction(() => document.querySelector('#first-document > agui-state p')?.textContent === 'Document dependency failed');
     await failure.close();
   }
   await cli('share', 'markdown');

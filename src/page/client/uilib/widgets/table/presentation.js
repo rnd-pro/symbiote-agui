@@ -40,6 +40,7 @@ export function presentTable(table, state) {
     tableLabel: state.label,
     busyText: String(state.loading),
     surfaceHidden: !model || state.loading || !!state.error,
+    statusState: state.loading ? 'loading' : state.error || table.issue ? 'error' : !model?.filtered.length ? 'empty' : 'ready',
     statusMessage: state.loading ? text('loading') : state.error || (table.issue ? text(table.issue) : !model?.filtered.length ? text('empty') : ''),
     resultsLabel: text('results'),
     selectedLabel: text('selected'),

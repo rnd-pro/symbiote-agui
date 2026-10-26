@@ -84,24 +84,24 @@ test('Markdown src loads bounded CORS documents, cancels superseded loads, prese
   /** @param {string} src */
   let setSrc = (src) => page.$eval('#remote', (element, src) => element.setAttribute('src', src), src);
   await setSrc('https://example.test/slow.md');
-  await page.waitForFunction(() => document.querySelector('#remote > p')?.textContent === 'Loading source');
+  await page.waitForFunction(() => document.querySelector('#remote > agui-state p')?.textContent === 'Loading source');
   await page.$eval('#remote', (element) => Reflect.set(window, 'oldSource', Reflect.get(element, 'sourceController')));
   await setSrc('https://example.test/fast.md');
   await page.waitForFunction(() => document.querySelector('#remote h1')?.textContent === '/fast.md');
   assert.equal(await page.evaluate(() => Reflect.get(window, 'oldSource').signal.aborted), true);
   let count = requests.length;
   await setSrc('data:text/markdown,Forbidden');
-  await page.waitForFunction(() => document.querySelector('#remote > p')?.textContent === 'Invalid URL');
+  await page.waitForFunction(() => document.querySelector('#remote > agui-state p')?.textContent === 'Invalid URL');
   assert.equal(requests.length, count);
   for (let path of [
     'failed',
     'no-cors',
   ]) {
     await setSrc(`https://example.test/${path}.md`);
-    await page.waitForFunction(() => document.querySelector('#remote > p')?.textContent === 'Source request failed');
+    await page.waitForFunction(() => document.querySelector('#remote > agui-state p')?.textContent === 'Source request failed');
   }
   await setSrc('https://example.test/large.md');
-  await page.waitForFunction(() => document.querySelector('#remote > p')?.textContent === 'Source too large');
+  await page.waitForFunction(() => document.querySelector('#remote > agui-state p')?.textContent === 'Source too large');
   await setSrc('relative.md');
   await page.waitForFunction(() => document.querySelector('#remote h1')?.textContent === '/markdown-source/relative.md');
   await setSrc('https://example.test/redirect.md');

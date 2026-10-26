@@ -1,7 +1,7 @@
 import { html } from '@symbiotejs/symbiote/core/html.js';
 
 export let TABLE_TEMPLATE = html`
-  <p role="status" aria-live="polite" bind="textContent: statusMessage; hidden: !statusMessage"></p>
+  <agui-state bind="$.status: statusState; $.message: statusMessage; hidden: !statusMessage"></agui-state>
   <div class="agui-table-scroll" role="region" tabindex="0" bind="@aria-label: tableLabel; hidden: surfaceHidden; @aria-busy: busyText">
     <table>
       <caption bind="textContent: tableLabel"></caption>
@@ -25,7 +25,8 @@ export let TABLE_TEMPLATE = html`
 export let TABLE_HEADING_TEMPLATE = html`
   <th scope="col" bind="id: headingId; @aria-sort: ariaSort; @data-column: columnKey">
     <div class="agui-table-heading-content">
-      <input ref="selector" type="checkbox" bind="hidden: !selectAll; disabled: unavailable; checked: selected; indeterminate: mixed; @aria-label: selectAllLabel; onchange: select_filtered">
+      <agui-field type="checkbox" pub-to="^selectionValue"
+        bind="hidden: !selectAll; $.disabled: unavailable; $.value: selected; $.indeterminate: mixed; @aria-label: selectAllLabel"></agui-field>
       <span bind="textContent: label; hidden: sortable"></span>
       <button class="agui-table-sort" type="button" bind="onclick: sort_column; hidden: !sortable; disabled: unavailable">
         <span bind="textContent: label"></span><agui-icon bind="$.name: sortIcon" aria-hidden="true"></agui-icon>
@@ -43,6 +44,7 @@ export let TABLE_CELL_TEMPLATE = html`
     <span bind="hidden: isSelection">
       <span bind="textContent: text; className: cellClass; @data-tone: tone"></span>
     </span>
-    <input ref="selector" bind="type: selectionType; name: groupName; checked: selected; hidden: !isSelection; disabled: unavailable; @aria-label: selectLabel">
+    <agui-field pub-to="^selectionValue"
+      bind="@type: selectionType; @name: groupName; @value: rowId; $.value: selectionValue; hidden: !isSelection; $.disabled: unavailable; @aria-label: selectLabel"></agui-field>
   </td>
 `;

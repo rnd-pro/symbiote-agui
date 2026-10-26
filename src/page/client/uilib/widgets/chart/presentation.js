@@ -18,6 +18,7 @@ export function presentChart(chart) {
     dataDisabled: unavailable,
     unavailable: unavailable || state.selection === 'none',
     plotHidden: !model?.hasData || busy || !!state.error || !!chart.runtimeError,
+    statusState: state.error || chart.runtimeError || chart.issue ? 'error' : busy ? 'loading' : !model?.hasData ? 'empty' : 'ready',
     statusMessage: state.error || failure || (chart.issue ? text(chart.issue) : busy ? text('loading') : !model?.hasData ? text('empty') : ''),
     effectiveSelected: model?.selected ?? [],
     dataRows: model?.points.map((point) => ({

@@ -3,6 +3,7 @@ import {
 } from '../../shared/component.js';
 import {
   MESSAGE_TIMEOUT_MS,
+  MESSAGE_TONES,
 } from './constants.js';
 import {
   addMessage,
@@ -40,13 +41,10 @@ export class Message extends UiComponent {
     this.sizeObserver = new ResizeObserver(positionMessages);
     this.sizeObserver.observe(this);
     this.sub('tone', (tone) => {
-      let alert = tone === 'alert';
-      this.setAttribute('data-tone', alert ? 'alert' : 'info');
-      this.set$({
-        messageRole: alert ? 'alert' : 'status',
-        liveMode: alert ? 'assertive' : 'polite',
-        iconName: alert ? 'warning' : 'info',
-      });
+      let key = Object.hasOwn(MESSAGE_TONES, String(tone))
+        ? /** @type {import('../../../../../../types/uilib.js').UiMessageTone} */ (tone) : 'info';
+      this.setAttribute('data-tone', key);
+      this.set$(MESSAGE_TONES[key]);
     });
     this.sub('message', () => this.show());
     this.sub('timeout', () => {

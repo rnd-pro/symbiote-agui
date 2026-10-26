@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { selectSavedData, sameSubmission } from '../../src/page/client/uilib/controls/data-toolbar/saved-data.js';
 import { toolbarIndicator } from '../../src/page/client/uilib/controls/data-toolbar/indicator.js';
+import { toolbarNotices } from '../../src/page/client/uilib/controls/data-toolbar/notices.js';
 
 test('toolbar status distinguishes local saving, delivery, and external verification without hiding newer drafts', () => {
   /** @type {import('../../types/data-toolbar.js').ToolbarIndicatorInput} */
@@ -61,6 +62,84 @@ test('toolbar status distinguishes local saving, delivery, and external verifica
   input.viewer = true;
   input.connected = true;
   assert.equal(toolbarIndicator(input).state, 'viewer');
+});
+
+test('partial saves keep success, pending delivery warnings, and independent transfer failures separate', () => {
+  let reference = {
+    commitId: 'commit',
+    instanceId: 'worker',
+    markupRevision: 1,
+    revision: 'revision',
+  };
+  /** @type {import('../../types/data-toolbar.js').ToolbarNoticesInput} */
+  let input = {
+    viewer: false,
+    dirty: true,
+    stale: false,
+    issue: '',
+    submission: {
+      reference,
+      changes: [],
+      result: {
+        ...reference,
+        state: 'committed',
+      },
+      delivery: {
+        submissionId: reference.commitId,
+        instanceId: reference.instanceId,
+        state: 'rejected',
+        failure: {
+          code: 'DISABLED',
+          message: 'Not rendered directly.',
+        },
+      },
+    },
+    transfer: {
+      operation: 'export',
+      state: 'error',
+      message: '',
+      failure: {
+        code: 'EXPORT_FAILED',
+        message: 'Not rendered directly.',
+      },
+    },
+  };
+  let notices = toolbarNotices(input, (key) => key);
+  assert.deepEqual(notices.local, {
+    tone: 'success',
+    message: 'saved',
+  });
+  assert.deepEqual(notices.delivery, {
+    tone: 'warning',
+    message: 'delivery.rejected feedback.DISABLED',
+  });
+  assert.deepEqual(notices.transfer, {
+    tone: 'error',
+    message: 'transfer.EXPORT_FAILED',
+  });
+  assert.equal(notices.edit.tone, 'warning');
+  assert.ok(input.submission?.delivery);
+  assert.ok(input.submission.delivery.failure);
+  input.submission.delivery.failure.code = 'COMMAND_FAILED';
+  assert.equal(toolbarNotices(input, (key) => key).delivery.tone, 'error');
+  input.submission.delivery.state = 'accepted';
+  delete input.submission.delivery.failure;
+  notices = toolbarNotices(input, (key) => key);
+  assert.equal(notices.delivery.tone, 'success');
+  assert.equal(notices.external.tone, 'warning', 'Confirmed delivery does not confirm external persistence.');
+  assert.equal(notices.transfer.tone, 'error');
+  input.submission.external = {
+    ...reference,
+    state: 'unknown',
+    message: 'Verify destination before retrying.',
+  };
+  notices = toolbarNotices(input, (key) => key);
+  assert.equal(notices.external.tone, 'warning');
+  assert.match(notices.external.message, /Verify destination/);
+  assert.equal(notices.local.tone, 'success');
+  assert.ok(input.transfer);
+  delete input.transfer.failure;
+  assert.equal(toolbarNotices(input, (key) => key).transfer.tone, 'error');
 });
 
 test('saved reads paginate cloned JSON, reject inherited paths, and enforce the byte limit', () => {

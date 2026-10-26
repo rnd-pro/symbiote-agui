@@ -1,14 +1,6 @@
 /** @type {1} */
 export let TRANSFER_VERSION = 1;
 export let DOWNLOAD_RELEASE_MS = 1_000;
-export let MESSAGE_KEYS = Object.freeze([
-  'editMessage',
-  'localMessage',
-  'deliveryMessage',
-  'externalMessage',
-  'transferMessage',
-  'errorMessage',
-]);
 export let TRANSFER_FAILURES = Object.freeze({
   INVALID_JSON: 'INVALID_JSON',
   TOO_LARGE: 'TOO_LARGE',

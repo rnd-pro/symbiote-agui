@@ -64,11 +64,11 @@ test('declarative data toolbar saves, cancels, imports offline, delivers one bou
   await page.type('#email input', 'bad-address');
   await clickDataAction(page, '#data', 'Save');
   assert.equal(await readRuntimeCache('toolbar-test'), undefined);
-  assert.match(await page.$eval('#data .agui-data-error', (element) => element.textContent || ''), /Check the form fields/);
+  assert.match(await page.$eval('#data [data-kind="issue"][data-tone="error"]', (element) => element.textContent || ''), /Check the form fields/);
   await page.locator('#data .agui-data-trigger').click();
   await page.waitForFunction(() => !document.querySelector('#data .agui-data-panel')?.matches(':popover-open'));
   await clickDataAction(page, '#data', 'Save');
-  assert.match(await page.$eval('#data .agui-data-error', (element) => element.textContent || ''), /Check the form fields/);
+  assert.match(await page.$eval('#data [data-kind="issue"][data-tone="error"]', (element) => element.textContent || ''), /Check the form fields/);
   await page.$eval('#email input', (element) => { Reflect.set(element, 'value', ''); element.dispatchEvent(new Event('input', { bubbles: true })); });
   await clickDataAction(page, '#data', 'Save');
   await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, 'submission')?.delivery?.failure?.code === 'DISABLED');
@@ -114,7 +114,9 @@ test('declarative data toolbar saves, cancels, imports offline, delivers one bou
   await gate;
   await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, 'submission')?.delivery?.state === 'accepted');
   assert.equal(await page.$eval('#data', (element) => Reflect.get(element, '$').dirty), true);
-  assert.match(await page.$eval('#data', (element) => String(Reflect.get(element, '$').errorMessage)), /Could not start the JSON download/);
+  assert.match(await page.$eval('#data [data-kind="transfer"][data-tone="error"]', (element) => element.textContent || ''), /Could not start the JSON download/);
+  assert.match(await page.$eval('#data [data-kind="local"][data-tone="success"]', (element) => element.textContent || ''), /Saved locally/);
+  assert.match(await page.$eval('#data [data-kind="external"][data-tone="warning"]', (element) => element.textContent || ''), /pending verification/);
   let envelope = JSON.parse((await readFile(log, 'utf8')).trim());
   assert.equal(envelope.event.type, 'agui.data.submitted');
   assert.deepEqual(Object.keys(envelope.event.data).sort(), ['commit', 'targets']);
@@ -263,5 +265,95 @@ test('session information dialogs read fresh files without changing drafts or ac
   assert.equal(await page.$eval('#data', (element) => Reflect.get(element, '$').dirty), true);
   assert.equal(await readRuntimeCache('toolbar-test'), undefined);
   assert.equal(runtime.feedback.status().pending, 0);
+  assert.deepEqual(errors, []);
+});
+
+test('partial outcomes produce independently dismissible success, warning, and error notifications', {
+  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
+  timeout: 30_000,
+}, async (t) => {
+  let state = await temporaryState();
+  let runtime = createRuntime();
+  /** @type {import('puppeteer-core').Browser | undefined} */
+  let browser;
+  t.after(async () => {
+    await browser?.close();
+    await runtime.close();
+    await state.close();
+  });
+  let saved = await prepareCachedMarkup('toolbar-test', await readFile(new URL('./data-toolbar.html', import.meta.url), 'utf8'));
+  try { await saved.commit(); } finally { await saved.discard(); }
+  await runtime.start(new AbortController().signal);
+  browser = await puppeteer.launch({
+    executablePath,
+    headless: true,
+  });
+  let page = await browser.newPage();
+  page.setDefaultTimeout(8_000);
+  /** @type {string[]} */
+  let errors = [];
+  page.on('pageerror', (error) => errors.push(String(error)));
+  assert.ok(runtime.record.url);
+  await page.goto(runtime.record.url);
+  await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, '$')?.connectionLabel === 'Connected');
+  await page.$eval('#data', (element) => {
+    let toolbar = /** @type {import('../../src/page/client/uilib/controls/data-toolbar/data-toolbar.js').DataToolbar} */ (element);
+    let data = /** @type {import('../../types/data.js').DataStatus} */ (toolbar.$['AGUI_DATA/current']);
+    let reference = {
+      commitId: crypto.randomUUID(),
+      instanceId: data.instanceId,
+      markupRevision: data.markupRevision,
+      revision: data.revision,
+    };
+    toolbar.$.messageTimeout = 60_000;
+    toolbar.submission = {
+      reference,
+      changes: [],
+      result: {
+        ...reference,
+        state: 'committed',
+      },
+      delivery: {
+        submissionId: reference.commitId,
+        instanceId: reference.instanceId,
+        state: 'rejected',
+        failure: {
+          code: 'DISABLED',
+          message: '',
+        },
+      },
+    };
+    toolbar.transferState = {
+      operation: 'export',
+      state: 'error',
+      message: '',
+      failure: {
+        code: 'EXPORT_FAILED',
+        message: '',
+      },
+    };
+    toolbar.refresh(true);
+  });
+  for (let tone of [
+    'success',
+    'warning',
+    'error',
+  ]) { await page.waitForSelector(`#data agui-message[data-tone="${tone}"]:popover-open`); }
+  assert.equal(await page.$eval('#data agui-message[data-tone="success"] p', (element) => element.textContent), 'Saved locally');
+  assert.match(await page.$eval('#data agui-message[data-tone="warning"] p', (element) => element.textContent || ''), /Agent delivery unavailable/);
+  assert.match(await page.$eval('#data agui-message[data-tone="error"] p', (element) => element.textContent || ''), /Could not start the JSON download/);
+  assert.equal(await page.$eval('#data agui-message[data-tone="error"] p', (element) => element.getAttribute('role')), 'alert');
+  assert.equal(await page.$eval('#data agui-message[data-tone="warning"] p', (element) => element.getAttribute('role')), 'status');
+  await page.locator('#data agui-message[data-tone="warning"] button').click();
+  await page.waitForFunction(() => document.querySelector('#data agui-message[data-tone="warning"]')?.hasAttribute('hidden'));
+  await page.$eval('#data', (element) => Reflect.get(element, 'refresh').call(element));
+  assert.equal(await page.$eval('#data agui-message[data-tone="warning"]', (element) => element.hasAttribute('hidden')), true);
+  assert.equal(await page.$eval('#data agui-message[data-tone="success"]', (element) => element.matches(':popover-open')), true);
+  assert.equal(await page.$eval('#data agui-message[data-tone="error"]', (element) => element.matches(':popover-open')), true);
+  await page.locator('#data .agui-data-trigger').click();
+  await page.waitForFunction(() => !document.querySelector('#data agui-message:popover-open'));
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#data .agui-data-panel')?.matches(':popover-open'));
+  assert.equal(await page.$('#data agui-message:popover-open'), null);
   assert.deepEqual(errors, []);
 });

@@ -78,8 +78,18 @@ export default css`
       white-space: pre-line;
       overflow-wrap: anywhere;
     }
-    .agui-data-error {
-      color: var(--agui-danger);
+    .agui-data-notice {
+      border-inline-start: .2rem solid var(--agui-accent);
+      padding-inline-start: .5rem;
+    }
+    .agui-data-notice[data-tone='success'] {
+      border-color: var(--agui-success);
+    }
+    .agui-data-notice[data-tone='warning'] {
+      border-color: var(--agui-warning);
+    }
+    .agui-data-notice[data-tone='error'] {
+      border-color: var(--agui-danger);
     }
     .agui-data-metadata {
       white-space: pre-wrap;

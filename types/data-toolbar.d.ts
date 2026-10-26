@@ -28,6 +28,20 @@ export interface ToolbarIndicatorInput {
   transfer?: import('./data.js').DataTransferState;
 }
 
+export interface ToolbarNotice {
+  message: string;
+  tone: import('./uilib.js').UiMessageTone;
+}
+
+export interface ToolbarNoticesInput {
+  viewer: boolean;
+  dirty: boolean;
+  stale: boolean;
+  issue: string;
+  submission?: ToolbarSubmission;
+  transfer?: import('./data.js').DataTransferState;
+}
+
 export interface SavedDataSelection extends SavedReference {
   provider: string;
   key: string;

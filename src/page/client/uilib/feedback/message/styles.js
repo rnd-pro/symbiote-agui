@@ -28,7 +28,16 @@ export default css`
       opacity: 0;
       transform: translateY(.5rem);
     }
-    agui-message[data-tone='alert'] {
+    agui-message[data-tone='success'] {
+      background: var(--agui-success);
+      color: var(--agui-on-success);
+    }
+    agui-message[data-tone='warning'] {
+      background: var(--agui-warning);
+      color: var(--agui-on-warning);
+    }
+    agui-message[data-tone='alert'],
+    agui-message[data-tone='error'] {
       background: var(--agui-danger);
     }
     agui-message:not([hidden]):not([data-closing]) {
@@ -47,8 +56,16 @@ export default css`
       overflow-wrap: anywhere;
       font-size: .875rem;
     }
-    .agui-message-dismiss {
+    agui-message .agui-message-dismiss {
       pointer-events: auto;
+      color: inherit;
+    }
+    agui-message .agui-message-dismiss:hover:enabled {
+      background: color-mix(in srgb, currentColor 15%, transparent);
+      color: inherit;
+    }
+    agui-message .agui-message-dismiss:focus-visible {
+      outline-color: currentColor;
     }
     @media (prefers-reduced-motion: no-preference) {
       agui-message {

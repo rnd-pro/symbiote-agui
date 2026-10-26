@@ -47,13 +47,10 @@ export let DATA_TOOLBAR_TEMPLATE = html`
       <span class="agui-chip" bind="textContent: roleLabel"></span>
       <span class="agui-chip" bind="textContent: connectionLabel; @data-tone: connectionTone"></span>
     </div>
-    <div class="agui-data-status" role="status" aria-live="polite" aria-atomic="true">
-      <p bind="textContent: editMessage; hidden: !editMessage"></p>
-      <p bind="textContent: localMessage; hidden: !localMessage"></p>
-      <p bind="textContent: deliveryMessage; hidden: !deliveryMessage"></p>
-      <p bind="textContent: externalMessage; hidden: !externalMessage"></p>
-      <p bind="textContent: transferMessage; hidden: !transferMessage"></p>
-      <p class="agui-data-error" bind="textContent: errorMessage; hidden: !errorMessage"></p>
+    <div class="agui-data-status" role="status" aria-live="polite" aria-atomic="true" itemize="statusMessages">
+      <template>
+        <p class="agui-data-notice" bind="textContent: message; @data-tone: tone; @data-kind: _KEY_"></p>
+      </template>
     </div>
   </div>
   <agui-dialog ref="information" pub-to="^informationOpen"
@@ -62,6 +59,6 @@ export let DATA_TOOLBAR_TEMPLATE = html`
     <agui-markdown bind="hidden: ^descriptionHidden; $.value: ^description; $.label: ^descriptionLabel; $.texts: ^descriptionTexts; $.extensions: ^descriptionExtensions"></agui-markdown>
     <pre class="agui-data-metadata" bind="hidden: ^metadataHidden"><code bind="textContent: ^metadata"></code></pre>
   </agui-dialog>
-  <agui-message ref="messages" hidden></agui-message>
+  <div ref="messages" itemize="notifications" item-tag="agui-message"></div>
   <input ref="file" type="file" hidden bind="@aria-label: fileLabel">
 `;

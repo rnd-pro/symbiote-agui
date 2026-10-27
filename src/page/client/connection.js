@@ -85,8 +85,6 @@ export function connectSession() {
       let message;
       try { message = /** @type {import('../../../types/transport.js').ServerMessage} */ (JSON.parse(event.data)); }
       catch { showStatus('Connection error: invalid server message.', 'alert'); return; }
-      // Annotation packets are separate from application commands and state.
-      if (message.type === 'annotations') { return; }
       if (message.type === 'session-info') {
         withoutFeedback(() => receiveSessionInformation(message));
         return;
@@ -101,6 +99,10 @@ export function connectSession() {
       }
       updates = updates.then(async () => {
         if (current !== socket || attempt !== generation) { return; }
+        if (message.type === 'annotations') {
+          shared.markers.receive(message);
+          return;
+        }
         if (message.type === 'role') {
           updateSessionContext({ role: message.role, userConnected: message.userConnected });
           setFeedbackRole(message.role);

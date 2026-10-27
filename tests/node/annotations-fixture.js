@@ -6,6 +6,9 @@ export function annotationsFixture() {
   /** @type {Map<string, import('../../types/tools.js').PagePeer>} */
   let pages = new Map();
   let annotations = new PageAnnotations(pages, () => time);
+  annotations.setView(1, [
+    'fixture-anchor',
+  ]);
 
   return {
     annotations,
@@ -36,6 +39,7 @@ export function annotationsFixture() {
             type: 'annotation',
             revision: annotations.revision,
             sequence: ++sequence,
+            viewSequence: annotations.viewSequence,
             ...input,
           };
           return annotations.receive(page, packet, Buffer.byteLength(JSON.stringify(packet)));

@@ -11,6 +11,11 @@ let fields = {
   sync: [],
 };
 
+/** @param {unknown} value */
+export function isAnnotationAnchor(value) {
+  return typeof value === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(value);
+}
+
 /**
  * @param {unknown} value
  * @returns {value is import('../../types/transport.js').AnnotationPoint}
@@ -23,7 +28,7 @@ function validPoint(value) {
     'x',
     'y',
   ].includes(key)) && typeof point.anchor === 'string'
-    && /^[a-zA-Z0-9_-]{1,64}$/.test(point.anchor)
+    && isAnnotationAnchor(point.anchor)
     && typeof point.x === 'number' && Number.isFinite(point.x) && point.x >= 0 && point.x <= 1
     && typeof point.y === 'number' && Number.isFinite(point.y) && point.y >= 0 && point.y <= 1;
 }
@@ -44,11 +49,15 @@ export function validateAnnotation(value, bytes) {
     || !Number.isSafeInteger(packet.sequence) || Number(packet.sequence) < 1) {
     throw new Error('Invalid annotation header.');
   }
+  if (!Number.isSafeInteger(packet.viewSequence) || Number(packet.viewSequence) < 0) {
+    throw new Error('Invalid annotation view.');
+  }
   let allowed = [
     'type',
     'revision',
     'sequence',
     'action',
+    'viewSequence',
     ...fields[/** @type {keyof typeof fields} */ (packet.action)],
   ];
   if (Object.keys(packet).length !== allowed.length || Object.keys(packet).some((key) => !allowed.includes(key))) {

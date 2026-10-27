@@ -51,6 +51,9 @@ export interface RenderUpdate {
 export type PageRole = 'user' | 'viewer';
 
 export interface MirrorSnapshot extends RenderUpdate {
+  sequence?: number;
+  anchors?: string[];
+  rootAnchor?: string;
   rootStyles?: string;
   theme?: string;
 }
@@ -61,6 +64,7 @@ export interface PageRoleMessage {
   userConnected: boolean;
   revision: number;
   capture: boolean;
+  viewSequence: number;
 }
 
 export interface AnnotationPoint {
@@ -94,6 +98,7 @@ export type AnnotationPageMessage = {
   type: 'annotation';
   revision: number;
   sequence: number;
+  viewSequence: number;
 } & (
   | { action: 'cursor'; point: AnnotationPoint | null }
   | { action: 'stroke'; phase: 'start' | 'append' | 'end'; points: AnnotationPoint[] }
@@ -104,6 +109,7 @@ export type AnnotationServerMessage = {
   type: 'annotations';
   revision: number;
   time: number;
+  viewSequence: number;
 } & (
   | { action: 'state'; self: AnnotationParticipant | null; participants: AnnotationPresence[]; strokes: AnnotationStroke[] }
   | { action: 'join'; participant: AnnotationPresence }
@@ -112,6 +118,7 @@ export type AnnotationServerMessage = {
   | { action: 'stroke'; stroke: AnnotationStroke; append: boolean }
   | { action: 'remove'; ids: string[] }
   | { action: 'reset' }
+  | { action: 'view' }
 );
 
 export type PageCommand =

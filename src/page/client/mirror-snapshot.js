@@ -3,12 +3,16 @@ import { mirrorOverlays, MIRROR_OVERLAY_STYLES } from './mirror-overlays.js';
 import { TABLE_ITEM_TAGS } from './uilib/widgets/table/constants.js';
 import { mirrorMaps } from './mirror-maps.js';
 
-/** @param {number} revision */
-export function captureSnapshot(revision) {
+/**
+ * @param {number} revision
+ * @param {import('./markers/anchors.js').SnapshotAnchors} anchors
+ */
+export function captureSnapshot(revision, anchors) {
   let root = document.getElementById(CONTENT_ROOT_ID);
   let stylesheet = document.getElementById(STYLESHEET_ID)?.getAttribute('href');
   if (!root || !stylesheet) { return; }
   let copy = /** @type {HTMLElement} */ (root.cloneNode(true));
+  anchors.stamp(root, copy);
   let originals = root.querySelectorAll('input, textarea, select');
   let copies = copy.querySelectorAll('input, textarea, select');
   originals.forEach((element, index) => {
@@ -40,5 +44,12 @@ export function captureSnapshot(revision) {
     if (element.matches('a, area')) { element.removeAttribute('href'); }
   }
   let rootStyles = document.adoptedStyleSheets.flatMap((sheet) => [...sheet.cssRules].map((rule) => rule.cssText)).join('\n') + MIRROR_OVERLAY_STYLES;
-  return { html: copy.innerHTML, revision, stylesheetUrl: stylesheet, rootStyles, theme: document.body.dataset.theme ?? 'system' };
+  return {
+    html: copy.innerHTML,
+    revision,
+    stylesheetUrl: stylesheet,
+    rootStyles,
+    theme: document.body.dataset.theme ?? 'system',
+    ...anchors.finish(copy),
+  };
 }

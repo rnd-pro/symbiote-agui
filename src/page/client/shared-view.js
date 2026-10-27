@@ -4,6 +4,8 @@ import { MAX_PAGE_MESSAGE_BYTES, MIRROR_INTERVAL_MS, MIRROR_REFRESH_MS, PAGE_ROL
 import { disposeModules } from './modules.js';
 import { replaceContent } from './replace-content.js';
 import { captureSnapshot } from './mirror-snapshot.js';
+import { SnapshotAnchors, mirroredAnchors } from './markers/anchors.js';
+import { PageMarkers } from './markers/client.js';
 
 export class SharedView {
   /** @type {import('../../../types/transport.js').PageRole | undefined} */
@@ -12,6 +14,8 @@ export class SharedView {
   revision = -1;
   previous = '';
   rendered = false;
+  viewSequence = 0;
+  anchors = new SnapshotAnchors();
   /** @type {number | undefined} */
   timer;
   /** @type {number | undefined} */
@@ -30,6 +34,7 @@ export class SharedView {
   constructor(send, report) {
     this.send = send;
     this.report = report;
+    this.markers = new PageMarkers(send);
     this.schedule = () => {
       if (this.timer !== undefined) { return; }
       this.timer = window.setTimeout(() => { this.timer = undefined; this.publish(); }, MIRROR_INTERVAL_MS);
@@ -46,6 +51,7 @@ export class SharedView {
     let previous = this.role;
     this.role = message.role;
     this.userConnected = message.userConnected;
+    this.viewSequence = Math.max(this.viewSequence, message.viewSequence ?? 0);
     if (this.role === PAGE_ROLE.VIEWER && previous !== this.role) {
       this.disconnect();
       await disposeModules();
@@ -59,6 +65,7 @@ export class SharedView {
         root.append(this.createToolbar());
       }
     }
+    this.markers.role = this.role;
     if (this.role === PAGE_ROLE.USER) {
       if (message.capture) { this.revision = message.revision; }
       this.observe();
@@ -80,15 +87,26 @@ export class SharedView {
 
   publish() {
     if (this.role !== PAGE_ROLE.USER || this.revision < 0) { return; }
-    let snapshot = captureSnapshot(this.revision);
+    let snapshot = captureSnapshot(this.revision, this.anchors);
     if (!snapshot) { return; }
-    let message = JSON.stringify({ type: 'snapshot', ...snapshot });
-    if (message === this.previous) { return; }
+    let content = JSON.stringify(snapshot);
+    if (content === this.previous) { return; }
+    let sequence = this.viewSequence + 1;
+    let message = JSON.stringify({
+      type: 'snapshot',
+      ...snapshot,
+      sequence,
+    });
     if (new TextEncoder().encode(message).byteLength > MAX_PAGE_MESSAGE_BYTES) {
       this.report('The live view exceeds 1 MiB. Simplify the interface to resume viewer updates.');
       return;
     }
-    if (this.send(message)) { this.previous = message; }
+    if (this.send(message)) {
+      this.previous = content;
+      this.viewSequence = sequence;
+      let root = document.getElementById(CONTENT_ROOT_ID);
+      if (root) { this.markers.setView(root, this.anchors.targets, this.revision, sequence); }
+    }
   }
 
   /** @param {import('../../../types/transport.js').MirrorSnapshot} snapshot */
@@ -125,10 +143,29 @@ export class SharedView {
     fragment.content.querySelectorAll('agui-data-toolbar').forEach((element) => element.remove());
     let x = frame.contentWindow?.scrollX || 0;
     let y = frame.contentWindow?.scrollY || 0;
+    let scrolls = new Map(Array.from(this.markers.geometry?.targets || [], ([
+      id,
+      element,
+    ]) => [
+      id,
+      {
+        left: element.scrollLeft,
+        top: element.scrollTop,
+      },
+    ]));
     root.replaceChildren(fragment.content);
     if (stylesheet.getAttribute('href') !== stylesheetUrl) { stylesheet.setAttribute('href', stylesheetUrl); }
     if (rootStyles.textContent !== (this.snapshot.rootStyles ?? '')) { rootStyles.textContent = this.snapshot.rootStyles ?? ''; }
     frame.contentWindow?.scrollTo(x, y);
+    let targets = mirroredAnchors(root, this.snapshot);
+    for (let [
+      id,
+      element,
+    ] of targets) {
+      let position = scrolls.get(id);
+      if (position) { element.scrollLeft = position.left; element.scrollTop = position.top; }
+    }
+    this.markers.setView(root, targets, this.snapshot.revision, this.snapshot.sequence ?? 0);
   }
 
   createToolbar() {
@@ -138,6 +175,7 @@ export class SharedView {
   }
 
   disconnect() {
+    this.markers.disconnect();
     clearTimeout(this.timer);
     clearInterval(this.refresh);
     this.refresh = undefined;

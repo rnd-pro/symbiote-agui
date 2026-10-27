@@ -78,6 +78,18 @@ test('real shared sockets broadcast annotation presence and strokes, replay tran
     connect,
   } = await setup(t);
   let user = await connect('user');
+  let owner = pages.shared.user();
+  assert.ok(owner);
+  pages.shared.publish(owner, {
+    html: '<p>Fixture</p>',
+    revision: 0,
+    sequence: 1,
+    anchors: [
+      'fixture-anchor',
+    ],
+    rootAnchor: 'fixture-anchor',
+    stylesheetUrl: '/styles.css.js',
+  });
   let first = await connect('viewer');
   let joined = nextAnnotation(user.socket, 'join');
   let second = await connect('viewer');
@@ -99,6 +111,7 @@ test('real shared sockets broadcast annotation presence and strokes, replay tran
     action: 'cursor',
     revision: 0,
     sequence: 1,
+    viewSequence: 1,
     point: annotationPoint(),
   }));
   for (let packet of await Promise.all(cursors)) {
@@ -115,6 +128,7 @@ test('real shared sockets broadcast annotation presence and strokes, replay tran
     phase: 'start',
     revision: 0,
     sequence: 2,
+    viewSequence: 1,
     points: [
       annotationPoint(),
     ],

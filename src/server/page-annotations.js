@@ -22,6 +22,9 @@ export class PageAnnotations {
   /** @type {ReturnType<typeof setInterval> | undefined} */
   timer;
   revision = 0;
+  viewSequence = 0;
+  /** @type {Set<string>} */
+  anchors = new Set();
   pointCount = 0;
   colorIndex = 0;
   disposed = false;
@@ -80,6 +83,7 @@ export class PageAnnotations {
       type: /** @type {const} */ ('annotations'),
       revision: this.revision,
       time: this.now(),
+      viewSequence: this.viewSequence,
     };
   }
 
@@ -151,6 +155,11 @@ export class PageAnnotations {
     this.sweep();
     if (packet.revision !== this.revision) { return false; }
     if (packet.action === 'sync') { this.sendState(page); return true; }
+    if (packet.viewSequence !== this.viewSequence) { return false; }
+    let points = packet.action === 'cursor' ? packet.point ? [
+      packet.point,
+    ] : [] : packet.points;
+    if (points.some((point) => !this.anchors.has(point.anchor))) { return false; }
     if (packet.action === 'cursor') {
       member.presence.point = packet.point;
       member.presence.updatedAt = now;
@@ -267,7 +276,10 @@ export class PageAnnotations {
 
   sweep() {
     let now = this.now();
-    for (let [id, stroke] of this.strokes) {
+    for (let [
+      id,
+      stroke,
+    ] of this.strokes) {
       if (stroke.expiresAt <= now) { this.drop(id); }
     }
     for (let page of this.dirty) { this.sendState(page); }
@@ -290,6 +302,7 @@ export class PageAnnotations {
   /** @param {number} revision */
   reset(revision) {
     this.revision = revision;
+    this.anchors.clear();
     this.strokes.clear();
     this.pointCount = 0;
     for (let member of this.members.values()) {
@@ -303,6 +316,28 @@ export class PageAnnotations {
     });
   }
 
+  /**
+   * @param {number} sequence
+   * @param {string[]} anchors
+   */
+  setView(sequence, anchors) {
+    this.viewSequence = sequence;
+    this.anchors = new Set(anchors);
+    for (let member of this.members.values()) {
+      if (member.presence.point && !this.anchors.has(member.presence.point.anchor)) { member.presence.point = null; }
+    }
+    for (let [
+      id,
+      stroke,
+    ] of this.strokes) {
+      if (stroke.points.some((point) => !this.anchors.has(point.anchor))) { this.drop(id); }
+    }
+    this.broadcast({
+      ...this.header(),
+      action: 'view',
+    });
+  }
+
   close() {
     this.disposed = true;
     clearInterval(this.timer);
@@ -310,6 +345,7 @@ export class PageAnnotations {
     this.members.clear();
     this.strokes.clear();
     this.dirty.clear();
+    this.anchors.clear();
     this.pointCount = 0;
   }
 }

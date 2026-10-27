@@ -3,6 +3,7 @@ import test from 'node:test';
 import { ANNOTATION_LIMITS, MAX_PAGE_MESSAGE_BYTES } from '../../src/transport/constants.js';
 import { validateAnnotation } from '../../src/transport/annotations.js';
 import { annotationsFixture, annotationPoint } from './annotations-fixture.js';
+import { SharedPages } from '../../src/server/shared-pages.js';
 
 test('annotation packets reject spoofed metadata, unbounded input, invalid coordinates and malformed phases', () => {
   let packet = {
@@ -10,6 +11,7 @@ test('annotation packets reject spoofed metadata, unbounded input, invalid coord
     action: 'cursor',
     revision: 0,
     sequence: 1,
+    viewSequence: 1,
     point: annotationPoint(),
   };
   assert.deepEqual(validateAnnotation(packet, 128), packet);
@@ -58,6 +60,7 @@ test('annotation packets reject spoofed metadata, unbounded input, invalid coord
     revision: 0,
     sequence: 1,
     phase: 'start',
+    viewSequence: 1,
     points: [
       annotationPoint(),
     ],
@@ -254,4 +257,91 @@ test('annotation rate, sequence, stroke and total point budgets are bounded', (t
   assert.ok(state.strokes.filter((stroke) => !stroke.ended).length <= 1);
   assert.ok(Buffer.byteLength(JSON.stringify(state)) < MAX_PAGE_MESSAGE_BYTES);
   assert.equal(viewer.messages.some((message) => message.action === 'remove'), true);
+});
+
+test('only anchors in the current snapshot accept positions; replacement removes obsolete positions', (t) => {
+  let fixture = annotationsFixture();
+  t.after(() => fixture.annotations.close());
+  let viewer = fixture.add();
+  assert.equal(viewer.send({
+    action: 'cursor',
+    point: annotationPoint(),
+  }), true);
+  fixture.annotations.setView(2, [
+    'fixture-anchor',
+  ]);
+  assert.equal(viewer.send({
+    action: 'cursor',
+    viewSequence: 1,
+    point: annotationPoint(),
+  }), false);
+  assert.equal(viewer.send({
+    action: 'cursor',
+    point: {
+      ...annotationPoint(),
+      anchor: 'not-in-the-snapshot',
+    },
+  }), false);
+  assert.equal(viewer.state().participants[0].point?.anchor, 'fixture-anchor');
+  fixture.annotations.setView(3, []);
+  assert.equal(viewer.state().participants[0].point, null);
+});
+
+test('snapshot anchor metadata is bounded and only newer snapshots can replace the coordinate model', (t) => {
+  let fixture = annotationsFixture();
+  let owner = fixture.add('user');
+  let shared = new SharedPages(fixture.pages);
+  shared.enabled = true;
+  t.after(() => { fixture.annotations.close(); shared.close(); });
+  let snapshot = {
+    html: '<p>Current snapshot</p>',
+    revision: 0,
+    sequence: 1,
+    rootAnchor: 'root',
+    anchors: [
+      'root',
+      'content',
+    ],
+    stylesheetUrl: '/styles.css.js',
+  };
+  shared.publish(owner.page, snapshot);
+  shared.publish(owner.page, {
+    ...snapshot,
+    html: '<p>Obsolete</p>',
+  });
+  assert.equal(shared.latest?.html, snapshot.html);
+  assert.equal(shared.annotations.viewSequence, 1);
+  assert.equal(shared.annotations.anchors.has('content'), true);
+  for (let anchors of [
+    [
+      'content',
+    ],
+    [
+      'root',
+      'root',
+    ],
+    [
+      'root',
+      '<invalid>',
+    ],
+    Array.from({
+      length: ANNOTATION_LIMITS.anchors + 1,
+    }, (_, index) => index ? `a${index}` : 'root'),
+  ]) {
+    assert.throws(() => shared.publish(owner.page, {
+      ...snapshot,
+      sequence: 2,
+      anchors,
+    }), /Invalid snapshot anchors/);
+  }
+  assert.equal(shared.viewSequence, 1);
+  shared.publish(owner.page, {
+    ...snapshot,
+    sequence: 2,
+    anchors: [
+      'root',
+    ],
+  });
+  assert.equal(shared.viewSequence, 2);
+  assert.equal(shared.annotations.anchors.has('content'), false);
 });

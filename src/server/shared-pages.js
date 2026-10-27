@@ -1,11 +1,13 @@
 import { WebSocket } from 'ws';
-import { PAGE_ROLE } from '../transport/constants.js';
+import { ANNOTATION_LIMITS, PAGE_ROLE } from '../transport/constants.js';
+import { isAnnotationAnchor } from '../transport/annotations.js';
 import { STYLESHEET_PATH } from '../markup/constants.js';
 import { PageAnnotations } from './page-annotations.js';
 
 export class SharedPages {
   enabled = false;
   revision = 0;
+  viewSequence = 0;
   /** @type {import('../../types/transport.js').MirrorSnapshot | undefined} */
   latest;
   /** @type {Set<WebSocket>} */
@@ -47,6 +49,7 @@ export class SharedPages {
       page.socket.send(JSON.stringify({
         type: 'role', role: page.role, userConnected,
         revision: this.revision, capture: page.ready,
+        viewSequence: this.viewSequence,
       }));
     }
   }
@@ -55,7 +58,13 @@ export class SharedPages {
   reset(revision) {
     this.revision = revision;
     this.annotations.reset(revision);
-    this.latest = { html: '', revision, stylesheetUrl: `${STYLESHEET_PATH}?revision=${revision}` };
+    this.latest = {
+      html: '',
+      revision,
+      sequence: this.viewSequence,
+      anchors: [],
+      stylesheetUrl: `${STYLESHEET_PATH}?revision=${revision}`,
+    };
     if (this.enabled) {
       for (let page of this.pages.values()) {
         if (page.role === PAGE_ROLE.VIEWER) { this.send(page.socket); }
@@ -76,16 +85,28 @@ export class SharedPages {
       throw new Error('Invalid live view.');
     }
     if (snapshot.revision !== this.revision) { return; }
+    if (snapshot.sequence !== undefined) {
+      if (!Number.isSafeInteger(snapshot.sequence) || snapshot.sequence < 1 || !isAnnotationAnchor(snapshot.rootAnchor)
+        || !Array.isArray(snapshot.anchors) || snapshot.anchors.length > ANNOTATION_LIMITS.anchors
+        || !snapshot.anchors.every(isAnnotationAnchor) || !snapshot.anchors.includes(snapshot.rootAnchor || '')
+        || new Set(snapshot.anchors).size !== snapshot.anchors.length) { throw new Error('Invalid snapshot anchors.'); }
+      if (snapshot.sequence <= this.viewSequence) { return; }
+    } else if (snapshot.anchors !== undefined || snapshot.rootAnchor !== undefined) { throw new Error('Snapshot anchors require a sequence.'); }
+    this.viewSequence = snapshot.sequence ?? this.viewSequence + 1;
     this.latest = {
       html: snapshot.html,
       revision: snapshot.revision,
       stylesheetUrl: snapshot.stylesheetUrl,
       rootStyles: snapshot.rootStyles ?? '',
       theme: snapshot.theme ?? 'system',
+      sequence: this.viewSequence,
+      anchors: snapshot.anchors ?? [],
+      rootAnchor: snapshot.rootAnchor,
     };
     for (let viewer of this.pages.values()) {
       if (viewer.role === PAGE_ROLE.VIEWER) { this.send(viewer.socket); }
     }
+    this.annotations.setView(this.viewSequence, this.latest.anchors || []);
   }
 
   /** @param {WebSocket} socket */

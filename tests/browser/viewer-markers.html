@@ -1,0 +1,31 @@
+<context-provider ctx="MARKER_DEMO">
+  <script type="application/json">
+    {"rows":[{"id":"one","name":"First record"}],"columns":[{"key":"name","label":"Name","type":"text"}],"texts":{"results":"Records","selected":"Selected","selection":"Selection","selectRow":"Select row"}}
+  </script>
+  <agui-app>
+    <agui-sidebar label="Navigation" expand-label="Expand navigation" collapse-label="Collapse navigation">
+      <p>Viewer marker fixture</p>
+    </agui-sidebar>
+    <agui-viewport>
+      <div class="grid gap-4 p-4">
+        <button id="user-action" type="button">Interactive user action</button>
+        <agui-field id="notes" label="Notes" value="Preserve this value"></agui-field>
+        <div id="pointer-target" class="h-16 w-full bg-agui-raised">Shared target</div>
+        <agui-table id="records" label="Records" bind="$.rows: MARKER_DEMO/rows; $.columns: MARKER_DEMO/columns; $.texts: MARKER_DEMO/texts"></agui-table>
+        <div id="scroll-box" class="h-36 overflow-auto border border-agui-border">
+          <div id="scroll-content" class="grid gap-4 p-3">
+            <div class="h-40">Scroll above the target</div>
+            <div id="scroll-target" class="h-16 w-full bg-agui-raised">Nested target</div>
+            <div class="h-40">Scroll below the target</div>
+          </div>
+        </div>
+        <div id="map-target" class="agui-map-canvas h-28 w-full overflow-hidden border border-agui-border">Map viewport</div>
+        <button id="show-popup" type="button" popovertarget="popup">Open popup</button>
+        <div id="popup" popover class="agui-popover"><div id="popup-target" class="h-16 w-40">Popup target</div></div>
+        <agui-dialog id="dialog" label="Marker dialog" open-label="Open dialog" close-label="Close dialog">
+          <div id="dialog-target" class="h-16 w-48">Dialog target</div>
+        </agui-dialog>
+      </div>
+    </agui-viewport>
+  </agui-app>
+</context-provider>

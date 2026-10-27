@@ -15,6 +15,7 @@ export let MIRROR_INTERVAL_MS = 100;
 export let MIRROR_REFRESH_MS = 1_000;
 export let PAGE_ROLE = Object.freeze({ USER: 'user', VIEWER: 'viewer' });
 export let SESSION_CONTEXT = 'AGUI_SESSION';
+export const ANNOTATION_ANCHOR_ATTRIBUTE = 'data-agui-anchor';
 
 export const ANNOTATION_LIMITS = Object.freeze({
   messageBytes: 8 * 1024,
@@ -29,4 +30,6 @@ export const ANNOTATION_LIMITS = Object.freeze({
   points: 4_096,
   bufferBytes: 64 * 1024,
   sweepMs: 250,
+  anchors: 10_000,
+  cursorIntervalMs: 34,
 });

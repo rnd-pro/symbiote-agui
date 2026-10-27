@@ -13,6 +13,7 @@ import { Select } from './controls/select/select.js';
 import { ThemeToggle } from './controls/theme-toggle/theme-toggle.js';
 import { Toggle } from './controls/toggle/toggle.js';
 import { State } from './feedback/state/state.js';
+import { Preloader } from './feedback/preloader/preloader.js';
 import { DataToolbar } from './controls/data-toolbar/data-toolbar.js';
 import { Icon } from './content/icon/icon.js';
 import { Dialog } from './feedback/dialog/dialog.js';
@@ -49,6 +50,7 @@ export function registerUiLibComponents() {
   Select.reg('agui-select');
   Toggle.reg('agui-toggle');
   ThemeToggle.reg('agui-theme-toggle');
+  Preloader.reg('agui-preloader');
   State.reg('agui-state');
   Dialog.reg('agui-dialog');
   Message.reg('agui-message');

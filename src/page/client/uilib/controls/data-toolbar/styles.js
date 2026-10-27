@@ -105,15 +105,5 @@ export default css`
         position-area: block-start span-inline-start;
       }
     }
-    @media (prefers-reduced-motion: no-preference) {
-      .agui-data-trigger[data-busy] agui-icon {
-        animation: agui-data-working 1.2s linear infinite;
-      }
-    }
-    @keyframes agui-data-working {
-      to {
-        rotate: 360deg;
-      }
-    }
   }
 `;

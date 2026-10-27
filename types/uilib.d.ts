@@ -68,6 +68,10 @@ export interface UiFeedbackState {
   retryLabel?: string;
 }
 
+export interface UiPreloaderState {
+  label?: string;
+}
+
 export interface UiMessageState {
   message: string;
   tone?: 'info' | 'alert';

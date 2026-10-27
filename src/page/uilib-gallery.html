@@ -67,6 +67,8 @@
           "theme": "system",
           "density": "comfortable",
           "navigationOpen": true,
+          "preloaderVisible": true,
+          "preloaderLabel": "Loading preview",
           "inspectorOpen": false,
           "galleryTab": "overview",
           "galleryTabNotes": "",
@@ -213,6 +215,17 @@
                   <p>Notifications: <output>{{APP/notifications}}</output></p>
                 </agui-component>
                 <h2>Content states</h2>
+                <agui-toggle label="Show preloader" pub-to="APP/preloaderVisible" bind="$.value: APP/preloaderVisible"></agui-toggle>
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <div class="grid content-start gap-2">
+                    <p class="text-sm text-agui-muted">Default preloader</p>
+                    <agui-preloader id="gallery-preloader" class="text-agui-accent" bind="$.label: APP/preloaderLabel; hidden: !APP/preloaderVisible"></agui-preloader>
+                  </div>
+                  <div class="grid content-start gap-2">
+                    <p class="text-sm text-agui-muted">Compact preloader</p>
+                    <agui-preloader class="size-4 text-agui-accent" label="Loading compact preview" bind="hidden: !APP/preloaderVisible"></agui-preloader>
+                  </div>
+                </div>
                 <agui-state status="loading" message="Loading contacts..."></agui-state>
                 <agui-state status="empty" message="No contacts match the current filters."></agui-state>
                 <agui-state id="retry-state" bind="state: APP/componentState"></agui-state>

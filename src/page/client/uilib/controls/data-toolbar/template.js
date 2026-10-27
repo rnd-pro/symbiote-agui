@@ -3,7 +3,8 @@ import { html } from '@symbiotejs/symbiote/core/html.js';
 export let DATA_TOOLBAR_TEMPLATE = html`
   <button ref="trigger" class="agui-data-trigger agui-button-icon" type="button"
     bind="@popovertarget: popupId; @aria-label: indicatorLabel; @title: indicatorLabel; @data-state: indicatorState; @data-tone: indicatorTone; @data-busy: indicatorBusy">
-    <agui-icon bind="$.name: indicatorIcon" aria-hidden="true"></agui-icon>
+    <agui-preloader aria-hidden="true" bind="hidden: !indicatorBusy"></agui-preloader>
+    <agui-icon bind="$.name: indicatorIcon; hidden: indicatorBusy" aria-hidden="true"></agui-icon>
   </button>
   <div ref="panel" popover="auto" class="agui-data-panel agui-popover" role="group" bind="id: popupId; @aria-label: actionsLabel">
     <div class="agui-data-heading">

@@ -8,6 +8,7 @@ export class State extends UiComponent {
   init$ = {
     status: undefined, message: undefined, retryLabel: undefined,
     stateHidden: true, stateRole: 'status', stateBusy: 'false', stateMessage: '', stateRetryLabel: '', retryVisible: false,
+    stateLoading: false,
     retry: new ToolDescriptor({
       description: 'Request retry for this error state. This does not claim the request has succeeded.',
       deps: ['retryVisible'],
@@ -31,6 +32,7 @@ export class State extends UiComponent {
       stateHidden: status === 'ready',
       stateRole: status === 'error' ? 'alert' : 'status',
       stateBusy: String(status === 'loading'),
+      stateLoading: status === 'loading',
       stateMessage: String(this.$.message ?? this.getAttribute('message') ?? ''),
       stateRetryLabel: retryLabel,
       retryVisible: status === 'error' && !!retryLabel,

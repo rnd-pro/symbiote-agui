@@ -3,6 +3,7 @@ import { SELECT_TEMPLATE } from './controls/select/template.js';
 import { TOGGLE_TEMPLATE } from './controls/toggle/template.js';
 import { THEME_TOGGLE_TEMPLATE } from './controls/theme-toggle/template.js';
 import { STATE_TEMPLATE } from './feedback/state/template.js';
+import { PRELOADER_TEMPLATE } from './feedback/preloader/template.js';
 import { DATA_TOOLBAR_TEMPLATE } from './controls/data-toolbar/template.js';
 import { ICON_TEMPLATE } from './content/icon/template.js';
 import { SIDEBAR_TEMPLATE } from './layouts/sidebar/template.js';
@@ -25,6 +26,7 @@ export let UILIB_TEMPLATES = Object.freeze({
   toggle: TOGGLE_TEMPLATE,
   themeToggle: THEME_TOGGLE_TEMPLATE,
   state: STATE_TEMPLATE,
+  preloader: PRELOADER_TEMPLATE,
   dataToolbar: DATA_TOOLBAR_TEMPLATE,
   icon: ICON_TEMPLATE,
   sidebar: SIDEBAR_TEMPLATE,

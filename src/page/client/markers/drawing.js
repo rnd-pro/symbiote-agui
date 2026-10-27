@@ -34,16 +34,14 @@ export class PointerDrawing {
     if (available && !this.subscription) {
       this.subscription = PubSub.getCtx(SESSION_CONTEXT, false)?.sub('annotationDrawing', (value) => {
         this.enabled = value === true;
-        if (!this.enabled && this.active?.type !== 'mouse') { this.end(); }
+        if (!this.enabled) { this.end(); }
         this.touchAction();
       });
     }
     updateSessionContext({
       annotationAvailable: available,
-      ...(available ? {} : {
-        annotationDrawing: false,
-      }),
     });
+    this.touchAction();
   }
 
   /**
@@ -64,14 +62,16 @@ export class PointerDrawing {
   }
 
   touchAction() {
-    if (this.document) { this.document.documentElement.style.touchAction = this.enabled ? 'pinch-zoom' : this.previousTouchAction; }
+    if (this.document) {
+      this.document.documentElement.style.touchAction = this.enabled && this.page.ready && this.page.self
+        ? 'pinch-zoom' : this.previousTouchAction;
+    }
   }
 
   /** @param {PointerEvent} event */
   down = (event) => {
     let viewer = this.page.self;
-    if (!viewer || !this.page.ready || !event.isPrimary || event.button !== 0 || this.active
-      || event.pointerType !== 'mouse' && !this.enabled) { return; }
+    if (!viewer || !this.page.ready || !this.enabled || !event.isPrimary || event.button !== 0 || this.active) { return; }
     let point = this.page.geometry?.point(event.clientX, event.clientY);
     if (!point) { return; }
     this.cancel();
@@ -242,7 +242,6 @@ export class PointerDrawing {
     this.enabled = false;
     updateSessionContext({
       annotationAvailable: false,
-      annotationDrawing: false,
     });
   }
 }

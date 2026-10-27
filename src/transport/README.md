@@ -26,7 +26,7 @@ The marker layer reuses the bundled icon, native keyed Itemize, and non-interact
 
 ## Transient drawing
 
-Viewers draw with the primary mouse button. Touch and pen drawing require the existing data toolbar's drawing toggle, bound to reserved `AGUI_SESSION/annotationDrawing` state. The toggle is available only when annotation targets and a viewer identity exist. Drawing mode preserves pinch zoom; leaving it restores ordinary touch scrolling. The interactive user keeps normal controls.
+Viewer drawing defaults to enabled for mouse, touch and pen. The existing data toolbar's Enable drawing toggle binds to reserved `AGUI_SESSION/annotationDrawing` state and controls all pointer types. Disabling ends any active stroke without hiding marker cursors. The toggle is available only when annotation targets and a viewer identity exist. Its value survives snapshots and reconnects in the same page; reloading restores the default. Drawing mode preserves pinch zoom; leaving it restores ordinary touch scrolling. The interactive user keeps normal controls.
 
 Native Pointer Events feed bounded local previews and shared-socket batches. Release, cancellation, lost capture, leaving the surface, and tab suspension end drawing. Disconnect discards unsent work. Ordinary snapshots retain valid trails and rebase a held pointer to the current view; removed anchors retire their trails. Old queued points are never replayed after reconnect.
 

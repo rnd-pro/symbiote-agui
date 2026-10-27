@@ -40,7 +40,7 @@ async function instrument(page) {
 
 /**
  * @param {import('puppeteer-core').Page} page
- * @param {'pen' | 'touch'} type
+ * @param {'mouse' | 'pen' | 'touch'} type
  */
 async function syntheticStroke(page, type) {
   await page.bringToFront();
@@ -72,7 +72,7 @@ async function syntheticStroke(page, type) {
   }, type);
 }
 
-test('viewer drawing stays transient, survives snapshots, replays to late arrivals and isolates touch mode from application state', {
+test('viewer drawing stays transient, survives snapshots, replays to late arrivals and obeys the drawing toggle for every pointer type', {
   skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45_000,
 }, async (t) => {
@@ -171,18 +171,33 @@ test('viewer drawing stays transient, survives snapshots, replays to late arriva
   assert.notEqual(reconnected.id, lateViewer.id);
   assert.equal(Array.from(pages.shared.annotations.members.values()).some((member) => member.presence.id === lateViewer.id), false);
   assert.equal(Array.from(pages.shared.annotations.strokes.keys()).every((id) => knownStrokes.has(id)), true, 'Reconnect replays server history without publishing old input.');
-  let previous = new Set(pages.shared.annotations.strokes.keys());
-  await syntheticStroke(viewer, 'pen');
-  await user.bringToFront();
-  await user.waitForFunction(() => {
-    let packets = /** @type {import('../../types/transport.js').AnnotationServerMessage[]} */ (Reflect.get(window, 'annotationPackets'));
-    return packets.at(-1)?.action === 'cursor';
-  });
-  assert.equal(Array.from(pages.shared.annotations.strokes.keys()).some((id) => !previous.has(id)), false, 'Pen input does not draw until explicitly enabled.');
   await viewer.bringToFront();
   await viewer.click('agui-data-toolbar .agui-data-trigger');
   await viewer.waitForSelector('agui-data-toolbar .agui-data-panel agui-toggle:not([hidden]) input');
+  let toggleSelector = 'agui-data-toolbar .agui-data-panel agui-toggle input';
+  assert.equal(await viewer.$eval(toggleSelector, (element) => Reflect.get(element, 'checked')), true, 'Drawing defaults to enabled.');
   await viewer.click('agui-data-toolbar .agui-data-panel agui-toggle input');
+  await viewer.click('agui-data-toolbar .agui-data-trigger');
+  let previous = new Set(pages.shared.annotations.strokes.keys());
+  for (let type of /** @type {const} */ ([
+    'mouse',
+    'pen',
+    'touch',
+  ])) { await syntheticStroke(viewer, type); }
+  await viewer.evaluate(() => new Promise((resolve) => setTimeout(resolve, 100)));
+  assert.equal(Array.from(pages.shared.annotations.strokes.keys()).some((id) => !previous.has(id)), false, 'Disabled drawing blocks mouse, pen and touch strokes.');
+  await hoverMirror(viewer, '#pointer-target');
+  await user.bringToFront();
+  await user.waitForSelector(`[data-viewer="${originalViewer.id}"] agui-icon`);
+  await user.$eval('#pointer-target', (element) => { element.textContent = 'Updated with drawing disabled'; });
+  await viewer.bringToFront();
+  await viewer.waitForFunction(() => {
+    let frame = /** @type {HTMLIFrameElement} */ (document.getElementById('agui-viewer'));
+    return frame.contentDocument?.getElementById('pointer-target')?.textContent === 'Updated with drawing disabled';
+  });
+  assert.equal(await viewer.$eval(toggleSelector, (element) => Reflect.get(element, 'checked')), false, 'Snapshots preserve the disabled mode.');
+  await viewer.click('agui-data-toolbar .agui-data-trigger');
+  await viewer.click(toggleSelector);
   await viewer.click('agui-data-toolbar .agui-data-trigger');
   let start = Math.max(0, ...Array.from(pages.shared.annotations.strokes.values(), (stroke) => stroke.startSequence));
   await syntheticStroke(viewer, 'touch');
@@ -190,6 +205,25 @@ test('viewer drawing stays transient, survives snapshots, replays to late arriva
     let packets = /** @type {import('../../types/transport.js').AnnotationServerMessage[]} */ (Reflect.get(window, 'annotationPackets'));
     return packets.some((entry) => entry.action === 'stroke' && entry.stroke.startSequence > start && entry.stroke.ended);
   }, {}, start);
+  start = Math.max(...Array.from(pages.shared.annotations.strokes.values(), (stroke) => stroke.startSequence));
+  await hoverMirror(viewer, '#pointer-target');
+  await viewer.mouse.down();
+  await viewer.mouse.move(point.x + 20, point.y);
+  await viewer.waitForFunction((start) => {
+    let packets = /** @type {import('../../types/transport.js').AnnotationServerMessage[]} */ (Reflect.get(window, 'annotationPackets'));
+    return packets.some((entry) => entry.action === 'stroke' && entry.stroke.startSequence > start && !entry.stroke.ended);
+  }, {}, start);
+  // Toggle through the native control while the mouse is still held down.
+  await viewer.$eval(toggleSelector, (element) => /** @type {HTMLInputElement} */ (element).click());
+  await viewer.waitForFunction((start) => {
+    let packets = /** @type {import('../../types/transport.js').AnnotationServerMessage[]} */ (Reflect.get(window, 'annotationPackets'));
+    return packets.some((entry) => entry.action === 'stroke' && entry.stroke.startSequence > start && entry.stroke.ended);
+  }, {}, start);
+  previous = new Set(pages.shared.annotations.strokes.keys());
+  await viewer.mouse.move(point.x + 40, point.y);
+  await viewer.mouse.up();
+  await viewer.evaluate(() => new Promise((resolve) => setTimeout(resolve, 100)));
+  assert.equal(Array.from(pages.shared.annotations.strokes.keys()).some((id) => !previous.has(id)), false, 'Disabling ends the active stroke and does not resume it while the pointer stays held.');
   await user.bringToFront();
   assert.equal(await user.$eval('#notes input', (element) => Reflect.get(element, 'value')), 'Preserve this value');
   assert.equal(await viewer.evaluate(() => {

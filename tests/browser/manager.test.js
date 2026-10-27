@@ -160,8 +160,25 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.click('#session-views [role="tab"][value="table"]');
   await page.click('#manager-table tr[data-row-id="desk"] td[data-column="id"]');
   await page.waitForSelector('#session-inspector [data-session="desk"]');
+  await page.evaluate(() => {
+    let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
+    let connection = owner.connection;
+    if (!connection) { throw new Error('Expected a connected manager.'); }
+    let request = connection.request.bind(connection);
+    let gate = new Promise((resolve) => { Reflect.set(window, 'releaseManagerStart', resolve); });
+    connection.request = async (operation, options) => {
+      if (operation === 'start') { await gate; }
+      return request(operation, options);
+    };
+  });
   await page.locator('#session-inspector ::-p-aria([name="Start"][role="button"])').click();
+  assert.equal(await page.$eval('#session-inspector button.agui-button-primary', (button) => button.getAttribute('aria-busy')), 'true');
+  assert.ok(await page.$('#session-inspector button[aria-busy="true"] > agui-preloader[aria-hidden="true"]'));
+  assert.equal(await page.$eval('#session-inspector button[aria-busy="true"]', (button) => button.lastChild?.textContent?.trim()), 'Start');
+  assert.equal(await page.$$eval('#session-inspector button[aria-busy="true"]', (buttons) => buttons.length), 1);
+  await page.evaluate(() => Reflect.get(window, 'releaseManagerStart')());
   await notice(page, 'start completed');
+  await page.waitForFunction(() => !document.querySelector('#session-inspector button[aria-busy="true"]'));
   assert.equal(await page.$eval('#manager-table input[type="radio"]', (element) => element.checked), true, 'Snapshot refresh preserves the selected session.');
   await page.click('#session-views [role="tab"][value="cards"]');
   await page.waitForFunction(() => document.querySelector('.counts')?.textContent?.includes('1 running'));
@@ -187,6 +204,7 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await fixture.setMode('fail');
   await action(page, 'Attach tunnel');
   await notice(page, 'Expected tunnel fixture failure');
+  await page.waitForFunction(() => !document.querySelector('#session-inspector button[aria-busy="true"]'));
   await page.locator('#session-inspector [data-session="desk"] ::-p-aria([name="Retry tunnel"][role="button"])').filter((button) => !button.hasAttribute('disabled')).wait();
   assert.equal((await cli('status', 'desk')).pid, pid);
   await fixture.setMode('ready');
@@ -232,6 +250,7 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   page.once('dialog', (dialog) => { void dialog.accept(); });
   await action(page, 'Renew tunnel');
   await notice(page, 'outcome may be unknown');
+  await page.waitForFunction(() => !document.querySelector('#session-inspector button[aria-busy="true"]'));
   await page.waitForSelector('button[aria-label="Public link"][title*="reconnected-manager.trycloudflare.com"]');
   assert.equal((await fixture.pids()).length, connectors + 1, 'A disconnected renewal is accepted once and never replayed.');
   if (process.env.AGUI_MANAGER_SCREENSHOT) {

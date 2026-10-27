@@ -21,6 +21,15 @@
     --agui-sidebar-width: 19rem;
     --agui-table-height: 55dvh;
   }
+  button > agui-preloader {
+    display: none;
+  }
+  button[aria-busy='true'] > agui-preloader {
+    display: inline-flex;
+  }
+  button[aria-busy='true'] > agui-icon {
+    display: none;
+  }
   .manager-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));

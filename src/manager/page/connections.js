@@ -1,3 +1,5 @@
+import { busyAction } from './busy-action.js';
+
 export let CONNECTIONS_STATE = {
   liveConnectionRows: {},
   connectionsMessage: 'Open Connections to inspect all running projects.',
@@ -73,18 +75,18 @@ export class LiveConnections {
         publicDisabled: disabled || !entry.tunnel,
         tunnelDisabled: disabled || !entry.tunnel,
         stopDisabled: disabled || !entry.tunnel || !entry.manageable,
-        openPublic: () => { void this.open(entry.sessionId, entry.project.id, false, entry.instanceId); },
-        openViewer: () => { void this.open(entry.sessionId, entry.project.id, true, entry.instanceId); },
-        check: () => { void this.run('connection tunnel check', entry); },
-        renew: () => { void this.run('connection tunnel renew', entry); },
-        stop: () => { void this.run('stop tunnel', entry); },
+        openPublic: busyAction(() => this.open(entry.sessionId, entry.project.id, false, entry.instanceId)),
+        openViewer: busyAction(() => this.open(entry.sessionId, entry.project.id, true, entry.instanceId)),
+        check: busyAction(() => this.run('connection tunnel check', entry)),
+        renew: busyAction(() => this.run('connection tunnel renew', entry)),
+        stop: busyAction(() => this.run('stop tunnel', entry)),
         pages: entry.pages.map((page) => ({
           id: page.pageId,
           title: page.title,
           url: page.url,
           details: `${page.role || 'interactive local'} / ${page.ready ? 'ready' : 'loading'}${page.connectedAt ? ` / connected ${new Date(page.connectedAt).toLocaleTimeString()}` : ''}`,
           disabled: disabled || !entry.manageable,
-          disconnect: () => { void this.run('disconnect page', entry, page.pageId); },
+          disconnect: busyAction(() => this.run('disconnect page', entry, page.pageId)),
         })),
       },
     ]));

@@ -23,9 +23,9 @@
             <agui-select id="manager-project-switcher" label="Connected project" name="project" placeholder="Choose a project"
               pub-to="MANAGER/projectChoice" bind="$.value: MANAGER/projectChoice; $.options: MANAGER/projectOptions; $.disabled: MANAGER/projectsDisabled"></agui-select>
             <agui-toolbar class="grid grid-cols-1" aria-label="Project navigation">
-              <button id="manager-switch-project" type="button" class="agui-button-primary" bind="onclick: MANAGER/switchProject; disabled: MANAGER/projectSwitchDisabled"><agui-icon name="arrow_forward"></agui-icon>Switch</button>
-              <button id="manager-open-project" type="button" bind="onclick: MANAGER/openProjectFolder; disabled: MANAGER/projectOpenDisabled"><agui-icon name="open_in_new"></agui-icon>Open folder</button>
-              <button type="button" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-icon name="home"></agui-icon>Manage projects</button>
+              <button id="manager-switch-project" type="button" class="agui-button-primary" bind="onclick: MANAGER/switchProject; disabled: MANAGER/projectSwitchDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="arrow_forward"></agui-icon>Switch</button>
+              <button id="manager-open-project" type="button" bind="onclick: MANAGER/openProjectFolder; disabled: MANAGER/projectOpenDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="open_in_new"></agui-icon>Open folder</button>
+              <button type="button" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="home"></agui-icon>Manage projects</button>
             </agui-toolbar>
             <p class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/projectError"></p>
           </agui-panel>
@@ -39,7 +39,7 @@
             <agui-select label="All sessions in this scope" name="operation" pub-to="MANAGER/bulkOperation" bind="$.options: MANAGER/bulkOptions; $.value: MANAGER/bulkOperation; $.disabled: MANAGER/controlsDisabled"></agui-select>
             <p class="text-xs text-agui-muted">Applies to the entire folder, including sessions hidden by filters.</p>
             <agui-toolbar class="bulk" aria-label="Bulk session actions">
-              <button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; disabled: MANAGER/controlsDisabled"><agui-icon name="check"></agui-icon>Apply to all</button>
+              <button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; disabled: MANAGER/controlsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="check"></agui-icon>Apply to all</button>
             </agui-toolbar>
           </section>
         </div>
@@ -50,9 +50,9 @@
             <h1 class="flex items-center gap-2"><agui-icon name="dashboard"></agui-icon>AGUI Manager</h1>
             <agui-toolbar class="toolbar" aria-label="Manager controls">
               <agui-theme-toggle id="manager-theme" ctx="MANAGER" aria-label="Dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
-              <button type="button" class="agui-button-icon" aria-label="Refresh" title="Refresh" bind="onclick: MANAGER/refresh; disabled: MANAGER/refreshDisabled"><agui-icon name="refresh"></agui-icon></button>
-              <button type="button" class="agui-button-icon" aria-label="Projects" title="Projects" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-icon name="home"></agui-icon></button>
-              <button type="button" class="agui-button-icon" aria-label="Transfers" title="Transfers" bind="onclick: MANAGER/showTransfers; disabled: MANAGER/refreshDisabled"><agui-icon name="content_copy"></agui-icon></button>
+              <button type="button" class="agui-button-icon" aria-label="Refresh" title="Refresh" bind="onclick: MANAGER/refresh; disabled: MANAGER/refreshDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="refresh"></agui-icon></button>
+              <button type="button" class="agui-button-icon" aria-label="Projects" title="Projects" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="home"></agui-icon></button>
+              <button type="button" class="agui-button-icon" aria-label="Transfers" title="Transfers" bind="onclick: MANAGER/showTransfers; disabled: MANAGER/refreshDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="content_copy"></agui-icon></button>
               <button type="button" class="agui-button-icon" aria-label="Settings" title="Settings" bind="onclick: MANAGER/openSettings"><agui-icon name="settings"></agui-icon></button>
             </agui-toolbar>
           </agui-header>
@@ -89,12 +89,12 @@
                     <h3 class="text-lg font-medium">Project explorer</h3>
                     <p class="text-xs text-agui-muted">Read-only files from the current project. Source files are displayed as text.</p>
                     <agui-toolbar aria-label="Explorer controls">
-                      <button type="button" bind="onclick: MANAGER/explorerRefresh; disabled: MANAGER/explorerDisabled"><agui-icon name="refresh"></agui-icon>Refresh files</button>
+                      <button type="button" bind="onclick: MANAGER/explorerRefresh; disabled: MANAGER/explorerDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="refresh"></agui-icon>Refresh files</button>
                       <agui-toggle label="Show hidden files and dependencies" name="explorerHidden" pub-to="MANAGER/explorerHidden" bind="$.value: MANAGER/explorerHidden; $.disabled: MANAGER/explorerDisabled"></agui-toggle>
                     </agui-toolbar>
                     <nav aria-label="Project breadcrumbs" class="flex flex-wrap gap-2" itemize="MANAGER/explorerBreadcrumbs">
                       <template>
-                        <button type="button" bind="textContent: label; onclick: invoke; disabled: disabled"></button>
+                        <button type="button" bind="onclick: invoke; disabled: disabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><span bind="textContent: label"></span></button>
                       </template>
                     </nav>
                   </div>
@@ -105,7 +105,7 @@
                       <div id="explorer-entries" class="grid min-w-0 gap-1" role="list" aria-label="Project files" itemize="MANAGER/explorerRows">
                         <template>
                           <div role="listitem" class="grid min-w-0 gap-1" bind="style.paddingInlineStart: indent; @data-entry: path">
-                            <button type="button" class="w-full justify-start" bind="onclick: invoke; disabled: disabled; ariaExpanded: expanded; ariaCurrent: selected; @aria-label: actionLabel; @title: path">
+                            <button type="button" class="w-full justify-start" bind="onclick: invoke; disabled: disabled; ariaExpanded: expanded; ariaCurrent: selected; @aria-label: actionLabel; @title: path"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>
                               <agui-icon bind="@name: icon"></agui-icon><span class="truncate" bind="textContent: label"></span>
                             </button>
                             <p class="break-words text-xs text-agui-danger empty:hidden" bind="textContent: issue"></p>
@@ -136,7 +136,7 @@
             <div class="grid gap-5">
               <section class="grid gap-3" aria-label="Connect a project">
                 <agui-toolbar aria-label="Choose a project folder">
-                  <button id="manager-choose-project" type="button" class="agui-button-primary" bind="onclick: MANAGER/chooseProject; disabled: MANAGER/projectsDisabled"><agui-icon name="add"></agui-icon>Choose folder</button>
+                  <button id="manager-choose-project" type="button" class="agui-button-primary" bind="onclick: MANAGER/chooseProject; disabled: MANAGER/projectsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="add"></agui-icon>Choose folder</button>
                 </agui-toolbar>
                 <p class="text-xs text-agui-muted">Choose an existing AGUI folder on the computer running AGUI. Connecting does not change save-folder configuration.</p>
                 <details bind="open: MANAGER/projectPathOpen">
@@ -146,7 +146,7 @@
                       pub-to="MANAGER/projectFolder" bind="$.value: MANAGER/projectFolder; $.disabled: MANAGER/projectsDisabled"></agui-field>
                     <p class="text-xs text-agui-muted">Relative paths use the manager's launch directory.</p>
                     <agui-toolbar aria-label="Connect by folder path">
-                      <button type="submit" bind="disabled: MANAGER/projectsDisabled"><agui-icon name="add"></agui-icon>Connect project</button>
+                      <button type="submit" bind="disabled: MANAGER/projectsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="add"></agui-icon>Connect project</button>
                     </agui-toolbar>
                   </form>
                 </details>
@@ -166,9 +166,9 @@
                       <p class="text-xs text-agui-muted">{{lastUsed}}</p>
                       <p class="break-words text-sm text-agui-danger empty:hidden">{{error}}</p>
                       <agui-toolbar aria-label="Project actions">
-                        <button type="button" bind="onclick: ^switchProject; disabled: ^switchDisabled"><agui-icon name="arrow_forward"></agui-icon>Switch</button>
-                        <button type="button" bind="onclick: ^openFolder; disabled: ^openDisabled"><agui-icon name="open_in_new"></agui-icon>Open folder</button>
-                        <button type="button" bind="onclick: ^forgetProject; disabled: ^forgetDisabled"><agui-icon name="close"></agui-icon>Forget connection</button>
+                        <button type="button" bind="onclick: ^switchProject; disabled: ^switchDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="arrow_forward"></agui-icon>Switch</button>
+                        <button type="button" bind="onclick: ^openFolder; disabled: ^openDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="open_in_new"></agui-icon>Open folder</button>
+                        <button type="button" bind="onclick: ^forgetProject; disabled: ^forgetDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="close"></agui-icon>Forget connection</button>
                       </agui-toolbar>
                     </section>
                   </template>
@@ -183,8 +183,8 @@
             <p class="break-words text-xs text-agui-muted">{{MANAGER/storageHint}}</p>
             <p class="break-all text-xs text-agui-muted">{{MANAGER/storageContext}}</p>
             <agui-toolbar aria-label="AGUI folder settings">
-              <button type="button" class="agui-button-primary" bind="onclick: MANAGER/saveStorage; disabled: MANAGER/storageDisabled"><agui-icon name="save"></agui-icon>Save folder and open</button>
-              <button type="button" bind="onclick: MANAGER/resetStorage; disabled: MANAGER/storageDisabled"><agui-icon name="home"></agui-icon>Use default cache</button>
+              <button type="button" class="agui-button-primary" bind="onclick: MANAGER/saveStorage; disabled: MANAGER/storageDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="save"></agui-icon>Save folder and open</button>
+              <button type="button" bind="onclick: MANAGER/resetStorage; disabled: MANAGER/storageDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="home"></agui-icon>Use default cache</button>
             </agui-toolbar>
           </agui-dialog>
           <agui-dialog id="manager-description" label="Session description" close-label="Close description" pub-to="MANAGER/descriptionOpen" bind="$.value: MANAGER/descriptionOpen">
@@ -203,9 +203,9 @@
               <p id="feedback-error" class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/feedbackError"></p>
               <p id="feedback-message" class="text-sm empty:hidden" role="status" bind="textContent: MANAGER/feedbackMessage"></p>
               <agui-toolbar aria-label="Feedback settings actions">
-                <button id="feedback-save" type="submit" class="agui-button-primary" bind="disabled: MANAGER/feedbackDisabled"><agui-icon name="save"></agui-icon>Save command</button>
-                <button id="feedback-disable" type="button" bind="onclick: MANAGER/disableFeedback; disabled: MANAGER/feedbackDisableDisabled">Disable feedback</button>
-                <button id="feedback-refresh" type="button" bind="onclick: MANAGER/refreshFeedback; disabled: MANAGER/controlsDisabled"><agui-icon name="refresh"></agui-icon>Refresh</button>
+                <button id="feedback-save" type="submit" class="agui-button-primary" bind="disabled: MANAGER/feedbackDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="save"></agui-icon>Save command</button>
+                <button id="feedback-disable" type="button" bind="onclick: MANAGER/disableFeedback; disabled: MANAGER/feedbackDisableDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Disable feedback</button>
+                <button id="feedback-refresh" type="button" bind="onclick: MANAGER/refreshFeedback; disabled: MANAGER/controlsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="refresh"></agui-icon>Refresh</button>
               </agui-toolbar>
             </form>
           </agui-dialog>
@@ -227,9 +227,9 @@
               <p id="transfer-error" class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/transferError"></p>
               <p id="transfer-message" class="break-all text-sm empty:hidden" role="status" bind="textContent: MANAGER/transferMessage"></p>
               <agui-toolbar aria-label="Transfer actions">
-                <button type="submit" class="agui-button-primary" bind="textContent: MANAGER/transferTitle; disabled: MANAGER/transferDisabled"></button>
-                <button id="transfer-open-destination" type="button" bind="hidden: MANAGER/transferIsRename; onclick: MANAGER/openTransferDestination; disabled: MANAGER/transferDestinationDisabled">Open destination project</button>
-                <button type="button" bind="onclick: MANAGER/showTransfers">Review transfers</button>
+                <button type="submit" class="agui-button-primary" bind="disabled: MANAGER/transferDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><span bind="textContent: MANAGER/transferTitle"></span></button>
+                <button id="transfer-open-destination" type="button" bind="hidden: MANAGER/transferIsRename; onclick: MANAGER/openTransferDestination; disabled: MANAGER/transferDestinationDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Open destination project</button>
+                <button type="button" bind="onclick: MANAGER/showTransfers"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Review transfers</button>
               </agui-toolbar>
             </form>
           </agui-dialog>
@@ -245,7 +245,7 @@
                     <p class="break-all text-xs text-agui-muted" bind="textContent: receipt"></p>
                     <p class="break-all text-xs text-agui-muted empty:hidden" bind="textContent: backup"></p>
                     <p class="break-words text-sm text-agui-danger empty:hidden" bind="textContent: error"></p>
-                    <button type="button" bind="onclick: recover; disabled: recoverDisabled">Recover incomplete transfer</button>
+                    <button type="button" bind="onclick: recover; disabled: recoverDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Recover incomplete transfer</button>
                   </section>
                 </template>
               </div>

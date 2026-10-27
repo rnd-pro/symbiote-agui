@@ -1,4 +1,5 @@
 import { highlightSourcePreview } from './source-preview.js';
+import { busyAction } from './busy-action.js';
 
 export let EXPLORER_STATE = {
   workspaceView: 'table',
@@ -90,7 +91,7 @@ export class ProjectExplorer {
     this.directoryPath = '';
     this.clearPreview();
     this.render();
-    if (this.active && this.projectId && this.owner.connection?.ready) { void this.load(''); }
+    if (this.active && this.projectId && this.owner.connection?.ready) { return this.load(''); }
   }
 
   clearPreview() {
@@ -160,23 +161,23 @@ export class ProjectExplorer {
   }
 
   /** @param {string} path */
-  toggle(path) {
+  async toggle(path) {
     let node = this.directories.get(path);
     if (node?.expanded) { node.expanded = false; }
     else {
       if (node) { node.expanded = true; }
       this.directoryPath = path;
-      if (!node?.loaded) { void this.load(path); }
+      if (!node?.loaded) { await this.load(path); }
     }
     this.render();
   }
 
   /** @param {string} path */
-  reveal(path) {
+  async reveal(path) {
     this.directoryPath = path;
     let node = this.directories.get(path);
     if (node) { node.expanded = true; }
-    if (!node?.loaded) { void this.load(path); }
+    if (!node?.loaded) { await this.load(path); }
     this.render();
   }
 
@@ -250,7 +251,7 @@ export class ProjectExplorer {
             icon: folder ? child?.expanded ? 'expand_more' : 'chevron_right' : 'info',
             disabled: disabled || entry.kind === 'unavailable',
             issue: entry.error || '',
-            invoke: () => { if (folder) { this.toggle(entry.path); } else { void this.preview(entry.path); } },
+            invoke: busyAction(() => folder ? this.toggle(entry.path) : this.preview(entry.path)),
           },
         ]);
         if (child?.expanded) { append(child, depth + 1); }
@@ -269,7 +270,7 @@ export class ProjectExplorer {
             icon: node.error ? 'refresh' : 'more_horiz',
             disabled: disabled || node.loading || !node.error && node.nextOffset === undefined,
             issue: '',
-            invoke: () => { void this.load(node.path, node.nextOffset ?? 0); },
+            invoke: busyAction(() => this.load(node.path, node.nextOffset ?? 0)),
           },
         ]);
       }
@@ -288,7 +289,7 @@ export class ProjectExplorer {
           {
             label: String(this.owner.$.projectName),
             disabled,
-            invoke: () => this.reveal(''),
+            invoke: busyAction(() => this.reveal('')),
           },
         ],
         ...parts.map((label, index) => [
@@ -296,7 +297,7 @@ export class ProjectExplorer {
           {
             label,
             disabled,
-            invoke: () => this.reveal(parts.slice(0, index + 1).join('/')),
+            invoke: busyAction(() => this.reveal(parts.slice(0, index + 1).join('/'))),
           },
         ]),
       ]),

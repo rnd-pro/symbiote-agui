@@ -1,3 +1,5 @@
+import { busyAction } from './busy-action.js';
+
 export let TRANSFER_STATE = {
   transferOpen: false,
   transferTitle: '',
@@ -103,7 +105,7 @@ export class SessionTransfers {
           backup: entry.kind === 'move' ? `Source backup: ${entry.backupPath}` : '',
           error: entry.error || '',
           recoverDisabled: disabled || !entry.recoveryRequired,
-          recover: () => { void this.recover(entry.id); },
+          recover: busyAction(() => this.recover(entry.id)),
         },
       ])),
       transferRecoveryNotice: this.history.some((entry) => entry.recoveryRequired) ? 'A transfer needs recovery. Open Transfers to review it.' : '',
@@ -167,7 +169,7 @@ export class SessionTransfers {
 
   showHistory() {
     this.owner.$.transferHistoryOpen = true;
-    void this.refreshHistory();
+    return this.refreshHistory();
   }
 
   async refreshHistory() {

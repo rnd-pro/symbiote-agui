@@ -1,4 +1,5 @@
 import { sessionStatus } from './view.js';
+import { busyAction } from './busy-action.js';
 
 export let SESSION_STATE = {
   sessionId: '',
@@ -48,8 +49,8 @@ export let SESSION_STATE = {
 /**
  * @param {import('../../../types/manager.js').ManagerSession} row
  * @param {boolean} disabled
- * @param {(operation: import('../../../types/manager.js').ManagerOperation, sessionId: string) => void} act
- * @param {(viewer: boolean) => void} open
+ * @param {(operation: import('../../../types/manager.js').ManagerOperation, sessionId: string) => Promise<void>} act
+ * @param {(viewer: boolean) => Promise<void> | undefined} open
  */
 export function rowState(row, disabled, act, open) {
   let active = row.active === true;
@@ -76,8 +77,8 @@ export function rowState(row, disabled, act, open) {
     noLocal: !row.url || !active,
     noPublic: !row.tunnel || !active,
     publicDisabled: disabled || !row.tunnel || !active || unknown,
-    openPublic: () => open(false),
-    openViewer: () => open(true),
+    openPublic: busyAction(() => open(false)),
+    openViewer: busyAction(() => open(true)),
     startDisabled: disabled || active || unknown,
     stopDisabled: disabled || !active || unknown,
     syncDisabled: disabled || !active || !saved || unknown,
@@ -91,17 +92,17 @@ export function rowState(row, disabled, act, open) {
     moveDisabled: disabled || !saved || active || unknown,
     renameDisabled: disabled || !saved || active || unknown,
     feedbackDisabled: disabled || !active || unknown,
-    start: () => act('start', row.sessionId),
-    stop: () => act('stop', row.sessionId),
-    sync: () => act('sync', row.sessionId),
-    clear: () => act('clear', row.sessionId),
-    share: () => act('share', row.sessionId),
-    check: () => act('tunnel check', row.sessionId),
-    renew: () => act('tunnel renew', row.sessionId),
-    describe: () => act('describe', row.sessionId),
+    start: busyAction(() => act('start', row.sessionId)),
+    stop: busyAction(() => act('stop', row.sessionId)),
+    sync: busyAction(() => act('sync', row.sessionId)),
+    clear: busyAction(() => act('clear', row.sessionId)),
+    share: busyAction(() => act('share', row.sessionId)),
+    check: busyAction(() => act('tunnel check', row.sessionId)),
+    renew: busyAction(() => act('tunnel renew', row.sessionId)),
+    describe: busyAction(() => act('describe', row.sessionId)),
     copy: () => act('copy session', row.sessionId),
     move: () => act('move session', row.sessionId),
     rename: () => act('rename session', row.sessionId),
-    feedback: () => act('feedback settings', row.sessionId),
+    feedback: busyAction(() => act('feedback settings', row.sessionId)),
   };
 }

@@ -3,7 +3,7 @@ import { html } from '@symbiotejs/symbiote/core/html.js';
 export let CONNECTIONS_TEMPLATE = html`
   <section class="grid min-w-0 gap-4" aria-label="All project connections">
     <agui-toolbar aria-label="Connection discovery">
-      <button type="button" bind="onclick: MANAGER/refreshConnections; disabled: MANAGER/connectionsDisabled"><agui-icon name="refresh"></agui-icon>Refresh connections</button>
+      <button type="button" bind="onclick: MANAGER/refreshConnections; disabled: MANAGER/connectionsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="refresh"></agui-icon>Refresh connections</button>
     </agui-toolbar>
     <p class="text-sm text-agui-muted" role="status" bind="textContent: MANAGER/connectionsMessage"></p>
     <p class="whitespace-pre-wrap break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/connectionsError"></p>
@@ -19,11 +19,11 @@ export let CONNECTIONS_TEMPLATE = html`
           </div>
           <agui-toolbar aria-label="Session connection actions">
             <a class="agui-button no-underline" target="_blank" rel="noopener noreferrer" bind="href: ^url; hidden: ^noLocal"><agui-icon name="open_in_new"></agui-icon>Local</a>
-            <button type="button" bind="onclick: ^openPublic; disabled: ^publicDisabled">Public</button>
-            <button type="button" bind="onclick: ^openViewer; disabled: ^publicDisabled">Viewer</button>
-            <button type="button" bind="onclick: ^check; disabled: ^tunnelDisabled">Check tunnel</button>
-            <button type="button" bind="onclick: ^renew; disabled: ^tunnelDisabled">Renew tunnel</button>
-            <button type="button" class="agui-button-danger" bind="onclick: ^stop; disabled: ^stopDisabled">Stop tunnel</button>
+            <button type="button" bind="onclick: ^openPublic; disabled: ^publicDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Public</button>
+            <button type="button" bind="onclick: ^openViewer; disabled: ^publicDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Viewer</button>
+            <button type="button" bind="onclick: ^check; disabled: ^tunnelDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Check tunnel</button>
+            <button type="button" bind="onclick: ^renew; disabled: ^tunnelDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Renew tunnel</button>
+            <button type="button" class="agui-button-danger" bind="onclick: ^stop; disabled: ^stopDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Stop tunnel</button>
           </agui-toolbar>
           <div class="grid gap-2" itemize="^pages">
             <template>
@@ -32,7 +32,7 @@ export let CONNECTIONS_TEMPLATE = html`
                 <p class="text-xs text-agui-muted">{{details}}</p>
                 <p class="break-all text-xs">{{url}}</p>
                 <agui-toolbar aria-label="Browser connection actions">
-                  <button type="button" bind="onclick: ^disconnect; disabled: ^disabled"><agui-icon name="close"></agui-icon>Disconnect browser</button>
+                  <button type="button" bind="onclick: ^disconnect; disabled: ^disabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="close"></agui-icon>Disconnect browser</button>
                 </agui-toolbar>
               </section>
             </template>

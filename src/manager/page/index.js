@@ -15,6 +15,7 @@ import { EXPLORER_STATE, ProjectExplorer } from './explorer.js';
 import { TRANSFER_STATE, SessionTransfers } from './transfers.js';
 import { FEEDBACK_SETTINGS_STATE, SessionFeedbackSettings } from './feedback.js';
 import { CONNECTIONS_STATE, LiveConnections } from './connections.js';
+import { busyAction } from './busy-action.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
@@ -25,7 +26,7 @@ export class SessionManager extends ContextProvider {
     ...TRANSFER_STATE,
     ...FEEDBACK_SETTINGS_STATE,
     ...CONNECTIONS_STATE,
-    refreshConnections: () => { void this.liveConnections?.refresh(); },
+    refreshConnections: busyAction(() => this.liveConnections?.refresh()),
     connection: 'Connecting...',
     connectionTone: 'info',
     scope: '',
@@ -58,22 +59,22 @@ export class SessionManager extends ContextProvider {
     description: '',
     descriptionTexts: DESCRIPTION_TEXTS,
     descriptionExtensions: false,
-    explorerRefresh: () => this.explorer?.reload(),
-    showTransfers: () => this.transfers?.showHistory(),
-    submitTransfer: (/** @type {Event} */ event) => { event.preventDefault(); void this.transfers?.submit(); },
-    openTransferDestination: () => { void this.transfers?.openDestination(); },
+    explorerRefresh: busyAction(() => this.explorer?.reload()),
+    showTransfers: busyAction(() => this.transfers?.showHistory()),
+    submitTransfer: busyAction((event) => { event.preventDefault(); return this.transfers?.submit(); }),
+    openTransferDestination: busyAction(() => this.transfers?.openDestination()),
     openSettings: () => { this.$.settingsOpen = true; },
-    saveFeedback: (/** @type {Event} */ event) => this.feedbackSettings?.submit(event),
-    disableFeedback: (/** @type {Event} */ event) => this.feedbackSettings?.submit(event, true),
-    refreshFeedback: () => { void this.feedbackSettings?.run('feedback settings'); },
-    openProjects: () => this.projects?.open(),
-    switchProject: () => { void this.projects?.run('switch project', String(this.$.projectChoice)); },
-    openProjectFolder: () => { void this.projects?.run('open folder', String(this.$.projectChoice)); },
-    connectProject: (/** @type {Event} */ event) => {
+    saveFeedback: busyAction((event) => this.feedbackSettings?.submit(event)),
+    disableFeedback: busyAction((event) => this.feedbackSettings?.submit(event, true)),
+    refreshFeedback: busyAction(() => this.feedbackSettings?.run('feedback settings')),
+    openProjects: busyAction(() => this.projects?.open()),
+    switchProject: busyAction(() => this.projects?.run('switch project', String(this.$.projectChoice))),
+    openProjectFolder: busyAction(() => this.projects?.run('open folder', String(this.$.projectChoice))),
+    connectProject: busyAction((event) => {
       event.preventDefault();
-      void this.projects?.run('connect project');
-    },
-    chooseProject: () => { void this.projects?.run('choose project'); },
+      return this.projects?.run('connect project');
+    }),
+    chooseProject: busyAction(() => this.projects?.run('choose project')),
     bulkOptions: BULK_OPTIONS,
     query: '',
     bulkOperation: 'start',
@@ -81,12 +82,13 @@ export class SessionManager extends ContextProvider {
     storageHint: 'Loading save-folder settings...',
     storageContext: '',
     storageDisabled: true,
-    saveStorage: () => { void this.saveStorage(); },
-    resetStorage: () => { void this.saveStorage(true); },
-    refresh: () => { void this.refresh(); if (this.$.workspaceView === 'explorer') { this.explorer?.reload(); } },
-    bulk: () => {
-      void this.act(/** @type {import('../../../types/manager.js').ManagerOperation} */ (this.$.bulkOperation));
-    },
+    saveStorage: busyAction(() => this.saveStorage()),
+    resetStorage: busyAction(() => this.saveStorage(true)),
+    refresh: busyAction(() => Promise.all([
+      this.refresh(),
+      this.$.workspaceView === 'explorer' ? this.explorer?.reload() : undefined,
+    ])),
+    bulk: busyAction(() => this.act(/** @type {import('../../../types/manager.js').ManagerOperation} */ (this.$.bulkOperation))),
   };
   /** @type {import('../../../types/manager.js').ManagerSnapshot | undefined} */
   snapshot;
@@ -210,8 +212,8 @@ export class SessionManager extends ContextProvider {
     this.$.counts = `${sessions.length} total / ${sessions.filter((row) => row.active === true).length} running / ${sessions.filter((row) => row.active === false).length} stopped / ${sessions.filter((row) => row.active === null).length} unknown`;
     let states = Object.fromEntries(sessions.map((row) => [
       row.sessionId,
-      rowState(row, disabled, (operation, id) => { void this.act(operation, id); }, (viewer) => {
-        void this.liveConnections?.open(row.sessionId, this.connection?.projectId || 'default', viewer, row.instanceId);
+      rowState(row, disabled, (operation, id) => this.act(operation, id), (viewer) => {
+        return this.liveConnections?.open(row.sessionId, this.connection?.projectId || 'default', viewer, row.instanceId);
       }),
     ]));
     let selected = /** @type {string[]} */ (this.$.selection)[0];
@@ -315,7 +317,7 @@ export class SessionManager extends ContextProvider {
   async act(operation, sessionId) {
     if (this.busy || !this.connection?.ready) { return; }
     if (operation === 'feedback settings') {
-      this.feedbackSettings?.open(sessionId || '');
+      await this.feedbackSettings?.open(sessionId || '');
       return;
     }
     let transferKinds = /** @type {const} */ ({

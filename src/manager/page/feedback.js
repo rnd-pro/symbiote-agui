@@ -40,7 +40,7 @@ export class SessionFeedbackSettings {
       feedbackMessage: '',
       feedbackError: '',
     });
-    void this.run('feedback settings');
+    return this.run('feedback settings');
   }
 
   render() {
@@ -64,7 +64,7 @@ export class SessionFeedbackSettings {
       || this.owner.$.feedbackDisabled || (disable && this.owner.$.feedbackDisableDisabled)) { return; }
     let form = document.getElementById('manager-feedback-form');
     if (!disable && form instanceof HTMLFormElement && !form.reportValidity()) { return; }
-    void this.run(disable ? 'feedback disable' : 'feedback configure');
+    return this.run(disable ? 'feedback disable' : 'feedback configure');
   }
 
   /** @param {'feedback settings' | 'feedback configure' | 'feedback disable'} operation */

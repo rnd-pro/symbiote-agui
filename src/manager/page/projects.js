@@ -1,3 +1,5 @@
+import { busyAction } from './busy-action.js';
+
 export let PROJECT_STATE = {
   projectsOpen: false,
   projectFolder: '',
@@ -68,9 +70,9 @@ export class ProjectNavigation {
           switchDisabled: disabled || !entry.available || entry.id === currentId,
           openDisabled: disabled || !entry.available,
           forgetDisabled: disabled || entry.id === 'default' || entry.id === currentId,
-          switchProject: () => { void this.run('switch project', entry.id, currentId); },
-          openFolder: () => { void this.run('open folder', entry.id, currentId); },
-          forgetProject: () => { void this.run('forget project', entry.id, currentId); },
+          switchProject: busyAction(() => this.run('switch project', entry.id, currentId)),
+          openFolder: busyAction(() => this.run('open folder', entry.id, currentId)),
+          forgetProject: busyAction(() => this.run('forget project', entry.id, currentId)),
         },
       ])),
     });
@@ -96,7 +98,7 @@ export class ProjectNavigation {
 
   open() {
     this.owner.$.projectsOpen = true;
-    void this.refresh();
+    return this.refresh();
   }
 
   /**
@@ -160,7 +162,7 @@ export class ProjectNavigation {
         owner.busy = false;
         owner.renderRows();
         await this.refresh();
-        void owner.refresh();
+        await owner.refresh();
       }
     }
   }

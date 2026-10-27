@@ -99,6 +99,8 @@ export class DataToolbar extends UiComponent {
     statusMessages: {},
     notifications: {},
     actionsLabel: '',
+    drawingLabel: '',
+    drawingHidden: true,
     saveLabel: '',
     cancelLabel: '',
     importLabel: '',
@@ -170,6 +172,7 @@ export class DataToolbar extends UiComponent {
     for (let property of [
       'AGUI_SESSION/role',
       'AGUI_SESSION/connected',
+      'AGUI_SESSION/annotationAvailable',
       'AGUI_SESSION/information',
       'AGUI_SESSION/informationState',
       'AGUI_DATA/current',

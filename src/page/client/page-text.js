@@ -33,6 +33,7 @@ export let dataToolbarTexts = Object.freeze({
   connected: 'Connected',
   disconnected: 'Disconnected',
   readonly: 'Read-only',
+  drawing: 'Draw with touch or pen',
   dirty: 'Unsaved changes',
   clean: 'No unsaved changes',
   saving: 'Saving locally...',

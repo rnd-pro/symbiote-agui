@@ -8,6 +8,8 @@ let context = PubSub.registerCtx(/** @type {Record<string, unknown>} */ ({
   userConnected: false,
   information: null,
   informationState: 'idle',
+  annotationAvailable: false,
+  annotationDrawing: false,
 }), SESSION_CONTEXT);
 
 /** @param {Partial<import('../../../types/transport.js').SessionUiState>} values */

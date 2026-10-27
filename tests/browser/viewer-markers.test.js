@@ -1,36 +1,9 @@
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
-import { SessionRuntime } from '../../src/sessions/runtime.js';
-import { prepareCachedMarkup } from '../../src/sessions/cache.js';
-import { temporaryState } from '../node/state-fixture.js';
 import { ANNOTATION_ANCHOR_ATTRIBUTE } from '../../src/transport/constants.js';
+import { markerFixture, hoverMirror } from './marker-fixture.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
-
-/**
- * @param {import('puppeteer-core').Page} page
- * @param {string} selector
- */
-async function hoverMirror(page, selector) {
-  await page.bringToFront();
-  let point = await page.evaluate((selector) => {
-    let frame = /** @type {HTMLIFrameElement} */ (document.getElementById('agui-viewer'));
-    let element = frame.contentDocument?.querySelector(selector);
-    if (!element) { throw new Error(`Missing mirror target ${selector}`); }
-    let box = element.getBoundingClientRect();
-    let outer = frame.getBoundingClientRect();
-    return {
-      x: outer.left + box.left + box.width / 2,
-      y: outer.top + box.top + box.height / 2,
-      anchor: element.getAttribute('data-agui-anchor'),
-    };
-  }, selector);
-  await page.mouse.move(point.x, point.y);
-  return point;
-}
 
 /**
  * @param {import('puppeteer-core').Page} page
@@ -64,27 +37,11 @@ test('viewer markers share content anchors across sizes and snapshots without en
   skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45_000,
 }, async (t) => {
-  let state = await temporaryState();
-  let runtime = new SessionRuntime({
-    sessionId: 'viewer-markers',
-    instanceId: randomUUID(),
-    controlToken: '',
-    pid: process.pid,
-    launcherPid: process.pid,
-  });
-  /** @type {import('puppeteer-core').Browser | undefined} */
-  let browser;
-  t.after(async () => { await browser?.close(); await runtime.close(); await state.close(); });
-  let saved = await prepareCachedMarkup('viewer-markers', await readFile(new URL('./viewer-markers.html', import.meta.url), 'utf8'));
-  try { await saved.commit(); } finally { await saved.discard(); }
-  await runtime.start(new AbortController().signal);
-  assert.ok(runtime.access && runtime.pages && runtime.record.url);
-  runtime.access.sharing = true;
-  runtime.pages.shared.enable(runtime.latest?.revision ?? 0);
-  browser = await puppeteer.launch({
-    executablePath,
-    headless: true,
-  });
+  let {
+    runtime,
+    browser,
+  } = await markerFixture(t);
+  assert.ok(runtime.pages && runtime.record.url);
   let user = await browser.newPage();
   await user.setViewport({
     width: 1000,

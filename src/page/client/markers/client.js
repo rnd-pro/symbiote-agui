@@ -1,6 +1,9 @@
 import { ANNOTATION_LIMITS, PAGE_ROLE } from '../../../transport/constants.js';
 import { MarkerGeometry } from './geometry.js';
 import { MarkerLayer } from './layer.js';
+import { TrailStore } from './trails.js';
+import { TrailCanvas } from './canvas.js';
+import { PointerDrawing } from './drawing.js';
 
 /** @typedef {import('../../../../types/transport.js').AnnotationPresence & { viewSequence: number }} Presence */
 
@@ -38,9 +41,16 @@ export class PageMarkers {
   /** @type {{ x: number, y: number } | undefined} */
   touch;
   reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  clockOffset = 0;
+  trails = new TrailStore(() => Date.now() + this.clockOffset);
+  /** @type {TrailCanvas | undefined} */
+  canvas;
 
   /** @param {(message: string) => boolean} send */
-  constructor(send) { this.send = send; }
+  constructor(send) {
+    this.send = send;
+    this.drawing = new PointerDrawing(this);
+  }
 
   /**
    * @param {HTMLElement} root
@@ -49,12 +59,17 @@ export class PageMarkers {
    * @param {number} sequence
    */
   setView(root, targets, revision, sequence) {
+    let changedRevision = revision !== this.revision;
+    let changedSequence = sequence !== this.viewSequence;
     this.detach();
     this.geometry = new MarkerGeometry(root);
     this.geometry.targets = targets;
     this.revision = revision;
     this.viewSequence = sequence;
     this.ready = sequence > 0 && targets.size > 0;
+    this.trails.prune(targets);
+    if (changedRevision) { this.drawing.cancel(); }
+    else if (changedSequence) { this.drawing.rebase(); }
     let doc = root.ownerDocument;
     this.listeners = new AbortController();
     let options = {
@@ -63,6 +78,7 @@ export class PageMarkers {
     };
     let layout = () => {
       this.geometry?.invalidate();
+      this.trails.invalidate();
       this.positions.clear();
       if (this.local && this.self && this.ready) { this.queue(this.geometry?.point(this.local.x, this.local.y) || null); }
       this.schedule();
@@ -84,11 +100,13 @@ export class PageMarkers {
       this.previousCursor = doc.documentElement.style.cursor;
       doc.addEventListener('pointermove', this.pointer, options);
       doc.documentElement.addEventListener('pointerleave', this.leave, options);
+      this.drawing.attach(doc, options);
       doc.addEventListener('wheel', this.wheel, {
         ...options,
         passive: false,
       });
       doc.addEventListener('touchstart', (event) => {
+        if (this.drawing.enabled) { return; }
         let touch = event.touches.length === 1 ? event.touches[0] : undefined;
         this.touch = touch ? {
           x: touch.clientX,
@@ -96,6 +114,7 @@ export class PageMarkers {
         } : undefined;
       }, options);
       doc.addEventListener('touchmove', (event) => {
+        if (this.drawing.enabled) { return; }
         let previous = this.touch;
         let touch = event.touches.length === 1 ? event.touches[0] : undefined;
         if (!previous || !touch) { this.touch = undefined; return; }
@@ -115,6 +134,7 @@ export class PageMarkers {
       if (event.target !== this.layer) { this.layer?.raise(); }
     }, options);
     this.cursor();
+    this.drawing.controls();
     layout();
     this.schedule();
   }
@@ -128,7 +148,8 @@ export class PageMarkers {
 
   /** @param {PointerEvent} event */
   pointer = (event) => {
-    if (!this.self || !this.ready || event.pointerType === 'touch') { return; }
+    if (!this.self || !this.ready || event.pointerType === 'touch' && !this.drawing.active
+      || this.drawing.active && this.drawing.active.id !== event.pointerId) { return; }
     this.local = {
       x: event.clientX,
       y: event.clientY,
@@ -139,6 +160,7 @@ export class PageMarkers {
   };
 
   leave = () => {
+    this.drawing.end();
     this.local = undefined;
     this.touch = undefined;
     this.cursor();
@@ -158,29 +180,51 @@ export class PageMarkers {
   /** @param {import('../../../../types/transport.js').AnnotationPoint | null} point */
   queue(point) {
     this.pending = point;
-    if (this.sendTimer !== undefined) { return; }
+    if (this.drawing.job || this.sendTimer !== undefined) { return; }
     this.sendTimer = window.setTimeout(() => {
       this.sendTimer = undefined;
       if (!this.self || !this.ready || this.pending === undefined) { return; }
-      let packet = {
-        type: 'annotation',
+      this.transmit({
         action: 'cursor',
-        revision: this.revision,
-        viewSequence: this.viewSequence,
-        sequence: ++this.sequence,
         point: this.pending,
-      };
+      });
       this.pending = undefined;
-      this.lastSent = performance.now();
-      this.send(JSON.stringify(packet));
     }, Math.max(0, ANNOTATION_LIMITS.cursorIntervalMs - (performance.now() - this.lastSent)));
+  }
+
+  clearCursor() {
+    clearTimeout(this.sendTimer);
+    this.sendTimer = undefined;
+    this.pending = undefined;
+  }
+
+  /**
+   * @param {import('../../../../types/transport.js').AnnotationPayload} payload
+   * @param {number} [sequence]
+   */
+  transmit(payload, sequence = ++this.sequence) {
+    this.lastSent = performance.now();
+    return !!this.self && this.ready && this.send(JSON.stringify({
+      type: 'annotation',
+      revision: this.revision,
+      viewSequence: this.viewSequence,
+      sequence,
+      ...payload,
+    }));
   }
 
   /** @param {import('../../../../types/transport.js').AnnotationServerMessage} message */
   receive(message) {
+    this.clockOffset = message.time - Date.now();
     if (message.action === 'state') {
-      if (message.self?.id !== this.self?.id) { this.sequence = 0; this.local = undefined; }
+      if (message.self?.id !== this.self?.id) {
+        this.drawing.cancel();
+        this.trails.clear();
+        this.sequence = 0;
+        this.local = undefined;
+      }
       this.self = message.self;
+      this.trails.restore(message.strokes);
       this.participants = new Map(message.participants.map((presence) => [
         presence.id,
         {
@@ -189,6 +233,7 @@ export class PageMarkers {
         },
       ]));
       this.cursor();
+      this.drawing.controls();
     } else if (message.action === 'join') {
       this.participants.set(message.participant.id, {
         ...message.participant,
@@ -198,10 +243,13 @@ export class PageMarkers {
       this.participants.delete(message.viewerId);
       this.positions.delete(message.viewerId);
     } else if (message.action === 'reset') {
+      this.drawing.cancel();
+      this.trails.clear();
       this.ready = false;
       this.local = undefined;
       for (let presence of this.participants.values()) { presence.point = null; }
       this.cursor();
+      this.drawing.controls();
     } else if (message.action === 'view') {
       for (let presence of this.participants.values()) { presence.viewSequence = message.viewSequence; }
     } else if (message.action === 'cursor' && message.viewSequence >= this.viewSequence) {
@@ -210,6 +258,13 @@ export class PageMarkers {
         presence.point = message.point;
         presence.viewSequence = message.viewSequence;
       }
+    } else if (message.action === 'stroke') {
+      this.trails.accept(message.stroke, message.append);
+      let presence = this.participants.get(message.stroke.viewerId);
+      let point = message.stroke.points.at(-1);
+      if (presence && point) { presence.point = point; presence.viewSequence = message.viewSequence; }
+    } else if (message.action === 'remove') {
+      this.trails.remove(message.ids);
     }
     this.schedule();
   }
@@ -247,15 +302,20 @@ export class PageMarkers {
         position: `${target.x}px ${target.y}px`,
       });
     }
-    if (!this.layer && markers.length) {
+    let trails = this.trails.visible();
+    if (!this.layer && (markers.length || trails.length)) {
       this.layer = /** @type {MarkerLayer} */ (document.createElement('agui-viewer-markers'));
       document.body.append(this.layer);
     }
     if (this.layer) { this.layer.$.markers = markers; }
-    if (moving) { this.schedule(); }
+    let canvas = this.layer?.ref.trails;
+    if (!this.canvas && canvas instanceof HTMLCanvasElement) { this.canvas = new TrailCanvas(canvas); }
+    if (this.canvas && this.geometry) { this.canvas.paint(this.trails, this.geometry, this.reducedMotion.matches); }
+    if (moving || trails.length) { this.schedule(); }
   };
 
   detach() {
+    this.drawing.detach();
     if (this.geometry && this.role === PAGE_ROLE.VIEWER) { this.geometry.root.ownerDocument.documentElement.style.cursor = this.previousCursor; }
     this.listeners?.abort();
     this.resize?.disconnect();
@@ -263,8 +323,9 @@ export class PageMarkers {
   }
 
   disconnect() {
+    this.drawing.disconnect();
     this.detach();
-    clearTimeout(this.sendTimer);
+    this.clearCursor();
     cancelAnimationFrame(this.frame);
     this.frame = 0;
     this.sendTimer = undefined;
@@ -274,6 +335,9 @@ export class PageMarkers {
     this.self = null;
     this.ready = false;
     this.participants.clear();
+    this.trails.clear();
+    this.canvas?.dispose();
+    this.canvas = undefined;
     this.layer?.remove();
     this.layer = undefined;
     this.geometry = undefined;

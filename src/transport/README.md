@@ -14,7 +14,7 @@ The annotation transport is available only on shared sessions. The trusted page 
 
 Server packets use `type: "annotations"` with current `revision`, `viewSequence`, and server `time`. Actions are `state`, `join`, `leave`, `cursor`, `stroke`, `remove`, `reset`, and `view`. Bootstrap/recovery state includes `self`, current viewer presence, and unexpired strokes. A user has `self: null`; a viewer beyond the annotation participant limit also has `self: null` and continues viewing without publication capability.
 
-Stroke packets contain server-owned identity, color, timestamps, expiry, and an `ended` flag. `append: false` starts a segment; `append: true` adds its packet's points to that segment. A final append with no points marks it ended. Recovery state always contains complete strokes. Client sequence numbers are not snapshot sequence numbers.
+Stroke packets contain server-owned identity, color, timestamps, expiry, and an `ended` flag. `startSequence` identifies the originating start packet across automatic segment splits; `sequence` identifies the latest applied packet. These allow clients to reconcile immediate local previews with confirmed strokes without drawing both. `append: false` starts a segment; `append: true` adds its packet's points to that segment. A final append with no points marks it ended. Recovery state always contains complete strokes. Client sequence numbers are not snapshot sequence numbers.
 
 ## Snapshot positioning
 
@@ -23,6 +23,16 @@ Role messages expose the current `viewSequence`. An active user publishes a grea
 The client assigns stable opaque anchor IDs through a WeakMap, adds their attributes only to cloned markup, and retains a bounded reverse map for projection on the live page. Map transformations and hoisted dialogs/popovers keep their identities; transparent table hosts do not become anchors. Snapshot replacement preserves each viewer's own nested scroll offsets. Positions reproject against each visitor's visible element bounds instead of viewport percentages; missing or clipped anchors are hidden.
 
 The marker layer reuses the bundled icon, native keyed Itemize, and non-interactive manual popovers. It is outside mirrored content, has no application actions, does not capture user controls or focus, and is never included in a snapshot. Pointer movement updates locally before network confirmation; remote positions interpolate unless reduced motion is requested. Disconnect clears marker state, listeners, observers, pending packets, and animation frames.
+
+## Transient drawing
+
+Viewers draw with the primary mouse button. Touch and pen drawing require the existing data toolbar's drawing toggle, bound to reserved `AGUI_SESSION/annotationDrawing` state. The toggle is available only when annotation targets and a viewer identity exist. Drawing mode preserves pinch zoom; leaving it restores ordinary touch scrolling. The interactive user keeps normal controls.
+
+Native Pointer Events feed bounded local previews and shared-socket batches. Release, cancellation, lost capture, leaving the surface, and tab suspension end drawing. Disconnect discards unsent work. Ordinary snapshots retain valid trails and rebase a held pointer to the current view; removed anchors retire their trails. Old queued points are never replayed after reconnect.
+
+A single Canvas 2D surface shares the marker animation loop. Rounded 18 CSS px trails use 30% opacity on the complete surface so overlapping samples remain translucent. Shared rendering defaults live in `src/page/client/markers/constants.js`; timing limits remain in `constants.js`. Canvas backing storage is capped at 4,194,304 pixels and device scale 2. Local previews and confirmed history share the segment/point budgets below.
+
+Trails hold for 3 seconds and fade for 2 seconds. Timestamp-based expiry catches up after background suspension. Reduced-motion mode removes trails at expiry without gradual fading. The canvas stops redrawing unchanged held trails and releases its backing storage on disconnect. Drawing and the toolbar toggle never become application actions, feedback, or saved provider data.
 
 ## Bounds and lifecycle
 

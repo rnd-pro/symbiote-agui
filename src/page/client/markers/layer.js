@@ -27,6 +27,7 @@ export class MarkerLayer extends UiComponent {
 }
 
 MarkerLayer.template = html`
+  <canvas ref="trails" class="agui-viewer-trails"></canvas>
   <div itemize="markers">
     <template>
       <span class="agui-viewer-marker" bind="@data-viewer: id; style.color: color; style.translate: position">
@@ -63,6 +64,13 @@ MarkerLayer.rootStyles = css`
       inset-inline-start: 0;
       transform: translate(-.15rem, -1.35rem);
       filter: drop-shadow(0 1px 1px var(--agui-bg));
+      pointer-events: none;
+    }
+    .agui-viewer-trails {
+      position: absolute;
+      inset: 0;
+      inline-size: 100%;
+      block-size: 100%;
       pointer-events: none;
     }
   }

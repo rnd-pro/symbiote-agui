@@ -10,6 +10,7 @@ import { validateAnnotation } from '../transport/annotations.js';
  * @property {number} window
  * @property {number} messages
  * @property {string | undefined} active
+ * @property {number} startSequence
  */
 
 export class PageAnnotations {
@@ -68,6 +69,7 @@ export class PageAnnotations {
         window: this.now(),
         messages: 0,
         active: undefined,
+        startSequence: 0,
       });
       this.broadcast({
         ...this.header(),
@@ -181,7 +183,11 @@ export class PageAnnotations {
   stroke(member, packet) {
     if (packet.phase !== 'start' && !member.active) { return; }
     let stroke = member.active ? this.strokes.get(member.active) : undefined;
-    if (packet.phase === 'start') { this.finish(member, false); stroke = undefined; }
+    if (packet.phase === 'start') {
+      this.finish(member, false);
+      member.startSequence = packet.sequence;
+      stroke = undefined;
+    }
     let points = packet.points.map((point) => ({
       ...point,
     }));
@@ -204,9 +210,12 @@ export class PageAnnotations {
         updatedAt: now,
         expiresAt: now,
         ended: false,
+        startSequence: member.startSequence,
+        sequence: packet.sequence,
       };
       stroke.points.push(...points);
       stroke.updatedAt = now;
+      stroke.sequence = packet.sequence;
       stroke.expiresAt = now + ANNOTATION_LIMITS.holdMs + ANNOTATION_LIMITS.fadeMs;
       this.strokes.set(stroke.id, stroke);
       this.pointCount += points.length;
@@ -243,6 +252,7 @@ export class PageAnnotations {
     member.active = undefined;
     if (!stroke) { return; }
     stroke.ended = true;
+    stroke.sequence = member.sequence;
     if (extend) {
       stroke.updatedAt = this.now();
       stroke.expiresAt = stroke.updatedAt + ANNOTATION_LIMITS.holdMs + ANNOTATION_LIMITS.fadeMs;

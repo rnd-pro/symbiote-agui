@@ -123,15 +123,25 @@ export class MarkerGeometry {
     };
   }
 
-  /** @param {import('../../../../types/transport.js').AnnotationPoint} point */
-  project(point) {
+  /**
+   * @param {import('../../../../types/transport.js').AnnotationPoint} point
+   * @param {Map<string, ReturnType<typeof bounds>>} [cache]
+   */
+  project(point, cache) {
     let element = this.targets.get(point.anchor);
-    let box = element && bounds(element);
+    let box = cache?.has(point.anchor) ? cache.get(point.anchor) : element && bounds(element);
+    cache?.set(point.anchor, box);
     if (!box) { return; }
     let x = box.rect.left + point.x * box.rect.width;
     let y = box.rect.top + point.y * box.rect.height;
     if (x < box.left || x > box.right || y < box.top || y > box.bottom) { return; }
     return this.screen(x, y);
+  }
+
+  projector() {
+    /** @type {Map<string, ReturnType<typeof bounds>>} */
+    let cache = new Map();
+    return (/** @type {import('../../../../types/transport.js').AnnotationPoint} */ point) => this.project(point, cache);
   }
 
   /**

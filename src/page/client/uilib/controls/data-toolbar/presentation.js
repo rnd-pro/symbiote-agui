@@ -62,6 +62,8 @@ export function presentToolbar(toolbar) {
       value,
     ])),
     actionsLabel: text('actions'),
+    drawingLabel: text('drawing'),
+    drawingHidden: !viewer || toolbar.$['AGUI_SESSION/annotationAvailable'] !== true,
     saveLabel: text('save'),
     cancelLabel: text('cancel'),
     importLabel: text('import'),

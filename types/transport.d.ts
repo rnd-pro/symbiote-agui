@@ -25,6 +25,8 @@ export interface SessionUiState {
   userConnected: boolean;
   information: SessionInformation | null;
   informationState: 'idle' | 'loading' | 'ready' | 'failed';
+  annotationAvailable: boolean;
+  annotationDrawing: boolean;
 }
 
 export type FeedbackPageMessage =
@@ -92,18 +94,21 @@ export interface AnnotationStroke {
   updatedAt: number;
   expiresAt: number;
   ended: boolean;
+  startSequence: number;
+  sequence: number;
 }
+
+export type AnnotationPayload =
+  | { action: 'cursor'; point: AnnotationPoint | null }
+  | { action: 'stroke'; phase: 'start' | 'append' | 'end'; points: AnnotationPoint[] }
+  | { action: 'sync' };
 
 export type AnnotationPageMessage = {
   type: 'annotation';
   revision: number;
   sequence: number;
   viewSequence: number;
-} & (
-  | { action: 'cursor'; point: AnnotationPoint | null }
-  | { action: 'stroke'; phase: 'start' | 'append' | 'end'; points: AnnotationPoint[] }
-  | { action: 'sync' }
-);
+} & AnnotationPayload;
 
 export type AnnotationServerMessage = {
   type: 'annotations';

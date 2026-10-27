@@ -131,6 +131,8 @@ test('strokes split continuously and expire without persistence, while new viewe
   });
   let initial = first.state().strokes[0];
   assert.ok(initial);
+  assert.equal(initial.startSequence, 1);
+  assert.equal(initial.sequence, 1);
   assert.equal(initial.createdAt, 1_000);
   assert.equal(initial.expiresAt, initial.createdAt + ANNOTATION_LIMITS.holdMs + ANNOTATION_LIMITS.fadeMs);
   fixture.advance(ANNOTATION_LIMITS.strokeMs);
@@ -148,12 +150,15 @@ test('strokes split continuously and expire without persistence, while new viewe
   let state = late.state();
   assert.equal(state.strokes.length, 2);
   assert.equal(state.strokes[0].ended, true);
+  assert.equal(state.strokes[1].startSequence, initial.startSequence);
+  assert.equal(state.strokes[1].sequence, 2);
   assert.deepEqual(state.strokes[1].points[0], initial.points[0]);
   assert.equal(state.participants[0].point?.x, 0.75);
   fixture.annotations.disconnect(first.page);
   assert.equal(late.state().participants.some((entry) => entry.id === initial.viewerId), false);
   assert.equal(late.messages.some((message) => message.action === 'leave' && message.viewerId === initial.viewerId), true);
   assert.equal(late.state().strokes.length, 2, 'Disconnect retains trails for their remaining fade time.');
+  assert.equal(late.state().strokes.every((stroke) => stroke.ended && stroke.sequence === 2), true);
   let reconnect = fixture.add();
   assert.notEqual(reconnect.state().self?.id, initial.viewerId);
   assert.notEqual(reconnect.state().self?.color, initial.color);

@@ -42,6 +42,8 @@ export let DATA_TOOLBAR_TEMPLATE = html`
         <span bind="textContent: ^metadataLabel"></span>
       </button>
     </agui-toolbar>
+    <agui-toggle class="mt-4" pub-to="AGUI_SESSION/annotationDrawing"
+      bind="hidden: drawingHidden; $.label: drawingLabel; $.value: AGUI_SESSION/annotationDrawing"></agui-toggle>
     <div class="agui-data-markers">
       <span class="agui-chip" bind="textContent: roleLabel"></span>
       <span class="agui-chip" bind="textContent: connectionLabel; @data-tone: connectionTone"></span>

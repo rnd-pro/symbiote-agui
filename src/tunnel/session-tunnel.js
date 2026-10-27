@@ -97,7 +97,11 @@ export class SessionTunnel {
             cleanup();
             this.origin = origin;
             this.onOrigin(origin);
-            this.status = { state: 'ready', active: null };
+            this.status = {
+              state: 'ready',
+              active: null,
+              readyAt: new Date().toISOString(),
+            };
             resolve(origin);
           }
         });

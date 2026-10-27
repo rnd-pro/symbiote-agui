@@ -10,6 +10,7 @@ import { withStorageFolder } from '../../src/config/storage-scope.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { ensureSessionStarted } from '../../src/sessions/start.js';
 import { stopSession } from '../../src/sessions/lifecycle.js';
+import { TUNNEL_READY_TIMEOUT_MS } from '../../src/tunnel/constants.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
@@ -91,9 +92,12 @@ test('manager verifies public links and manages browsers and tunnels across proj
   await page.click('#manager-table tr[data-row-id="desk"] td[data-column="id"]');
   await page.waitForSelector('#session-inspector button[aria-label="Public link"]');
   let before = (await fixture.pids()).length;
+  await fixture.setReadyAge(TUNNEL_READY_TIMEOUT_MS + 1);
   await fixture.setOrigin('https://manager-verified.trycloudflare.com');
+  await fixture.delayActivity(1_500);
   await page.click('#session-inspector button[aria-label="Public link"]');
   await page.waitForFunction(() => Reflect.get(window, 'verifiedOpenedUrl') === 'https://manager-verified.trycloudflare.com/desk/');
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'reservedTabClosed')), undefined, 'The reserved tab remains open while DNS settles after renewal.');
   assert.equal((await fixture.pids()).length, before + 1);
   assert.equal((await cli('status', 'desk')).pid, originalPid);
   assert.equal(await user.$eval('#notes', (element) => Reflect.get(element, 'value')), 'Keep this draft');

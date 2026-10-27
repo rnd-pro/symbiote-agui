@@ -2,7 +2,7 @@ import { connectionProjectRoot, discoverConnectionWorkers } from '../sessions/co
 import { readScopedSession, isProcessAlive } from '../sessions/store.js';
 import { requestSession } from '../sessions/client.js';
 import { openSessionPublicLink } from '../sessions/tunnel.js';
-import { checkTunnelActivity } from '../tunnel/activity.js';
+import { checkTunnelActivity, waitForTunnelActivity } from '../tunnel/activity.js';
 import { TUNNEL_REQUEST_TIMEOUT_MS } from '../tunnel/constants.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE } from '../shared/constants.js';
@@ -144,7 +144,7 @@ export async function runManagerConnection(request) {
   } else if (request.operation === 'connection tunnel check') {
     status = await checkTunnelActivity(await requestSession(record, 'status'));
   } else if (request.operation === 'connection tunnel renew') {
-    status = await checkTunnelActivity(await requestSession(record, 'tunnel-renew', TUNNEL_REQUEST_TIMEOUT_MS));
+    status = await waitForTunnelActivity(await requestSession(record, 'tunnel-renew', TUNNEL_REQUEST_TIMEOUT_MS));
   } else if (request.operation === 'stop tunnel') {
     status = await requestSession(record, 'tunnel-stop');
   } else {

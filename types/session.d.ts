@@ -40,6 +40,7 @@ export type SessionFeedbackStatus = SessionStatus & {
 
 export interface TunnelStatus {
   state: 'starting' | 'ready' | 'failed' | 'stopped';
+  readyAt?: string;
   active?: boolean | null;
   checkedAt?: string;
   checkError?: string;

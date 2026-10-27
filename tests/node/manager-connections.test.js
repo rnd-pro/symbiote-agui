@@ -17,6 +17,7 @@ import { requestSession } from '../../src/sessions/client.js';
 import { PAGE_DISCONNECT_CODE } from '../../src/transport/constants.js';
 import { startControlServer } from '../../src/server/control-server.js';
 import { closeServer } from '../../src/shared/server.js';
+import { TUNNEL_READY_TIMEOUT_MS } from '../../src/tunnel/constants.js';
 
 /**
  * @param {ManagerOperations} manager
@@ -172,6 +173,7 @@ test('public opening checks and renews once, keeps role-free URLs, and tunnel st
     'viewer',
   ], 'Explicit viewer stays read-only even when first; other tabs use first-eligible election.');
   let count = (await fixture.pids()).length;
+  await fixture.setReadyAge(TUNNEL_READY_TIMEOUT_MS + 1);
   await fixture.setOrigin('https://renewed-open.trycloudflare.com');
   let opened = await dispatch(manager, 'open public', publicOptions);
   assert.equal(opened.ok, true);

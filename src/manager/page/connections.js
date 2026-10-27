@@ -133,6 +133,8 @@ export class LiveConnections {
       if (epoch === this.epoch && !owner.disposed) {
         owner.$.noticeTone = 'alert';
         owner.$.notice = error instanceof Error ? error.message : String(error);
+        await owner.refresh();
+        await this.refresh();
       }
     } finally {
       owner.busy = false;

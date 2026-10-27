@@ -1,4 +1,5 @@
 import { MANAGER_SOCKET_PATH, MANAGER_CLIENT_TIMEOUT_MS } from '../constants.js';
+import { TUNNEL_OPEN_TIMEOUT_MS } from '../../tunnel/constants.js';
 import { validProjectId } from '../../projects/identifiers.js';
 
 export const CONNECTION_LOST_MESSAGE = 'Connection lost. The operation outcome may be unknown. Reconnecting will refresh status; actions are not replayed.';
@@ -92,7 +93,7 @@ export class ManagerConnection {
         this.pending.delete(id);
         reject(new Error('Request timed out. Its outcome may be unknown. Status will be refreshed after reconnecting.'));
         socket.close();
-      }, MANAGER_CLIENT_TIMEOUT_MS);
+      }, operation === 'open public' || operation.endsWith('tunnel renew') ? TUNNEL_OPEN_TIMEOUT_MS : MANAGER_CLIENT_TIMEOUT_MS);
       this.pending.set(id, { resolve, reject, timer });
       socket.send(JSON.stringify({ ...options, scopeProjectId: this.projectId, id, operation }));
     });

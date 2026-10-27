@@ -12,12 +12,16 @@ export async function tunnelFixture(directory, origin = 'https://agui-test.trycl
   let mode = join(directory, 'tunnel-mode');
   let activity = join(directory, 'tunnel-activity');
   let hostname = join(directory, 'tunnel-origin');
+  let readyAge = join(directory, 'tunnel-ready-age');
+  let readyAfter = join(directory, 'tunnel-ready-after');
   let fetchMock = join(directory, 'tunnel-fetch.mjs');
   let pids = join(directory, 'tunnel-pids');
   let executable = join(directory, 'fake-cloudflared');
   await writeFile(mode, 'ready');
   await writeFile(activity, 'ready');
   await writeFile(hostname, origin);
+  await writeFile(readyAge, '0');
+  await writeFile(readyAfter, '0');
   await writeFile(fetchMock, `
 import { readFileSync } from 'node:fs';
 let original = globalThis.fetch;
@@ -29,12 +33,22 @@ globalThis.fetch = async (input, options) => {
     if (mode === 'disabled' || url.origin !== readFileSync(${JSON.stringify(hostname)}, 'utf8')) {
       return new Response('Tunnel disabled', { status: 503 });
     }
+    if (Date.now() < Number(readFileSync(${JSON.stringify(readyAfter)}, 'utf8'))) {
+      throw new TypeError('fetch failed', { cause: new Error('getaddrinfo ENOTFOUND ' + url.hostname) });
+    }
     return Response.json({
       sessionId: url.pathname.split('/')[1],
       nonce: mode === 'wrong' ? 'stale' : url.searchParams.get('nonce'),
     });
   }
-  return original(input, options);
+  let response = await original(input, options);
+  let age = Number(readFileSync(${JSON.stringify(readyAge)}, 'utf8'));
+  if (age > 0 && url.hostname === '127.0.0.1' && url.pathname === '/status' && response.ok) {
+    let reply = await response.json();
+    if (reply.result?.tunnel?.readyAt) reply.result.tunnel.readyAt = new Date(Date.now() - age).toISOString();
+    return Response.json(reply, { status: response.status });
+  }
+  return response;
 };
 `);
   await writeFile(executable, `#!/usr/bin/env node
@@ -67,6 +81,8 @@ process.on('SIGTERM', () => process.exit(0));
     setMode: (/** @type {string} */ value) => writeFile(mode, value),
     setActivity: (/** @type {string} */ value) => writeFile(activity, value),
     setOrigin: (/** @type {string} */ value) => writeFile(hostname, value),
+    setReadyAge: (/** @type {number} */ value) => writeFile(readyAge, String(value)),
+    delayActivity: (/** @type {number} */ milliseconds) => writeFile(readyAfter, String(Date.now() + milliseconds)),
     async pids() {
       return (await readFile(pids, 'utf8')).trim().split('\n').map(Number);
     },

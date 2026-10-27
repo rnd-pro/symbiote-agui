@@ -101,13 +101,6 @@ export class LiveConnections {
   async open(sessionId, projectId, viewer = false, instanceId) {
     let owner = this.owner;
     if (owner.busy || !owner.connection?.ready) { return; }
-    // Reserve a tab during the click; waiting for network checks loses browser activation.
-    let tab = window.open('about:blank', '_blank');
-    if (tab) {
-      tab.opener = null;
-      tab.document.title = 'Opening shared page';
-      tab.document.body.textContent = 'Checking the public link...';
-    }
     owner.busy = true;
     owner.$.verifiedPublicUrl = '';
     owner.$.noticeTone = 'info';
@@ -123,15 +116,16 @@ export class LiveConnections {
         } : {}),
         viewer,
       });
-      if (epoch !== this.epoch || owner.disposed) { tab?.close(); return; }
+      if (epoch !== this.epoch || owner.disposed) { return; }
       if (!result.ok || !result.openUrl) { throw new Error(result.error?.message || 'The public link could not be verified.'); }
-      if (tab && !tab.closed) { tab.location.replace(result.openUrl); }
+      // Verification can outlast browser activation; expose a native link if blocked.
+      let tab = window.open(result.openUrl, '_blank');
+      if (tab && !tab.closed) { tab.opener = null; }
       else { owner.$.verifiedPublicUrl = result.openUrl; }
       owner.$.notice = tab && !tab.closed ? `Opened ${sessionId}.` : 'Public link verified. Use Open verified link to continue.';
       await owner.refresh();
       await this.refresh();
     } catch (error) {
-      tab?.close();
       if (epoch === this.epoch && !owner.disposed) {
         owner.$.noticeTone = 'alert';
         owner.$.notice = error instanceof Error ? error.message : String(error);

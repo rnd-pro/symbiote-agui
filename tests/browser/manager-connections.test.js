@@ -74,20 +74,26 @@ test('manager verifies public links and manages browsers and tunnels across proj
   await page.waitForSelector('#manager-table tr[data-row-id="desk"]');
   // Keep the test off the public Internet while observing the real verified-open flow.
   await page.evaluate(() => {
-    Reflect.set(window, 'open', () => ({
-      closed: false,
-      opener: null,
-      document: {
-        title: '',
-        body: {
-          textContent: '',
-        },
-      },
-      location: {
-        replace: (/** @type {string} */ url) => Reflect.set(window, 'verifiedOpenedUrl', url),
-      },
-      close: () => Reflect.set(window, 'reservedTabClosed', true),
-    }));
+    Reflect.set(window, 'open', (/** @type {string} */ url) => {
+      Reflect.set(window, 'verifiedOpenedUrl', url);
+      return {
+        closed: false,
+        opener: null,
+      };
+    });
+    let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
+    let connection = owner.connection;
+    if (!connection) { throw new Error('Expected a connected manager.'); }
+    let request = connection.request.bind(connection);
+    let gate = new Promise((resolve) => { Reflect.set(window, 'releasePublicCheck', resolve); });
+    connection.request = async (operation, options) => {
+      let result = await request(operation, options);
+      if (operation === 'open public') {
+        Reflect.set(window, 'publicCheckFinished', true);
+        await gate;
+      }
+      return result;
+    };
   });
   await page.click('#manager-table tr[data-row-id="desk"] td[data-column="id"]');
   await page.waitForSelector('#session-inspector button[aria-label="Public link"]');
@@ -96,14 +102,40 @@ test('manager verifies public links and manages browsers and tunnels across proj
   await fixture.setOrigin('https://manager-verified.trycloudflare.com');
   await fixture.delayActivity(1_500);
   await page.click('#session-inspector button[aria-label="Public link"]');
+  await page.waitForFunction(() => Reflect.get(window, 'publicCheckFinished'));
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'verifiedOpenedUrl')), undefined, 'No tab opens before the readiness result arrives.');
+  assert.equal(await page.$eval('#session-inspector button[aria-label="Public link"]', (button) => button.getAttribute('aria-busy')), 'true');
+  await page.evaluate(() => Reflect.get(window, 'releasePublicCheck')());
   await page.waitForFunction(() => Reflect.get(window, 'verifiedOpenedUrl') === 'https://manager-verified.trycloudflare.com/desk/');
-  assert.equal(await page.evaluate(() => Reflect.get(window, 'reservedTabClosed')), undefined, 'The reserved tab remains open while DNS settles after renewal.');
   assert.equal((await fixture.pids()).length, before + 1);
   assert.equal((await cli('status', 'desk')).pid, originalPid);
   assert.equal(await user.$eval('#notes', (element) => Reflect.get(element, 'value')), 'Keep this draft');
   await page.click('#session-views [role="tab"][value="cards"]');
   await page.click('.sessions button[aria-label="Viewer page"]');
   await page.waitForFunction(() => Reflect.get(window, 'verifiedOpenedUrl') === 'https://manager-verified.trycloudflare.com/desk/?mode=viewer');
+  await page.waitForFunction(() => !Reflect.get(document.querySelector('agui-session-manager') || {}, 'busy'));
+  await page.evaluate(() => {
+    Reflect.set(window, 'open', () => null);
+  });
+  await page.click('.sessions button[aria-label="Viewer page"]');
+  await page.waitForSelector('a[href="https://manager-verified.trycloudflare.com/desk/?mode=viewer"]', {
+    visible: true,
+  });
+  await page.waitForFunction(() => !Reflect.get(document.querySelector('agui-session-manager') || {}, 'busy'));
+  await page.evaluate(() => {
+    Reflect.deleteProperty(window, 'verifiedOpenedUrl');
+    Reflect.set(window, 'open', (/** @type {string} */ url) => { Reflect.set(window, 'verifiedOpenedUrl', url); });
+    let connection = /** @type {import('../../src/manager/page/connection.js').ManagerConnection} */ (Reflect.get(document.querySelector('agui-session-manager') || {}, 'connection'));
+    let request = connection.request.bind(connection);
+    connection.request = async (operation, options) => {
+      if (operation === 'open public') { throw new Error('Fixture readiness failure.'); }
+      return request(operation, options);
+    };
+  });
+  await page.click('.sessions button[aria-label="Viewer page"]');
+  await page.waitForFunction(() => document.querySelector('.notice')?.textContent?.includes('Fixture readiness failure.'));
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'verifiedOpenedUrl')), undefined, 'A failed readiness check opens no tab.');
+  assert.equal(await page.$eval('agui-session-manager', (owner) => Reflect.get(owner, '$').verifiedPublicUrl), '', 'A failed check clears the previous fallback URL.');
   await page.click('#session-views [role="tab"][value="connections"]');
   await page.waitForFunction(() => document.querySelectorAll('[data-connection-session]').length === 2);
   assert.match(await page.$eval('agui-manager-connections', (element) => element.textContent || ''), /another-project/);

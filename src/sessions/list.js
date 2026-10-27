@@ -5,7 +5,7 @@ import { hasErrorCode } from '../shared/system-error.js';
 import { listDefinitionIds } from '../library/paths.js';
 
 /** @param {string} key */
-function decodeSessionKey(key) {
+export function decodeSessionKey(key) {
   if (!/^(?:[a-f0-9]{2}){1,64}$/.test(key)) { return undefined; }
   let sessionId = Buffer.from(key, 'hex').toString('utf8');
   return SESSION_ID_PATTERN.test(sessionId) ? sessionId : undefined;

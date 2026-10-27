@@ -1,5 +1,6 @@
 import { PROJECT_OPERATIONS } from '../projects/constants.js';
 import { TRANSFER_OPERATIONS } from '../projects/transfer/constants.js';
+import { CONNECTION_OPERATIONS } from './connection-operations.js';
 
 export let MANAGER_PATH = '/manager/';
 export let MANAGER_PROTOCOL_VERSION = 2;
@@ -28,6 +29,7 @@ export let MANAGER_FEEDBACK_OPERATIONS = Object.freeze({
 });
 
 export let MANAGER_OPERATIONS = Object.freeze({
+  ...CONNECTION_OPERATIONS,
   ...PROJECT_OPERATIONS,
   ...TRANSFER_OPERATIONS,
   ...MANAGER_FEEDBACK_OPERATIONS,

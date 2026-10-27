@@ -6,6 +6,7 @@ import { cssMin } from 'jsda-kit/node/cssMin.js';
 import { UILIB_TEMPLATES } from '../page/client/uilib/templates.js';
 import { SESSION_ROW_TEMPLATE } from './page/row-template.js';
 import { SESSION_CONTROLS_TEMPLATE } from './page/controls-template.js';
+import { CONNECTIONS_TEMPLATE } from './page/connections-template.js';
 
 export async function createManagerStyles() {
   let [compiler, html] = await Promise.all([
@@ -15,7 +16,12 @@ export async function createManagerStyles() {
   let { document } = parseHTML(html);
   let fragment = document.createDocumentFragment();
   let templates = document.createElement('template');
-  templates.innerHTML = [...Object.values(UILIB_TEMPLATES), SESSION_ROW_TEMPLATE, SESSION_CONTROLS_TEMPLATE].join('\n');
+  templates.innerHTML = [
+    ...Object.values(UILIB_TEMPLATES),
+    SESSION_ROW_TEMPLATE,
+    SESSION_CONTROLS_TEMPLATE,
+    CONNECTIONS_TEMPLATE,
+  ].join('\n');
   fragment.append(document.body, templates.content);
   return cssMin(compiler.build(analyzeFragment(fragment).classes));
 }

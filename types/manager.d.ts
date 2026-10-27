@@ -28,6 +28,8 @@ export interface ManagerRequest {
   instanceId?: string;
   conversationId?: string;
   command?: import('./feedback.js').FeedbackCommand;
+  pageId?: string;
+  viewer?: boolean;
 }
 
 export interface ManagerScope {
@@ -72,6 +74,8 @@ export interface ManagerResult {
   transfer?: import('./transfer.js').TransferResult;
   transfers?: import('./transfer.js').TransferResult[];
   feedbackSettings?: import('./feedback.js').FeedbackSettings;
+  connections?: import('./connections.js').GlobalConnections;
+  openUrl?: string;
   error?: CommandFailure['error'];
 }
 

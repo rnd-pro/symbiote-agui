@@ -15,6 +15,9 @@ export let SESSION_STATE = {
   viewerUrl: '',
   noLocal: true,
   noPublic: true,
+  publicDisabled: true,
+  openPublic: () => {},
+  openViewer: () => {},
   startDisabled: true,
   stopDisabled: true,
   syncDisabled: true,
@@ -46,8 +49,9 @@ export let SESSION_STATE = {
  * @param {import('../../../types/manager.js').ManagerSession} row
  * @param {boolean} disabled
  * @param {(operation: import('../../../types/manager.js').ManagerOperation, sessionId: string) => void} act
+ * @param {(viewer: boolean) => void} open
  */
-export function rowState(row, disabled, act) {
+export function rowState(row, disabled, act, open) {
   let active = row.active === true;
   let unknown = row.active === null || !row.ok;
   let saved = !!row.definition;
@@ -67,10 +71,13 @@ export function rowState(row, disabled, act) {
     error: (!row.ok ? row.error.message : '') || row.definitionError || tunnel?.checkError || tunnel?.error || '',
     tunnel: tunnel ? `Tunnel ${tunnel.state}: ${health}` : active ? 'Local only. Attach a tunnel to get public user and viewer links.' : 'Start this session to attach a public tunnel.',
     url: row.url || '',
-    userUrl: row.publicUserUrl || row.publicUrl || '',
+    userUrl: row.publicUrl || '',
     viewerUrl: row.publicViewerUrl || '',
     noLocal: !row.url || !active,
-    noPublic: !row.publicUrl || !active,
+    noPublic: !row.tunnel || !active,
+    publicDisabled: disabled || !row.tunnel || !active || unknown,
+    openPublic: () => open(false),
+    openViewer: () => open(true),
     startDisabled: disabled || active || unknown,
     stopDisabled: disabled || !active || unknown,
     syncDisabled: disabled || !active || !saved || unknown,

@@ -27,6 +27,9 @@ import { EXPLORER_OPERATIONS } from '../projects/explorer/constants.js';
 import { TRANSFER_OPERATIONS } from '../projects/transfer/constants.js';
 import { validateTransferRequest } from '../projects/transfer/requests.js';
 import { runManagerTransfer } from './transfer.js';
+import { CONNECTION_OPERATIONS } from './connection-operations.js';
+import { validateConnectionRequest, listManagerConnections, runManagerConnection } from './connections.js';
+import { connectionProjectRoot } from '../sessions/connection-discovery.js';
 
 /** @param {unknown} error */
 function failure(error) {
@@ -60,6 +63,8 @@ export function validateManagerRequest(input) {
     'instanceId',
     'conversationId',
     'command',
+    'pageId',
+    'viewer',
   ].includes(key))
     || typeof value.id !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(value.id)
     || typeof value.operation !== 'string' || !Object.hasOwn(MANAGER_OPERATIONS, value.operation)
@@ -78,6 +83,7 @@ export function validateManagerRequest(input) {
 
 /** @param {import('../../types/manager.js').ManagerRequest} request */
 function validateScopedRequest(request) {
+  if (validateConnectionRequest(request)) { return request; }
   let operation = MANAGER_OPERATIONS[request.operation];
   if (validateManagerFeedback(request)) { return request; }
   validateExplorerRequest(request);
@@ -177,6 +183,7 @@ export class ManagerOperations {
     try {
       this.assertScope();
       let request = validateManagerRequest(input);
+      if (Object.hasOwn(CONNECTION_OPERATIONS, request.operation)) { return await this.dispatchScoped(request); }
       let folder = this.defaultFolder;
       if (request.scopeProjectId) {
         if (!this.folders.has(request.scopeProjectId)) {
@@ -200,7 +207,7 @@ export class ManagerOperations {
   /** @param {import('../../types/manager.js').ManagerRequest} request */
   async dispatchScoped(request) {
     try {
-      if (['snapshot', 'describe', 'projects', 'transfer history', 'feedback settings'].includes(request.operation) || Object.hasOwn(EXPLORER_OPERATIONS, request.operation)) { return await this.execute(request); }
+      if (['snapshot', 'describe', 'projects', 'transfer history', 'feedback settings', 'connections'].includes(request.operation) || Object.hasOwn(EXPLORER_OPERATIONS, request.operation)) { return await this.execute(request); }
       let fingerprint = JSON.stringify([
         request.operation,
         request.sessionId,
@@ -216,8 +223,11 @@ export class ManagerOperations {
         request.instanceId,
         request.conversationId,
         request.command,
+        request.pageId,
+        request.viewer,
       ]);
-      let requestKey = this.sessionKey(request.id);
+      let requestKey = Object.hasOwn(CONNECTION_OPERATIONS, request.operation)
+        ? `${this.managerRoot}\0global\0${request.id}` : this.sessionKey(request.id);
       let previous = this.requests.get(requestKey);
       if (previous) {
         if (previous.fingerprint !== fingerprint) { throw new CommandError('Request ID was already used for another operation.'); }
@@ -236,6 +246,23 @@ export class ManagerOperations {
 
   /** @param {import('../../types/manager.js').ManagerRequest} request */
   async execute(request) {
+    if (request.operation === 'connections') { return {
+      ok: true,
+      connections: await listManagerConnections(this.tunnelChecks),
+    }; }
+    if (Object.hasOwn(CONNECTION_OPERATIONS, request.operation)) {
+      let key = `${connectionProjectRoot(request.projectId || '')}\0${request.sessionId}`;
+      return this.serializeTask(key, async () => {
+        let result = await runManagerConnection(request);
+        let status = result.sessions?.[0];
+        if (status?.tunnel) { this.tunnelChecks.set(key, {
+          publicUrl: status.publicUrl,
+          tunnel: status.tunnel,
+        }); }
+        else { this.tunnelChecks.delete(key); }
+        return result;
+      });
+    }
     if (Object.hasOwn(MANAGER_FEEDBACK_OPERATIONS, request.operation)) {
       return this.serialize(request.sessionId || '', () => runManagerFeedback(request));
     }
@@ -293,7 +320,16 @@ export class ManagerOperations {
    */
   serialize(sessionId, task) {
     if (!currentStorageScope()) { return withStorageFolder(this.defaultFolder, () => this.serialize(sessionId, task)); }
-    let key = this.sessionKey(sessionId);
+    return this.serializeTask(this.sessionKey(sessionId), task);
+  }
+
+  /**
+   * @template T
+   * @param {string} key
+   * @param {() => Promise<T>} task
+   * @returns {Promise<T>}
+   */
+  serializeTask(key, task) {
     let result = (this.locks.get(key) || Promise.resolve()).then(task);
     let settled = result.then(() => {}, () => {});
     this.locks.set(key, settled);

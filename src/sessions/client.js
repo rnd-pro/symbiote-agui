@@ -4,7 +4,7 @@ import { CONTROL_TIMEOUT_MS, SESSION_STATE } from './constants.js';
 
 /**
  * @param {import('../../types/session.js').SessionRecord} record
- * @param {'status' | 'stop' | 'insert' | 'update' | 'events' | 'tools' | 'clear' | 'share' | 'tunnel-renew' | 'sync' | 'transfer-snapshot' | 'feedback' | 'feedback/settings' | 'feedback/configure' | 'feedback/disable' | 'feedback/check'} action
+ * @param {'status' | 'stop' | 'insert' | 'update' | 'events' | 'tools' | 'clear' | 'share' | 'tunnel-renew' | 'tunnel-stop' | 'connections' | 'connections/disconnect' | 'sync' | 'transfer-snapshot' | 'feedback' | 'feedback/settings' | 'feedback/configure' | 'feedback/disable' | 'feedback/check'} action
  * @param {number} timeout
  * @param {string} [html]
  * @returns {Promise<import('../../types/session.js').SessionStatus>}
@@ -16,16 +16,19 @@ export async function requestSession(record, action, timeout = CONTROL_TIMEOUT_M
     }
 
     let response = await fetch(`${record.controlUrl}/${action}`, {
-      method: ['status', 'events', 'feedback', 'feedback/settings'].includes(action) ? 'GET' : 'POST',
+      method: ['status', 'events', 'feedback', 'feedback/settings', 'connections'].includes(action) ? 'GET' : 'POST',
       headers: {
         authorization: `Bearer ${record.controlToken}`,
         ...(action === 'insert' ? { 'content-type': 'text/html; charset=utf-8' } : {}),
-        ...(['update', 'tools', 'sync'].includes(action) || action.startsWith('feedback/') ? { 'content-type': 'application/json' } : {}),
+        ...(['update', 'tools', 'sync', 'connections/disconnect'].includes(action) || action.startsWith('feedback/') ? { 'content-type': 'application/json' } : {}),
       },
       body: html,
       signal: AbortSignal.timeout(timeout),
       redirect: 'error',
     });
+    if (['connections', 'connections/disconnect', 'tunnel-stop'].includes(action) && response.status === 404) {
+      throw new CommandError('Connection management is unavailable in this worker. Save browser drafts before restarting it.', ERROR_CODE.NOT_IMPLEMENTED);
+    }
     if (action.startsWith('feedback') && response.status === 404) {
       throw new CommandError('Feedback is unavailable in this worker.', ERROR_CODE.NOT_IMPLEMENTED, EXIT_CODE.RUNTIME_ERROR);
     }

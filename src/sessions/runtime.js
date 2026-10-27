@@ -88,6 +88,7 @@ export class SessionRuntime {
     let clients = this.pages?.clients.size || 0;
     return {
       sessionId: this.record.sessionId,
+      instanceId: this.record.instanceId,
       state: this.closing ? SESSION_STATE.STOPPED : clients ? SESSION_STATE.READY : SESSION_STATE.WAITING,
       url: this.record.url,
       clients,
@@ -165,6 +166,41 @@ export class SessionRuntime {
   async disableFeedback(input) {
     await this.feedback.disable(input);
     return this.feedbackStatus();
+  }
+
+  connections() {
+    return {
+      ...this.status(),
+      pageConnections: {
+        project: projectEntry(getSettings().folder),
+        pages: this.pages?.listPages() || [],
+      },
+    };
+  }
+
+  /** @param {unknown} input */
+  async disconnectPage(input) {
+    let value = /** @type {{ instanceId?: unknown; pageId?: unknown }} */ (input);
+    if (!value || typeof value !== 'object' || Array.isArray(value)
+      || Object.keys(value).some((key) => ![
+        'instanceId',
+        'pageId',
+      ].includes(key)) || value.instanceId !== this.record.instanceId
+      || typeof value.pageId !== 'string' || !/^[a-f0-9-]{36}$/.test(value.pageId) || !this.pages || this.closing) {
+      throw new CommandError('The connection identity changed. Refresh Connections before disconnecting a browser.');
+    }
+    await this.pages.disconnectPage(value.pageId);
+    return this.connections();
+  }
+
+  stopTunnel() {
+    let task = this.tunnelOperations.then(async () => {
+      await this.tunnel?.close();
+      this.tunnel = undefined;
+      return this.status();
+    });
+    this.tunnelOperations = task.then(() => {}, () => {});
+    return task;
   }
 
   /** @param {boolean} [resetData] */

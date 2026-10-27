@@ -5,6 +5,8 @@ export type SessionState = typeof SESSION_STATE[keyof typeof SESSION_STATE];
 
 export interface SessionStatus {
   sessionId: string;
+  instanceId?: string;
+  pageConnections?: import('./connections.js').WorkerConnections;
   state: SessionState;
   active?: boolean;
   pid?: number;
@@ -84,6 +86,9 @@ export type ControlReply = ControlIdentity & (
 );
 
 export interface ControlActions {
+  connections?(): SessionStatus;
+  disconnectPage?(input: unknown): Promise<SessionStatus>;
+  tunnelStop?(): Promise<SessionStatus>;
   insert?(html: string): Promise<SessionStatus>;
   update?(input: unknown): Promise<SessionStatus>;
   events?(): SessionStatus;

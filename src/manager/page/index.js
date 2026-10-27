@@ -14,6 +14,7 @@ import { PROJECT_STATE, ProjectNavigation } from './projects.js';
 import { EXPLORER_STATE, ProjectExplorer } from './explorer.js';
 import { TRANSFER_STATE, SessionTransfers } from './transfers.js';
 import { FEEDBACK_SETTINGS_STATE, SessionFeedbackSettings } from './feedback.js';
+import { CONNECTIONS_STATE, LiveConnections } from './connections.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
@@ -23,6 +24,8 @@ export class SessionManager extends ContextProvider {
     ...EXPLORER_STATE,
     ...TRANSFER_STATE,
     ...FEEDBACK_SETTINGS_STATE,
+    ...CONNECTIONS_STATE,
+    refreshConnections: () => { void this.liveConnections?.refresh(); },
     connection: 'Connecting...',
     connectionTone: 'info',
     scope: '',
@@ -92,6 +95,8 @@ export class SessionManager extends ContextProvider {
   refreshAgain = false;
   loaded = false;
   disposed = false;
+  /** @type {LiveConnections | undefined} */
+  liveConnections;
   viewEpoch = 0;
   /** @type {ProjectNavigation | undefined} */
   projects;
@@ -107,11 +112,15 @@ export class SessionManager extends ContextProvider {
   stopThemeSync;
 
   renderCallback() {
+    this.liveConnections = new LiveConnections(this);
     this.feedbackSettings = new SessionFeedbackSettings(this);
     this.projects = new ProjectNavigation(this);
     this.explorer = new ProjectExplorer(this);
     this.transfers = new SessionTransfers(this);
-    this.sub('workspaceView', (view) => this.explorer?.activate(view === 'explorer'));
+    this.sub('workspaceView', (view) => {
+      this.explorer?.activate(view === 'explorer');
+      this.liveConnections?.activate(view === 'connections');
+    });
     this.sub('explorerHidden', () => this.explorer?.reload(), false);
     this.sub('projectChoice', () => this.projects?.render(), false);
     this.sub('theme', (theme) => setTheme(String(theme)));
@@ -134,11 +143,15 @@ export class SessionManager extends ContextProvider {
       this.$.connection = message;
       this.$.refreshDisabled = !ready;
       this.explorer?.connectionChanged(ready);
+      this.liveConnections?.connectionChanged(ready);
       this.renderRows();
     }, () => { void this.projects?.refresh(); void this.refresh(); void this.transfers?.refreshHistory(); });
     this.connection.connect();
     this.interval = setInterval(() => {
-      if (document.visibilityState === 'visible' && this.connection?.ready && !this.busy) { void this.refresh(); }
+      if (document.visibilityState === 'visible' && this.connection?.ready && !this.busy) {
+        void this.refresh();
+        void this.liveConnections?.refresh();
+      }
     }, MANAGER_REFRESH_MS);
   }
 
@@ -193,10 +206,13 @@ export class SessionManager extends ContextProvider {
     this.explorer?.render();
     this.transfers?.render();
     this.feedbackSettings?.render();
+    this.liveConnections?.render();
     this.$.counts = `${sessions.length} total / ${sessions.filter((row) => row.active === true).length} running / ${sessions.filter((row) => row.active === false).length} stopped / ${sessions.filter((row) => row.active === null).length} unknown`;
     let states = Object.fromEntries(sessions.map((row) => [
       row.sessionId,
-      rowState(row, disabled, (operation, id) => { void this.act(operation, id); }),
+      rowState(row, disabled, (operation, id) => { void this.act(operation, id); }, (viewer) => {
+        void this.liveConnections?.open(row.sessionId, this.connection?.projectId || 'default', viewer, row.instanceId);
+      }),
     ]));
     let selected = /** @type {string[]} */ (this.$.selection)[0];
     this.$.rows = Object.fromEntries(matches.map((row) => [

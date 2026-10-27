@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { WebSocket, WebSocketServer } from 'ws';
-import { HEARTBEAT_MS, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, PAGE_REQUEST_TIMEOUT_MS, PAGE_ROLE } from '../transport/constants.js';
+import { HEARTBEAT_MS, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, PAGE_REQUEST_TIMEOUT_MS, PAGE_ROLE, PAGE_DISCONNECT_CODE } from '../transport/constants.js';
+import { CommandError } from '../shared/command-error.js';
 import { isPageOrigin } from './page-access.js';
 import { SharedPages } from './shared-pages.js';
 import { PageFeedback } from './page-feedback.js';
@@ -52,6 +53,7 @@ export class PageConnection {
       let page = {
         socket, url: new URL(`${access.path}${endpoint.search}`, request.headers.origin).href,
         viewerRequested,
+        connectedAt: new Date().toISOString(),
         title: 'AGUI', ready: false, error: '',
       };
       this.pages.set(pageId, page);
@@ -129,6 +131,36 @@ export class PageConnection {
       }
     }, HEARTBEAT_MS);
     this.heartbeat.unref();
+  }
+
+  /** @returns {import('../../types/tools.js').ConnectedPage[]} */
+  listPages() {
+    return Array.from(this.pages, ([
+      pageId,
+      page,
+    ]) => ({
+      pageId,
+      url: page.url || '',
+      title: page.title,
+      ready: page.ready,
+      ...(page.role ? {
+        role: page.role,
+      } : {}),
+      ...(page.connectedAt ? {
+        connectedAt: page.connectedAt,
+      } : {}),
+    }));
+  }
+
+  /** @param {string} pageId */
+  async disconnectPage(pageId) {
+    let page = this.pages.get(pageId);
+    if (!page || page.socket.readyState !== WebSocket.OPEN) { throw new CommandError('This browser connection has already ended. Refresh Connections.'); }
+    await new Promise((resolve) => {
+      let timeout = setTimeout(() => page.socket.terminate(), 500);
+      page.socket.once('close', () => { clearTimeout(timeout); resolve(undefined); });
+      page.socket.close(PAGE_DISCONNECT_CODE, 'Disconnected by manager');
+    });
   }
 
   /**

@@ -2,6 +2,8 @@
 
 Pages use the existing session WebSocket. `types/transport.d.ts` defines the wire messages; `constants.js` owns shared limits. `PageConnection` enforces origins, connection membership, and user/viewer capabilities. Application commands, data commits, feedback, mirrored snapshots, and transient annotations have separate dispatch paths.
 
+The authenticated worker control API exposes connection inspection, one-page disconnect, and tunnel stop to the local manager. Connection inspection reuses the CLI's connected-page model and includes acceptance timestamps. An intentional page disconnect uses `PAGE_DISCONNECT_CODE`; the client disables sending and automatic reconnects while retaining content and drafts. Reloading permits a new connection. These controls are not available on generated pages or public tunnels.
+
 ## Annotation packets
 
 The annotation transport is available only on shared sessions. The trusted page client renders colored viewer marker cursors outside application content and keeps their packets separate from application commands. The mirror stays inert and has no application scripts; trusted parent listeners handle hover and presentation-only scrolling.

@@ -22,8 +22,8 @@ export let SESSION_CONTROLS_TEMPLATE = html`
     <section class="grid gap-2 border-t border-agui-divider pt-3" aria-label="Session links" bind="hidden: ^noLocal">
       <h3 class="text-xs uppercase tracking-widest text-agui-muted">Open page</h3>
       <agui-toolbar aria-label="Open session page" class="grid grid-cols-2">
-        <a class="agui-button no-underline" target="_blank" rel="noopener noreferrer" aria-label="Public link"
-          bind="href: ^userUrl; title: ^userUrl; hidden: ^noPublic"><agui-icon name="open_in_new"></agui-icon>Public</a>
+        <button type="button" aria-label="Public link"
+          bind="onclick: ^openPublic; title: ^userUrl; hidden: ^noPublic; disabled: ^publicDisabled"><agui-icon name="open_in_new"></agui-icon>Public</button>
         <a class="agui-button no-underline" target="_blank" rel="noopener noreferrer" aria-label="Local page"
           bind="href: ^url; title: ^url; hidden: ^noLocal"><agui-icon name="open_in_new"></agui-icon>Local</a>
       </agui-toolbar>

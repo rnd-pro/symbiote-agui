@@ -61,6 +61,8 @@
               <p class="text-xs uppercase tracking-widest text-agui-muted">Your workspace</p>
               <h2 class="text-2xl font-semibold">Sessions</h2>
               <p class="counts text-sm text-agui-muted" role="status">{{MANAGER/counts}}</p>
+              <a class="agui-button w-fit no-underline" target="_blank" rel="noopener noreferrer"
+                bind="href: MANAGER/verifiedPublicUrl; hidden: !MANAGER/verifiedPublicUrl">Open verified link</a>
               <p id="transfer-recovery-notice" class="text-sm text-agui-danger empty:hidden" role="status" bind="textContent: MANAGER/transferRecoveryNotice"></p>
             </div>
             <agui-tabs id="session-views" label="Workspace view" value="table" pub-to="MANAGER/workspaceView" bind="$.value: MANAGER/workspaceView">
@@ -77,6 +79,9 @@
                     <agui-session-row pub-to="MANAGER/selection" bind="state: card"></agui-session-row>
                   </template>
                 </div>
+              </agui-tab>
+              <agui-tab value="connections" label="Connections">
+                <agui-manager-connections></agui-manager-connections>
               </agui-tab>
               <agui-tab value="explorer" label="Project explorer">
                 <div id="manager-explorer" class="grid min-w-0 gap-4">

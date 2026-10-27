@@ -10,6 +10,7 @@ export let MAX_EVENTS = 100;
 export let RECONNECT_MIN_MS = 500;
 export let RECONNECT_MAX_MS = 5_000;
 export let CONNECTION_STATUS_ID = 'agui-connection';
+export let PAGE_DISCONNECT_CODE = 4000;
 export let MODULE_SELECTOR = 'script[type="module"][data-agui]';
 export let MIRROR_INTERVAL_MS = 100;
 export let MIRROR_REFRESH_MS = 1_000;

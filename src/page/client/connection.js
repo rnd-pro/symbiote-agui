@@ -1,4 +1,4 @@
-import { CONNECTION_STATUS_ID, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, RECONNECT_MIN_MS, RECONNECT_MAX_MS, SOCKET_PATH, PAGE_ROLE } from '../../transport/constants.js';
+import { CONNECTION_STATUS_ID, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, RECONNECT_MIN_MS, RECONNECT_MAX_MS, SOCKET_PATH, PAGE_ROLE, PAGE_DISCONNECT_CODE } from '../../transport/constants.js';
 import { executePageCommand, sendPageResult } from './commands.js';
 import { setEventSender } from './events.js';
 import { disposeModules } from './modules.js';
@@ -152,6 +152,12 @@ export function connectSession() {
       if (current === socket) { failInformationRequest(); }
       if (current === socket) { updateSessionContext({ connected: false }); shared.disconnect(); setFeedbackConnected(false); setDataConnected(false); }
       if (event.code === 1000 && event.reason === 'Session ended') { ended = true; }
+      if (event.code === PAGE_DISCONNECT_CODE) {
+        ended = true;
+        clearTimeout(timer);
+        showStatus('Disconnected by manager. Reload this page to reconnect.');
+        return;
+      }
       if (ended) { showStatus('Session ended.'); return; }
       if (paused || attempt !== generation) { return; }
       showStatus('Connection lost. Reconnecting...', 'alert');

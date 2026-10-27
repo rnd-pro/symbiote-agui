@@ -32,7 +32,7 @@ export function toolbarIndicator(input) {
   if (input.viewer) {
     return {
       state: 'viewer',
-      icon: 'person',
+      icon: 'visibility',
       tone: 'neutral',
       textKey: 'readonly',
     };

@@ -36,5 +36,6 @@ export let ICON_NAMES = Object.freeze({
   sort: 'sort',
   sync: 'sync',
   upload: 'upload',
+  visibility: 'visibility',
   warning: 'warning',
 });

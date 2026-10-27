@@ -9,6 +9,8 @@ npx symbiote-agui manager
 npx symbiote-agui manager --no-open
 npx symbiote-agui manager status
 npx symbiote-agui manager stop
+npx symbiote-agui manager restart
+npx symbiote-agui manager restart --no-open
 ```
 
 The built-in Symbiote page calls AGUI functions directly over its own authenticated WebSocket. It does not need an agent, MCP setup, or browser debugging. It lists running and saved sessions, descriptions, clients, process IDs, and current links. Search, status filters, individual controls, and scoped bulk actions use the shared UI library. The theme toggle selects light/dark; the initial theme follows your operating system when no preference is saved. Your choice is remembered across reloads and synchronized between tabs in the same browser at the manager URL.
@@ -23,7 +25,7 @@ Disconnect browser ends only that connection, retaining its visible page and loc
 
 For a running session, choose Feedback command to configure or disable private agent delivery. Enter the originating conversation ID and the command object described under [private feedback handlers](#private-feedback-handlers). Save command validates and registers it without executing it. The dialog can reload current settings; routine manager refreshes leave edits in place. Configuration stays in worker memory and is cleared when the session stops. An existing conversation binding cannot change until a new worker starts. These controls are available only in the authenticated local manager; generated AGUIs and public links cannot configure host commands.
 
-One detached manager runs per private state directory for all connected folders and Default. Repeating `manager` from any project reuses its process and URL, with that folder selected in the app. Switching projects refreshes folder contents and session statuses inside the same page. Tabs can select folders independently. Session stop/clear-all commands leave the manager running. `manager stop` stops only the manager and waits for accepted operations to finish.
+One detached manager runs per private state directory for all connected folders and Default. Repeating `manager` from any project reuses its process and URL, with that folder selected in the app. Switching projects refreshes folder contents and session statuses inside the same page. Tabs can select folders independently. Session stop/clear-all commands leave the manager running. `manager stop` stops only the manager and waits for accepted operations to finish. `manager restart` waits for that shutdown, then starts the manager with fresh assets and opens its new launch URL. Use `--no-open` to return the URL without opening a browser. If the manager is stopped, restart starts it. AGUI workers, tunnels, saved interfaces, and committed data remain in place; reopen the manager through the returned `launchUrl` because its URL and browser authorization change.
 
 Use Projects to connect existing AGUI folders and revisit them or Default. Choose folder opens a native picker on the computer running Node and connects the selected folder; canceling leaves connections unchanged. Enter folder path provides optional manual entry. Desktop pickers use macOS or Windows system dialogs, or an installed Zenity/KDialog on Linux; if unavailable, use manual entry. Switch selects the folder in the same manager without changing save-folder configuration or moving files, sessions, or data. Manage projects shows paths and availability; Forget connection removes only the remembered connection. Default and the current project cannot be forgotten.
 

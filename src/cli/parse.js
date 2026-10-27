@@ -48,11 +48,15 @@ export function parseCommand(args) {
   }
   if (positionals[0] === 'manager') {
     let command = positionals[1] || 'start';
-    if (!['start', 'status', 'stop'].includes(command) || positionals.length > 2
-      || Object.keys(values).some((key) => key !== 'no-open' || command !== 'start')) {
-      throw new CommandError('Usage: symbiote-agui manager [--no-open] | manager status | manager stop');
+    if (!['start', 'status', 'stop', 'restart'].includes(command) || positionals.length > 2
+      || Object.keys(values).some((key) => key !== 'no-open' || !['start', 'restart'].includes(command))) {
+      throw new CommandError('Usage: symbiote-agui manager [--no-open] | manager restart [--no-open] | manager status | manager stop');
     }
-    return { kind: 'manager', command: /** @type {'start' | 'status' | 'stop'} */ (command), open: !values['no-open'] };
+    return {
+      kind: 'manager',
+      command: /** @type {import('../../types/cli.js').ManagerCommand} */ (command),
+      open: !values['no-open'],
+    };
   }
   let library = parseLibraryCommand(positionals, values);
   if (library) { return library; }

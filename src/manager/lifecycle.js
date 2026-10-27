@@ -53,6 +53,12 @@ export async function stopManager() {
   };
 }
 
+/** @param {boolean} [open] */
+export async function restartManager(open = true) {
+  await stopManager();
+  return startManager(open);
+}
+
 /** @param {import('node:child_process').ChildProcess} child */
 function waitForManager(child) {
   return new Promise((resolve, reject) => {

@@ -67,8 +67,13 @@ export async function run(args) {
       return EXIT_CODE.SUCCESS;
     }
     if (request.kind === 'manager') {
-      let { startManager, statusManager, stopManager } = await import('../manager/lifecycle.js');
-      let operations = { start: () => startManager(request.open), status: statusManager, stop: stopManager };
+      let { startManager, statusManager, stopManager, restartManager } = await import('../manager/lifecycle.js');
+      let operations = {
+        start: () => startManager(request.open),
+        status: statusManager,
+        stop: stopManager,
+        restart: () => restartManager(request.open),
+      };
       printResult({ ok: true, ...await operations[request.command]() });
       return EXIT_CODE.SUCCESS;
     }

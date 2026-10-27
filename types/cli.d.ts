@@ -6,6 +6,7 @@ export type SessionCommand = keyof typeof COMMANDS;
 export type AllSessionsCommand = keyof typeof ALL_COMMANDS;
 export type ErrorCode = typeof ERROR_CODE[keyof typeof ERROR_CODE];
 export type ExitCode = typeof EXIT_CODE[keyof typeof EXIT_CODE];
+export type ManagerCommand = 'start' | 'status' | 'stop' | 'restart';
 
 export type LibraryRequest =
   | { kind: 'library'; command: 'config folder'; folder: string }
@@ -27,7 +28,7 @@ export type CliRequest =
   | LibraryRequest
   | FeedbackCliRequest
   | MetadataCliRequest
-  | { kind: 'manager'; command: 'start' | 'status' | 'stop'; open: boolean }
+  | { kind: 'manager'; command: ManagerCommand; open: boolean }
   | { kind: 'help' }
   | { kind: 'version' }
   | { kind: 'mcp' }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import test from 'node:test';
 import { once } from 'node:events';
@@ -17,6 +17,7 @@ import { stopSession, statusSession } from '../../src/sessions/lifecycle.js';
 import { runAllSessions } from '../../src/sessions/all.js';
 import { parseCommand } from '../../src/cli/parse.js';
 import { connectProject } from '../../src/projects/registry.js';
+import { temporaryManagerProject } from './manager-storage-fixture.js';
 
 /** @param {string} sessionId */
 async function save(sessionId) {
@@ -28,6 +29,23 @@ async function save(sessionId) {
 test('manager commands and inputs restrict capabilities to named sessions', () => {
   assert.deepEqual(parseCommand(['manager', '--no-open']), { kind: 'manager', command: 'start', open: false });
   assert.equal(parseCommand(['manager', 'status']).kind, 'manager');
+  assert.deepEqual(parseCommand([
+    'manager',
+    'restart',
+    '--no-open',
+  ]), {
+    kind: 'manager',
+    command: 'restart',
+    open: false,
+  });
+  assert.deepEqual(parseCommand([
+    'manager',
+    'restart',
+  ]), {
+    kind: 'manager',
+    command: 'restart',
+    open: true,
+  });
   for (let args of [['manager', 'share'], ['manager', 'stop', '--no-open'], ['manager', '--file', '/tmp/a']]) {
     assert.throws(() => parseCommand(args));
   }
@@ -209,6 +227,50 @@ test('detached manager reuses its URL and survives session stop-all and clear-al
   assert.equal((await statusManager()).active, true);
   assert.equal((await stopManager()).active, false);
   assert.equal((await statusManager()).active, false);
+});
+
+test('manager restart replaces only the manager and starts it when stopped', {
+  timeout: 40_000,
+}, async (t) => {
+  let project = await temporaryManagerProject();
+  t.after(() => project.close());
+  let source = join(project.directory, 'desk.html');
+  await writeFile(source, '<h1>Keep this session</h1>');
+  await project.cli([
+    'save',
+    'desk',
+    '--file',
+    source,
+  ]);
+  await project.cli([
+    'start',
+    'desk',
+    '--no-open',
+  ]);
+  let session = await project.cli([
+    'status',
+    'desk',
+  ]);
+  let args = [
+    'manager',
+    'restart',
+    '--no-open',
+  ];
+  let first = await project.cli(args);
+  assert.equal(first.active, true, 'Restart also starts a stopped manager.');
+  let restarted = await project.cli(args);
+  assert.equal(restarted.ok, true);
+  assert.equal(restarted.active, true);
+  assert.notEqual(restarted.pid, first.pid);
+  assert.notEqual(new URL(restarted.launchUrl).hash, new URL(first.launchUrl).hash);
+  assert.equal(restarted.opened, undefined, '--no-open does not invoke a browser.');
+  let retained = await project.cli([
+    'status',
+    'desk',
+  ]);
+  assert.equal(retained.active, true);
+  assert.equal(retained.pid, session.pid);
+  assert.equal(retained.url, session.url);
 });
 
 test('manager shutdown waits for accepted requests before session locks are acquired', { timeout: 20_000 }, async (t) => {

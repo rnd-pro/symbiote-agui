@@ -98,6 +98,7 @@ export let HELP = [
   '  manager [--no-open]          Open the built-in local session manager',
   '  manager status              Show the manager URL and storage scope',
   '  manager stop                Stop the manager without stopping sessions',
+  '  manager restart [--no-open]  Restart the manager without stopping sessions',
   '  list [--query <TEXT>]        Discover saved AGUIs by ID or Markdown description',
   '  config folder <PATH>         Set the project AGUI folder in .agui.json',
   '  config show                  Show effective storage settings',

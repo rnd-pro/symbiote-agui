@@ -259,9 +259,15 @@ Use `start --tunnel` for a new session or `share` for one already running. Resul
 
 The first eligible connection gets the user role. Other connections are viewers while that user is connected. After disconnect, the next eligible connection or reconnection can take the role. Existing viewers stay viewers until reconnecting; explicit viewer links never claim the role. If local tabs are already connected when sharing starts, the first connected tab becomes the user.
 
-Viewers receive the current rendered view and subsequent user and agent updates. They run no generated modules, expose no tools, and cannot submit actions or events. They retain the last view when the user disconnects. New insertions wait for a user to render them; clearing removes the old view immediately.
+Viewers receive the current rendered view and subsequent user and agent updates. They run no generated modules, expose no tools, and cannot submit application actions or events. They retain the last view when the user disconnects. New insertions wait for a user to render them; clearing removes the old view immediately.
 
-Mirroring covers light DOM and ordinary form values, with a 1 MiB snapshot limit. Password values are omitted. Canvas, video frames, embedded pages, and shadow-root contents are not streamed. Viewers can scroll independently.
+Each viewer gets a colored marker visible to everyone in the session. Move the pointer to point at content, or hold the primary mouse button and drag to highlight it. For touch or pen, open the floating status button and enable Draw with touch or pen; turn it off to return to ordinary touch scrolling. The interactive user keeps normal page controls. Viewers can scroll independently and use their own status popup while the mirrored application stays read-only.
+
+Highlights remain for three seconds, then fade over two seconds. Reduced-motion mode removes them at expiry without gradual fading. Late arrivals see unexpired highlights; reconnecting assigns a fresh marker identity without replaying old input. Missing content removes its highlights, and clearing or replacing the interface resets annotations. Markers and drawings are temporary collaboration data: they are not saved, exported, sent as feedback, or used to change application data. They require no extra connection or browser permission.
+
+Up to 128 connected viewers can publish annotations; additional viewers can still watch. History is bounded to 64 stroke segments and 4,096 points, so older segments can disappear early during heavy drawing. Slow connections receive current annotation state rather than a backlog of movement.
+
+Mirroring covers light DOM and ordinary form values, with a 1 MiB snapshot limit. Password values are omitted. Canvas, video frames, embedded pages, and shadow-root contents are not streamed.
 
 AGUI uses `cloudflared` from PATH or downloads and verifies an official binary once. Automatic provisioning supports macOS/Linux on x64 or arm64 and Windows on x64. Set `AGUI_CLOUDFLARED_PATH` to an absolute executable path before starting a session to select an installation. Provisioning and tunnel connection can take up to 90 seconds after local startup.
 

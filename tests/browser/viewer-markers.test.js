@@ -98,7 +98,15 @@ test('viewer markers share content anchors across sizes and snapshots without en
   let secondId = ids[1];
   assert.ok(firstId && secondId);
   await user.waitForFunction((id) => document.querySelector(`[data-viewer="${id}"]`), {}, firstId);
-  assert.equal(Array.from(runtime.pages.shared.annotations.members.values())[0].presence.point?.anchor, target.anchor);
+  await first.evaluate(() => {
+    let frame = /** @type {HTMLIFrameElement} */ (document.getElementById('agui-viewer'));
+    frame.contentDocument?.getElementById('pointer-target')?.dispatchEvent(new PointerEvent('pointerleave'));
+  });
+  // Allow the coalesced cursor packet to arrive after crossing a child boundary.
+  await user.evaluate(() => new Promise((resolve) => setTimeout(resolve, 100)));
+  assert.equal(Array.from(runtime.pages.shared.annotations.members.values())[0].presence.point?.anchor, target.anchor,
+    'Leaving a child element must not clear a cursor that is still inside the viewed page.');
+  assert.equal(await user.$eval(`[data-viewer="${firstId}"] agui-icon`, (element) => element.textContent?.trim()), 'edit');
   let expected = await user.$eval('#pointer-target', (element) => {
     let box = element.getBoundingClientRect();
     return {
@@ -112,6 +120,7 @@ test('viewer markers share content anchors across sizes and snapshots without en
   await second.bringToFront();
   await second.waitForSelector(`agui-viewer-markers [data-viewer="${firstId}"]`);
   assert.ok(await marker(second, firstId));
+  assert.equal(await second.$eval(`[data-viewer="${firstId}"] agui-icon`, (element) => element.textContent?.trim()), 'edit');
   await hoverMirror(second, '#notes input');
   await user.bringToFront();
   await user.waitForFunction(() => document.querySelectorAll('agui-viewer-markers [data-viewer]').length === 2);

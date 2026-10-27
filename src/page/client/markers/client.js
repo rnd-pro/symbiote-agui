@@ -99,7 +99,10 @@ export class PageMarkers {
     if (this.role === PAGE_ROLE.VIEWER) {
       this.previousCursor = doc.documentElement.style.cursor;
       doc.addEventListener('pointermove', this.pointer, options);
-      doc.documentElement.addEventListener('pointerleave', this.leave, options);
+      doc.documentElement.addEventListener('pointerleave', this.leave, {
+        ...options,
+        capture: false,
+      });
       this.drawing.attach(doc, options);
       doc.addEventListener('wheel', this.wheel, {
         ...options,

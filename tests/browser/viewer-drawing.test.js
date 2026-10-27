@@ -134,6 +134,43 @@ test('viewer drawing stays transient, survives snapshots, replays to late arriva
   assert.equal(await user.$eval('context-provider[ctx="MARKER_DEMO"]', (element) => JSON.stringify(Reflect.get(element, '$').rows)), before);
   let late = await open(true);
   await late.waitForFunction(() => Reflect.get(window, 'trailPaints') > 0);
+  let originalViewer = await viewer.evaluate(() => {
+    let packets = /** @type {import('../../types/transport.js').AnnotationServerMessage[]} */ (Reflect.get(window, 'annotationPackets'));
+    return packets.find((entry) => entry.action === 'state')?.self;
+  });
+  let lateViewer = await late.evaluate(() => {
+    let packets = /** @type {import('../../types/transport.js').AnnotationServerMessage[]} */ (Reflect.get(window, 'annotationPackets'));
+    return packets.find((entry) => entry.action === 'state')?.self;
+  });
+  assert.ok(originalViewer && lateViewer);
+  assert.notEqual(originalViewer.color, lateViewer.color);
+  let secondPoint = await hoverMirror(late, '#notes input');
+  await late.mouse.down();
+  await late.mouse.move(secondPoint.x + 20, secondPoint.y);
+  await late.mouse.up();
+  await late.waitForFunction((id) => {
+    let packets = /** @type {import('../../types/transport.js').AnnotationServerMessage[]} */ (Reflect.get(window, 'annotationPackets'));
+    return packets.some((entry) => entry.action === 'stroke' && entry.stroke.viewerId === id && entry.stroke.ended);
+  }, {}, lateViewer.id);
+  assert.equal(Array.from(pages.shared.annotations.strokes.values()).some((stroke) =>
+    stroke.viewerId === lateViewer.id && stroke.color === lateViewer.color), true);
+  await viewer.bringToFront();
+  await viewer.waitForFunction((id) => {
+    let packets = /** @type {import('../../types/transport.js').AnnotationServerMessage[]} */ (Reflect.get(window, 'annotationPackets'));
+    return packets.some((entry) => entry.action === 'stroke' && entry.stroke.viewerId === id && entry.stroke.ended);
+  }, {}, lateViewer.id);
+  let knownStrokes = new Set(pages.shared.annotations.strokes.keys());
+  await late.reload();
+  await late.bringToFront();
+  await late.waitForFunction(() => Reflect.get(window, 'trailPaints') > 0);
+  let reconnected = await late.evaluate(() => {
+    let packets = /** @type {import('../../types/transport.js').AnnotationServerMessage[]} */ (Reflect.get(window, 'annotationPackets'));
+    return packets.find((entry) => entry.action === 'state')?.self;
+  });
+  assert.ok(reconnected);
+  assert.notEqual(reconnected.id, lateViewer.id);
+  assert.equal(Array.from(pages.shared.annotations.members.values()).some((member) => member.presence.id === lateViewer.id), false);
+  assert.equal(Array.from(pages.shared.annotations.strokes.keys()).every((id) => knownStrokes.has(id)), true, 'Reconnect replays server history without publishing old input.');
   let previous = new Set(pages.shared.annotations.strokes.keys());
   await syntheticStroke(viewer, 'pen');
   await user.bringToFront();
@@ -159,6 +196,14 @@ test('viewer drawing stays transient, survives snapshots, replays to late arriva
     let frame = /** @type {HTMLIFrameElement} */ (document.getElementById('agui-viewer'));
     return frame.contentDocument?.body.inert && !frame.contentWindow?.customElements.get('agui-field');
   }), true);
+  await user.$eval('#pointer-target', (element) => element.remove());
+  await viewer.bringToFront();
+  await viewer.waitForFunction(() => {
+    let frame = /** @type {HTMLIFrameElement} */ (document.getElementById('agui-viewer'));
+    return !frame.contentDocument?.getElementById('pointer-target');
+  });
+  assert.equal(Array.from(pages.shared.annotations.strokes.values()).some((stroke) =>
+    stroke.points.some((strokePoint) => strokePoint.anchor === point.anchor)), false);
   await viewer.close();
   await late.close();
   let expires = Math.max(...Array.from(pages.shared.annotations.strokes.values(), (stroke) => stroke.expiresAt));

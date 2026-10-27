@@ -69,7 +69,7 @@ The manager uses the same UI library and theme as generated interfaces. It is lo
 
 Ask your agent to enable a public tunnel and give you a viewer link. AGUI creates the tunnel automatically, without a Cloudflare account or domain.
 
-One person uses the interactive page while others watch its updates through a read-only viewer link. Viewer links stay read-only. When the interactive user disconnects, the next eligible connection can take that role.
+One person uses the interactive page while others watch its updates through a viewer link. Viewers can point and draw temporary colored highlights together while application controls and data stay read-only. When the interactive user disconnects, the next eligible connection can take that role.
 
 If a shared link stops working, run `npx symbiote-agui tunnel check my-workspace` to check it, then `npx symbiote-agui tunnel renew my-workspace` to create replacement links.
 

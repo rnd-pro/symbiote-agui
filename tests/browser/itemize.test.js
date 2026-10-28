@@ -21,7 +21,7 @@ for (let native of [false, true]) {
       await browser?.close();
       await state.close();
     });
-    let skill = await readFile(new URL('../../skills/symbiote-agui/SKILL.md', import.meta.url), 'utf8');
+    let skill = await readFile(new URL('../../skills/agui/SKILL.md', import.meta.url), 'utf8');
     let example = skill.match(/```html\n(<task-list>[\s\S]+?)\n```/);
     assert.ok(example, 'The public Itemize example must be runnable markup.');
     browser = await puppeteer.launch({

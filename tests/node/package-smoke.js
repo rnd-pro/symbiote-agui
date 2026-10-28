@@ -77,7 +77,6 @@ test('the production tarball runs through npm exec outside the checkout', { time
     'src/manager/page/rows.js',
     'src/manager/page/connection.js',
     'src/manager/page/styles.css',
-    'skills/symbiote-agui/SKILL.md',
     'skills/agui/SKILL.md',
   ]) {
     assert.ok(files.includes(path), `${path} must be included in the tarball.`);

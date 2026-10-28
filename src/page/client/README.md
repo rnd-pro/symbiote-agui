@@ -26,4 +26,4 @@ One direct JSON script initializes local state before binding setup. Named conte
 
 A provider can also receive a plain object through `bind="state: APP/contact"`, exposing its plain local keys to a reusable template or authored children. Add `pub-to="APP/contact"` to publish local changes to those imported fields as fresh objects; omit it for a local draft. Incoming replacements never echo outward, clear removed fields without losing their local ownership, and add subscriptions for new fields. Other local fields stay outside publication. Use native `^property` bindings in nested controls; `ctx` still names an optional shared context. Declare persistence on the application provider's object property when these drafts should join the common Save workflow.
 
-For command examples and markup syntax, see [AGUI skill](../../../skills/symbiote-agui/SKILL.md#markup-and-handlers).
+For command examples and markup syntax, see [AGUI skill](../../../skills/agui/SKILL.md#markup-and-handlers).

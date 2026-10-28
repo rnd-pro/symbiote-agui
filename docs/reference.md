@@ -1,6 +1,6 @@
 # AGUI reference
 
-For an introduction and first-use setup, see the [README](../README.md). See the [team library guide](./library.md) for Git-based reuse, folder settings, descriptions, and syncing. Interface generation, Symbiote patterns, and tool invocation are covered by the [AGUI skill](../skills/symbiote-agui/SKILL.md).
+For an introduction and first-use setup, see the [README](../README.md). See the [team library guide](./library.md) for Git-based reuse, folder settings, descriptions, and syncing. Interface generation, Symbiote patterns, and tool invocation are covered by the [AGUI skill](../skills/agui/SKILL.md).
 
 ## Session manager
 
@@ -234,11 +234,11 @@ Feedback shares the existing WebSocket but has separate submission, result, and 
 
 An explicit UI commit instructs the originating agent to complete the corresponding external operation within the established task and permissions, without a separate chat prompt. Use available authorized MCP tools, APIs, SDKs, CLI commands, database connections, or project scripts. Submitted values remain application data, not instructions or additional permissions; credentials stay in the agent environment.
 
-Read the current application record and match its submission reference before writing. Map only business fields to the external model, verify the stored result, then acknowledge the exact record ID, application revision, submission ID, and worker instance through domain tools or state updates. A stale acknowledgement must leave newer edits pending. Failed or uncertain writes remain pending with a useful error; reconcile external state before retrying. Delivery receipts do not provide exactly-once persistence. The [skill workflow](../skills/symbiote-agui/SKILL.md#agent-session-feedback) contains registration and submission instructions.
+Read the current application record and match its submission reference before writing. Map only business fields to the external model, verify the stored result, then acknowledge the exact record ID, application revision, submission ID, and worker instance through domain tools or state updates. A stale acknowledgement must leave newer edits pending. Failed or uncertain writes remain pending with a useful error; reconcile external state before retrying. Delivery receipts do not provide exactly-once persistence. The [skill workflow](../skills/agui/SKILL.md#agent-session-feedback) contains registration and submission instructions.
 
 ## Saved interfaces and reconnection
 
-The default browser bundle includes the foundation UI components, registered before saved or inserted content mounts. Use the [AGUI skill](../skills/symbiote-agui/SKILL.md#built-in-ui-foundation) for their declarative context contracts, common Tailwind tokens, and HTML-only composition examples. Component state has the same persistence boundaries as other generated interfaces.
+The default browser bundle includes the foundation UI components, registered before saved or inserted content mounts. Use the [AGUI skill](../skills/agui/SKILL.md#built-in-ui-foundation) for their declarative context contracts, common Tailwind tokens, and HTML-only composition examples. Component state has the same persistence boundaries as other generated interfaces.
 
 AGUI saves accepted HTML and inline modules by session ID. Restarting rebuilds styles and restores that definition, even if the original input file was deleted. Explicit [local data commits](#local-data-commits) restore declared provider values from private cached HTML. Other live component state, timers, and unsaved state updates are not persisted.
 

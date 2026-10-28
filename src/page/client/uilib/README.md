@@ -68,6 +68,6 @@ Keep templates beside their component logic and collect them in `templates.js`. 
 
 Selects use a padded decorative chevron driven by native `:open`, with rotation disabled for reduced motion. Use `appearance: base-select` where supported for a web-rendered picker; the native picker is the fallback and may pause animations while open. Do not add JavaScript trackers for dropdown state.
 
-Use the self-contained catalogue and examples in `skills/symbiote-agui/SKILL.md` for authoring. The packaged `src/page/uilib-gallery.html` is the manual review fixture.
+Use the self-contained catalogue and examples in `skills/agui/SKILL.md` for authoring. The packaged `src/page/uilib-gallery.html` is the manual review fixture.
 
 Use grayscale surfaces with color reserved for accents and alerts. Inputs are recessed, default buttons use a solid contrasting fill, and panels have a soft border and shadow. Text inputs, selects, and buttons share `--agui-control-height` for height and minimum width. Checkbox/radio inputs occupy that same height around their smaller native indicators, including without a wrapping label. Toggle labels provide the shared control height around tracks sized by `--agui-toggle-height`. Textareas retain multiline sizing. Compact density reduces spacing without shrinking control targets.

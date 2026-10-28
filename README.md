@@ -25,15 +25,15 @@ The interface runs on your computer and opens in your normal browser. Your agent
 
 You need Node.js 24 or newer and an AI agent that can run shell commands.
 
-Install the [AGUI skill](https://skilld.dev/gh/rnd-pro/symbiote-agui) globally for your agent with [skilld](https://skilld.dev/), making it available across projects:
+Install the [AGUI skill](https://skills.sh/rnd-pro/symbiote-agui/agui) globally for your agent with the [skills CLI](https://skills.sh/), making it available across projects:
 
 ```sh
-npx skilld install rnd-pro/symbiote-agui/symbiote-agui --global
+npx skills add rnd-pro/symbiote-agui --skill agui --global
 ```
 
 Omit `--global` to install only in the current project. Keep the same scope when reinstalling or updating an existing skill.
 
-For manual setup, use the [skill source on GitHub](https://github.com/rnd-pro/symbiote-agui/tree/main/skills/symbiote-agui).
+For manual setup, use the [skill source on GitHub](https://github.com/rnd-pro/symbiote-agui/tree/main/skills/agui).
 
 Restart your agent session after installation, then ask it for an interface. For example:
 
@@ -49,11 +49,11 @@ AGUI exposes UI actions as WebMCP tools and invokes them through Symbiote.js's p
 
 AGUI runs locally by default. The CLI is enough to use it; [MCP integrations](./docs/reference.md#optional-agui-mcp) are available for agent environments that support them.
 
-With a verified [private feedback handler](./docs/reference.md#private-feedback-handlers), explicit Save or Submit actions can deliver consolidated changes to the originating conversation. The agent completes the corresponding authorized external operation and verifies the result before marking it saved. Routine edits stay local, and delivery acknowledgement is separate from external persistence. The [agent workflow](./skills/symbiote-agui/SKILL.md#agent-session-feedback) covers setup and behavior when native delivery is unavailable.
+With a verified [private feedback handler](./docs/reference.md#private-feedback-handlers), explicit Save or Submit actions can deliver consolidated changes to the originating conversation. The agent completes the corresponding authorized external operation and verifies the result before marking it saved. Routine edits stay local, and delivery acknowledgement is separate from external persistence. The [agent workflow](./skills/agui/SKILL.md#agent-session-feedback) covers setup and behavior when native delivery is unavailable.
 
 ## UI library
 
-AGUI includes a reusable UI library that lets agents build dynamic applications declaratively with RAT, using only predefined custom HTML tags and attributes, without needing access to the JavaScript runtime. It speeds up UI generation and significantly reduces token consumption. See the [AGUI skill](./skills/symbiote-agui/SKILL.md#built-in-ui-foundation) for usage guidance.
+AGUI includes a reusable UI library that lets agents build dynamic applications declaratively with RAT, using only predefined custom HTML tags and attributes, without needing access to the JavaScript runtime. It speeds up UI generation and significantly reduces token consumption. See the [AGUI skill](./skills/agui/SKILL.md#built-in-ui-foundation) for usage guidance.
 
 ## Manage sessions in your browser
 
@@ -120,7 +120,7 @@ Sessions can also describe their initial data source, provider bindings, and int
 ## Learn more
 
 - [Session controls, sharing limits, and optional integrations](./docs/reference.md)
-- [AGUI skill for agents creating and operating interfaces](./skills/symbiote-agui/SKILL.md)
+- [AGUI skill for agents creating and operating interfaces](./skills/agui/SKILL.md)
 - [Package on npm](https://www.npmjs.com/package/symbiote-agui)
 
 ## Contributing

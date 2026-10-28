@@ -50,7 +50,7 @@ The default JSDA page bundle includes and registers every available library comp
 - `agui-markdown`: Markdown string in `value` or an external `src` URL, caller-owned accessible `label`, and `texts`. JSDA-Kit renders formatting, highlighted code, native HTML/media, and custom wrappers with readable Markdown/JSON fallbacks. Registered components can enhance wrappers; task checkboxes stay disabled. Dependencies load on initialization without session imports or scripts.
 - `agui-dashboard`: responsive workspace. `layout="single"` (default), `split`, `equal`, or `grid`; `density="comfortable"` (default) or `compact`. In split mode, direct children with `slot="main"` use two columns and `slot="side"` one. Toolbars and `slot="full"` span all columns. These layout slot attributes do not require Shadow DOM.
 - `agui-panel`: content container; supply ordinary child markup and optional headings/actions.
-- `agui-header`: header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` inside the viewport when using the app shell, or under the same application provider without a viewport. Direct placement in `agui-app` creates an optional fixed header row. Add `floating` for sticky positioning within the scroll region; use `--agui-header-offset` if another sticky element is above it.
+- `agui-header`: header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` inside the viewport when using the app shell, or under the same application provider without a viewport. Author it with `floating` by default for sticky positioning within the scroll region; the component itself is static when the attribute is absent. Use `--agui-header-offset` if another sticky element is above it. Direct placement in `agui-app` creates an optional fixed header row that does not need `floating`.
 - `agui-toolbar`: wrapping logical control group. Give it an `aria-label` or `label`. Place related fields, selects, and buttons inside it.
 - `agui-data-toolbar`: common floating Save, Cancel changes, Import JSON, and Export JSON actions with edit/submission statuses, errors, User/Viewer marker, and Connected/Disconnected indicator. Use one last in the dashboard for data manipulation tasks, or last directly in `agui-app` when using the shell. It owns its controls and lifecycle; no session-specific handlers or initialization are needed. See the complete contract under Local data commits below.
 - `agui-field`: renders its own native input and supplies a visible label, required marker, hints, errors, context synchronization, and tools. Set `type` to text (default), search, email, url, tel, number, date, checkbox, or radio; use `type="textarea"` for multiline text. Put native attributes such as `name`, `placeholder`, `autocomplete`, `min`, `max`, `step`, `minlength`, `maxlength`, `pattern`, `rows`, and `cols` on the field. Attribute changes propagate to the internal control; recreate the field to switch between input and textarea. Checkboxes accept `bind="$.indeterminate: APP/mixed"` for a mixed indicator independent of their boolean value. Do not supply child inputs, light DOM slots, or a slot processor. Use `agui-select` for options.
@@ -118,7 +118,7 @@ Update common application data through CLI `update`, for example `{ "selector": 
 
 ### Layout defaults
 
-- With sidebars and a viewport, place the header and optional footer inside the viewport's scrollable area by default. A `floating` header can stay sticky within that area.
+- With sidebars and a viewport, place the header and optional footer inside the viewport's scrollable area by default. Use `<agui-header floating>` by default so the header stays sticky within that area while content scrolls.
 - Use the left/start sidebar for primary common actions, navigation, and controls or filters for the viewport's main items. Keep those controls in view while their dependent content scrolls.
 - Use the right/end sidebar for selected-item details and controls when needed.
 - For lists of cards or other repeated items, set an explicit `gap-*` on their grid or flex container, such as `class="grid gap-4"`. Check the list container for spacing between items rather than relying on margins inside each item.
@@ -135,7 +135,7 @@ Update common application data through CLI `update`, for example `{ "selector": 
       <agui-toggle label="Show navigation" pub-to="WORKSPACE/navigationOpen" bind="$.value: WORKSPACE/navigationOpen"></agui-toggle>
     </agui-sidebar>
     <agui-viewport aria-label="Task details">
-      <agui-header><h1>Task workspace</h1></agui-header>
+      <agui-header floating><h1>Task workspace</h1></agui-header>
       <agui-dashboard>
         <agui-field id="task-notes" label="Notes" type="textarea" pub-to="WORKSPACE/notes" bind="$.value: WORKSPACE/notes"></agui-field>
       </agui-dashboard>

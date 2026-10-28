@@ -25,11 +25,13 @@ The interface runs on your computer and opens in your normal browser. Your agent
 
 You need Node.js 24 or newer and an AI agent that can run shell commands.
 
-Install the [AGUI skill](https://skilld.dev/gh/rnd-pro/symbiote-agui) for your agent with [skilld](https://skilld.dev/):
+Install the [AGUI skill](https://skilld.dev/gh/rnd-pro/symbiote-agui) globally for your agent with [skilld](https://skilld.dev/), making it available across projects:
 
 ```sh
-npx skilld install rnd-pro/symbiote-agui/symbiote-agui
+npx skilld install rnd-pro/symbiote-agui/symbiote-agui --global
 ```
+
+Omit `--global` to install only in the current project. Keep the same scope when reinstalling or updating an existing skill.
 
 For manual setup, use the [skill source on GitHub](https://github.com/rnd-pro/symbiote-agui/tree/main/skills/symbiote-agui).
 

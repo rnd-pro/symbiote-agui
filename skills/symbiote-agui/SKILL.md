@@ -37,7 +37,7 @@ If any setup step fails or a requested capability remains unavailable, report th
 
 The default JSDA page bundle includes and registers every available library component. Compose them directly in HTML with Symbiote contexts; do not add imports, registration scripts, per-component JSON, or JavaScript initialization. Use these before generating custom components.
 
-- `agui-app`: viewport-height application shell. Direct children are an optional `agui-header` or `slot="header"` region, one start sidebar, one `agui-viewport`, an optional end sidebar, and an optional `slot="footer"` region. Place the single `agui-data-toolbar` last as a direct child of the app so its reserved row keeps all scroll areas clear of the floating bar. The header/footer stay outside the scroll regions. Sidebars flank the viewport from 64rem upward and stack above/below it on narrower screens. Use `--agui-app-height` to embed a shorter shell; the default is `100dvh`.
+- `agui-app`: viewport-height application shell. Direct children are one start sidebar, one `agui-viewport`, and an optional end sidebar. By default, place the header and optional footer inside the viewport. An app-level `agui-header` or `slot="header"` region and `slot="footer"` region are also supported when fixed rows outside the scroll regions are needed. Place the single `agui-data-toolbar` last as a direct child of the app so its reserved row keeps all scroll areas clear of the floating bar. Sidebars flank the viewport from 64rem upward and stack above/below it on narrower screens. Use `--agui-app-height` to embed a shorter shell; the default is `100dvh`.
 - `agui-sidebar`: independently scrolling authored content with a built-in expand/collapse button. `side="start"` is the default; use `side="end"` for the other side. Expanded by default; `collapsed` supplies a closed default. Supply `label`, `expand-label`, and `collapse-label`, or bind `$.label`, `$.expandLabel`, and `$.collapseLabel`. Boolean `$.value` is expanded state; pair its binding with `pub-to` to share visibility with other controls. Disabled/read-only state protects visibility changes, not the fields inside. Collapsing preserves mounted content and drafts. Desktop width uses `--agui-sidebar-width` (default `18rem`); collapsed panels keep their toggle visible.
 - `agui-viewport`: independently scrolling central content. Give it an `aria-label` or `aria-labelledby`; it defaults to `role="main"` and `tabindex="0"`, preserving explicit overrides. Place existing headers, dashboards, and panels inside it. A floating header within the viewport supplies focus spacing to that scroll region; an app-level header occupies its own row and needs no `floating` flag.
 - `agui-tabs`: authored tab layout with string active `value`, optional `pub-to`, caller-owned `label` for the tablist, and `orientation="horizontal"` (default) or `vertical`. Use direct `agui-tab` children with unique nonempty string `value` keys and caller-owned `label` text; labels, keys, and disabled state can use native property or `state` bindings. A disabled tab is unavailable for selection. Group `disabled`/`readonly` prevents switching without changing child fields' own edit policies. Panels stay mounted while hidden, preserving drafts and nested tab state. A missing, unknown, or disabled requested value displays the first enabled tab without publishing a correction; no enabled tabs means no visible panel and an effective value of `""`.
@@ -50,7 +50,7 @@ The default JSDA page bundle includes and registers every available library comp
 - `agui-markdown`: Markdown string in `value` or an external `src` URL, caller-owned accessible `label`, and `texts`. JSDA-Kit renders formatting, highlighted code, native HTML/media, and custom wrappers with readable Markdown/JSON fallbacks. Registered components can enhance wrappers; task checkboxes stay disabled. Dependencies load on initialization without session imports or scripts.
 - `agui-dashboard`: responsive workspace. `layout="single"` (default), `split`, `equal`, or `grid`; `density="comfortable"` (default) or `compact`. In split mode, direct children with `slot="main"` use two columns and `slot="side"` one. Toolbars and `slot="full"` span all columns. These layout slot attributes do not require Shadow DOM.
 - `agui-panel`: content container; supply ordinary child markup and optional headings/actions.
-- `agui-header`: header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` under the same application provider or viewport, or directly in `agui-app` for a fixed header row. Add `floating` for sticky positioning within the scroll region; use `--agui-header-offset` if another sticky element is above it.
+- `agui-header`: header for an authored heading and controls; its contents align with the dashboard's width and responsive gutters. Place it immediately before `agui-dashboard` inside the viewport when using the app shell, or under the same application provider without a viewport. Direct placement in `agui-app` creates an optional fixed header row. Add `floating` for sticky positioning within the scroll region; use `--agui-header-offset` if another sticky element is above it.
 - `agui-toolbar`: wrapping logical control group. Give it an `aria-label` or `label`. Place related fields, selects, and buttons inside it.
 - `agui-data-toolbar`: common floating Save, Cancel changes, Import JSON, and Export JSON actions with edit/submission statuses, errors, User/Viewer marker, and Connected/Disconnected indicator. Use one last in the dashboard for data manipulation tasks, or last directly in `agui-app` when using the shell. It owns its controls and lifecycle; no session-specific handlers or initialization are needed. See the complete contract under Local data commits below.
 - `agui-field`: renders its own native input and supplies a visible label, required marker, hints, errors, context synchronization, and tools. Set `type` to text (default), search, email, url, tel, number, date, checkbox, or radio; use `type="textarea"` for multiline text. Put native attributes such as `name`, `placeholder`, `autocomplete`, `min`, `max`, `step`, `minlength`, `maxlength`, `pattern`, `rows`, and `cols` on the field. Attribute changes propagate to the internal control; recreate the field to switch between input and textarea. Checkboxes accept `bind="$.indeterminate: APP/mixed"` for a mixed indicator independent of their boolean value. Do not supply child inputs, light DOM slots, or a slot processor. Use `agui-select` for options.
@@ -116,20 +116,27 @@ Inside components, declare defaults in native `init$` and use `$`, `add$()`, and
 
 Update common application data through CLI `update`, for example `{ "selector": "#app-data", "values": { "nameLabel": "Customer name" } }`; ordinary bindings propagate the change. For a local primitive, target its ID and public property, such as `{ "selector": "#name-control", "values": { "value": "Ada" } }`. Use `add$` for new properties. Native input interactions remain local and require no agent round trip.
 
+### Layout defaults
+
+- With sidebars and a viewport, place the header and optional footer inside the viewport's scrollable area by default. A `floating` header can stay sticky within that area.
+- Use the left/start sidebar for primary common actions, navigation, and controls or filters for the viewport's main items. Keep those controls in view while their dependent content scrolls.
+- Use the right/end sidebar for selected-item details and controls when needed.
+- For lists of cards or other repeated items, set an explicit `gap-*` on their grid or flex container, such as `class="grid gap-4"`. Check the list container for spacing between items rather than relying on margins inside each item.
+
 ### App layout example
 
 ```html
 <context-provider ctx="WORKSPACE">
   <script type="application/json">{"navigationOpen":true,"notes":""}</script>
   <agui-app>
-    <agui-header><h1>Task workspace</h1></agui-header>
     <agui-sidebar id="navigation" label="Navigation" expand-label="Show navigation" collapse-label="Hide navigation"
       pub-to="WORKSPACE/navigationOpen" bind="$.value: WORKSPACE/navigationOpen">
       <nav aria-label="Workspace"><a href="#task-notes">Notes</a></nav>
+      <agui-toggle label="Show navigation" pub-to="WORKSPACE/navigationOpen" bind="$.value: WORKSPACE/navigationOpen"></agui-toggle>
     </agui-sidebar>
     <agui-viewport aria-label="Task details">
+      <agui-header><h1>Task workspace</h1></agui-header>
       <agui-dashboard>
-        <agui-toggle label="Show navigation" pub-to="WORKSPACE/navigationOpen" bind="$.value: WORKSPACE/navigationOpen"></agui-toggle>
         <agui-field id="task-notes" label="Notes" type="textarea" pub-to="WORKSPACE/notes" bind="$.value: WORKSPACE/notes"></agui-field>
       </agui-dashboard>
     </agui-viewport>

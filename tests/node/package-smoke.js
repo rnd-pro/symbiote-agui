@@ -64,7 +64,22 @@ test('the production tarball runs through npm exec outside the checkout', { time
   let packages = JSON.parse(await runNpm(['pack', '--json', '--pack-destination', directory], root));
   let packed = Array.isArray(packages) ? packages[0] : Object.values(packages)[0];
   let files = packed.files.map((/** @type {{path: string}} */ file) => file.path);
-  for (let path of ['bin/symbiote-agui.js', 'src/page/shell.html', 'src/page/theme.css', 'src/page/client/index.js', 'src/page/client/tool-bridge.js', 'src/mcp/server.js', 'src/manager/worker.js', 'src/manager/page/index.html', 'src/manager/page/index.js', 'src/manager/page/rows.js', 'src/manager/page/connection.js', 'src/manager/page/styles.css', 'skills/symbiote-agui/SKILL.md']) {
+  for (let path of [
+    'bin/symbiote-agui.js',
+    'src/page/shell.html',
+    'src/page/theme.css',
+    'src/page/client/index.js',
+    'src/page/client/tool-bridge.js',
+    'src/mcp/server.js',
+    'src/manager/worker.js',
+    'src/manager/page/index.html',
+    'src/manager/page/index.js',
+    'src/manager/page/rows.js',
+    'src/manager/page/connection.js',
+    'src/manager/page/styles.css',
+    'skills/symbiote-agui/SKILL.md',
+    'skills/agui/SKILL.md',
+  ]) {
     assert.ok(files.includes(path), `${path} must be included in the tarball.`);
   }
   assert.equal(files.some((/** @type {string} */ path) => /^(tests|planning|node_modules)\//.test(path) || path === 'AGENTS.md'), false);
@@ -165,9 +180,12 @@ test('the production tarball runs through npm exec outside the checkout', { time
     });
     assert.equal(copied.transfer?.state, 'complete');
     assert.equal(await readFile(join(team, 'package-copy.html'), 'utf8'), managerSource);
-    assert.equal((await manage('switch project', {
+    let selected = await manage('switch project', {
       projectId: 'default',
-    })).manager?.url, manager.url, 'The packaged scoped launcher reuses the selected manager.');
+    });
+    assert.equal(selected.project?.id, 'default');
+    assert.equal(selected.projects?.currentProjectId, 'default');
+    assert.equal((await cli('manager', 'status')).url, manager.url, 'Project switching retains the packaged manager.');
     assert.equal((await cli('status', 'package-smoke')).url, session.url);
   } finally {
     socket.close();

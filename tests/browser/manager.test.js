@@ -11,6 +11,10 @@ import { setSessionMetadata } from '../../src/metadata/service.js';
 import { sampleMetadata } from '../node/metadata-fixture.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
+let desktopViewport = {
+  width: 1280,
+  height: 900,
+};
 
 test('manager save-folder controls persist the project setting and open the selected scope', {
   skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
@@ -43,6 +47,7 @@ test('manager save-folder controls persist the project setting and open the sele
   browser = await puppeteer.launch({
     executablePath,
     headless: true,
+    defaultViewport: desktopViewport,
   });
   let page = await browser.newPage();
   await page.goto(manager.launchUrl);
@@ -108,7 +113,14 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await cli('save', 'desk', '--file', source);
   await setSessionMetadata('desk', sampleMetadata());
   let manager = await cli('manager', '--no-open');
-  browser = await puppeteer.launch({ executablePath, headless: true, args: ['--disable-blink-features=WebMCP,WebMCPTesting'] });
+  browser = await puppeteer.launch({
+    executablePath,
+    headless: true,
+    defaultViewport: desktopViewport,
+    args: [
+      '--disable-blink-features=WebMCP,WebMCPTesting',
+    ],
+  });
   let page = await browser.newPage();
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
   page.setDefaultTimeout(7_000);
@@ -266,6 +278,9 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
     await page.screenshot({ path: `${process.env.AGUI_MANAGER_SCREENSHOT}.mobile.png`, fullPage: true });
   }
   await page.setViewport({ width: 1100, height: 900 });
+  await page.waitForSelector('#manager-filter input[type="search"]', {
+    visible: true,
+  });
   await page.type('input[type="search"]', 'not-present');
   await page.waitForFunction(() => document.querySelectorAll('.sessions agui-session-row').length === 0);
   await page.$eval('input[type="search"]', (element) => { element.value = ''; element.dispatchEvent(new Event('input', { bubbles: true })); });
@@ -306,7 +321,11 @@ test('manager disconnects reconcile status without replaying a mutation; generat
   await writeFile(join(state.directory, 'desk.html'), '<h1>Desk</h1>');
   await cli('save', 'desk', '--file', join(state.directory, 'desk.html'));
   let manager = await cli('manager', '--no-open');
-  browser = await puppeteer.launch({ executablePath, headless: true });
+  browser = await puppeteer.launch({
+    executablePath,
+    headless: true,
+    defaultViewport: desktopViewport,
+  });
   let page = await browser.newPage();
   await page.goto(manager.launchUrl);
   await page.waitForSelector('[data-session="desk"]');
@@ -363,6 +382,7 @@ test('cards and selectable table rows share session selection and inspector acti
   browser = await puppeteer.launch({
     executablePath,
     headless: true,
+    defaultViewport: desktopViewport,
   });
   let page = await browser.newPage();
   await page.evaluateOnNewDocument(() => {

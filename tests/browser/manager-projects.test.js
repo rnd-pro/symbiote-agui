@@ -7,6 +7,10 @@ import { projectId } from '../../src/projects/identity.js';
 import { temporaryManagerProject } from '../node/manager-storage-fixture.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
+let desktopViewport = {
+  width: 1280,
+  height: 900,
+};
 
 /**
  * @param {import('puppeteer-core').Page} page
@@ -105,6 +109,7 @@ test('manager connects projects, switches remembered scopes and Default, and pre
   browser = await puppeteer.launch({
     executablePath,
     headless: true,
+    defaultViewport: desktopViewport,
   });
   let generated = await browser.newPage();
   await generated.goto(session.url);
@@ -217,6 +222,7 @@ test('project navigation survives session discovery failures and ignores delayed
   browser = await puppeteer.launch({
     executablePath,
     headless: true,
+    defaultViewport: desktopViewport,
   });
   let page = await browser.newPage();
   await page.goto(manager.launchUrl);
@@ -328,6 +334,7 @@ test('Open folder targets the selected or listed project and recovers from a des
   browser = await puppeteer.launch({
     executablePath,
     headless: true,
+    defaultViewport: desktopViewport,
   });
   let page = await browser.newPage();
   page.setDefaultTimeout(8000);

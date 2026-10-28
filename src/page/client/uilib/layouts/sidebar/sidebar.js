@@ -16,6 +16,9 @@ let SIDEBAR_ATTRIBUTES = Object.freeze({
 });
 
 export class Sidebar extends UiComponent {
+  /** @type {MediaQueryList | undefined} */
+  desktopQuery;
+
   init$ = {
     value: undefined,
     label: undefined,
@@ -65,6 +68,8 @@ export class Sidebar extends UiComponent {
   }
 
   renderCallback() {
+    this.desktopQuery = matchMedia('(width >= 64rem)');
+    this.desktopQuery.addEventListener('change', this.refreshLayout);
     let semantics = this.attachInternals();
     semantics.role = 'complementary';
     if (!this.hasAttribute('tabindex')) { this.tabIndex = -1; }
@@ -82,8 +87,10 @@ export class Sidebar extends UiComponent {
     }
   }
 
+  refreshLayout = () => this.refresh();
+
   refresh() {
-    let expanded = this.$.value ?? !this.hasAttribute('collapsed');
+    let expanded = this.$.value ?? (!this.hasAttribute('collapsed') && !!this.desktopQuery?.matches);
     if (typeof expanded !== 'boolean') { throw new Error('Sidebar value must be a boolean.'); }
     let label = String(this.$.label ?? this.getAttribute('label') ?? '');
     let actionLabel = expanded
@@ -123,6 +130,10 @@ export class Sidebar extends UiComponent {
       value,
       changed,
     };
+  }
+
+  destroyCallback() {
+    this.desktopQuery?.removeEventListener('change', this.refreshLayout);
   }
 }
 

@@ -25,13 +25,15 @@ The interface runs on your computer and opens in your normal browser. Your agent
 
 You need Node.js 24 or newer and an AI agent that can run shell commands.
 
-Install the [AGUI skill](./skills/symbiote-agui/SKILL.md) for your agent:
+Install the [AGUI skill](https://skilld.dev/gh/rnd-pro/symbiote-agui) for your agent with [skilld](https://skilld.dev/):
 
 ```sh
-npx skills add rnd-pro/symbiote-agui --skill symbiote-agui
+npx skilld install rnd-pro/symbiote-agui/symbiote-agui
 ```
 
-Choose your agent in the installer, then ask it for an interface. For example:
+For manual setup, use the [skill source on GitHub](https://github.com/rnd-pro/symbiote-agui/tree/main/skills/symbiote-agui).
+
+Restart your agent session after installation, then ask it for an interface. For example:
 
 > Use Symbiote AGUI to create a weekly planner where I can prioritize tasks and check them off.
 

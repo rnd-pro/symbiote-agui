@@ -1,4 +1,5 @@
 import { MARKDOWN_LIMITS } from './constants.js';
+import { PROXY_PATH, PROXY_SOURCE_HEADER } from '../../../../../proxy/constants.js';
 
 /**
  * @param {string} source
@@ -17,10 +18,39 @@ export function markdownSourceUrl(source, base) {
 }
 
 /**
+ * @param {string} requestedUrl
+ * @param {Response} response
+ * @param {string | undefined} pageUrl
+ */
+function markdownResponseUrl(requestedUrl, response, pageUrl) {
+  let actual = response.url || requestedUrl;
+  if (!pageUrl) { return actual; }
+  let page = new URL(pageUrl);
+  let requested = new URL(requestedUrl);
+  let endpoint = new URL(PROXY_PATH, page);
+  if (requested.origin !== page.origin || requested.pathname !== endpoint.pathname) { return actual; }
+  try {
+    if (response.redirected || new URL(actual).href !== requested.href
+      || requested.searchParams.getAll('url').length !== 1 || [
+        ...requested.searchParams.keys(),
+      ].some((key) => key !== 'url')) { throw new Error(); }
+    let source = response.headers.get(PROXY_SOURCE_HEADER) || '';
+    if (/[\x00-\x20\x7f\\]/.test(source)) { throw new Error(); }
+    let url = new URL(source);
+    if (![
+      'http:',
+      'https:',
+    ].includes(url.protocol) || url.username || url.password || url.hash) { throw new Error(); }
+    return url.href;
+  } catch { throw new Error('fetchFailed'); }
+}
+
+/**
  * @param {string} url
  * @param {AbortSignal} signal
+ * @param {string} [pageUrl]
  */
-export async function fetchMarkdownSource(url, signal) {
+export async function fetchMarkdownSource(url, signal, pageUrl) {
   let response = await fetch(url, {
     signal: AbortSignal.any([
       signal,
@@ -35,7 +65,9 @@ export async function fetchMarkdownSource(url, signal) {
     await response.body?.cancel();
     throw new Error('inputTooLarge');
   }
-  let sourceUrl = response.url || url;
+  let sourceUrl;
+  try { sourceUrl = markdownResponseUrl(url, response, pageUrl); }
+  catch (error) { await response.body?.cancel(); throw error; }
   if (!response.body) {
     return {
       text: '',

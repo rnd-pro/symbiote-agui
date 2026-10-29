@@ -6,7 +6,9 @@ Bind a string to `agui-markdown` with `bind="$.value: APP/document"`, or set `sr
 
 Use `<agui-markdown src="https://example.com/notes.md" label="Notes" bind="$.texts: APP/documentTexts"></agui-markdown>`, or bind `$.src` to a provider property. A nonempty `src` takes precedence over `value`; clearing it restores the bound value. Absolute HTTP(S) URLs and relative URLs resolved against the page are supported. URL credentials and other protocols are rejected.
 
-The browser fetches directly, with credentials omitted and no referrer. Cross-origin servers must permit browser CORS access; there is no server proxy. Normal mixed-content restrictions apply. Loads time out after 15 seconds and enforce the 64 KiB source limit while streaming, including responses without Content-Length. Changing the URL or removing the widget aborts the request. Repeated rendering of the same URL reuses the loaded source; clear/change `src` or reload the page to fetch again. Fetching never overwrites the bound `value`, and viewers display rendered content without requesting the source file.
+The browser fetches with credentials omitted and no referrer. Direct cross-origin sources must permit browser CORS access and follow normal mixed-content restrictions. For a source configured in the session proxy policy, set `src` to `./_proxy?url=<percent-encoded-absolute-source-url>`. A verified same-origin proxy response supplies the final upstream URL for resolving relative document links and media. Headers from other origins or paths cannot override that base. Nested assets are not automatically proxied.
+
+Loads time out after 15 seconds and enforce the 64 KiB source limit while streaming, including responses without Content-Length. Changing the URL or removing the widget aborts the request. Repeated rendering of the same URL reuses the loaded source; clear/change `src` or reload the page to fetch again. Fetching never overwrites the bound `value`, and viewers display rendered content without requesting the source file.
 
 ## Supported content
 
@@ -30,7 +32,7 @@ Rejected content clears the previous document and shows caller-supplied status. 
 
 ## Loading and presentation
 
-The first initialized Markdown element loads its separate packaged parser/highlighter runtime; concurrent instances share the load. DOMPurify has a separate asset requested only by browsers without native safe HTML parsing. Pages without Markdown elements and inert viewers fetch neither dependency. Reload the page to retry a dependency load failure.
+The first initialized Markdown element loads its separate packaged parser/highlighter runtime; concurrent instances share the load. DOMPurify has a separate asset requested only by browsers without native safe HTML parsing. Pages without Markdown elements fetch neither dependency. Read-only mirrors do not initialize document widgets or request their dependencies; the parent viewer toolbar can initialize Markdown for its own Description popup. Reload the page to retry a dependency load failure.
 
 Supply `texts` keys `loading`, `empty`, `loadFailed`, `renderFailed`, `invalidValue`, `inputTooLarge`, and `outputTooLarge`; external sources also use `invalidSrc` and `fetchFailed`. Missing copy renders empty. Optional `loading` and `error` attributes or property bindings supply external states; `error` contains its own message. Empty or whitespace-only source shows `empty`. Labels and statuses remain outside parsed document content.
 

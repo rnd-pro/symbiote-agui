@@ -103,7 +103,7 @@ export class Markdown extends UiComponent {
     let controller = new AbortController();
     this.sourceController = controller;
     try {
-      let value = await fetchMarkdownSource(url, controller.signal);
+      let value = await fetchMarkdownSource(url, controller.signal, window.location.href);
       if (this.disposed || this.sourceController !== controller) { return; }
       this.sourceValue = value.text;
       this.sourceBaseUrl = value.url;

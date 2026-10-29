@@ -15,10 +15,19 @@ export async function tunnelProxy() {
       method: request.method,
       headers: request.headers,
     }, (reply) => {
+      reply.on('error', () => response.destroy());
+      if (response.destroyed) { reply.destroy(); return; }
       response.writeHead(reply.statusCode || 502, reply.headers);
       reply.pipe(response);
     });
-    upstream.on('error', () => response.writeHead(502).end());
+    upstream.on('error', () => {
+      if (response.destroyed) { return; }
+      if (response.headersSent) { response.destroy(); }
+      else { response.writeHead(502).end(); }
+    });
+    response.once('close', () => {
+      if (!response.writableFinished) { upstream.destroy(); }
+    });
     request.pipe(upstream);
   });
   server.on('connection', (socket) => {

@@ -10,7 +10,7 @@ import { cli, insertStdin, sendStdin } from './helpers.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
-test('Markdown loads on demand, sanitizes with native/fallback paths, bounds output, ignores stale work, and mirrors without a runtime', {
+test('Markdown loads on demand, sanitizes with native/fallback paths, bounds output, ignores stale work, and keeps mirrors inert', {
   skip: !executablePath || process.platform === 'win32' ? 'Requires Chrome and the POSIX connector fixture.' : false,
   timeout: 60_000,
 }, async (t) => {
@@ -206,19 +206,24 @@ test('Markdown loads on demand, sanitizes with native/fallback paths, bounds out
   }
   await cli('share', 'markdown');
   let viewer = await browser.newPage();
-  let viewerDependencies = 0;
+  /** @type {import('puppeteer-core').HTTPRequest[]} */
+  let viewerDependencies = [];
   viewer.on('request', (request) => {
     if ([
       MARKDOWN_RUNTIME_PATH,
       MARKDOWN_SANITIZER_PATH,
-    ].includes(new URL(request.url()).pathname)) { viewerDependencies += 1; }
+    ].includes(new URL(request.url()).pathname)) { viewerDependencies.push(request); }
   });
   await viewer.goto(session.url);
   await viewer.waitForFunction(() => {
     let frame = /** @type {HTMLIFrameElement | null} */ (document.getElementById('agui-viewer'));
     return frame?.contentDocument?.querySelector('#first-document h1');
   });
-  assert.equal(viewerDependencies, 0);
+  let mirror = await (await viewer.$('#agui-viewer'))?.contentFrame();
+  assert.ok(mirror);
+  // The parent viewer toolbar has its own Markdown description widget. Only the
+  // mirrored document must avoid initializing components or their dependencies.
+  assert.equal(viewerDependencies.some((request) => request.frame() === mirror), false);
   assert.equal(await viewer.evaluate(() => {
     let frame = /** @type {HTMLIFrameElement} */ (document.getElementById('agui-viewer'));
     return frame.contentDocument?.body.inert && !frame.contentDocument.querySelector('#first-document a[href]') && !frame.contentWindow?.customElements.get('agui-markdown');

@@ -19,6 +19,7 @@ export function cachedDefinitionPaths(sessionId) {
   return {
     htmlPath: join(directory, `${name}.html`),
     descriptionPath: join(directory, `${name}.md`),
+    proxyPath: join(directory, `${name}.proxy.json`),
   };
 }
 
@@ -36,6 +37,7 @@ export function scopedDefinitionPaths(sessionId, folder) {
   return folder ? {
     htmlPath: join(folder, `${sessionId}.html`),
     descriptionPath: join(folder, `${sessionId}.md`),
+    proxyPath: join(folder, `${sessionId}.proxy.json`),
   } : cachedDefinitionPaths(sessionId);
 }
 
@@ -61,7 +63,11 @@ export async function assertPortableName(sessionId) {
   let folder = getSettings().folder;
   if (!folder) { return; }
   let files = await entries(folder);
-  let expected = [`${sessionId}.html`, `${sessionId}.md`];
+  let expected = [
+    `${sessionId}.html`,
+    `${sessionId}.md`,
+    `${sessionId}.proxy.json`,
+  ];
   let collision = files.find((file) => expected.some((name) => name.toLowerCase() === file.name.toLowerCase() && name !== file.name));
   if (collision) {
     throw new CommandError(`AGUI ${sessionId} conflicts with ${collision.name}. Use names that differ beyond letter case in a shared folder.`, ERROR_CODE.CACHE_ERROR, EXIT_CODE.RUNTIME_ERROR);

@@ -7,7 +7,7 @@ import { temporaryManagerProject } from './manager-storage-fixture.js';
 import { transferSession } from '../../src/projects/transfer/service.js';
 import { recoverTransfer } from '../../src/projects/transfer/recover.js';
 import { transferScope, transferPaths } from '../../src/projects/transfer/scope.js';
-import { transferHistory } from '../../src/projects/transfer/receipts.js';
+import { readReceipt, transferHistory } from '../../src/projects/transfer/receipts.js';
 import { connectProject } from '../../src/projects/registry.js';
 import { readTransferFiles } from '../../src/projects/transfer/snapshot.js';
 import { writeTransferFixture as save } from './transfer-fixture.js';
@@ -60,6 +60,7 @@ test('copy transfers definitions between folders and Default, explicitly include
   let plain = await transferSession(a.id, input(b.id));
   assert.equal(plain.ok, true, plain.error?.message);
   let copied = await readTransferFiles(transferPaths(b, 'desk'));
+  assert.equal(copied.proxy, original.proxy);
   assert.equal(copied.html, original.html);
   assert.equal(copied.description, original.description);
   assert.equal(copied.metadata, null);
@@ -98,6 +99,27 @@ test('copy transfers definitions between folders and Default, explicitly include
   ], b.folder)).active, true);
 });
 
+test('transfer history remains readable for receipts written before proxy policies', async (t) => {
+  let {
+    a,
+    b,
+  } = await fixture(t);
+  await save(a);
+  await rm(transferPaths(a, 'desk').proxy);
+  let copied = await transferSession(a.id, input(b.id));
+  assert.equal(copied.ok, true);
+  assert.ok(copied.transfer);
+  let path = copied.transfer.receiptPath;
+  let legacy = JSON.parse(await readFile(path, 'utf8'));
+  delete legacy.sourceHashes.proxy;
+  delete legacy.destinationHashes.proxy;
+  await writeFile(path, JSON.stringify(legacy));
+  let receipt = await readReceipt(copied.transfer.id);
+  assert.equal(receipt.sourceHashes.proxy, null);
+  assert.equal(receipt.destinationHashes.proxy, null);
+  assert.equal((await transferHistory(a.stateRoot))[0].state, 'complete');
+});
+
 test('move verifies the destination before removing source files and retains excluded committed data privately', async (t) => {
   let {
     a,
@@ -110,6 +132,7 @@ test('move verifies the destination before removing source files and retains exc
   }));
   assert.equal(moved.ok, true, moved.error?.message);
   assert.deepEqual(await readTransferFiles(transferPaths(a, 'desk')), {
+    proxy: null,
     html: null,
     description: null,
     metadata: null,

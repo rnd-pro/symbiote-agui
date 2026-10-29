@@ -1,13 +1,13 @@
-import { join } from 'node:path';
 import { getSettings } from '../config/settings.js';
 import { analyzeMarkup } from '../markup/analyze.js';
 import { readMarkup } from '../markup/read-input.js';
-import { definitionPaths, getDefaultDefinitionFolder, listDefinitionIds, assertPortableName } from './paths.js';
+import { cachedDefinitionPaths, definitionPaths, listDefinitionIds, assertPortableName } from './paths.js';
 import { definitionInfo } from './descriptions.js';
-import { prepareTextFile, readOptional } from './files.js';
+import { prepareTextFile, readOptional, removeFile } from './files.js';
 import { prepareCachedMarkup, readCachedMarkup } from '../sessions/cache.js';
 import { isProcessAlive, readSession } from '../sessions/store.js';
-import { sessionKey } from '../sessions/identity.js';
+import { validateProxyPolicy } from '../proxy/policy.js';
+import { PROXY_LIMITS } from '../proxy/constants.js';
 import { requestSession } from '../sessions/client.js';
 import { INSERT_TIMEOUT_MS } from '../markup/constants.js';
 import { CommandError } from '../shared/command-error.js';
@@ -64,16 +64,42 @@ export async function saveDefinition(sessionId, file) {
  */
 async function saveLocked(sessionId, file) {
   let description;
+  let importedProxy;
   let html = file === undefined ? await readCachedMarkup(sessionId) : await readMarkup(file);
   if (html === undefined && getSettings().folder) {
-    html = await readOptional(join(getDefaultDefinitionFolder(), `${sessionKey(sessionId)}.html`));
-    description = await readOptional(join(getDefaultDefinitionFolder(), `${sessionKey(sessionId)}.md`));
+    let cached = cachedDefinitionPaths(sessionId);
+    html = await readOptional(cached.htmlPath);
+    description = await readOptional(cached.descriptionPath);
+    importedProxy = await readOptional(cached.proxyPath, PROXY_LIMITS.policyBytes);
+    if (importedProxy !== undefined) {
+      try { validateProxyPolicy(JSON.parse(importedProxy)); }
+      catch { throw new CommandError('Correct the private cached proxy policy before importing this definition.'); }
+    }
   }
   if (html === undefined) { throw new CommandError(`No saved definition for ${sessionId}. Provide --file <HTML_PATH>.`); }
   analyzeMarkup(html);
   let pending = await prepareCachedMarkup(sessionId, html, description);
-  try { await pending.commit(); }
-  finally { await pending.discard(); }
+  /** @type {import('../../types/session.js').PreparedCache | undefined} */
+  let proxy;
+  let proxyPath = definitionPaths(sessionId).proxyPath;
+  let published = false;
+  try {
+    if (importedProxy !== undefined) {
+      proxy = await prepareTextFile(proxyPath, importedProxy, {
+        text: undefined,
+        maxBytes: PROXY_LIMITS.policyBytes,
+      });
+      await proxy.commit();
+      published = true;
+    }
+    await pending.commit();
+  } catch (error) {
+    if (published && await readOptional(proxyPath, PROXY_LIMITS.policyBytes) === importedProxy) { await removeFile(proxyPath); }
+    throw error;
+  } finally {
+    await proxy?.discard();
+    await pending.discard();
+  }
   return definitionInfo(sessionId);
 }
 

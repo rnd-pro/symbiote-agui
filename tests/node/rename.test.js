@@ -36,6 +36,7 @@ test('rename moves all saved artifacts within cache and library scopes without c
     assert.equal(renamed.active, false);
     assert.equal(renamed.transfer?.recoveryRequired, false);
     let saved = await readTransferFiles(transferPaths(scope, 'after'));
+    assert.equal(saved.proxy, files.proxy);
     assert.equal(saved.html, files.html);
     assert.equal(saved.description, files.description);
     assert.equal(saved.metadata, files.metadata);

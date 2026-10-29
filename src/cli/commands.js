@@ -87,6 +87,18 @@ export let METADATA_COMMANDS = Object.freeze({
   clear: { usage: 'metadata clear <SESSION_ID> --key dataFlow', options: ['key'] },
 });
 
+export const PROXY_COMMANDS = Object.freeze({
+  allow: {
+    usage: 'proxy allow <SESSION_ID> <ORIGIN>',
+  },
+  remove: {
+    usage: 'proxy remove <SESSION_ID> <ORIGIN>',
+  },
+  status: {
+    usage: 'proxy status <SESSION_ID>',
+  },
+});
+
 export let HELP = [
   'Usage: symbiote-agui <command>',
   '',
@@ -95,6 +107,7 @@ export let HELP = [
   ...Object.values(ALL_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(FEEDBACK_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(METADATA_COMMANDS).map(({ usage }) => `  ${usage}`),
+  ...Object.values(PROXY_COMMANDS).map(({ usage }) => `  ${usage}`),
   '  manager [--no-open]          Open the built-in local session manager',
   '  manager status              Show the manager URL and storage scope',
   '  manager stop                Stop the manager without stopping sessions',
@@ -114,6 +127,7 @@ export let HELP = [
   'metadata get/set/clear read or edit private session data-flow descriptions without starting a worker.',
   'metadata set reads JSON from file or stdin; supplied fields replace those fields, leaving others unchanged.',
   'metadata clear --key dataFlow removes only data-flow metadata, not application data or the description.',
+  'proxy allow/remove configures saved public source origins; status reports policy, limits, and forwarding availability.',
   'sync reloads saved HTML into running sessions without rewriting source files or running Git commands.',
   'AGUI_LIBRARY_DIR overrides the project folder; without a folder, private caching remains the default.',
   'insert replaces the session content; input is limited to 1 MiB.',

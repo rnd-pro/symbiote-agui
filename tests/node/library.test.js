@@ -137,10 +137,21 @@ test('saving imports private cache explicitly, rejects conflicting edits and cas
   let pending = await prepareCachedMarkup('desk', '<p>Private cache</p>', '# Existing task\n\nPreserve team knowledge.\n');
   await pending.commit();
   await pending.discard();
+  let policy = (await cli([
+    'proxy',
+    'allow',
+    'desk',
+    'https://example.test',
+  ])).proxy.policy;
   let oldPath = cachePath('desk');
   process.env.AGUI_LIBRARY_DIR = join(state.directory, 'team');
   assert.equal((await cli(['list'])).total, 0);
   await cli(['save', 'desk']);
+  assert.deepEqual((await cli([
+    'proxy',
+    'status',
+    'desk',
+  ])).proxy.policy, policy);
   assert.equal((await cli(['describe', 'desk'])).title, 'Existing task');
   assert.equal(await readCachedMarkup('desk'), '<p>Private cache</p>');
   assert.equal(await readFile(oldPath, 'utf8'), '<p>Private cache</p>');

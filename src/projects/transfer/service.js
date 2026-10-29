@@ -73,6 +73,7 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
     if (!captured) { throw new CommandError('This worker cannot capture a consistent transfer snapshot. Stop and restart it before copying.'); }
   }
   let empty = {
+    proxy: null,
     html: null,
     description: null,
     metadata: null,
@@ -104,6 +105,7 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
     await checkTransferDependencies(html, destination.folder);
     let cache = input.includeData ? await readRuntimeCache(input.sessionId, source.stateRoot) : undefined;
     let planned = {
+      proxy: files.proxy,
       html,
       description: files.description ?? defaultDescription(input.sessionId),
       metadata: input.includeMetadata ? files.metadata : null,

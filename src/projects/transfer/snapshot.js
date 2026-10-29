@@ -1,6 +1,8 @@
 import { readOptional } from '../../library/files.js';
 import { analyzeMarkup } from '../../markup/analyze.js';
 import { validateMetadata } from '../../metadata/validate.js';
+import { validateProxyPolicy } from '../../proxy/policy.js';
+import { PROXY_LIMITS } from '../../proxy/constants.js';
 import { readRuntimeCache, sourceHash } from '../../data/cache.js';
 import { mergeSavedData } from '../../data/markup.js';
 import { transferPaths } from './scope.js';
@@ -35,16 +37,22 @@ export async function readTransferFiles(paths) {
  * @param {string} sessionId
  * @param {string} [acceptedSource]
  * @param {string} [acceptedData]
+ * @param {string | null} [acceptedProxy]
  * @returns {Promise<import('../../../types/transfer.js').TransferSnapshot>}
  */
-export async function captureTransferSnapshot(scope, sessionId, acceptedSource, acceptedData) {
+export async function captureTransferSnapshot(scope, sessionId, acceptedSource, acceptedData, acceptedProxy) {
   let files = await readTransferFiles(transferPaths(scope, sessionId));
   if (files.html === null) { throw new CommandError('Save a definition before copying or moving this session.'); }
   if (Buffer.byteLength(files.html) > MAX_HTML_BYTES || files.description !== null && Buffer.byteLength(files.description) > MAX_HTML_BYTES
+    || files.proxy !== null && Buffer.byteLength(files.proxy) > PROXY_LIMITS.policyBytes
     || files.metadata !== null && Buffer.byteLength(files.metadata) > METADATA_LIMITS.bytes) { throw new CommandError('Saved artifacts exceed their supported size limits.'); }
   if (acceptedSource !== undefined && (acceptedSource !== files.html || (acceptedData ?? null) !== files.data)) {
     throw new CommandError('Saved files differ from the running worker. Sync or reconcile the source before copying.');
   }
+  if (acceptedProxy !== undefined && files.proxy !== acceptedProxy) {
+    throw new CommandError('Saved proxy policy differs from the running worker. Sync before copying.');
+  }
+  if (files.proxy !== null) { validateProxyPolicy(JSON.parse(files.proxy)); }
   analyzeMarkup(files.html);
   if (files.metadata !== null) { validateMetadata(JSON.parse(files.metadata)); }
   let cache = await readRuntimeCache(sessionId, scope.stateRoot);
@@ -65,5 +73,5 @@ export async function captureTransferSnapshot(scope, sessionId, acceptedSource, 
  * @param {import('../../../types/transfer.js').TransferFiles} expected
  */
 export function assertFilesMatch(actual, expected) {
-  if (TRANSFER_FILE_KEYS.some((key) => actual[key] !== expected[key])) { throw new CommandError('Session files changed during the transfer. No source files will be removed. Review and retry.'); }
+  if (TRANSFER_FILE_KEYS.some((key) => actual[key] !== (expected[key] ?? null))) { throw new CommandError('Session files changed during the transfer. No source files will be removed. Review and retry.'); }
 }

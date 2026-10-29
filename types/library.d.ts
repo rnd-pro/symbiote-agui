@@ -11,6 +11,7 @@ export interface DefinitionInfo {
   summary: string;
   htmlPath: string;
   descriptionPath: string;
+  proxyPath?: string;
   description?: string;
   metadata?: import('./metadata.js').SessionMetadata;
   dataFlowSummary?: string;

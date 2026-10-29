@@ -28,6 +28,7 @@ export type CliRequest =
   | LibraryRequest
   | FeedbackCliRequest
   | MetadataCliRequest
+  | import('./proxy.js').ProxyCliRequest
   | { kind: 'manager'; command: ManagerCommand; open: boolean }
   | { kind: 'help' }
   | { kind: 'version' }

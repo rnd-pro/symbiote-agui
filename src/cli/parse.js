@@ -5,6 +5,7 @@ import { COMMANDS, ALL_COMMANDS, RENAME_USAGE } from './commands.js';
 import { parseLibraryCommand } from './library.js';
 import { parseFeedbackCommand } from './feedback.js';
 import { parseMetadataCommand } from './metadata.js';
+import { parseProxyCommand } from './proxy.js';
 
 /**
  * @param {string[]} args
@@ -62,6 +63,8 @@ export function parseCommand(args) {
   if (library) { return library; }
   let feedback = parseFeedbackCommand(positionals, values);
   if (feedback) { return feedback; }
+  let proxy = parseProxyCommand(positionals, values);
+  if (proxy) { return proxy; }
   let metadata = parseMetadataCommand(positionals, values);
   if (metadata) { return metadata; }
   if (positionals[0] === 'rename') {

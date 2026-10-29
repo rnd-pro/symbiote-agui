@@ -24,6 +24,8 @@ import { captureTransferSnapshot } from '../projects/transfer/snapshot.js';
 import { getSettings } from '../config/settings.js';
 import { getStateRoot } from './store.js';
 import { projectEntry } from '../projects/identity.js';
+import { readProxySnapshot, changeProxyPolicy } from '../proxy/store.js';
+import { emptyProxyPolicy, proxyStatus, validateProxyChange } from '../proxy/policy.js';
 
 export class SessionRuntime {
   /** @type {import('node:http').Server | undefined} */
@@ -46,6 +48,11 @@ export class SessionRuntime {
   revision = 0;
   closing = false;
   restored = false;
+  /** @type {Awaited<ReturnType<typeof readProxySnapshot>>} */
+  proxy = {
+    raw: undefined,
+    policy: emptyProxyPolicy(),
+  };
   clearing = 0;
 
   /** @param {import('../../types/session.js').SessionRecord} record */
@@ -57,6 +64,7 @@ export class SessionRuntime {
 
   /** @param {AbortSignal} signal */
   async start(signal) {
+    this.proxy = await readProxySnapshot(this.record.sessionId);
     let cached = await readCachedMarkup(this.record.sessionId);
     let html = await this.data.restore(cached ?? '<h1>AGUI</h1><p>Waiting for generated content.</p>');
     let { classes } = analyzeMarkup(html);
@@ -94,6 +102,7 @@ export class SessionRuntime {
       clients,
       feedback: this.feedback.status(),
       data: this.data.status(),
+      proxy: proxyStatus(this.record.sessionId, this.proxy.policy),
       ...(this.data.warning ? { warning: this.data.warning } : {}),
       ...(this.tunnel ? { tunnel: { ...this.tunnel.status } } : {}),
       ...(this.tunnel?.origin ? {
@@ -120,6 +129,16 @@ export class SessionRuntime {
     return this.replaceMarkup(html, true);
   }
 
+  /** @param {unknown} input */
+  changeProxy(input) {
+    let change = validateProxyChange(input);
+    return this.enqueue(async () => {
+      if (this.closing || this.clearing) { throw new CommandError('Proxy policy cannot change during clear or shutdown.'); }
+      this.proxy = await changeProxyPolicy(this.record.sessionId, change);
+      return this.status();
+    });
+  }
+
   transferSnapshot() {
     return this.enqueue(async () => {
       if (this.closing || this.data.warning) { throw new CommandError('Reconcile or restart this session before copying its saved snapshot.'); }
@@ -129,7 +148,7 @@ export class SessionRuntime {
       };
       return {
         ...this.status(),
-        transferSnapshot: await captureTransferSnapshot(scope, this.record.sessionId, this.data.source, this.data.raw),
+        transferSnapshot: await captureTransferSnapshot(scope, this.record.sessionId, this.data.source, this.data.raw, this.proxy.raw ?? null),
       };
     });
   }
@@ -230,6 +249,7 @@ export class SessionRuntime {
           if (saved === undefined) { throw new CommandError('No saved definition to sync.', ERROR_CODE.CACHE_ERROR, EXIT_CODE.RUNTIME_ERROR); }
           html = saved;
         }
+        let proxy = fromSaved ? await readProxySnapshot(this.record.sessionId) : this.proxy;
         let source = html;
         data = await this.data.prepareReplacement(source, resetData, persist);
         html = data.html;
@@ -247,6 +267,10 @@ export class SessionRuntime {
         if (cache) { await cache.commit(); }
         else if (!persist) { await clearCachedMarkup(this.record.sessionId); }
         await data.cache?.commit();
+        this.proxy = !persist ? {
+          raw: undefined,
+          policy: emptyProxyPolicy(),
+        } : proxy;
         this.latest = update;
         this.data.acceptReplacement(source, data.revision, data.cache?.raw);
         return { ...this.status(), delivery: applied ? 'applied' : 'queued', ...(fromSaved ? { synced: true } : {}), ...(!persist ? { cleared: true } : {}) };

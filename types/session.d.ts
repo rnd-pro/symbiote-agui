@@ -31,6 +31,7 @@ export interface SessionStatus {
   /** Only returned by the authenticated feedback settings operation. */
   feedbackSettings?: import('./feedback.js').FeedbackSettings;
   data?: import('./data.js').DataStatus;
+  proxy?: import('./proxy.js').ProxyStatus;
   transferSnapshot?: import('./transfer.js').TransferSnapshot;
 }
 
@@ -87,6 +88,8 @@ export type ControlReply = ControlIdentity & (
 );
 
 export interface ControlActions {
+  proxyStatus?(): SessionStatus;
+  proxyChange?(input: unknown): Promise<SessionStatus>;
   connections?(): SessionStatus;
   disconnectPage?(input: unknown): Promise<SessionStatus>;
   tunnelStop?(): Promise<SessionStatus>;

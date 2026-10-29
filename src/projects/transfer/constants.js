@@ -1,5 +1,6 @@
-/** @type {readonly ['metadata', 'data', 'description', 'html']} */
+/** @type {readonly ['proxy', 'metadata', 'data', 'description', 'html']} */
 export const TRANSFER_FILE_KEYS = [
+  'proxy',
   'metadata',
   'data',
   'description',

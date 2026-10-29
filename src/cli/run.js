@@ -19,6 +19,7 @@ import { runLibraryCommand } from './library.js';
 import { runFeedbackCommand } from './feedback.js';
 import { runMetadataCommand } from './metadata.js';
 import { renameSession } from '../sessions/rename.js';
+import { runProxyCommand } from '../proxy/service.js';
 
 /** @param {import('../../types/cli.js').CommandResult} result */
 function printResult(result) {
@@ -36,6 +37,13 @@ export async function run(args) {
       let result = await renameSession(request.sessionId, request.destinationSessionId);
       printResult(result);
       return result.ok ? EXIT_CODE.SUCCESS : EXIT_CODE.RUNTIME_ERROR;
+    }
+    if (request.kind === 'proxy') {
+      printResult({
+        ok: true,
+        ...await runProxyCommand(request),
+      });
+      return EXIT_CODE.SUCCESS;
     }
     if (request.kind === 'metadata') {
       printResult({ ok: true, ...await runMetadataCommand(request) });

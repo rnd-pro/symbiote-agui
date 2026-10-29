@@ -49,6 +49,7 @@ export async function clearCachedMarkup(sessionId) {
   let paths = definitionPaths(sessionId);
   await removeFile(paths.htmlPath);
   await removeFile(paths.descriptionPath);
+  await removeFile(paths.proxyPath);
   await clearMetadata(sessionId);
   await clearRuntimeCache(sessionId);
 }

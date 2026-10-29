@@ -9,4 +9,8 @@ export const PROXY_LIMITS = Object.freeze({
   redirects: 3,
   concurrentRequests: 8,
   requestsPerMinute: 120,
+  urlBytes: 8192,
+  headerBytes: 16 * 1024,
 });
+
+export const PROXY_SOURCE_HEADER = 'X-AGUI-Source-URL';

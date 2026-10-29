@@ -7,9 +7,16 @@ import { MAP_RUNTIME_PATH, MAP_CSS_PATH, MAP_ASSET_PREFIX } from '../page/client
 import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../page/client/uilib/widgets/markdown/constants.js';
 import { serveMapAsset } from './map-assets.js';
 import { TUNNEL_HEALTH_PATH } from '../tunnel/constants.js';
+import { AssetProxy } from '../proxy/asset-proxy.js';
+import { emptyProxyPolicy } from '../proxy/policy.js';
+import { PROXY_PATH } from '../proxy/constants.js';
 
-/** @param {import('../../types/session.js').PageAccess} access */
-export async function startPageServer(access) {
+/**
+ * @param {import('../../types/session.js').PageAccess} access
+ * @param {() => import('../../types/proxy.js').ProxyPolicy} [getProxyPolicy]
+ * @param {import('../../types/proxy.js').ProxyDependencies} [proxyDependencies]
+ */
+export async function startPageServer(access, getProxyPolicy = emptyProxyPolicy, proxyDependencies) {
   let styles = await createStyles();
   let { default: config } = await import('jsda-kit/cfg');
   let { createServer } = await import('jsda-kit/server/JSDAServer.js');
@@ -22,6 +29,8 @@ export async function startPageServer(access) {
   config.log = false;
 
   let server = createServer({ port: { host: '127.0.0.1', port: 0 } });
+  let proxy = new AssetProxy(access, getProxyPolicy, proxyDependencies);
+  server.once('close', () => { void proxy.close(); });
   let origin = '';
   let [handler] = server.listeners('request');
   server.removeAllListeners('request');
@@ -29,6 +38,10 @@ export async function startPageServer(access) {
     let pathname = request.url?.split('?')[0];
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
+    if (pathname === `${access.path}${PROXY_PATH}`) {
+      void proxy.serve(request, response, origin);
+      return;
+    }
     if (request.method === 'GET' && pathname === `${access.path}${TUNNEL_HEALTH_PATH}`) {
       let nonce = new URL(request.url || '', 'http://localhost').searchParams.get('nonce');
       if (!nonce || !/^[a-zA-Z0-9-]{1,64}$/.test(nonce)) {
@@ -77,8 +90,9 @@ export async function startPageServer(access) {
 
   try {
     origin = await waitForServer(server);
-    return { server, url: `${origin}${access.path}`, styles };
+    return { server, url: `${origin}${access.path}`, styles, proxy };
   } catch (error) {
+    await proxy.close();
     await closeServer(server);
     throw error;
   }

@@ -172,6 +172,7 @@ test('CLI policy updates preserve a live worker, require control authentication,
     'https://example.test',
   ]);
   assert.equal(changed.proxy.enabled, true);
+  assert.equal(changed.proxy.available, true);
   assert.deepEqual(await readSession('desk'), before);
   assert.equal((await fetch(`${before.controlUrl}/proxy`)).status, 401);
   assert.equal((await fetch(`${before.controlUrl}/proxy/change`, {
@@ -182,7 +183,7 @@ test('CLI policy updates preserve a live worker, require control authentication,
     method: 'POST',
     body: '{}',
   })).status, 404);
-  assert.equal((await fetch(new URL('_proxy?url=https://example.test/data', before.url))).status, 404);
+  assert.equal((await fetch(new URL('_proxy?url=https://blocked.test/data', before.url))).status, 403);
   for (let value of [
     null,
     {

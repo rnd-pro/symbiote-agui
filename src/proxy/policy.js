@@ -82,13 +82,14 @@ export function proxyAllowsUrl(policy, target) {
 /**
  * @param {string} sessionId
  * @param {import('../../types/proxy.js').ProxyPolicy} policy
+ * @param {boolean} [available]
  * @returns {import('../../types/proxy.js').ProxyStatus}
  */
-export function proxyStatus(sessionId, policy) {
+export function proxyStatus(sessionId, policy, available = false) {
   let path = `/${sessionId}/${PROXY_PATH}`;
   return {
     enabled: policy.allowedOrigins.length > 0,
-    available: false,
+    available,
     policy: structuredClone(policy),
     path,
     urlTemplate: `${path}?url=<percent-encoded-absolute-source-url>`,

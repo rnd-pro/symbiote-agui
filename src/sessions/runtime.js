@@ -30,6 +30,8 @@ import { emptyProxyPolicy, proxyStatus, validateProxyChange } from '../proxy/pol
 export class SessionRuntime {
   /** @type {import('node:http').Server | undefined} */
   server;
+  /** @type {import('../proxy/asset-proxy.js').AssetProxy | undefined} */
+  assetProxy;
   /** @type {PageConnection | undefined} */
   pages;
   /** @type {import('../../types/markup.js').StyleCompiler | undefined} */
@@ -70,7 +72,8 @@ export class SessionRuntime {
     let { classes } = analyzeMarkup(html);
     let access = createPageAccess(this.record);
     this.access = access;
-    let { server, url, styles } = await startPageServer(access);
+    let { server, url, styles, proxy } = await startPageServer(access, () => this.proxy.policy);
+    this.assetProxy = proxy;
     this.server = server;
     this.styles = styles;
     publishStyles(styles.build(classes));
@@ -102,7 +105,7 @@ export class SessionRuntime {
       clients,
       feedback: this.feedback.status(),
       data: this.data.status(),
-      proxy: proxyStatus(this.record.sessionId, this.proxy.policy),
+      proxy: proxyStatus(this.record.sessionId, this.proxy.policy, !!this.assetProxy && !this.closing),
       ...(this.data.warning ? { warning: this.data.warning } : {}),
       ...(this.tunnel ? { tunnel: { ...this.tunnel.status } } : {}),
       ...(this.tunnel?.origin ? {
@@ -135,6 +138,7 @@ export class SessionRuntime {
     return this.enqueue(async () => {
       if (this.closing || this.clearing) { throw new CommandError('Proxy policy cannot change during clear or shutdown.'); }
       this.proxy = await changeProxyPolicy(this.record.sessionId, change);
+      this.assetProxy?.refreshPolicy();
       return this.status();
     });
   }
@@ -271,6 +275,7 @@ export class SessionRuntime {
           raw: undefined,
           policy: emptyProxyPolicy(),
         } : proxy;
+        this.assetProxy?.refreshPolicy();
         this.latest = update;
         this.data.acceptReplacement(source, data.revision, data.cache?.raw);
         return { ...this.status(), delivery: applied ? 'applied' : 'queued', ...(fromSaved ? { synced: true } : {}), ...(!persist ? { cleared: true } : {}) };
@@ -310,6 +315,7 @@ export class SessionRuntime {
   async close() {
     this.closing = true;
     try {
+      await this.assetProxy?.close();
       await this.feedback.close();
       await this.pages?.close();
     }

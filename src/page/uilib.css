@@ -74,6 +74,8 @@
     --agui-sidebar-width: 18rem;
     --agui-scrollbar-thumb: var(--agui-muted);
     --agui-scrollbar-track: transparent;
+    --agui-scrollbar-idle-opacity: 5%;
+    --agui-scrollbar-active-opacity: 65%;
     --agui-control-height: 2.4rem;
     --agui-toggle-height: 1.5rem;
     --agui-panel-padding: 1.25rem;

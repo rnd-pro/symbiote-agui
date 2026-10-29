@@ -1,3 +1,9 @@
+@property --_agui-scrollbar-opacity {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
 @layer base {
   /* The document scrollbar uses the root's scheme, independently of body. */
   :root {
@@ -10,8 +16,21 @@
     color-scheme: dark;
   }
   * {
-    scrollbar-color: var(--agui-scrollbar-thumb) var(--agui-scrollbar-track);
+    --_agui-scrollbar-opacity: var(--agui-scrollbar-idle-opacity);
+    --_agui-scrollbar-thumb: color-mix(in srgb, var(--agui-scrollbar-thumb) var(--_agui-scrollbar-opacity), transparent);
+    scrollbar-color: var(--_agui-scrollbar-thumb) var(--agui-scrollbar-track);
     scrollbar-width: thin;
+    @media (prefers-reduced-motion: no-preference) {
+      transition: --_agui-scrollbar-opacity .4s;
+    }
+  }
+  @media (hover: hover) {
+    [data-agui-scrollbar-hover] {
+      --_agui-scrollbar-opacity: var(--agui-scrollbar-active-opacity);
+    }
+  }
+  [data-agui-scrolling] {
+    --_agui-scrollbar-opacity: var(--agui-scrollbar-active-opacity);
   }
   @supports not (scrollbar-color: auto) {
     @media (forced-colors: none) and (pointer: fine) {
@@ -26,7 +45,7 @@
       ::-webkit-scrollbar-thumb {
         border: 2px solid transparent;
         border-radius: var(--agui-radius-control);
-        background: var(--agui-scrollbar-thumb);
+        background: var(--_agui-scrollbar-thumb);
         background-clip: padding-box;
       }
     }
@@ -34,6 +53,8 @@
   @media (prefers-contrast: more) {
     * {
       --agui-scrollbar-thumb: var(--agui-text);
+      --agui-scrollbar-idle-opacity: 100%;
+      --agui-scrollbar-active-opacity: 100%;
       scrollbar-width: auto;
     }
   }

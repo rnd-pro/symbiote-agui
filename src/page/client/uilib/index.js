@@ -31,11 +31,13 @@ import { TableCell } from './widgets/table/cell.js';
 import { TableHeading } from './widgets/table/heading.js';
 import { Filter } from './widgets/filter/filter.js';
 import { FilterField } from './widgets/filter/field.js';
+import { watchScrollbarActivity } from './shared/scrollbars.js';
 import {
   Message,
 } from './feedback/message/message.js';
 
 export function registerUiLibComponents() {
+  watchScrollbarActivity(document);
   App.reg('agui-app');
   Sidebar.reg('agui-sidebar');
   Viewport.reg('agui-viewport');

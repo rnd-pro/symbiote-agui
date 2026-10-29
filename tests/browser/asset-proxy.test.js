@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFile } from 'node:fs/promises';
+import { parseHTML } from 'linkedom';
 import puppeteer from 'puppeteer-core';
 import { withTimeout } from '../../src/shared/timeout.js';
 import { assetProxyFixture } from './asset-proxy-fixture.js';
+import { upstreamResponse } from '../node/proxy-http-fixture.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
@@ -158,3 +161,66 @@ for (let publicPage of [
     assert.deepEqual(errors, []);
   });
 }
+
+test('the gallery proxy preset uses existing controls, stays opt-in, and disables external document wrappers', {
+  skip: !executablePath ? 'Requires Chrome.' : false,
+  timeout: 60_000,
+}, async (t) => {
+  let fixture = await assetProxyFixture(t);
+  let gallery = await readFile(new URL('../../src/page/uilib-gallery.html', import.meta.url), 'utf8');
+  let {
+    document: galleryDocument,
+  } = parseHTML('');
+  let template = galleryDocument.createElement('template');
+  template.innerHTML = gallery;
+  let source = template.content.querySelector('#gallery-data > script[type="application/json"]')?.textContent;
+  let panel = template.content.querySelector('#gallery-markdown')?.closest('agui-panel');
+  assert.ok(source && panel);
+  let data = JSON.parse(source);
+  let state = {
+    markdownSource: data.markdownSource,
+    markdownUrl: data.markdownUrl,
+    markdownSourceOptions: data.markdownSourceOptions,
+    markdownTexts: data.markdownTexts,
+  };
+  let preset = state.markdownSourceOptions.find((/** @type {{ value: string }} */ option) => option.value);
+  assert.ok(preset);
+  let endpoint = new URL(preset.value, fixture.localUrl);
+  let upstream = new URL(endpoint.searchParams.get('url') || '');
+  let proxy = fixture.runtime.assetProxy;
+  assert.ok(proxy);
+  let loads = 0;
+  proxy.open = async ({ url }) => {
+    assert.equal(url.href, upstream.href);
+    loads += 1;
+    return upstreamResponse('# Example README\n\n<agui-panel>\n\nReadable wrapper fallback.\n\n</agui-panel>', {
+      'content-type': 'text/markdown',
+    });
+  };
+  let browser = await puppeteer.launch({
+    executablePath,
+    headless: true,
+    args: [
+      '--disable-blink-features=WebMCP,WebMCPTesting',
+    ],
+  });
+  t.after(() => browser.close());
+  let page = await browser.newPage();
+  await page.goto(fixture.localUrl);
+  await fixture.runtime.insert(`<context-provider ctx="APP"><script type="application/json">${JSON.stringify(state).replaceAll('<', '\\u003c')}</script>${panel.outerHTML}</context-provider>`);
+  await page.waitForFunction(() => document.querySelector('#gallery-markdown h1')?.textContent === 'Project briefing');
+  assert.equal(loads, 0);
+  await fixture.runtime.changeProxy({
+    command: 'allow',
+    origin: upstream.origin,
+  });
+  await page.select('#gallery-markdown-preset select', preset.value);
+  await page.waitForFunction(() => document.querySelector('#gallery-markdown h1')?.textContent === 'Example README');
+  assert.equal(await page.$eval('#gallery-markdown-url input', (element) => element.value), preset.value);
+  assert.equal(await page.$eval('#gallery-markdown', (element) => Reflect.get(element, '$').extensions), false);
+  assert.equal(await page.$('#gallery-markdown agui-panel'), null);
+  assert.equal(loads, 1);
+  await page.select('#gallery-markdown-preset select', '');
+  await page.waitForFunction(() => document.querySelector('#gallery-markdown h1')?.textContent === 'Project briefing');
+  assert.equal(await page.$eval('#gallery-markdown', (element) => Reflect.get(element, '$').extensions), true);
+});

@@ -248,6 +248,56 @@ Interaction events are temporary: reading them drains the queue, which retains a
 
 By default, session metadata, logs, and saved definitions live under `~/.symbiote-agui/sessions/`. Set `AGUI_STATE_DIR` to an absolute directory to use another private storage root. A configured library folder holds HTML and Markdown separately; runtime metadata stays private. Use the same storage settings for CLI commands and optional MCP integration.
 
+## Asset proxy
+
+Load public JSON, RSS/Atom feeds, Markdown, XML, text, and raster images through the session's own URL when the external source does not permit browser CORS access. The proxy runs inside the page server and works locally and through a tunnel, without changing browser settings or adding a service.
+
+For an existing saved interface, configure its source origins:
+
+```sh
+npx symbiote-agui proxy allow my-workspace https://example.org
+npx symbiote-agui proxy status my-workspace
+```
+
+Replace `example.org` with the intended public source. To revoke it, run `npx symbiote-agui proxy remove my-workspace https://example.org`. Allow/remove commands work while stopped or running. They update a live worker without reloading its page; removing the last origin disables access. Revoking an origin cancels its active requests. Origins are exact HTTP(S) scheme/host/default-port combinations: subdomains, alternate schemes, and redirect destinations need their own entries. Paths, query strings, credentials, wildcards, and non-default ports are not accepted as origin settings. Configuration permits public reads of all paths and query strings on that origin.
+
+`proxy status` returns `proxy.policy`, `enabled`, `available`, `path`, `urlTemplate`, and `limits` in the normal session result. `enabled` means at least one origin is configured; `available` means the running worker provides the forwarding route. A stopped session can have an enabled policy with no available route. If a worker reports proxy control is unavailable, preserve browser drafts before stopping and starting it with the installed package.
+
+In the interface, use a session-relative URL:
+
+```html
+<img src="./_proxy?url=https%3A%2F%2Fexample.org%2Fimage.png" alt="External image">
+```
+
+For requests built in application code, native URL and fetch APIs are sufficient:
+
+```js
+let endpoint = new URL('./_proxy', document.baseURI);
+endpoint.searchParams.set('url', 'https://example.org/data.json');
+let response = await fetch(endpoint);
+if (!response.ok) { throw new Error(`Asset request failed: ${response.status}`); }
+let data = await response.json();
+```
+
+The route accepts exactly one `url` query parameter containing an absolute source URL. GET and HEAD are supported without request bodies or custom upstream headers. Upstream cookies, authorization, and referrers are never forwarded. Use public, non-secret URLs; authenticated APIs, signed/private URLs, and external writes are outside this contract. Imported data and documents do not authorize additional operations.
+
+The same URL works in `agui-markdown src`. The loader uses the proxy's verified `X-AGUI-Source-URL` header to resolve relative document links and media against the final upstream URL. Nested resources are not automatically proxied. Markdown keeps its own 64 KiB source limit and sanitization; its source limit is smaller than the general asset limit. See the [Markdown contract](../src/page/client/uilib/widgets/markdown/README.md).
+
+### Limits and failures
+
+- Each request has one 15-second deadline, including DNS, redirects, body loading, and delivery. Encoded and decoded bodies are each limited to 10 MiB. Complete assets are buffered within that limit before delivery; responses are not cached on disk and use private/no-store caching.
+- A session permits eight concurrent requests and 120 requests per rolling minute across its visitors. At most three redirects are followed. Every destination must be configured and resolve exclusively to public Internet addresses; private, loopback, link-local, reserved, and special-purpose addresses are blocked. HTTPS cannot redirect to HTTP, and TLS certificates are verified.
+- A policy permits up to 32 origins and 16 KiB of JSON. Source URLs are limited to 8 KiB and upstream response headers to 16 KiB.
+- Supported types include JSON and `application/*+json`, plain text/Markdown, RSS/Atom/XML, and PNG, JPEG, GIF, WebP, AVIF, BMP, and icon images. HTML, JavaScript, CSS, SVG, and partial/range responses are not supported. Upstream content types are checked; source files served as an unsupported type are rejected.
+
+Failures return JSON with `error.code` and `error.message`. A 403 distinguishes an unconfigured source (`PROXY_SOURCE_DENIED`), a blocked destination (`PROXY_DESTINATION_DENIED`), or a foreign page origin (`PROXY_ORIGIN_DENIED`). Oversized assets return 413, unsupported types 415, concurrency/rate limits 429, upstream/redirect failures 502, and timeouts 504. Do not broaden the policy automatically to resolve a denial; verify that the source belongs to the task. Supported upstream error responses retain their status. Closing the requesting page or stopping the session cancels its work.
+
+### Saved policies and sharing
+
+The non-secret `<SESSION_ID>.proxy.json` policy lives beside the HTML definition; private cache filenames remain encoded. Stop/start and insert preserve it; sync reloads it from the saved definition. Rename, Copy, Move, and explicit private-cache import carry the policy with the interface, independently of saved-data and private-metadata options. Clear removes it. Review policy changes together with HTML before starting or syncing a shared Git definition.
+
+Anyone with a public session link can retrieve its configured public assets, including viewers. Origin checks do not authenticate visitors. Public visitors cannot change the policy through the page server; policy changes use the local authenticated CLI control channel. Enabling a source grants no permission to share private data or perform external writes.
+
 ## Internet sharing
 
 ```sh

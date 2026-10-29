@@ -49,6 +49,8 @@ AGUI exposes UI actions as WebMCP tools and invokes them through Symbiote.js's p
 
 AGUI runs locally by default. The CLI is enough to use it; [MCP integrations](./docs/reference.md#optional-agui-mcp) are available for agent environments that support them.
 
+Interfaces can load public documents, feeds, images, and JSON through the [session asset proxy](./docs/reference.md#asset-proxy) when a source does not allow browser CORS access.
+
 With a verified [private feedback handler](./docs/reference.md#private-feedback-handlers), explicit Save or Submit actions can deliver consolidated changes to the originating conversation. The agent completes the corresponding authorized external operation and verifies the result before marking it saved. Routine edits stay local, and delivery acknowledgement is separate from external persistence. The [agent workflow](./skills/agui/SKILL.md#agent-session-feedback) covers setup and behavior when native delivery is unavailable.
 
 ## UI library

@@ -90,7 +90,17 @@
           "monthlySelected": [],
           "markdownSource": "# Project briefing\n\nA document with **shared theme tokens**, *reactive data*, and [a reference link](https://example.com/docs).\n\n[Jump to checklist](#checklist)\n\n## Checklist\n\n- [x] Review requirements\n- [ ] Prepare proposal\n\n> These checkboxes describe the document. Use AGUI task controls for editable tasks.\n\n## Delivery\n\n1. Review the draft.\n2. Share the final proposal.\n\n| Milestone | Status | Owner |\n| --- | --- | --- |\n| Discovery | Complete | Example team |\n| Proposal | In progress | Example studio |\n\n## Highlighted code\n\n```js\nconst report = { status: 'ready', count: 2 };\n```\n\n```html\n<agui-field label=\"Example\"></agui-field>\n```\n\nLiteral template text stays literal: `{{APP/sharedName}}`.\n\n<details><summary>Native HTML disclosure</summary><p>HTML can extend a Markdown document directly.</p></details>\n\n<example-report>\n\n### Readable wrapper fallback\n\n```json\n{\"status\":\"ready\",\"count\":2}\n```\n\nThe structured data and this description remain visible when no component implementation is registered.\n\n</example-report>\n\n<agui-panel>\n\n### Registered panel\n\nThis native AGUI panel enhances the document without treating its text as RAT.\n\n</agui-panel>",
           "markdownUrl": "",
-          "markdownTexts": {"loading":"Loading document...","empty":"No document yet.","loadFailed":"The document renderer could not load. Reload to retry.","renderFailed":"The document could not be rendered.","invalidValue":"The document must be text.","inputTooLarge":"The source document is too large.","outputTooLarge":"The rendered document is too large.","invalidSrc":"The document URL is invalid.","fetchFailed":"The document could not be loaded. Check its URL and CORS access."},
+          "markdownSourceOptions": [
+            {
+              "value": "",
+              "label": "Inline example"
+            },
+            {
+              "value": "./_proxy?url=https%3A%2F%2Fraw.githubusercontent.com%2Frnd-pro%2Fsymbiote-agui%2Fmain%2FREADME.md",
+              "label": "Project README through proxy"
+            }
+          ],
+          "markdownTexts": {"loading":"Loading document...","empty":"No document yet.","loadFailed":"The document renderer could not load. Reload to retry.","renderFailed":"The document could not be rendered.","invalidValue":"The document must be text.","inputTooLarge":"The source document is too large.","outputTooLarge":"The rendered document is too large.","invalidSrc":"The document URL is invalid.","fetchFailed":"The document could not be loaded. Check its URL, CORS access, or the session proxy policy."},
           "mapRows": [{"id":"studio","label":"Example studio","latitude":51.505,"longitude":-0.09},{"id":"office","label":"Example office","latitude":51.51,"longitude":-0.12},{"id":"warehouse","label":"Example warehouse","latitude":51.49,"longitude":-0.11},{"id":"unmapped","label":"Coordinates pending","latitude":null,"longitude":null}],
           "mapSelection": [],
           "mapView": {"center":[51.505,-0.09],"zoom":12},
@@ -303,9 +313,17 @@
               <agui-panel class="grid gap-4">
                 <h2 id="gallery-markdown-panel">Markdown</h2>
                 <p class="text-sm text-agui-muted">Use an external Markdown URL or edit the inline source. JSDA renders native HTML, highlighted code, and wrappers with readable fallbacks; registered components can enhance them. Document checkboxes remain disabled.</p>
-                <agui-field id="gallery-markdown-url" type="url" label="Markdown URL" hint="Leave empty to use the inline source. External servers must allow browser CORS access." pub-to="APP/markdownUrl" bind="$.value: APP/markdownUrl"></agui-field>
+                <agui-select id="gallery-markdown-preset" label="Source examples" pub-to="APP/markdownUrl"
+                  bind="$.options: APP/markdownSourceOptions; $.value: APP/markdownUrl"></agui-select>
+                <agui-field id="gallery-markdown-url" type="text" label="Markdown URL" hint="Leave empty for inline text. Direct external URLs need CORS; proxy URLs need a configured source." pub-to="APP/markdownUrl" bind="$.value: APP/markdownUrl"></agui-field>
+                <details>
+                  <summary>Enable the proxy example</summary>
+                  <p class="mt-3 text-sm text-agui-muted">Allow the public source for this gallery's session ID, then choose Project README through proxy. External documents use sanitized content without custom wrappers. Public links also expose the configured assets.</p>
+                  <pre class="mt-3 overflow-auto rounded-md bg-agui-bg p-3 text-sm"><code>npx symbiote-agui proxy allow &lt;SESSION_ID&gt; https://raw.githubusercontent.com
+npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
+                </details>
                 <agui-field id="gallery-markdown-source" type="textarea" data-code label="Inline Markdown source" pub-to="APP/markdownSource" bind="$.value: APP/markdownSource"></agui-field>
-                <agui-markdown id="gallery-markdown" label="Project briefing" bind="$.value: APP/markdownSource; $.src: APP/markdownUrl; $.texts: APP/markdownTexts"></agui-markdown>
+                <agui-markdown id="gallery-markdown" label="Project briefing" bind="$.value: APP/markdownSource; $.src: APP/markdownUrl; $.extensions: !APP/markdownUrl; $.texts: APP/markdownTexts"></agui-markdown>
               </agui-panel>
             </div>
           </agui-tab>

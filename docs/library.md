@@ -1,6 +1,6 @@
 # Team AGUI libraries
 
-Keep reusable interfaces beside the tasks they support. A team library contains one `<ID>.html` definition and one `<ID>.md` description per AGUI. These are ordinary files you can review, edit, and share through Git.
+Keep reusable interfaces beside the tasks they support. A team library contains one `<ID>.html` definition and one `<ID>.md` description per AGUI, plus an optional `<ID>.proxy.json` source policy. These are ordinary files you can review, edit, and share through Git. Review allowed origins with the interface; the [asset proxy](./reference.md#asset-proxy) serves only configured public sources.
 
 ## Choose a folder
 
@@ -49,7 +49,7 @@ npx symbiote-agui describe leads --file ./leads-description.md
 
 Describe the task, intended users, data sources, available actions, and persistence expectations. Keep the description current when the interface changes. `save` validates markup without executing its modules. `start`, `insert`, and `sync` render the definition and execute its marked modules in the browser.
 
-`npx symbiote-agui save leads` keeps an existing saved definition and creates a missing description. If the selected team folder has no such definition, it imports that ID's HTML and available description from your private cache while leaving the private copies intact. An existing description in the destination is preserved.
+`npx symbiote-agui save leads` keeps an existing saved definition and creates a missing description. If the selected team folder has no such definition, it imports that ID's HTML, available description, and proxy policy from your private cache while leaving the private copies intact. An existing description in the destination is preserved.
 
 ## Load team changes
 
@@ -62,7 +62,7 @@ npx symbiote-agui sync leads
 npx symbiote-agui sync all
 ```
 
-`sync` reads the latest saved HTML and applies it without rewriting the source or description. It rebuilds styles, reruns marked modules, and refreshes tool registrations. Rediscover tools before invoking them again. Unsaved form values and `update` changes reset; explicitly committed provider data is retained when declarations remain compatible.
+`sync` reads the latest saved HTML and proxy policy and applies them without rewriting the source or description. It rebuilds styles, reruns marked modules, and refreshes tool registrations. Rediscover tools before invoking them again. Unsaved form values and `update` changes reset; explicitly committed provider data is retained when declarations remain compatible. Proxy policy follows Rename, Copy, and Move automatically, independently of saved-data and private-metadata options.
 
 [Local data commits](./reference.md#local-data-commits) update private cached HTML under `.runtime/`, scoped to this library on this machine. They never write application records into shared source definitions. Copying HTML/Markdown through Git or importing it with `save` does not transfer those snapshots; the manager can include them explicitly during Copy or Move. Adding providers or keys preserves existing committed values; removing or renaming them, or changing a non-null top-level type, requires reconciliation. Conflicting sync fails without discarding the previous snapshot. After backing up any needed data, `npx symbiote-agui sync leads --reset-data` explicitly resets committed data to the saved source defaults. Reset applies to one running session at a time.
 
@@ -76,6 +76,6 @@ Workers keep the folder selected at startup, even if configuration later changes
 
 [Data-flow metadata](./reference.md#session-data-flow-metadata) records the initial source, bindings, and intended destinations without editing the Markdown description. It is private to this library's local storage scope, survives stop/start and sync, and is removed by session clear. Copying definition files or using `save` to import them does not transfer metadata. Use the manager's Include private metadata option, or `metadata get` and `metadata set`, after reviewing the existing source and destination references. Including metadata grants no external access and changes no external resource.
 
-`stop` retains HTML and Markdown. `clear` removes both files and clears a running interface; `clear-all` does this throughout the selected scope. Review these deletions in Git before committing. Atomic saves detect a source file changed during preparation and fail rather than intentionally overwrite the newer contents. Resolve Git conflicts before loading a definition.
+`stop` retains HTML, Markdown, and the proxy policy. `clear` removes those files and clears a running interface; `clear-all` does this throughout the selected scope. Review these deletions in Git before committing. Atomic saves detect a source file changed during preparation and fail rather than intentionally overwrite the newer contents. Resolve Git conflicts before loading a definition.
 
 Use IDs that differ beyond letter case in a shared folder so files remain portable across operating systems. Private caching retains case-sensitive IDs through encoded filenames. HTML and descriptions must be valid UTF-8 and fit the CLI's 1 MiB input limit.

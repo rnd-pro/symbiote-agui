@@ -77,6 +77,9 @@ test('the production tarball runs through npm exec outside the checkout', { time
     'src/manager/page/rows.js',
     'src/manager/page/connection.js',
     'src/manager/page/styles.css',
+    'src/proxy/asset-proxy.js',
+    'src/cli/proxy.js',
+    'types/proxy.d.ts',
     'skills/agui/SKILL.md',
   ]) {
     assert.ok(files.includes(path), `${path} must be included in the tarball.`);
@@ -113,6 +116,13 @@ test('the production tarball runs through npm exec outside the checkout', { time
   let managerSource = '<h1>Packaged project workflow</h1>';
   await writeFile(join(caller, 'manager-source.html'), managerSource);
   await cli('insert', 'package-smoke', '--file', 'manager-source.html');
+  assert.equal((await cli('proxy', 'status', 'package-smoke')).proxy.enabled, false);
+  let policy = await cli('proxy', 'allow', 'package-smoke', 'https://example.org');
+  assert.equal(policy.proxy.enabled, true);
+  assert.equal(policy.proxy.available, true);
+  let denied = await fetch(new URL('_proxy?url=https://blocked.example/data.json', session.url));
+  assert.equal(denied.status, 403);
+  assert.equal((await denied.json()).error.code, 'PROXY_SOURCE_DENIED');
   let manager = await cli('manager', '--no-open');
   assert.equal(manager.active, true);
   assert.equal((await cli('manager', 'status')).url, manager.url);
@@ -235,6 +245,8 @@ test('the production tarball runs through npm exec outside the checkout', { time
   let restored = await cli('start', 'package-smoke', '--no-open');
   started = true;
   assert.equal(restored.restored, true);
+  assert.equal((await cli('proxy', 'status', 'package-smoke')).proxy.enabled, true);
+  assert.equal((await cli('proxy', 'remove', 'package-smoke', 'https://example.org')).proxy.enabled, false);
   assert.equal(new URL(restored.url).pathname, new URL(session.url).pathname);
   assert.match(await (await fetch(new URL('/styles.css.js', restored.url))).text(), /123px/);
   assert.equal((await cli('clear', 'package-smoke')).cleared, true);

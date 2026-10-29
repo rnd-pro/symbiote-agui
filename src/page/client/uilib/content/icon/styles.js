@@ -21,6 +21,8 @@ export default css`
       width: 1em;
       height: 1em;
       font-size: var(--agui-icon-size, 1.5em);
+      /* Icon glyphs must not inherit the page's text x-height adjustment. */
+      font-size-adjust: none;
       font-style: normal;
       font-weight: normal;
       font-variant-ligatures: discretionary-ligatures;

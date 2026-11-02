@@ -7,6 +7,12 @@
     <agui-field id="preserved" label="Preserved draft" value="Original"></agui-field>
   </agui-conditional>
   <agui-conditional id="inverse" when="CONDITIONS/enabled" is="false">Disabled</agui-conditional>
+  <agui-conditional id="hidden-mode" when="CONDITIONS/enabled" is="true" behavior="hide">
+    <agui-field id="hidden-draft" label="Hidden draft" value="Original"></agui-field>
+  </agui-conditional>
+  <agui-conditional id="removed-mode" when="CONDITIONS/enabled" is="true" behavior="dom-remove">
+    <template><agui-field id="inverse-reset" label="Inverse reset draft" value="Original"></agui-field></template>
+  </agui-conditional>
   <agui-conditional id="tab" when="CONDITIONS/tab" is="settings" behavior="show">Settings</agui-conditional>
   <agui-conditional id="mounted" when="CONDITIONS/enabled" is="true" behavior="dom-add">
     <template>

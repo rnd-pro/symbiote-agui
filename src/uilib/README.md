@@ -6,7 +6,7 @@ Group components by purpose: `layouts/` for dashboard, panel, header, and toolba
 
 Import every component from `index.js` and register it before the page connects. JSDA bundles this entry into the normal page client, with one Symbiote instance and no per-session imports.
 
-Use `agui-conditional` for declarative boolean/string conditions on native context keys. The default keeps hidden content mounted; `behavior="dom-add"` uses Itemize to mount fresh content only when matched. See the [conditional contract](./layouts/conditional/README.md).
+Use `agui-conditional` for declarative boolean/string conditions on native context keys. `behavior` sets the matching state: `show` (default), `hide`, `dom-add`, or `dom-remove`; nonmatches apply the opposite state. Show/hide preserve mounted content, while DOM behaviors use Itemize. See the [conditional contract](./layouts/conditional/README.md).
 
 Mark code-entry fields with `data-code` on `agui-field type="textarea"` or a native `textarea` to use the shared monospace font for the editable content.
 

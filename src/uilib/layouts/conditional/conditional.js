@@ -9,6 +9,25 @@ let attributes = Object.freeze([
   'behavior',
 ]);
 
+let behaviors = Object.freeze({
+  show: {
+    dom: false,
+    inverse: false,
+  },
+  hide: {
+    dom: false,
+    inverse: true,
+  },
+  'dom-add': {
+    dom: true,
+    inverse: false,
+  },
+  'dom-remove': {
+    dom: true,
+    inverse: true,
+  },
+});
+
 export class Conditional extends UiComponent {
   source = '';
   /** @type {Set<string>} */
@@ -51,20 +70,22 @@ export class Conditional extends UiComponent {
 
   updateContent() {
     if (this.disposed) { return; }
-    let behavior = this.$.behavior ?? this.getAttribute('behavior') ?? 'show';
-    if (behavior !== 'show' && behavior !== 'dom-add') {
-      throw new TypeError('agui-conditional behavior must be "show" or "dom-add".');
+    let behavior = String(this.$.behavior ?? this.getAttribute('behavior') ?? 'show');
+    let mode = Object.hasOwn(behaviors, behavior) ? behaviors[/** @type {keyof typeof behaviors} */ (behavior)] : undefined;
+    if (!mode) {
+      throw new TypeError('agui-conditional behavior must be "show", "hide", "dom-add", or "dom-remove".');
     }
     let expected = this.$.is ?? this.getAttribute('is');
     if (expected === 'true') { expected = true; }
     else if (expected === 'false') { expected = false; }
     let value = this.source && this.has(this.source) ? this.$[this.source] : undefined;
     let matches = !!this.source && (expected === null || expected === undefined ? !!value : value === expected);
-    this.hidden = !matches;
-    let mount = behavior === 'show' || matches;
+    let visible = mode.inverse ? !matches : matches;
+    this.hidden = !visible;
+    let mount = !mode.dom || visible;
     if (mount !== this.mounted) {
       this.mounted = mount;
-      // null clears Itemize immediately; show mode keeps the existing item mounted.
+      // null clears Itemize immediately; visibility behaviors keep the item mounted.
       this.$.contentItems = mount ? [
         {},
       ] : null;

@@ -49,6 +49,16 @@ test('conditional content follows native contexts, preserves hidden drafts, and 
   assert.equal(await hidden('number'), true);
   assert.equal(await page.$('#reset'), null);
   assert.equal(await page.$('#direct span'), null);
+  assert.equal(await hidden('hidden-mode'), false);
+  assert.equal(await hidden('removed-mode'), false);
+  await page.focus('#hidden-draft input');
+  await page.keyboard.press('End');
+  await page.type('#hidden-draft input', ' draft');
+  await page.focus('#inverse-reset input');
+  await page.keyboard.press('End');
+  await page.type('#inverse-reset input', ' draft');
+  await page.$eval('#hidden-draft', (element) => { Reflect.set(window, 'hiddenConditionalField', element); });
+  await page.$eval('#inverse-reset', (element) => { Reflect.set(window, 'inverseRemovedConditionalField', element); });
   let baseline = await cli('tools', 'conditional');
   let baselineOwners = new Set(baseline.tools.map((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.ownerId));
   await update({
@@ -62,6 +72,9 @@ test('conditional content follows native contexts, preserves hidden drafts, and 
   assert.equal(await hidden('truthy'), false);
   assert.equal(await hidden('parent'), false);
   assert.equal(await hidden('nested'), false);
+  assert.equal(await hidden('hidden-mode'), true);
+  assert.equal(await hidden('removed-mode'), true);
+  assert.equal(await page.$('#inverse-reset'), null);
   assert.equal(await page.$eval('#direct span', (element) => element.textContent), 'Direct content Initial');
   await page.focus('#preserved input');
   await page.keyboard.press('End');
@@ -83,6 +96,13 @@ test('conditional content follows native contexts, preserves hidden drafts, and 
   assert.equal(await page.$('#reset'), null);
   assert.equal(await page.$('#nested'), null);
   assert.equal(await page.$eval('#default span', (element) => element.textContent), 'Updated');
+  assert.equal(await hidden('hidden-mode'), false);
+  assert.equal(await hidden('removed-mode'), false);
+  await page.waitForSelector('#inverse-reset input');
+  assert.equal(await page.$eval('#hidden-draft input', (element) => element.value), 'Original draft');
+  assert.equal(await page.$eval('#inverse-reset input', (element) => element.value), 'Original');
+  assert.equal(await page.$eval('#hidden-draft', (element) => Reflect.get(window, 'hiddenConditionalField') === element), true);
+  assert.equal(await page.$eval('#inverse-reset', (element) => Reflect.get(window, 'inverseRemovedConditionalField') === element), false);
   let after = await cli('tools', 'conditional');
   assert.equal(after.tools.some((/** @type {import('../../types/tools.js').PageTool} */ tool) => resetTools.some((/** @type {import('../../types/tools.js').PageTool} */ previous) => previous.name === tool.name)), false);
   await update({
@@ -106,6 +126,50 @@ test('conditional content follows native contexts, preserves hidden drafts, and 
   assert.equal(await hidden('retarget'), false);
   await page.$eval('#retarget', (element) => { element.setAttribute('when', 'CONDITIONS/enabled'); });
   assert.equal(await hidden('retarget'), false);
+  // behavior names the matching state; a nonmatch applies its opposite.
+  for (let scenario of [
+    {
+      behavior: 'show',
+      matchedHidden: false,
+      unmatchedHidden: true,
+      matchedMounted: true,
+      unmatchedMounted: true,
+    },
+    {
+      behavior: 'hide',
+      matchedHidden: true,
+      unmatchedHidden: false,
+      matchedMounted: true,
+      unmatchedMounted: true,
+    },
+    {
+      behavior: 'dom-add',
+      matchedHidden: false,
+      unmatchedHidden: true,
+      matchedMounted: true,
+      unmatchedMounted: false,
+    },
+    {
+      behavior: 'dom-remove',
+      matchedHidden: true,
+      unmatchedHidden: false,
+      matchedMounted: false,
+      unmatchedMounted: true,
+    },
+  ]) {
+    for (let matches of [
+      true,
+      false,
+    ]) {
+      await page.$eval('#retarget', (element, behavior, matches) => {
+        element.setAttribute('behavior', behavior);
+        element.setAttribute('is', matches ? 'false' : 'true');
+      }, scenario.behavior, matches);
+      assert.equal(await hidden('retarget'), matches ? scenario.matchedHidden : scenario.unmatchedHidden, scenario.behavior);
+      assert.equal(await page.$eval('#retarget .agui-conditional-content', (element) => !!element.firstElementChild),
+        matches ? scenario.matchedMounted : scenario.unmatchedMounted, scenario.behavior);
+    }
+  }
   await page.$eval('#default', (element) => { element.setAttribute('behavior', 'dom-add'); });
   assert.equal(await page.$('#preserved'), null);
   await page.$eval('#default', (element) => { element.removeAttribute('behavior'); });

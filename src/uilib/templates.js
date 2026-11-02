@@ -8,6 +8,7 @@ import { DATA_TOOLBAR_TEMPLATE } from './controls/data-toolbar/template.js';
 import { ICON_TEMPLATE } from './content/icon/template.js';
 import { SIDEBAR_TEMPLATE } from './layouts/sidebar/template.js';
 import { TABS_TEMPLATE, TAB_BUTTON_TEMPLATE } from './layouts/tabs/template.js';
+import { CONDITIONAL_TEMPLATE } from './layouts/conditional/template.js';
 import { DIALOG_TEMPLATE } from './feedback/dialog/template.js';
 import { FILTER_TEMPLATE, FILTER_FIELD_TEMPLATE } from './widgets/filter/template.js';
 import { CHART_TEMPLATE } from './widgets/chart/template.js';
@@ -33,6 +34,7 @@ export let UILIB_TEMPLATES = Object.freeze({
   sidebar: SIDEBAR_TEMPLATE,
   tabs: TABS_TEMPLATE,
   tabButton: TAB_BUTTON_TEMPLATE,
+  conditional: CONDITIONAL_TEMPLATE,
   dialog: DIALOG_TEMPLATE,
   chart: CHART_TEMPLATE,
   map: MAP_TEMPLATE,

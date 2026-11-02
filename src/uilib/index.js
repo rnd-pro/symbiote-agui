@@ -8,6 +8,7 @@ import { TabButton } from './layouts/tabs/tab-button.js';
 import { Panel } from './layouts/panel/panel.js';
 import { Header } from './layouts/header/header.js';
 import { Toolbar } from './layouts/toolbar/toolbar.js';
+import { Conditional } from './layouts/conditional/conditional.js';
 import { Field } from './controls/field/field.js';
 import { Select } from './controls/select/select.js';
 import { ThemeToggle } from './controls/theme-toggle/theme-toggle.js';
@@ -50,6 +51,7 @@ export function registerUiLibComponents() {
   Panel.reg('agui-panel');
   Header.reg('agui-header');
   Toolbar.reg('agui-toolbar');
+  Conditional.reg('agui-conditional');
   Field.reg('agui-field');
   Select.reg('agui-select');
   Toggle.reg('agui-toggle');

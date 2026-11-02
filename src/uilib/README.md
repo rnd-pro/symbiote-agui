@@ -6,6 +6,8 @@ Group components by purpose: `layouts/` for dashboard, panel, header, and toolba
 
 Import every component from `index.js` and register it before the page connects. JSDA bundles this entry into the normal page client, with one Symbiote instance and no per-session imports.
 
+Use `agui-conditional` for declarative boolean/string conditions on native context keys. The default keeps hidden content mounted; `behavior="dom-add"` uses Itemize to mount fresh content only when matched. See the [conditional contract](./layouts/conditional/README.md).
+
 Mark code-entry fields with `data-code` on `agui-field type="textarea"` or a native `textarea` to use the shared monospace font for the editable content.
 
 Use `agui-preloader` for indeterminate loading, with caller-provided `label` or standard accessible-name attributes. Native `hidden` bindings control visibility; text color and size utilities customize appearance. It uses native progress semantics and slows its animation for reduced motion. Loading states and the data toolbar reuse it. The gallery's Bindings tab includes standalone and compact examples; the skill documents its bindings and CSS properties.

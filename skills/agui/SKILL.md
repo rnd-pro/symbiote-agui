@@ -42,6 +42,7 @@ The default JSDA page bundle includes and registers every available library comp
 - `agui-sidebar`: independently scrolling authored content with a built-in expand/collapse button. `side="start"` is the default; use `side="end"` for the other side. Without an explicit value, it defaults to collapsed below `64rem` and expanded from `64rem`; `collapsed` keeps that default closed at every size. Unset state follows breakpoint changes without publishing edits. A bound value or explicit user/tool toggle takes precedence and survives resizing. Supply `label`, `expand-label`, and `collapse-label`, or bind `$.label`, `$.expandLabel`, and `$.collapseLabel`. Boolean `$.value` is expanded state; pair its binding with `pub-to` to share visibility with other controls. Disabled/read-only state protects visibility changes, not the fields inside. Collapsing preserves mounted content and drafts. Desktop width uses `--agui-sidebar-width` (default `18rem`); collapsed panels keep their toggle visible.
 - `agui-viewport`: independently scrolling central content. Give it an `aria-label` or `aria-labelledby`; it defaults to `role="main"` and `tabindex="0"`, preserving explicit overrides. Place existing headers, dashboards, and panels inside it. A floating header within the viewport supplies focus spacing to that scroll region; an app-level header occupies its own row and needs no `floating` flag.
 - `agui-tabs`: authored tab layout with string active `value`, optional `pub-to`, caller-owned `label` for the tablist, and `orientation="horizontal"` (default) or `vertical`. Use direct `agui-tab` children with unique nonempty string `value` keys and caller-owned `label` text; labels, keys, and disabled state can use native property or `$` merge bindings. A disabled tab is unavailable for selection. Group `disabled`/`readonly` prevents switching without changing child fields' own edit policies. Panels stay mounted while hidden, preserving drafts and nested tab state. A missing, unknown, or disabled requested value displays the first enabled tab without publishing a correction; no enabled tabs means no visible panel and an effective value of `""`.
+- `agui-conditional`: `when` names a native context key; `is="true|false"` compares a boolean, other `is` values compare exact strings, and omitted `is` checks truthiness. Default `behavior="show"` preserves mounted content while hidden. `behavior="dom-add"` creates/removes fresh Itemize branches; use a child `<template>` for inert contents and keep durable values in an outer provider. No expressions or scripts are needed. See the conditional example below.
 - `agui-dialog`: native modal with preserved authored contents and boolean `value` for visibility. Supply `label` and `close-label`; optional `open-label` adds a built-in opener. Native property bindings use `$.label`, `$.closeLabel`, and `$.openLabel`. The `open` attribute supplies an initially open default when no value is bound. Pair the value binding with `pub-to` for shared visibility. Closing never saves or discards fields; child controls keep their own edit policies. See the dialog/popup example below.
 - `agui-filter`: reusable search and typed AND filters over provider-bound `rows` and `fields`, independent of any view. `value` is the filter dictionary; pair it with `pub-to`, and optionally publish `query` through `query-pub-to`. `results-to` publishes matching IDs into an existing provider array, including initialization and incoming updates, without user-action notifications. Supply caller-owned `texts`, `label`, optional `locale`, and `id-key` (default `id`).
 - `agui-table`: provider-bound `rows`, typed `columns`, and caller-owned `texts`, with sorting, ID selection, and local pagination. Optional `filteredIds` consumes a filter's matching IDs; `null` shows all rows and `[]` shows none. `value` is always a string ID array; `selection="none|single|multiple"` defaults to none. Pair selection with `pub-to` and sort with `sort-pub-to`. Supply `label`, optional `locale`, and `page-size` (default 20, maximum 100). Every source row needs a unique nonempty string ID. Disabled/read-only blocks changes; `loading` and `error` show caller-owned states. The table does not edit records.
@@ -147,6 +148,20 @@ Update common application data through CLI `update`, for example `{ "selector": 
 ```
 
 Sidebar clicks, keyboard input, and scoped `set_value` tools publish visibility changes; incoming assignments and repeated values emit no changes. Sidebar tools also include `read_value` and `toggle`; discover their exact names through CLI `tools`. Keep visibility transient by default. For record-editing workspaces, declare the record keys in `persist` and place the data toolbar directly in the app as described above.
+
+### Conditional content example
+
+Use context values as conditions rather than adding visibility handlers. These examples assume the application provides the referenced context keys.
+
+```html
+<agui-conditional when="APP/showHello" is="true">Hello!</agui-conditional>
+<agui-conditional when="APP/currentTab" is="settings">Settings...</agui-conditional>
+<agui-conditional when="ROUTER/currentRoute" is="dashboard" behavior="dom-add">
+  <template><agui-panel>Dashboard...</agui-panel></template>
+</agui-conditional>
+```
+
+Use the default show behavior to preserve local drafts. DOM mode recreates descendants and their tools when shown again; bind any values that must survive to an outside provider. Missing sources stay unmatched. Boolean comparison is strict: string `"true"` does not match boolean `true`. Content uses native named or `^` bindings. See the [conditional contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/layouts/conditional/README.md).
 
 ### Tabs example
 

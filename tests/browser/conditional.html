@@ -1,0 +1,24 @@
+<context-provider id="conditional-data" ctx="CONDITIONS">
+  <script type="application/json">
+    {"enabled":false,"other":true,"tab":"home","literal":"true","name":"Initial","number":1}
+  </script>
+  <agui-conditional id="default" when="CONDITIONS/enabled" is="true">
+    <p>Hello <span bind="textContent: CONDITIONS/name"></span></p>
+    <agui-field id="preserved" label="Preserved draft" value="Original"></agui-field>
+  </agui-conditional>
+  <agui-conditional id="inverse" when="CONDITIONS/enabled" is="false">Disabled</agui-conditional>
+  <agui-conditional id="tab" when="CONDITIONS/tab" is="settings" behavior="show">Settings</agui-conditional>
+  <agui-conditional id="mounted" when="CONDITIONS/enabled" is="true" behavior="dom-add">
+    <template>
+      <agui-field id="reset" label="Reset draft" value="Original"></agui-field>
+      <agui-conditional id="nested" when="CONDITIONS/tab" is="settings">Nested settings</agui-conditional>
+    </template>
+  </agui-conditional>
+  <agui-conditional id="direct" when="CONDITIONS/tab" is="settings" behavior="dom-add"><span>Direct content {{CONDITIONS/name}}</span></agui-conditional>
+  <agui-conditional id="truthy" when="CONDITIONS/enabled">Enabled</agui-conditional>
+  <agui-conditional id="string" when="CONDITIONS/literal" is="true">String is not boolean</agui-conditional>
+  <agui-conditional id="number" when="CONDITIONS/number" is="1">Number is not string</agui-conditional>
+  <agui-conditional id="retarget" when="CONDITIONS/enabled" is="true">Retargeted</agui-conditional>
+  <agui-conditional id="parent" when="^enabled" is="true">Parent context</agui-conditional>
+  <agui-conditional id="late" when="LATE/enabled" is="true">Deferred context</agui-conditional>
+</context-provider>

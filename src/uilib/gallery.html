@@ -228,11 +228,11 @@
                 <agui-toggle label="Show preloader" pub-to="APP/preloaderVisible" bind="$.value: APP/preloaderVisible"></agui-toggle>
                 <div class="grid gap-4 sm:grid-cols-2">
                   <div class="grid content-start gap-2">
-                    <p class="text-sm text-agui-muted">Default preloader</p>
+                    <agui-conditional when="APP/preloaderVisible" is="true"><p class="text-sm text-agui-muted">Default preloader: preserved conditional content</p></agui-conditional>
                     <agui-preloader id="gallery-preloader" class="text-agui-accent" bind="$.label: APP/preloaderLabel; hidden: !APP/preloaderVisible"></agui-preloader>
                   </div>
                   <div class="grid content-start gap-2">
-                    <p class="text-sm text-agui-muted">Compact preloader</p>
+                    <agui-conditional when="APP/preloaderVisible" is="true" behavior="dom-add"><template><p class="text-sm text-agui-muted">Compact preloader: content mounted on demand</p></template></agui-conditional>
                     <agui-preloader class="size-4 text-agui-accent" label="Loading compact preview" bind="hidden: !APP/preloaderVisible"></agui-preloader>
                   </div>
                 </div>

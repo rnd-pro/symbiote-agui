@@ -60,8 +60,8 @@ export default css`
       pointer-events: auto;
       color: inherit;
     }
-    agui-message .agui-message-dismiss:hover:enabled {
-      background: color-mix(in srgb, currentColor 15%, transparent);
+    agui-message .agui-message-dismiss:hover:not(:disabled):not([aria-disabled='true']) {
+      background: rgb(255 255 255 / 15%);
       color: inherit;
     }
     agui-message .agui-message-dismiss:focus-visible {

@@ -63,7 +63,6 @@ export class SessionManager extends ContextProvider {
     showTransfers: busyAction(() => this.transfers?.showHistory()),
     submitTransfer: busyAction((event) => { event.preventDefault(); return this.transfers?.submit(); }),
     openTransferDestination: busyAction(() => this.transfers?.openDestination()),
-    openSettings: () => { this.$.settingsOpen = true; },
     saveFeedback: busyAction((event) => this.feedbackSettings?.submit(event)),
     disableFeedback: busyAction((event) => this.feedbackSettings?.submit(event, true)),
     refreshFeedback: busyAction(() => this.feedbackSettings?.run('feedback settings')),

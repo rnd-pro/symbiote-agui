@@ -129,6 +129,10 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   page.on('pageerror', (error) => { errors.push(String(error)); t.diagnostic(String(error)); });
   await page.goto(manager.launchUrl);
   await page.waitForSelector('[data-session="desk"]');
+  await page.locator('::-p-aria([name="Settings"][role="button"])').click();
+  await page.waitForSelector('#manager-settings dialog[open]');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#manager-settings dialog')?.hasAttribute('open'));
   assert.match(await page.$eval('[data-session="desk"] .data-flow', (element) => element.textContent || ''), /demo.inventory/);
   await action(page, 'Description');
   await page.waitForSelector('#manager-description agui-markdown h1');

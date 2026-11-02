@@ -53,7 +53,7 @@
               <button type="button" class="agui-button-icon" aria-label="Refresh" title="Refresh" bind="onclick: MANAGER/refresh; disabled: MANAGER/refreshDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="refresh"></agui-icon></button>
               <button type="button" class="agui-button-icon" aria-label="Projects" title="Projects" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="home"></agui-icon></button>
               <button type="button" class="agui-button-icon" aria-label="Transfers" title="Transfers" bind="onclick: MANAGER/showTransfers; disabled: MANAGER/refreshDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="content_copy"></agui-icon></button>
-              <button type="button" class="agui-button-icon" aria-label="Settings" title="Settings" bind="onclick: MANAGER/openSettings"><agui-icon name="settings"></agui-icon></button>
+              <agui-button class="agui-button-icon" aria-label="Settings" title="Settings" aria-haspopup="dialog" set="MANAGER/settingsOpen" value="true"><agui-icon name="settings"></agui-icon></agui-button>
             </agui-toolbar>
           </agui-header>
           <div class="min-w-0 flex-1 p-4 sm:p-6">
@@ -116,10 +116,16 @@
                     <agui-panel id="explorer-preview" class="min-w-0">
                       <h4 class="mb-3 break-all text-sm font-medium" bind="textContent: MANAGER/previewPath"></h4>
                       <agui-state bind="$.status: MANAGER/previewStatus; $.message: MANAGER/previewMessage"></agui-state>
-                      <div class="agui-markdown-content" bind="hidden: MANAGER/previewSourceHidden">
-                        <pre class="max-h-[36rem] overflow-auto whitespace-pre text-xs" tabindex="0" aria-label="File source"><code bind="textContent: MANAGER/previewText"></code></pre>
-                      </div>
-                      <agui-markdown label="File preview" bind="hidden: MANAGER/previewMarkdownHidden; $.value: MANAGER/previewMarkdown; $.texts: MANAGER/previewTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown>
+                      <agui-conditional when="MANAGER/previewSourceHidden" is="true" behavior="hide">
+                        <template>
+                          <div class="agui-markdown-content">
+                            <pre class="max-h-[36rem] overflow-auto whitespace-pre text-xs" tabindex="0" aria-label="File source"><code bind="textContent: MANAGER/previewText"></code></pre>
+                          </div>
+                        </template>
+                      </agui-conditional>
+                      <agui-conditional when="MANAGER/previewMarkdownHidden" is="true" behavior="hide">
+                        <template><agui-markdown label="File preview" bind="$.value: MANAGER/previewMarkdown; $.texts: MANAGER/previewTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown></template>
+                      </agui-conditional>
                     </agui-panel>
                   </div>
                 </div>
@@ -217,13 +223,17 @@
                 bind="hidden: MANAGER/transferIsRename; $.value: MANAGER/transferDestination; $.options: MANAGER/transferOptions; $.disabled: MANAGER/transferProjectDisabled"></agui-select>
               <agui-field name="transferSessionId" required required-mark="*" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" pub-to="MANAGER/transferSessionId"
                 bind="$.label: MANAGER/transferIdLabel; $.value: MANAGER/transferSessionId; $.disabled: MANAGER/transferDisabled"></agui-field>
-              <agui-toggle label="Include saved data" name="transferIncludeData" pub-to="MANAGER/transferIncludeData" bind="hidden: MANAGER/transferIsRename; $.value: MANAGER/transferIncludeData; $.disabled: MANAGER/transferDisabled"></agui-toggle>
-              <agui-toggle label="Include private metadata" name="transferIncludeMetadata" pub-to="MANAGER/transferIncludeMetadata" bind="hidden: MANAGER/transferIsRename; $.value: MANAGER/transferIncludeMetadata; $.disabled: MANAGER/transferDisabled"></agui-toggle>
-              <details bind="hidden: MANAGER/transferIsRename">
-                <summary>Associated private metadata</summary>
-                <p class="text-xs text-agui-muted">Includes existing data-source and destination references. Copying them grants no external access and changes no external resource.</p>
-                <pre class="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs"><code bind="textContent: MANAGER/transferMetadata"></code></pre>
-              </details>
+              <agui-conditional when="MANAGER/transferIsRename" is="true" behavior="hide">
+                <template>
+                  <agui-toggle label="Include saved data" name="transferIncludeData" pub-to="MANAGER/transferIncludeData" bind="$.value: MANAGER/transferIncludeData; $.disabled: MANAGER/transferDisabled"></agui-toggle>
+                  <agui-toggle label="Include private metadata" name="transferIncludeMetadata" pub-to="MANAGER/transferIncludeMetadata" bind="$.value: MANAGER/transferIncludeMetadata; $.disabled: MANAGER/transferDisabled"></agui-toggle>
+                  <details>
+                    <summary>Associated private metadata</summary>
+                    <p class="text-xs text-agui-muted">Includes existing data-source and destination references. Copying them grants no external access and changes no external resource.</p>
+                    <pre class="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs"><code bind="textContent: MANAGER/transferMetadata"></code></pre>
+                  </details>
+                </template>
+              </agui-conditional>
               <p id="transfer-error" class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/transferError"></p>
               <p id="transfer-message" class="break-all text-sm empty:hidden" role="status" bind="textContent: MANAGER/transferMessage"></p>
               <agui-toolbar aria-label="Transfer actions">

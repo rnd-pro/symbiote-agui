@@ -5,7 +5,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { jsBuild } from 'jsda-kit/server/build-asset.js';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { temporaryState } from '../node/state-fixture.js';
 import { waitForServer, closeServer } from '../../src/shared/server.js';
 import { DATA_LIMITS } from '../../src/data/constants.js';
@@ -13,7 +13,7 @@ import { DATA_LIMITS } from '../../src/data/constants.js';
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 test('manual JSON transfer works offline, replaces only validated drafts, resets the picker, and releases downloads', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.', timeout: 30_000,
+  timeout: 30_000,
 }, async (t) => {
   let state = await temporaryState();
   let bundle = await jsBuild(fileURLToPath(new URL('./data-transfer.fixture.js', import.meta.url)));
@@ -23,7 +23,7 @@ test('manual JSON transfer works offline, replaces only validated drafts, resets
   });
   server.listen(0, '127.0.0.1');
   let origin = await waitForServer(server);
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => { await browser?.close(); await closeServer(server); await state.close(); });
   browser = await puppeteer.launch({ executablePath, headless: true, timeout: 10_000, protocolTimeout: 10_000 });

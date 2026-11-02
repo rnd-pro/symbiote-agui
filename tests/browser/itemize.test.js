@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { temporaryState } from '../node/state-fixture.js';
 import { cli, cliToolCall, insertStdin } from './helpers.js';
 
@@ -9,12 +9,11 @@ let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 for (let native of [false, true]) {
   test(`Itemize skill example exposes individual checkbox tools with native WebMCP ${native ? 'enabled' : 'disabled'}`, {
-    skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
     timeout: 30_000,
   }, async (t) => {
     let state = await temporaryState();
     let sessionId = 'itemize';
-    /** @type {import('puppeteer-core').Browser | undefined} */
+    /** @type {import('puppeteer').Browser | undefined} */
     let browser;
     t.after(async () => {
       await cli('stop', sessionId).catch(() => {});

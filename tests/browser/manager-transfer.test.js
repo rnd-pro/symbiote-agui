@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { chmod, mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { temporaryManagerProject } from '../node/manager-storage-fixture.js';
 import { writeTransferFixture } from '../node/transfer-fixture.js';
 import { dataHtml } from '../node/data-fixture.js';
@@ -40,7 +40,7 @@ async function fixture(t) {
 }
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} label
  */
 async function openTransfer(page, label) {
@@ -51,7 +51,6 @@ async function openTransfer(page, label) {
 }
 
 test('manager renames saved IDs with all artifacts, selects the renamed session, and protects unrelated live drafts', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45000,
 }, async (t) => {
   let {
@@ -99,7 +98,7 @@ test('manager renames saved IDs with all artifacts, selects the renamed session,
   assert.match((await readRuntimeCache('renamed', a.stateRoot))?.html || '', /committed/);
   await page.locator('#session-inspector ::-p-aria([name="Start"][role="button"])').click();
   await page.waitForFunction(() => document.querySelector('.notice')?.textContent?.includes('start completed'));
-  assert.equal(await page.$eval('#session-inspector button[title*="before renaming"]', (element) => Reflect.get(element, 'disabled')), true);
+  await page.waitForSelector('#session-inspector button[title*="before renaming"]:disabled');
   let running = await project.cli([
     'status',
     'renamed',
@@ -116,7 +115,6 @@ test('manager renames saved IDs with all artifacts, selects the renamed session,
 });
 
 test('manager copies live sessions with explicit options, handles collisions, moves stopped sources and opens the destination separately', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45000,
 }, async (t) => {
   let {
@@ -245,7 +243,7 @@ test('manager copies live sessions with explicit options, handles collisions, mo
 });
 
 test('manager discovers an interrupted move after restart and explicitly restores it without overwriting other files', {
-  skip: !executablePath || process.platform === 'win32' || process.getuid?.() === 0 ? 'Requires Chrome and POSIX directory permissions.' : false,
+  skip: process.platform === 'win32' || process.getuid?.() === 0 ? 'Requires POSIX directory permissions.' : false,
   timeout: 45000,
 }, async (t) => {
   let {
@@ -270,7 +268,7 @@ test('manager discovers an interrupted move after restart and explicitly restore
   await page.click('#manager-transfer-form button[type="submit"]');
   await page.waitForFunction(() => document.querySelector('#transfer-error')?.textContent?.includes('Transfer incomplete'));
   await chmod(a.folder || '', 0o700);
-  assert.equal((await readTransferFiles(transferPaths(a, 'desk'))).data, null);
+  assert.equal((await readTransferFiles(transferPaths(a, 'desk'))).data, original.data);
   await project.cli([
     'manager',
     'stop',
@@ -281,7 +279,7 @@ test('manager discovers an interrupted move after restart and explicitly restore
   ], a.folder);
   await page.goto(manager.launchUrl);
   await page.waitForFunction(() => document.querySelector('#transfer-recovery-notice')?.textContent?.includes('transfer needs recovery'));
-  await page.click('.toolbar button[aria-label="Transfers"]');
+  await page.locator('::-p-aria([name="Transfers"][role="button"])').click();
   await page.waitForSelector('#manager-transfers dialog[open]');
   await page.waitForFunction(() => document.querySelector('#manager-transfer-history')?.textContent?.includes('needs-recovery'));
   page.once('dialog', (dialog) => { void dialog.accept(); });

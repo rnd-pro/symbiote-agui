@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { cli } from './helpers.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';
@@ -17,12 +17,11 @@ let desktopViewport = {
 };
 
 test('manager save-folder controls persist the project setting and open the selected scope', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45_000,
 }, async (t) => {
   let project = await temporaryManagerProject();
   let folder = join(project.projectDirectory, 'saved interfaces');
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();
@@ -76,7 +75,7 @@ test('manager save-folder controls persist the project setting and open the sele
 });
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} name
  */
 async function action(page, name) {
@@ -86,7 +85,7 @@ async function action(page, name) {
 }
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} text
  */
 async function notice(page, text) {
@@ -94,12 +93,12 @@ async function notice(page, text) {
 }
 
 test('built-in manager populates new tabs and directly manages sessions, descriptions and tunnels', {
-  skip: !executablePath || process.platform === 'win32' ? 'Requires Chrome and the POSIX tunnel fixture.' : false,
+  skip: process.platform === 'win32' && 'Requires the POSIX tunnel fixture.',
   timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
   let fixture = await tunnelFixture(state.directory);
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();
@@ -310,11 +309,10 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
 });
 
 test('manager disconnects reconcile status without replaying a mutation; generated pages have no management access', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 40_000,
 }, async (t) => {
   let state = await temporaryState();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();
@@ -364,11 +362,10 @@ test('manager disconnects reconcile status without replaying a mutation; generat
 });
 
 test('cards and selectable table rows share session selection and inspector actions target only the selected session', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 35_000,
 }, async (t) => {
   let state = await temporaryState();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();

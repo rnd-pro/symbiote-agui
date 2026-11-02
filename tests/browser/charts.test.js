@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { CHART_RUNTIME_PATH } from '../../src/uilib/widgets/chart/constants.js';
 import { CLIENT_SCRIPT_PATH } from '../../src/markup/constants.js';
 import { temporaryState } from '../node/state-fixture.js';
@@ -11,12 +11,12 @@ import { cli, insertStdin, sendStdin } from './helpers.js';
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 test('chart dependencies load once on initialization, render SVG, select source IDs, and stay absent from viewers', {
-  skip: !executablePath || process.platform === 'win32' ? 'Requires Chrome and the POSIX connector fixture.' : false,
+  skip: process.platform === 'win32' && 'Requires the POSIX connector fixture.',
   timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
   let fixture = await tunnelFixture(state.directory);
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();
@@ -45,7 +45,7 @@ test('chart dependencies load once on initialization, render SVG, select source 
   });
   /** @type {string[]} */
   let errors = [];
-  /** @type {import('puppeteer-core').HTTPRequest[]} */
+  /** @type {import('puppeteer').HTTPRequest[]} */
   let runtimeRequests = [];
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.setRequestInterception(true);

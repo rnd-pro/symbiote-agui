@@ -3,17 +3,17 @@ import test from 'node:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { temporaryState } from '../node/state-fixture.js';
 import { cli, insertStdin, sendStdin } from './helpers.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 test('explicit Save consolidates context, blocks agent loops, and recovers delivery without replay', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.', timeout: 60_000,
+  timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await cli('stop', 'feedback-browser').catch(() => {});

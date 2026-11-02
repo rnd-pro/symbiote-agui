@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { connectProject } from '../../src/projects/registry.js';
 import { EXPLORER_PAGE_SIZE } from '../../src/projects/explorer/constants.js';
 import { temporaryManagerProject } from '../node/manager-storage-fixture.js';
@@ -33,7 +33,7 @@ async function fixture(t) {
   };
 }
 
-/** @param {import('puppeteer-core').Page} page */
+/** @param {import('puppeteer').Page} page */
 async function openExplorer(page) {
   await page.click('#session-views [role="tab"][value="explorer"]');
   try { await page.waitForSelector('#explorer-entries [data-entry] button'); }
@@ -56,7 +56,6 @@ async function openExplorer(page) {
 }
 
 test('manager lazily expands project folders and previews source or inert Markdown while sessions stay available', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45000,
 }, async (t) => {
   let {
@@ -164,11 +163,12 @@ test('manager lazily expands project folders and previews source or inert Markdo
   assert.equal(await page.$('#explorer-entries [data-entry="pages/entry-100.txt"]'), null);
   await page.locator('#explorer-entries ::-p-aria([name="Load more entries"][role="button"])').click();
   await page.waitForSelector('#explorer-entries [data-entry="pages/entry-100.txt"]');
-  await page.click('agui-toggle[name="explorerHidden"] input');
+  await page.locator('agui-toggle[name="explorerHidden"] input').click();
   await page.waitForSelector('#explorer-entries [data-entry=".hidden.txt"] button');
   await page.click('#explorer-entries [data-entry=".hidden.txt"] button');
   await page.waitForFunction(() => document.querySelector('#explorer-preview pre code')?.textContent === 'Hidden fixture.');
-  await page.click('agui-toggle[name="explorerHidden"] input');
+  await page.focus('agui-toggle[name="explorerHidden"] input');
+  await page.keyboard.press('Space');
   await page.waitForFunction(() => !document.querySelector('#explorer-entries [data-entry=".hidden.txt"]'));
   assert.equal(await page.$eval('#explorer-preview pre code', (element) => element.textContent), '', 'Hiding content also clears its preview.');
   await writeFile(join(folder, 'new.txt'), 'New file.');
@@ -189,7 +189,6 @@ test('manager lazily expands project folders and previews source or inert Markdo
 });
 
 test('Default uses readable definitions and explorer drops delayed responses after scope changes and reconnect', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45000,
 }, async (t) => {
   let {

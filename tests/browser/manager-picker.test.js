@@ -2,14 +2,13 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { projectId } from '../../src/projects/identity.js';
 import { temporaryManagerProject } from '../node/manager-storage-fixture.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 test('manager offers a folder picker first, preserves cancellation and falls back to manual connection', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45000,
 }, async (t) => {
   let project = await temporaryManagerProject();

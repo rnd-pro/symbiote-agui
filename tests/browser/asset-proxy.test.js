@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { parseHTML } from 'linkedom';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { withTimeout } from '../../src/shared/timeout.js';
 import { assetProxyFixture } from './asset-proxy-fixture.js';
 import { upstreamResponse } from '../node/proxy-http-fixture.js';
@@ -14,7 +14,6 @@ for (let publicPage of [
   true,
 ]) {
   test(`native assets and Markdown use the session proxy ${publicPage ? 'through the HTTPS tunnel' : 'locally'} and remain read-only in viewers`, {
-    skip: !executablePath ? 'Requires Chrome.' : false,
     timeout: 60_000,
   }, async (t) => {
     let fixture = await assetProxyFixture(t);
@@ -33,7 +32,7 @@ for (let publicPage of [
     /** @type {string[]} */
     let errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
-    /** @param {import('puppeteer-core').Page} target */
+    /** @param {import('puppeteer').Page} target */
     async function interceptExternal(target) {
       await target.setRequestInterception(true);
       target.on('request', (request) => {
@@ -163,7 +162,6 @@ for (let publicPage of [
 }
 
 test('the gallery proxy preset uses existing controls, stays opt-in, and disables external document wrappers', {
-  skip: !executablePath ? 'Requires Chrome.' : false,
   timeout: 60_000,
 }, async (t) => {
   let fixture = await assetProxyFixture(t);

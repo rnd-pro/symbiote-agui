@@ -44,13 +44,9 @@ Run the tests that cover the changed behavior. Node tests use the built-in test 
 node --test tests/node/manager.test.js
 ```
 
-Run all Node tests with `npm run test:node`. Browser tests use an installed Chrome or Chromium executable through Puppeteer. Set `AGUI_TEST_BROWSER_PATH` to its absolute path, then run:
+Run all Node tests with `npm run test:node`.
 
-```sh
-npm run test:browser
-```
-
-Browser checks are skipped when that variable is unset. They start local servers and browser processes, so the environment must permit both. Restart the manager after changing its templates or styles to rebuild its assets.
+Run `npm test` for both suites without additional setup. Downloads require network access on the first run; subsequent runs reuse the cached browser.
 
 Before release, run `npm run test:package`. It installs the production tarball in a temporary npm cache outside the checkout and verifies CLI, MCP, manager assets, and project operations without development dependencies. It requires npm registry access.
 

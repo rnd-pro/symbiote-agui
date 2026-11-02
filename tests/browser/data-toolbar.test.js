@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { SessionRuntime } from '../../src/sessions/runtime.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { readRuntimeCache, runtimeCachePath } from '../../src/data/cache.js';
@@ -21,11 +21,11 @@ function createRuntime() {
 }
 
 test('declarative data toolbar saves, cancels, imports offline, delivers one bounded reference, and keeps viewer status local', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.', timeout: 60_000,
+  timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
   let runtime = createRuntime();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   let release = () => {};
   t.after(async () => { release(); await browser?.close(); await runtime.close(); await state.close(); });
@@ -214,12 +214,11 @@ test('declarative data toolbar saves, cancels, imports offline, delivers one bou
 });
 
 test('session information dialogs read fresh files without changing drafts or activating description components', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 30_000,
 }, async (t) => {
   let state = await temporaryState();
   let runtime = createRuntime();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();
@@ -272,12 +271,11 @@ test('session information dialogs read fresh files without changing drafts or ac
 });
 
 test('partial outcomes produce independently dismissible success, warning, and error notifications', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 30_000,
 }, async (t) => {
   let state = await temporaryState();
   let runtime = createRuntime();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();

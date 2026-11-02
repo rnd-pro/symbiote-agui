@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { MARKDOWN_LIMITS } from '../../src/uilib/widgets/markdown/constants.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';
@@ -9,12 +9,12 @@ import { cli, insertStdin, sendStdin } from './helpers.js';
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 test('Markdown src loads bounded CORS documents, cancels superseded loads, preserves inline state, and stays inactive in viewers', {
-  skip: !executablePath || process.platform === 'win32' ? 'Requires Chrome and the POSIX connector fixture.' : false,
+  skip: process.platform === 'win32' && 'Requires the POSIX connector fixture.',
   timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
   let fixture = await tunnelFixture(state.directory);
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();
@@ -31,7 +31,7 @@ test('Markdown src loads bounded CORS documents, cancels superseded loads, prese
     ],
   });
   let page = await browser.newPage();
-  /** @type {import('puppeteer-core').HTTPRequest[]} */
+  /** @type {import('puppeteer').HTTPRequest[]} */
   let requests = [];
   /** @type {string[]} */
   let errors = [];

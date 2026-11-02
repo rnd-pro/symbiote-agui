@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { CLIENT_SCRIPT_PATH } from '../../src/markup/constants.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { cli, insertStdin, sendStdin } from './helpers.js';
@@ -50,7 +50,7 @@ let markup = [
 ].join('\n');
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @returns {Promise<import('@symbiotejs/symbiote/webmcp').WebMCPRegistryEntry[]>}
  */
 async function registryTools(page) {
@@ -58,7 +58,7 @@ async function registryTools(page) {
 }
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} name
  * @param {Record<string, unknown>} [input]
  * @returns {Promise<unknown>}
@@ -72,7 +72,7 @@ async function invokePageTool(page, name, input = {}) {
 }
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} name
  * @param {Record<string, unknown>} [input]
  */
@@ -87,11 +87,10 @@ async function executeTool(page, name, input = {}) {
 
 for (let native of [false, true]) {
   test(`Symbiote WebMCP tools and lifecycle with native API ${native ? 'enabled' : 'disabled'}`, {
-    skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
     timeout: 60_000,
   }, async (t) => {
     let state = await temporaryState();
-    /** @type {import('puppeteer-core').Browser | undefined} */
+    /** @type {import('puppeteer').Browser | undefined} */
     let browser;
     t.after(async () => {
       await cli('stop', 'webmcp').catch(() => {});

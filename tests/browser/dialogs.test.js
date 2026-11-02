@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { readRuntimeCache } from '../../src/data/cache.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';
@@ -12,12 +12,12 @@ let trigger = '#record-editor > button';
 let dialog = '#record-editor > dialog';
 
 test('dialogs publish dismissal once, preserve drafts, and mirror native overlays without viewer interaction', {
-  skip: !executablePath || process.platform === 'win32' ? 'Requires Chrome and the POSIX connector fixture.' : false,
+  skip: process.platform === 'win32' && 'Requires the POSIX connector fixture.',
   timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
   let fixture = await tunnelFixture(state.directory);
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();

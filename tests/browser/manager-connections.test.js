@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';
 import { cli } from './helpers.js';
@@ -15,14 +15,13 @@ import { TUNNEL_READY_TIMEOUT_MS } from '../../src/tunnel/constants.js';
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 test('manager verifies public links and manages browsers and tunnels across projects without reconnecting disconnected tabs', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45_000,
 }, async (t) => {
   let state = await temporaryState();
   let fixture = await tunnelFixture(state.directory);
   let folder = join(state.directory, 'another-project');
   await mkdir(folder);
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();

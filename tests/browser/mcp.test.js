@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { temporaryState } from '../node/state-fixture.js';
 import { connectMcp, mcpCall } from '../node/mcp-client.js';
 import { cli, cliToolCall, hasCliError, insertStdin, sendStdin, waitForSession } from './helpers.js';
@@ -40,12 +40,11 @@ let markup = [
 
 for (let route of ['MCP', 'CLI']) {
   test(`${route} invokes one ordinary page through the worker and WebSocket with validation and stale-call protection`, {
-    skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
     timeout: 60_000,
   }, async (t) => {
     let state = await temporaryState();
     let sessionId = 'mcp-desk';
-    /** @type {import('puppeteer-core').Browser | undefined} */
+    /** @type {import('puppeteer').Browser | undefined} */
     let browser;
     /** @type {Awaited<ReturnType<typeof connectMcp>> | undefined} */
     let client;

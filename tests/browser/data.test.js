@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { SessionRuntime } from '../../src/sessions/runtime.js';
 import { prepareCachedMarkup, readCachedMarkup } from '../../src/sessions/cache.js';
 import { readRuntimeCache } from '../../src/data/cache.js';
@@ -15,11 +15,11 @@ function makeRuntime() {
 }
 
 test('Save restores committed values, retains newer drafts, rejects stale tabs, and recovers receipts without replay', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.', timeout: 60_000,
+  timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
   let runtime = makeRuntime();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   let release = () => {};
   t.after(async () => { release(); await browser?.close(); await runtime.close(); await state.close(); });

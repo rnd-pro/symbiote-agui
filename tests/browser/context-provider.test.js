@@ -1,17 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { temporaryState } from '../node/state-fixture.js';
 import { cli, insertStdin } from './helpers.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 test('providers bind object fields and publish fresh drafts without echoing replacements', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45_000,
 }, async (t) => {
   let state = await temporaryState();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await cli('stop', 'provider-object').catch(() => {});

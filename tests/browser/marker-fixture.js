@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { SessionRuntime } from '../../src/sessions/runtime.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { temporaryState } from '../node/state-fixture.js';
@@ -16,7 +16,7 @@ export async function markerFixture(t) {
     pid: process.pid,
     launcherPid: process.pid,
   });
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => { await browser?.close(); await runtime.close(); await state.close(); });
   let saved = await prepareCachedMarkup('viewer-markers', await readFile(new URL('./viewer-markers.html', import.meta.url), 'utf8'));
@@ -38,7 +38,7 @@ export async function markerFixture(t) {
 }
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} selector
  */
 export async function hoverMirror(page, selector) {

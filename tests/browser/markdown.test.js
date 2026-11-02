@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH, MARKDOWN_LIMITS } from '../../src/uilib/widgets/markdown/constants.js';
 import { CLIENT_SCRIPT_PATH } from '../../src/markup/constants.js';
 import { temporaryState } from '../node/state-fixture.js';
@@ -11,12 +11,12 @@ import { cli, insertStdin, sendStdin } from './helpers.js';
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 test('Markdown loads on demand, sanitizes with native/fallback paths, bounds output, ignores stale work, and keeps mirrors inert', {
-  skip: !executablePath || process.platform === 'win32' ? 'Requires Chrome and the POSIX connector fixture.' : false,
+  skip: process.platform === 'win32' && 'Requires the POSIX connector fixture.',
   timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
   let fixture = await tunnelFixture(state.directory);
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();
@@ -49,9 +49,9 @@ test('Markdown loads on demand, sanitizes with native/fallback paths, bounds out
   });
   /** @type {string[]} */
   let errors = [];
-  /** @type {import('puppeteer-core').HTTPRequest[]} */
+  /** @type {import('puppeteer').HTTPRequest[]} */
   let runtimeRequests = [];
-  /** @type {import('puppeteer-core').HTTPRequest[]} */
+  /** @type {import('puppeteer').HTTPRequest[]} */
   let sanitizerRequests = [];
   /** @type {string[]} */
   let externalRequests = [];
@@ -206,7 +206,7 @@ test('Markdown loads on demand, sanitizes with native/fallback paths, bounds out
   }
   await cli('share', 'markdown');
   let viewer = await browser.newPage();
-  /** @type {import('puppeteer-core').HTTPRequest[]} */
+  /** @type {import('puppeteer').HTTPRequest[]} */
   let viewerDependencies = [];
   viewer.on('request', (request) => {
     if ([

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readdir, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { isProcessAlive, readSession } from '../../src/sessions/store.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { cli, hasCliError, insertStdin, sendStdin, waitForSession } from './helpers.js';
@@ -10,11 +10,10 @@ import { cli, hasCliError, insertStdin, sendStdin, waitForSession } from './help
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 test('regular pages receive markup independently and remain open after stop', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     for (let id of ['demo', 'Demo']) { await cli('stop', id).catch(() => {}); }
@@ -130,16 +129,19 @@ test('regular pages receive markup independently and remain open after stop', {
   assert.equal(await firstPage.title(), 'demo');
   assert.equal(await firstPage.$eval('link[rel="icon"]', (element) => element.getAttribute('href')), icon);
   await cli('stop', 'demo');
-  assert.deepEqual(await readdir(state.directory), ['.cache', 'view with spaces.html']);
+  assert.deepEqual(await readdir(state.directory), [
+    '.cache',
+    '.storage-locks',
+    'view with spaces.html',
+  ]);
   assert.equal(browser.connected, true);
 });
 
 test('inline modules, state commands, events, reload, and reconnect work in ordinary tabs', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await cli('stop', 'interactive').catch(() => {});

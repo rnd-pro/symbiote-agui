@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { projectId } from '../../src/projects/identity.js';
 import { temporaryManagerProject } from '../node/manager-storage-fixture.js';
 
@@ -13,7 +13,7 @@ let desktopViewport = {
 };
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} id
  */
 async function waitForProject(page, id) {
@@ -26,14 +26,14 @@ async function waitForProject(page, id) {
   assert.equal(new URL(page.url()).hash, '', 'Authorization removes the private launch fragment.');
 }
 
-/** @param {import('puppeteer-core').Page} page */
+/** @param {import('puppeteer').Page} page */
 async function openProjects(page) {
   await page.click('.toolbar button[aria-label="Projects"]');
   await page.waitForSelector('#manager-projects dialog[open]');
 }
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} folder
  */
 async function connect(page, folder) {
@@ -54,7 +54,7 @@ async function connect(page, folder) {
 }
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} id
  */
 async function switchProject(page, id) {
@@ -65,11 +65,10 @@ async function switchProject(page, id) {
 }
 
 test('manager connects projects, switches remembered scopes and Default, and preserves independent tabs and sessions', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 60000,
 }, async (t) => {
   let project = await temporaryManagerProject();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => { await browser?.close(); await project.close(); });
   let folderA = join(project.projectDirectory, 'project a');
@@ -202,11 +201,10 @@ test('manager connects projects, switches remembered scopes and Default, and pre
 });
 
 test('project navigation survives session discovery failures and ignores delayed responses after reconnect', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45000,
 }, async (t) => {
   let project = await temporaryManagerProject();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => { await browser?.close(); await project.close(); });
   let folder = join(project.projectDirectory, 'destination');
@@ -314,11 +312,10 @@ test('project navigation survives session discovery failures and ignores delayed
 });
 
 test('Open folder targets the selected or listed project and recovers from a desktop failure', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45000,
 }, async (t) => {
   let project = await temporaryManagerProject();
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => { await browser?.close(); await project.close(); });
   let folder = join(project.projectDirectory, 'team folder');

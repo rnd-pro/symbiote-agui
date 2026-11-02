@@ -2,9 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { markerFixture, hoverMirror } from './marker-fixture.js';
 
-let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
-
-/** @param {import('puppeteer-core').Page} page */
+/** @param {import('puppeteer').Page} page */
 async function instrument(page) {
   await page.evaluateOnNewDocument(() => {
     Reflect.set(window, 'trailPaints', 0);
@@ -39,7 +37,7 @@ async function instrument(page) {
 }
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {'mouse' | 'pen' | 'touch'} type
  */
 async function syntheticStroke(page, type) {
@@ -73,7 +71,6 @@ async function syntheticStroke(page, type) {
 }
 
 test('viewer drawing stays transient, survives snapshots, replays to late arrivals and obeys the drawing toggle for every pointer type', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45_000,
 }, async (t) => {
   let {

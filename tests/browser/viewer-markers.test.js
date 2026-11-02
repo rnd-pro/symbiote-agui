@@ -3,10 +3,8 @@ import test from 'node:test';
 import { ANNOTATION_ANCHOR_ATTRIBUTE } from '../../src/transport/constants.js';
 import { markerFixture, hoverMirror } from './marker-fixture.js';
 
-let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
-
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} id
  */
 async function marker(page, id) {
@@ -18,7 +16,7 @@ async function marker(page, id) {
 }
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} id
  * @param {string} selector
  */
@@ -34,7 +32,6 @@ async function waitAt(page, id, selector) {
 }
 
 test('viewer markers share content anchors across sizes and snapshots without enabling mirrored controls or capturing overlays', {
-  skip: !executablePath && 'Set AGUI_TEST_BROWSER_PATH to an installed Chrome executable.',
   timeout: 45_000,
 }, async (t) => {
   let {

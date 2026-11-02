@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { cli, cliToolCall, insertStdin, sendStdin, hasCliError } from './helpers.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';
@@ -10,7 +10,7 @@ import { tunnelProxy } from './tunnel-proxy.js';
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {number} count
  */
 async function waitForMirror(page, count) {
@@ -21,13 +21,13 @@ async function waitForMirror(page, count) {
 }
 
 test('public links elect one user and deliver a live read-only mirror to other browsers', {
-  skip: !executablePath || process.platform === 'win32' ? 'Requires Chrome and the POSIX connector fixture.' : false,
+  skip: process.platform === 'win32' && 'Requires the POSIX connector fixture.',
   timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
   let proxy = await tunnelProxy();
   let fixture = await tunnelFixture(state.directory, proxy.origin);
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await cli('stop', 'tunnel-ui').catch(() => {});
@@ -172,12 +172,12 @@ test('public links elect one user and deliver a live read-only mirror to other b
 });
 
 test('sharing existing local tabs retires viewer modules and releases the user slot for the next connection', {
-  skip: !executablePath || process.platform === 'win32' ? 'Requires Chrome and the POSIX connector fixture.' : false,
+  skip: process.platform === 'win32' && 'Requires the POSIX connector fixture.',
   timeout: 45_000,
 }, async (t) => {
   let state = await temporaryState();
   let fixture = await tunnelFixture(state.directory);
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await cli('stop', 'local-share').catch(() => {});

@@ -6,7 +6,7 @@ let execute = promisify(execFile);
 let cliPath = fileURLToPath(new URL('../../bin/symbiote-agui.js', import.meta.url));
 
 /**
- * @param {import('puppeteer-core').Page} page
+ * @param {import('puppeteer').Page} page
  * @param {string} selector
  * @param {string} label
  */

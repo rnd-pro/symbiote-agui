@@ -10,6 +10,8 @@ export default css`
     agui-kanban-column,
     agui-kanban-card {
       display: contents;
+      /* Structural Itemize hosts must not retain old cards during scrollbar fades. */
+      transition: none;
     }
     .agui-kanban-scroll {
       min-inline-size: 0;

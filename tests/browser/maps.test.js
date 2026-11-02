@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import { MAP_RUNTIME_PATH, MAP_CSS_PATH, MAP_ASSET_PREFIX } from '../../src/uilib/widgets/map/constants.js';
 import { CLIENT_SCRIPT_PATH } from '../../src/markup/constants.js';
 import { temporaryState } from '../node/state-fixture.js';
@@ -11,12 +11,12 @@ import { cli, insertStdin, sendStdin } from './helpers.js';
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
 test('maps load packaged dependencies once, synchronize stable IDs and view without echoes, and mirror inert viewport geometry', {
-  skip: !executablePath || process.platform === 'win32' ? 'Requires Chrome and the POSIX connector fixture.' : false,
+  skip: process.platform === 'win32' && 'Requires the POSIX connector fixture.',
   timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
   let fixture = await tunnelFixture(state.directory);
-  /** @type {import('puppeteer-core').Browser | undefined} */
+  /** @type {import('puppeteer').Browser | undefined} */
   let browser;
   t.after(async () => {
     await browser?.close();
@@ -39,13 +39,13 @@ test('maps load packaged dependencies once, synchronize stable IDs and view with
   });
   /** @type {string[]} */
   let errors = [];
-  /** @type {import('puppeteer-core').HTTPRequest[]} */
+  /** @type {import('puppeteer').HTTPRequest[]} */
   let pending = [];
   /** @type {string[]} */
   let referrers = [];
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.setRequestInterception(true);
-  /** @param {import('puppeteer-core').HTTPRequest} request */
+  /** @param {import('puppeteer').HTTPRequest} request */
   let respondTile = (request) => request.respond({
     contentType: 'image/png',
     body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aL1sAAAAASUVORK5CYII=', 'base64'),

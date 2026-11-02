@@ -62,7 +62,6 @@ export function rowState(row, disabled, act, open) {
     : 'reachability unchecked';
   return {
     sessionId: row.sessionId,
-    selectLabel: `Select session ${row.sessionId}`,
     title: row.definition?.title || row.sessionId,
     summary: row.definition?.summary || (saved ? 'Saved interface' : 'No saved definition'),
     dataFlow: row.definition?.dataFlowSummary || '',

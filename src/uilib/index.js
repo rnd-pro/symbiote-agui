@@ -35,12 +35,15 @@ import { Filter } from './widgets/filter/filter.js';
 import { FilterField } from './widgets/filter/field.js';
 import { List } from './widgets/list/list.js';
 import { ListItem } from './widgets/list/item.js';
+import { AguiComponent } from './component.js';
+import { COMPONENT_TAG } from './shared/constants.js';
 import { watchScrollbarActivity } from './shared/scrollbars.js';
 import {
   Message,
 } from './feedback/message/message.js';
 
 export function registerUiLibComponents() {
+  AguiComponent.reg(COMPONENT_TAG);
   watchScrollbarActivity(document);
   App.reg('agui-app');
   Sidebar.reg('agui-sidebar');

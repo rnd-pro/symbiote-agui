@@ -86,6 +86,12 @@ export let TABLE_TEXTS = {
   unavailable: 'Session selection is unavailable.',
 };
 
+export let CARD_TEXTS = {
+  ...TABLE_TEXTS,
+  selectItem: TABLE_TEXTS.selectRow,
+  noSessions: 'No sessions saved or running in this scope.',
+};
+
 export let DESCRIPTION_TEXTS = {
   loading: 'Loading description...',
   empty: 'No description.',

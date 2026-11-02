@@ -39,7 +39,6 @@
   .manager-footer {
     @apply flex flex-wrap justify-between gap-2 border-t border-agui-border bg-agui-surface px-4 py-2 text-xs text-agui-muted;
   }
-  agui-session-row,
   agui-session-controls {
     @apply block min-w-0;
   }
@@ -47,20 +46,6 @@
   #session-inspector agui-toolbar > button,
   #session-inspector agui-toolbar > .agui-button {
     @apply justify-start text-start;
-  }
-  agui-session-row [data-session] {
-    cursor: pointer;
-  }
-  agui-session-row [data-selected='true'] {
-    border-color: var(--agui-accent);
-    outline: 1px solid var(--agui-accent);
-  }
-  .manager-session-select {
-    @apply h-auto min-h-0 min-w-0 rounded-none border-0 bg-transparent p-0 text-left font-semibold;
-  }
-  .manager-session-select:hover:enabled,
-  .manager-session-select:active:enabled {
-    background: transparent;
   }
   [data-state='running'] .session-status {
     @apply bg-agui-success text-agui-on-success;

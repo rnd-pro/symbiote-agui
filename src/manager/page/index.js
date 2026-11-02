@@ -1,13 +1,12 @@
 import { ContextProvider } from '../../uilib/context-provider.js';
 import { registerUiLibComponents } from '../../uilib/index.js';
 import { CONNECTION_LOST_MESSAGE, ManagerConnection } from './connection.js';
-import './rows.js';
 import './controls.js';
 import { rowState } from './session-state.js';
 import { MANAGER_REFRESH_MS } from '../constants.js';
 import { getTheme, setTheme, watchTheme } from './theme.js';
 import { BULK_OPTIONS } from './options.js';
-import { SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, DESCRIPTION_TEXTS, sessionRecords } from './view.js';
+import { SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, CARD_TEXTS, DESCRIPTION_TEXTS, sessionRecords } from './view.js';
 import { formatDataFlow } from '../../metadata/format.js';
 import { guardNativeRegistrations } from '../../uilib/shared/native-webmcp.js';
 import { PROJECT_STATE, ProjectNavigation } from './projects.js';
@@ -32,12 +31,9 @@ export class SessionManager extends ContextProvider {
     scope: '',
     checkedAt: 'Waiting for a snapshot',
     counts: '',
-    empty: 'Loading sessions...',
-    emptyStatus: 'loading',
     notice: '',
     noticeTone: 'info',
-    rows: {
-    },
+    cards: [],
     controlsDisabled: true,
     refreshDisabled: true,
     theme: getTheme(),
@@ -45,6 +41,7 @@ export class SessionManager extends ContextProvider {
     filterFields: SESSION_FILTER_FIELDS,
     filterTexts: FILTER_TEXTS,
     tableTexts: TABLE_TEXTS,
+    cardTexts: CARD_TEXTS,
     records: [],
     matchingIds: [],
     filters: {},
@@ -126,7 +123,6 @@ export class SessionManager extends ContextProvider {
     this.sub('projectChoice', () => this.projects?.render(), false);
     this.sub('theme', (theme) => setTheme(String(theme)));
     this.stopThemeSync = watchTheme((theme) => { this.$.theme = theme; });
-    this.sub('matchingIds', () => this.renderRows(), false);
     this.sub('selection', () => {
       this.renderRows();
       this.$.inspectorOpen = !this.$.noSelection;
@@ -198,8 +194,6 @@ export class SessionManager extends ContextProvider {
 
   renderRows() {
     let sessions = this.snapshot?.sessions || [];
-    let matchingIds = new Set(/** @type {string[]} */ (this.$.matchingIds));
-    let matches = sessions.filter((row) => matchingIds.has(row.sessionId));
     let disabled = !this.connection?.ready || this.busy || !this.loaded;
     this.$.controlsDisabled = disabled;
     this.$.storageDisabled = disabled || !this.snapshot?.storage.editable;
@@ -216,21 +210,18 @@ export class SessionManager extends ContextProvider {
       }),
     ]));
     let selected = /** @type {string[]} */ (this.$.selection)[0];
-    this.$.rows = Object.fromEntries(matches.map((row) => [
-      row.sessionId,
-      {
-        card: {
-          ...states[row.sessionId],
-          selected: selected === row.sessionId,
-        },
-      },
-    ]));
+    this.$.cards = sessions.map((row) => ({
+      id: row.sessionId,
+      ...states[row.sessionId],
+    }));
     this.$.noSelection = !selected || !states[selected];
     this.$.selectedRows = selected && states[selected] ? {
       [selected]: states[selected],
     } : {};
-    this.$.emptyStatus = this.$.discoveryError ? 'error' : matches.length > 0 ? 'ready' : this.loaded ? 'empty' : 'loading';
-    this.$.empty = this.$.discoveryError || (this.loaded ? sessions.length ? 'No sessions match these filters.' : 'No sessions saved or running in this scope.' : 'Loading sessions...');
+    this.$.cardTexts = {
+      ...CARD_TEXTS,
+      empty: sessions.length ? CARD_TEXTS.empty : CARD_TEXTS.noSessions,
+    };
   }
 
   /** @param {number} epoch */
@@ -250,7 +241,7 @@ export class SessionManager extends ContextProvider {
       selection: [],
       matchingIds: [],
       records: [],
-      rows: {},
+      cards: [],
       selectedRows: {},
       filters: {},
       query: '',

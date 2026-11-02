@@ -11,6 +11,8 @@ export default css`
     agui-table-row,
     agui-table-cell {
       display: contents;
+      /* Itemize must remove structural hosts without waiting for scrollbar fades. */
+      transition: none;
     }
     .agui-table-scroll {
       min-inline-size: 0;

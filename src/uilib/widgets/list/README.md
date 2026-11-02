@@ -4,7 +4,7 @@ Use `agui-list` to render provider-bound records with Symbiote's default Itemize
 
 ```html
 <agui-list label="Records" selection="multiple" pub-to="APP/selectedIds" class="grid gap-4"
-  bind="$.rows: APP/rows; $.value: APP/selectedIds; $.filteredIds: APP/matchingIds; $.texts: APP/listTexts">
+  bind="$.items: APP/items; $.value: APP/selectedIds; $.filteredIds: APP/matchingIds; $.texts: APP/listTexts">
   <template>
     <agui-panel role="listitem" class="grid gap-2">
       <h3 bind="textContent: ^name"></h3>
@@ -14,7 +14,7 @@ Use `agui-list` to render provider-bound records with Symbiote's default Itemize
 </agui-list>
 ```
 
-- Bind `rows`, `value`, optional `filteredIds`, and caller-owned `texts`. Every record needs a unique nonempty string ID; `id-key` defaults to `id`. Shared limits allow 5,000 records and IDs up to 128 characters.
+- Bind `items`, `value`, optional `filteredIds`, and caller-owned `texts`. Every item needs a unique nonempty string ID; `id-key` defaults to `id`. Shared limits allow 5,000 items and IDs up to 128 characters.
 - Provide a direct child `<template>` or `item-template="#existing-template"`. The template is chosen at initialization; replace the list to use a different template. The list places that template directly in its Itemize container without slots or an intermediate renderer. Native Itemize updates existing item owners by position; keep durable values in a provider.
 - Item state contains the record's flat fields plus reserved boolean `_selected` and `_selectionDisabled`. Plain elements bind directly to `name`; nested components such as `agui-panel` use `^name`. Normal fields such as `selected` retain their application values. Use text bindings for external content.
 - `selection="none|single|multiple"` defaults to none. `value` is always an ID array. Pair `bind="$.value: APP/selectedIds"` with `pub-to="APP/selectedIds"` for synchronization. Incoming assignments and initialization do not publish; equivalent selection sets are no-ops. Removed IDs are ignored without rewriting the provider.

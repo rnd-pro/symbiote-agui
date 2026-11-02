@@ -264,7 +264,7 @@
                       pub-to="APP/tableSelection" sort-pub-to="APP/tableSort"
                       bind="$.rows: APP/tableRows; $.columns: APP/tableColumns; $.texts: APP/tableTexts; $.value: APP/tableSelection; $.filteredIds: APP/tableMatchingIds; $.sort: APP/tableSort; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-table>
                     <agui-list id="gallery-lead-list" class="grid gap-4 md:grid-cols-2" label="Lead cards" selection="multiple" pub-to="APP/tableSelection"
-                      bind="$.rows: APP/tableRows; $.value: APP/tableSelection; $.filteredIds: APP/tableMatchingIds; $.texts: APP/tableTexts; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly">
+                      bind="$.items: APP/tableRows; $.value: APP/tableSelection; $.filteredIds: APP/tableMatchingIds; $.texts: APP/tableTexts; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly">
                       <template>
                         <agui-panel role="listitem" class="grid gap-2"><h3><button type="button" bind="onclick: ^selectItem; ariaPressed: ^_selected; disabled: ^_selectionDisabled">{{^name}}</button></h3><p class="text-sm text-agui-muted" bind="textContent: ^status"></p></agui-panel>
                       </template>

@@ -14,7 +14,7 @@
   <agui-filter id="list-filter" label="Search records" id-key="key" results-to="LIST/matchingIds" query-pub-to="LIST/query"
     bind="$.rows: LIST/rows; $.fields: LIST/fields; $.texts: LIST/texts; $.query: LIST/query"></agui-filter>
   <agui-list id="cards" label="Record cards" id-key="key" selection="multiple" pub-to="LIST/ids"
-    bind="$.rows: LIST/rows; $.value: LIST/ids; $.filteredIds: LIST/matchingIds; $.texts: LIST/texts; $.readonly: LIST/readonly">
+    bind="$.items: LIST/rows; $.value: LIST/ids; $.filteredIds: LIST/matchingIds; $.texts: LIST/texts; $.readonly: LIST/readonly">
     <template>
       <agui-panel role="listitem" bind="@data-row: ^key">
         <h2 bind="textContent: ^name"></h2><p bind="textContent: ^notes"></p><a bind="href: ^url">Open</a><span data-record-selected bind="textContent: ^selected"></span>
@@ -24,9 +24,9 @@
     </template>
   </agui-list>
   <agui-list id="single" label="Choose a record" id-key="key" selection="single" pub-to="LIST/singleIds" item-template="#compact-item"
-    bind="$.rows: LIST/rows; $.value: LIST/singleIds; $.texts: LIST/texts"></agui-list>
+    bind="$.items: LIST/rows; $.value: LIST/singleIds; $.texts: LIST/texts"></agui-list>
   <template id="compact-item"><article role="listitem" bind="@data-row: key"><h3 bind="textContent: name"></h3><label><input type="radio" name="single-list" bind="checked: _selected; disabled: _selectionDisabled; value: key; onchange: ^selectItem">Choose</label></article></template>
-  <agui-list id="plain" label="Unadorned records" id-key="key" selection="multiple" pub-to="LIST/ids" bind="$.rows: LIST/rows; $.value: LIST/ids">
+  <agui-list id="plain" label="Unadorned records" id-key="key" selection="multiple" pub-to="LIST/ids" bind="$.items: LIST/rows; $.value: LIST/ids">
     <template><section bind="@data-row: key; onclick: ^selectItem"><h4 bind="textContent: name"></h4></section><aside bind="textContent: notes"></aside></template>
   </agui-list>
 </context-provider>

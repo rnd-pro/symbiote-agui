@@ -26,7 +26,7 @@ export class List extends UiComponent {
     label: this.stateInput().label,
   });
   init$ = {
-    rows: [],
+    items: [],
     value: [],
     filteredIds: null,
     texts: {},
@@ -34,7 +34,7 @@ export class List extends UiComponent {
       key,
       undefined,
     ])),
-    items: [],
+    itemsToRender: [],
     unavailable: true,
     selectionEnabled: false,
     selectItem: (/** @type {import('../../../../types/uilib-list.js').UiListSelectionEvent} */ event) => this.selectItem(event),
@@ -70,7 +70,7 @@ export class List extends UiComponent {
     this.semantics.role = 'list';
     this.ref.items.addEventListener('click', this.onClick);
     for (let key of [
-      'rows',
+      'items',
       'value',
       'filteredIds',
       'texts',
@@ -87,7 +87,7 @@ export class List extends UiComponent {
      */
     let get = (key, fallback) => this.$[key] ?? this.getAttribute(LIST_ATTRIBUTES[key]) ?? fallback;
     return /** @type {import('../../../../types/uilib-list.js').UiListState} */ ({
-      rows: this.$.rows,
+      rows: this.$.items,
       value: this.$.value,
       filteredIds: this.$.filteredIds,
       texts: this.$.texts,
@@ -123,7 +123,7 @@ export class List extends UiComponent {
     this.set$({
       unavailable,
       selectionEnabled: selectable && !!model,
-      items: state.loading || state.error || !model ? null : model.filtered.map((record) => ({
+      itemsToRender: state.loading || state.error || !model ? null : model.filtered.map((record) => ({
         ...record,
         _selected: selected.has(String(record[state.idKey])),
         _selectionDisabled: unavailable || !selectable,

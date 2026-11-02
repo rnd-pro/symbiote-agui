@@ -7,7 +7,7 @@ Use `agui-list` to render provider-bound records with Symbiote's default Itemize
   bind="$.items: APP/items; $.value: APP/selectedIds; $.filteredIds: APP/matchingIds; $.texts: APP/listTexts">
   <template>
     <agui-panel process-inner-html="false" role="listitem" class="grid gap-2">
-      <h3 bind="textContent: name"></h3>
+      <h3>{{name}}</h3>
       <button type="button" bind="onclick: ^selectItem; ariaPressed: _selected; disabled: _selectionDisabled">Select</button>
     </agui-panel>
   </template>

@@ -271,8 +271,8 @@ Inside the preceding provider, this list shares the table's records, filter, and
   bind="$.items: LEADS/rows; $.value: LEADS/selected; $.filteredIds: LEADS/matchingIds; $.texts: LEADS/texts">
   <template>
     <agui-panel process-inner-html="false" role="listitem" class="grid gap-2">
-      <h3 bind="textContent: name"></h3>
-      <p bind="textContent: status"></p>
+      <h3>{{name}}</h3>
+      <p>{{status}}</p>
       <button type="button" bind="onclick: ^selectItem; ariaPressed: _selected; disabled: _selectionDisabled">Select</button>
     </agui-panel>
   </template>

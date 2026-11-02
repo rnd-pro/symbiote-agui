@@ -31,6 +31,8 @@ import { TableCell } from './widgets/table/cell.js';
 import { TableHeading } from './widgets/table/heading.js';
 import { Filter } from './widgets/filter/filter.js';
 import { FilterField } from './widgets/filter/field.js';
+import { List } from './widgets/list/list.js';
+import { ListItem } from './widgets/list/item.js';
 import { watchScrollbarActivity } from './shared/scrollbars.js';
 import {
   Message,
@@ -64,6 +66,8 @@ export function registerUiLibComponents() {
   FilterField.reg('agui-filter-field');
   Filter.reg('agui-filter');
   Table.reg('agui-table');
+  ListItem.reg('agui-list-item');
+  List.reg('agui-list');
   ChartDataTable.reg('agui-chart-data');
   Chart.reg('agui-chart');
   MapDataTable.reg('agui-map-data');

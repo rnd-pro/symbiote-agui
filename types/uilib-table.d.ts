@@ -1,5 +1,5 @@
 import type { UiTexts } from './uilib.js';
-import type { UiDataField, UiDataRecord, UiDataSelection } from './uilib-data.js';
+import type { UiDataField, UiDataRecord, UiDataSelection, UiSelectionSource } from './uilib-data.js';
 
 export type UiTableRecord = UiDataRecord;
 export type UiTableSelection = UiDataSelection;
@@ -12,14 +12,11 @@ export interface UiTableSort {
   key: string;
   direction: 'ascending' | 'descending';
 }
-export interface UiTableState {
-  rows: UiTableRecord[];
+export interface UiTableState extends UiSelectionSource {
   columns: UiTableColumn[];
   value: string[];
   filteredIds: string[] | null;
   sort: UiTableSort | null;
-  idKey: string;
-  selection: UiTableSelection;
   locale: string;
   page: number;
   pageSize: number;

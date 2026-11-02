@@ -1,0 +1,25 @@
+<context-provider id="list-data" ctx="LIST">
+  <script type="application/json">
+    {
+      "rows": [
+        {"key":"a","name":"<b>Alpha</b>","notes":"First","url":"#alpha","selected":"record field"},
+        {"key":"b","name":"Beta","notes":"Second","url":"#beta","selected":"other field"},
+        {"key":"c","name":"Gamma","notes":"Third","url":"#gamma","selected":"third field"}
+      ],
+      "fields": [{"key":"name","label":"Name","type":"text","filter":"contains"}],
+      "texts": {"search":"Search","empty":"No matches","loading":"Loading","selectItem":"Select item","invalidRows":"Invalid rows","invalidState":"Invalid state","unavailable":"Unavailable"},
+      "ids": ["b"], "singleIds": [], "matchingIds": [], "query": "", "readonly": false
+    }
+  </script>
+  <agui-filter id="list-filter" label="Search records" id-key="key" results-to="LIST/matchingIds" query-pub-to="LIST/query"
+    bind="$.rows: LIST/rows; $.fields: LIST/fields; $.texts: LIST/texts; $.query: LIST/query"></agui-filter>
+  <agui-list id="cards" label="Record cards" id-key="key" selection="multiple" pub-to="LIST/ids"
+    bind="$.rows: LIST/rows; $.value: LIST/ids; $.filteredIds: LIST/matchingIds; $.texts: LIST/texts; $.readonly: LIST/readonly">
+    <template>
+      <agui-panel><h2 bind="textContent: ^name"></h2><p bind="textContent: ^notes"></p><a bind="href: ^url">Open</a><span bind="textContent: ^selected"></span></agui-panel>
+    </template>
+  </agui-list>
+  <agui-list id="single" label="Choose a record" id-key="key" selection="single" pub-to="LIST/singleIds" item-template="#compact-item"
+    bind="$.rows: LIST/rows; $.value: LIST/singleIds; $.texts: LIST/texts"></agui-list>
+  <template id="compact-item"><article><h3 bind="textContent: name"></h3></article></template>
+</context-provider>

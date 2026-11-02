@@ -2,6 +2,11 @@ import type { UiOption } from './uilib.js';
 
 export type UiDataSelection = 'none' | 'single' | 'multiple';
 export type UiDataRecord = Record<string, unknown>;
+export interface UiSelectionSource {
+  rows: UiDataRecord[];
+  idKey: string;
+  selection: UiDataSelection;
+}
 export interface UiDataOption extends UiOption {
   tone?: 'info' | 'success' | 'warning' | 'danger';
 }

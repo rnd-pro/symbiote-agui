@@ -15,6 +15,7 @@ import { MAP_TEMPLATE } from './widgets/map/template.js';
 import { MARKDOWN_TEMPLATE } from './widgets/markdown/template.js';
 import { KANBAN_TEMPLATE, KANBAN_COLUMN_TEMPLATE, KANBAN_CARD_TEMPLATE } from './widgets/kanban/template.js';
 import { TABLE_TEMPLATE, TABLE_ROW_TEMPLATE, TABLE_HEADING_TEMPLATE, TABLE_CELL_TEMPLATE } from './widgets/table/template.js';
+import { LIST_TEMPLATE, LIST_ITEM_TEMPLATE } from './widgets/list/template.js';
 import {
   MESSAGE_TEMPLATE,
 } from './feedback/message/template.js';
@@ -43,6 +44,8 @@ export let UILIB_TEMPLATES = Object.freeze({
   tableRow: TABLE_ROW_TEMPLATE,
   tableHeading: TABLE_HEADING_TEMPLATE,
   tableCell: TABLE_CELL_TEMPLATE,
+  list: LIST_TEMPLATE,
+  listItem: LIST_ITEM_TEMPLATE,
   filter: FILTER_TEMPLATE,
   filterField: FILTER_FIELD_TEMPLATE,
   message: MESSAGE_TEMPLATE,

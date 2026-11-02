@@ -14,6 +14,8 @@ Use independent `agui-filter` for typed search/AND filtering and `agui-table` fo
 
 Use `agui-kanban` to edit record statuses through native card dragging, keyboard moves, and scoped tools. It publishes records through `pub-to`, keeps unsupported statuses visible, and shares provider records with tables without handlers. Moves remain drafts until the common data toolbar saves declared `persist` keys. See the [Kanban contract](./widgets/kanban/README.md).
 
+Use `agui-list` for authored cards and other repeating content through native Itemize templates. It shares the table's ID selection and independent filter contract, publishes through `pub-to`, and requires no session JavaScript. See the [list contract](./widgets/list/README.md).
+
 Use `agui-chart` for prepared line/bar/donut data, SVG output, ID-based selection, and a keyboard-accessible data table. Its ECharts adapter loads separately when the custom element initializes; the default bundle registers only lightweight chart code. The session server serves the exact packaged runtime path through JSDA. Shared viewers use snapshots without that runtime. See the [chart contract](./widgets/chart/README.md).
 
 Use `agui-map` for prepared coordinates, shared ID selection, and explicit viewport publication. Leaflet, CSS, and local assets load on initialization. Configure raster tiles and attribution; the coordinate table provides keyboard access. Viewer snapshots preserve the user's viewport without a map runtime. See the [map contract](./widgets/map/README.md).

@@ -1,5 +1,6 @@
 import { cellValue } from '../../shared/data/values.js';
 import { validateTable } from './validate.js';
+import { effectiveSelection, validateSelection } from '../../shared/data/selection.js';
 
 /**
  * @param {import('../../../../types/uilib-table.js').UiTableState} state
@@ -23,9 +24,7 @@ export function deriveTable(state) {
       return direction * (typeof a === 'number' && typeof b === 'number' ? a - b : collator.compare(String(a), String(b)));
     });
   }
-  let ids = new Set(state.rows.map((row) => String(row[state.idKey])));
-  let selected = state.selection === 'none' ? [] : state.value.filter((id) => ids.has(id));
-  if (state.selection === 'single') { selected = selected.slice(0, 1); }
+  let selected = effectiveSelection(state, state.value);
   let pageCount = Math.max(1, Math.ceil(filtered.length / state.pageSize));
   let page = Math.min(state.page, pageCount);
   return {
@@ -43,11 +42,7 @@ export function deriveTable(state) {
  * @param {string[]} ids
  */
 export function selectedIds(model, ids) {
-  if (model.state.selection === 'none' || !Array.isArray(ids) || ids.some((id) => typeof id !== 'string') || new Set(ids).size !== ids.length
-    || model.state.selection === 'single' && ids.length > 1) { throw new Error('invalidState'); }
-  let available = new Set(model.state.rows.map((row) => String(row[model.state.idKey])));
-  if (ids.some((id) => !available.has(id))) { throw new Error('invalidState'); }
-  return [...ids];
+  return validateSelection(model.state, ids);
 }
 
 /** @param {import('../../../../types/uilib-table.js').UiTableModel} model */

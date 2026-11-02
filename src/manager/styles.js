@@ -3,7 +3,7 @@ import { parseHTML } from 'linkedom';
 import { analyzeFragment } from '../markup/fragment.js';
 import { compileStyles } from '../markup/styles.js';
 import { cssMin } from 'jsda-kit/node/cssMin.js';
-import { UILIB_TEMPLATES } from '../page/client/uilib/templates.js';
+import { UILIB_TEMPLATES } from '../uilib/templates.js';
 import { SESSION_ROW_TEMPLATE } from './page/row-template.js';
 import { SESSION_CONTROLS_TEMPLATE } from './page/controls-template.js';
 import { CONNECTIONS_TEMPLATE } from './page/connections-template.js';

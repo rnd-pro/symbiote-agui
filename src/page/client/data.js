@@ -1,7 +1,7 @@
 import { PubSub } from '@symbiotejs/symbiote';
 import { DATA_LIMITS, dataFailure } from '../../data/constants.js';
 import { validateDataCommit, validateDataReference } from '../../data/validate.js';
-import { feedbackSuppressed } from './feedback-guard.js';
+import { feedbackSuppressed } from '../../uilib/shared/feedback-guard.js';
 import { updateDataContext } from './data-context.js';
 export { getDataState } from './data-context.js';
 

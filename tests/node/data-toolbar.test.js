@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { selectSavedData, sameSubmission } from '../../src/page/client/uilib/controls/data-toolbar/saved-data.js';
-import { toolbarIndicator } from '../../src/page/client/uilib/controls/data-toolbar/indicator.js';
-import { toolbarNotices } from '../../src/page/client/uilib/controls/data-toolbar/notices.js';
+import { selectSavedData, sameSubmission } from '../../src/uilib/controls/data-toolbar/saved-data.js';
+import { toolbarIndicator } from '../../src/uilib/controls/data-toolbar/indicator.js';
+import { toolbarNotices } from '../../src/uilib/controls/data-toolbar/notices.js';
 
 test('toolbar status distinguishes local saving, delivery, and external verification without hiding newer drafts', () => {
   /** @type {import('../../types/data-toolbar.js').ToolbarIndicatorInput} */

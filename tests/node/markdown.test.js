@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseHTML } from 'linkedom';
-import { markdownHtml } from '../../src/page/client/uilib/widgets/markdown/runtime/index.js';
-import { linkDestination } from '../../src/page/client/uilib/widgets/markdown/runtime/policy.js';
-import { MARKDOWN_LIMITS } from '../../src/page/client/uilib/widgets/markdown/constants.js';
+import { markdownHtml } from '../../src/uilib/widgets/markdown/runtime/index.js';
+import { linkDestination } from '../../src/uilib/widgets/markdown/runtime/policy.js';
+import { MARKDOWN_LIMITS } from '../../src/uilib/widgets/markdown/constants.js';
 
 test('JSDA Markdown preserves HTML, custom wrappers, and images while fenced code stays text', async () => {
   let html = await markdownHtml('# Release notes\n\n<strong>raw</strong>\n\n<example-widget>\n\n### Fallback\n\n```json\n{"zoom":12}\n```\n\n</example-widget>\n\n![Diagram](https://example.test/tracker.png)\n\n```html\n<script>alert(1)</script>\n```');

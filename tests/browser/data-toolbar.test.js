@@ -300,7 +300,7 @@ test('partial outcomes produce independently dismissible success, warning, and e
   await page.goto(runtime.record.url);
   await page.waitForFunction(() => Reflect.get(document.querySelector('#data') || {}, '$')?.connectionLabel === 'Connected');
   await page.$eval('#data', (element) => {
-    let toolbar = /** @type {import('../../src/page/client/uilib/controls/data-toolbar/data-toolbar.js').DataToolbar} */ (element);
+    let toolbar = /** @type {import('../../src/uilib/controls/data-toolbar/data-toolbar.js').DataToolbar} */ (element);
     let data = /** @type {import('../../types/data.js').DataStatus} */ (toolbar.$['AGUI_DATA/current']);
     let reference = {
       commitId: crypto.randomUUID(),

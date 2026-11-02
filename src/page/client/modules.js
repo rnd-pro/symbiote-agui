@@ -1,5 +1,5 @@
 import { MODULE_SELECTOR } from '../../transport/constants.js';
-import { emit, submitFeedback } from './events.js';
+import { emit, submitFeedback } from '../../uilib/shared/events.js';
 import { commitData } from './data.js';
 
 /** @type {import('../../../types/transport.js').ModuleCleanup[]} */

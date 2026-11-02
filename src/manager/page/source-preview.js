@@ -1,4 +1,4 @@
-import { loadMarkdownRuntime } from '../../page/client/uilib/widgets/markdown/loader.js';
+import { loadMarkdownRuntime } from '../../uilib/widgets/markdown/loader.js';
 import { EXPLORER_PREVIEW_BYTES } from '../../projects/explorer/constants.js';
 
 let languages = {

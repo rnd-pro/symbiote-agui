@@ -2,9 +2,9 @@ import { fileURLToPath } from 'node:url';
 import { closeServer, waitForServer } from '../shared/server.js';
 import { createStyles } from '../markup/styles.js';
 import { STYLESHEET_PATH, CLIENT_SCRIPT_PATH } from '../markup/constants.js';
-import { CHART_RUNTIME_PATH } from '../page/client/uilib/widgets/chart/constants.js';
-import { MAP_RUNTIME_PATH, MAP_CSS_PATH, MAP_ASSET_PREFIX } from '../page/client/uilib/widgets/map/constants.js';
-import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../page/client/uilib/widgets/markdown/constants.js';
+import { CHART_RUNTIME_PATH } from '../uilib/widgets/chart/constants.js';
+import { MAP_RUNTIME_PATH, MAP_CSS_PATH, MAP_ASSET_PREFIX } from '../uilib/widgets/map/constants.js';
+import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../uilib/widgets/markdown/constants.js';
 import { serveMapAsset } from './map-assets.js';
 import { TUNNEL_HEALTH_PATH } from '../tunnel/constants.js';
 import { AssetProxy } from '../proxy/asset-proxy.js';
@@ -20,7 +20,7 @@ export async function startPageServer(access, getProxyPolicy = emptyProxyPolicy,
   let styles = await createStyles();
   let { default: config } = await import('jsda-kit/cfg');
   let { createServer } = await import('jsda-kit/server/JSDAServer.js');
-  config.dynamic.baseDir = fileURLToPath(new URL('../page/', import.meta.url));
+  config.dynamic.baseDir = fileURLToPath(new URL('../', import.meta.url));
   config.dynamic.routes = fileURLToPath(new URL('../page/routes.js', import.meta.url));
   config.dynamic.cache.inMemory = false;
   config.minify.html = false;
@@ -77,7 +77,10 @@ export async function startPageServer(access, getProxyPolicy = emptyProxyPolicy,
       return;
     }
 
+    // Browser asset URLs stay independent of the packaged source folders.
     if (pathname === access.path) { request.url = '/'; }
+    else if (pathname === CLIENT_SCRIPT_PATH || pathname === STYLESHEET_PATH) { request.url = `/page${pathname}`; }
+    else { request.url = pathname?.replace('/client/uilib/', '/uilib/'); }
 
     Promise.resolve(handler?.call(server, request, response)).catch((error) => {
       console.error(error);

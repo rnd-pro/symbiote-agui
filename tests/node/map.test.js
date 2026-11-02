@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { deriveMap, selectedMapIds, validateView, validateTiles } from '../../src/page/client/uilib/widgets/map/model.js';
-import { readMap } from '../../src/page/client/uilib/widgets/map/reads.js';
+import { deriveMap, selectedMapIds, validateView, validateTiles } from '../../src/uilib/widgets/map/model.js';
+import { readMap } from '../../src/uilib/widgets/map/reads.js';
 
 /** @returns {import('../../types/uilib-map.js').UiMapState} */
 function mapState() {
@@ -113,7 +113,7 @@ test('visible map reads paginate source IDs within 8 KiB, without returning labe
   let ids = Array.from({
     length: 100,
   }, (_, index) => `${index}-${'🧪'.repeat(60)}`);
-  let map = /** @type {import('../../src/page/client/uilib/widgets/map/map.js').AguiMap} */ (/** @type {unknown} */ ({
+  let map = /** @type {import('../../src/uilib/widgets/map/map.js').AguiMap} */ (/** @type {unknown} */ ({
     requireModel: () => model,
     renderer: {
       view: () => model.state.view,

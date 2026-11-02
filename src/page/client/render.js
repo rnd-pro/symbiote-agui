@@ -1,7 +1,7 @@
 import { CONTENT_ROOT_ID, STYLESHEET_ID, STYLESHEET_TIMEOUT_MS } from '../../markup/constants.js';
 import { analyzeFragment } from '../../markup/fragment.js';
 import { validateStateUpdate } from '../../transport/state-update.js';
-import { replaceContent } from './replace-content.js';
+import { replaceContent } from '../../uilib/replace-content.js';
 import { disposeModules, loadModules, mountModules } from './modules.js';
 import { syncPageIdentity } from './identity.js';
 

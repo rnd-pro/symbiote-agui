@@ -9,7 +9,7 @@ import { ManagerOperations } from './operations.js';
 import { MANAGER_PATH, MANAGER_SOCKET_PATH, MANAGER_PROTOCOL_VERSION } from './constants.js';
 import { createManagerStyles } from './styles.js';
 import { projectId, validProjectId } from '../projects/identity.js';
-import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../page/client/uilib/widgets/markdown/constants.js';
+import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../uilib/widgets/markdown/constants.js';
 
 /**
  * @param {unknown} value
@@ -38,11 +38,11 @@ export async function startManagerServer(record, stop) {
   let markdownAssets = new Map([
     [
       MARKDOWN_RUNTIME_PATH,
-      new URL('../page/client/uilib/widgets/markdown/runtime/index.js', import.meta.url),
+      new URL('../uilib/widgets/markdown/runtime/index.js', import.meta.url),
     ],
     [
       MARKDOWN_SANITIZER_PATH,
-      new URL('../page/client/uilib/widgets/markdown/sanitizer/index.js', import.meta.url),
+      new URL('../uilib/widgets/markdown/sanitizer/index.js', import.meta.url),
     ],
   ]);
   /** @type {Map<string, Promise<string>>} */

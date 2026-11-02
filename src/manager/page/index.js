@@ -1,5 +1,5 @@
-import { ContextProvider } from '../../page/client/context-provider.js';
-import { registerUiLibComponents } from '../../page/client/uilib/index.js';
+import { ContextProvider } from '../../uilib/context-provider.js';
+import { registerUiLibComponents } from '../../uilib/index.js';
 import { CONNECTION_LOST_MESSAGE, ManagerConnection } from './connection.js';
 import './rows.js';
 import './controls.js';
@@ -9,7 +9,7 @@ import { getTheme, setTheme, watchTheme } from './theme.js';
 import { BULK_OPTIONS } from './options.js';
 import { SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, DESCRIPTION_TEXTS, sessionRecords } from './view.js';
 import { formatDataFlow } from '../../metadata/format.js';
-import { guardNativeRegistrations } from '../../page/client/native-webmcp.js';
+import { guardNativeRegistrations } from '../../uilib/shared/native-webmcp.js';
 import { PROJECT_STATE, ProjectNavigation } from './projects.js';
 import { EXPLORER_STATE, ProjectExplorer } from './explorer.js';
 import { TRANSFER_STATE, SessionTransfers } from './transfers.js';

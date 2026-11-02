@@ -1,5 +1,5 @@
 import { CommandError } from '../shared/command-error.js';
-import { isPlainStateKey } from '../markup/data.js';
+import { isPlainStateKey } from '../uilib/shared/initial-data.js';
 import { DATA_ENDPOINT_KIND, METADATA_KEYS, METADATA_LIMITS } from './constants.js';
 
 /**

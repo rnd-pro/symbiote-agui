@@ -186,6 +186,6 @@ export class LiveConnections {
     }
   }
 }
-import { UiComponent } from '../../page/client/uilib/shared/component.js';
+import { UiComponent } from '../../uilib/shared/component.js';
 import { CONNECTIONS_TEMPLATE } from './connections-template.js';
 

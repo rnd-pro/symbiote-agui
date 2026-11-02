@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { guardNativeRegistrations } from '../../src/page/client/native-webmcp.js';
+import { guardNativeRegistrations } from '../../src/uilib/shared/native-webmcp.js';
 
 test('native registration guard preserves synchronous results, receiver, arguments, and exceptions', () => {
   let result = {};

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { deriveTable, selectedIds, toggleFiltered } from '../../src/page/client/uilib/widgets/table/model.js';
-import { cellText } from '../../src/page/client/uilib/shared/data/values.js';
-import { readTable } from '../../src/page/client/uilib/widgets/table/reads.js';
+import { deriveTable, selectedIds, toggleFiltered } from '../../src/uilib/widgets/table/model.js';
+import { cellText } from '../../src/uilib/shared/data/values.js';
+import { readTable } from '../../src/uilib/widgets/table/reads.js';
 
 import { tableState as state } from './table-fixture.js';
 
@@ -99,7 +99,7 @@ test('table reads paginate within 8 KiB and identify oversized rows without retu
   let input = state();
   input.rows[0].name = '🧪'.repeat(20_000);
   let model = deriveTable(input);
-  let table = /** @type {import('../../src/page/client/uilib/widgets/table/table.js').Table} */ (/** @type {unknown} */ ({
+  let table = /** @type {import('../../src/uilib/widgets/table/table.js').Table} */ (/** @type {unknown} */ ({
     requireModel: () => model,
     text: () => 'Invalid request',
   }));

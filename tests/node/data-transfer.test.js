@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseTransfer, serializeTransfer, transferDocument } from '../../src/page/client/uilib/controls/data-toolbar/json.js';
-import { fileLabel } from '../../src/page/client/uilib/controls/data-toolbar/files.js';
+import { parseTransfer, serializeTransfer, transferDocument } from '../../src/uilib/controls/data-toolbar/json.js';
+import { fileLabel } from '../../src/uilib/controls/data-toolbar/files.js';
 import { DATA_LIMITS } from '../../src/data/constants.js';
 
 let targets = [{ provider: 'APP', keys: ['records', 'count'] }];

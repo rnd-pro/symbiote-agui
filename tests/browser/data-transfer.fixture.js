@@ -1,6 +1,6 @@
 import { PubSub } from '@symbiotejs/symbiote';
-import { JsonTransfer } from '../../src/page/client/uilib/controls/data-toolbar/transfer.js';
-import { feedbackSuppressed } from '../../src/page/client/feedback-guard.js';
+import { JsonTransfer } from '../../src/uilib/controls/data-toolbar/transfer.js';
+import { feedbackSuppressed } from '../../src/uilib/shared/feedback-guard.js';
 import { dataToolbarTexts } from '../../src/page/client/page-text.js';
 
 let targets = [{ provider: 'APP', keys: ['records', 'count'] }, { provider: 'OTHER', keys: ['enabled'] }];

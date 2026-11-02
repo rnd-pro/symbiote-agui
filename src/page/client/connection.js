@@ -1,13 +1,13 @@
 import { CONNECTION_STATUS_ID, MAX_EVENT_BYTES, MAX_PAGE_MESSAGE_BYTES, RECONNECT_MIN_MS, RECONNECT_MAX_MS, SOCKET_PATH, PAGE_ROLE, PAGE_DISCONNECT_CODE } from '../../transport/constants.js';
 import { executePageCommand, sendPageResult } from './commands.js';
-import { setEventSender } from './events.js';
+import { setEventSender } from '../../uilib/shared/events.js';
 import { disposeModules } from './modules.js';
 import { CONTENT_ROOT_ID } from '../../markup/constants.js';
-import { replaceContent } from './replace-content.js';
+import { replaceContent } from '../../uilib/replace-content.js';
 import { SharedView } from './shared-view.js';
 import { syncPageIdentity } from './identity.js';
 import { setFeedbackSender, setFeedbackConnected, setFeedbackRole, receiveFeedback } from './feedback.js';
-import { withoutFeedback } from './feedback-guard.js';
+import { withoutFeedback } from '../../uilib/shared/feedback-guard.js';
 import { setDataSender, setDataConnected, setDataRole, setDataRendered, receiveData } from './data.js';
 import { updateSessionContext } from './session-context.js';
 import { setInformationSender, receiveSessionInformation, failInformationRequest } from './session-information.js';

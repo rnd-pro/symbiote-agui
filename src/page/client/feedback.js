@@ -1,6 +1,6 @@
 import { FEEDBACK_LIMITS, feedbackFailure } from '../../feedback/constants.js';
 import { validateFeedbackSubmission } from '../../feedback/submission.js';
-import { feedbackSuppressed } from './feedback-guard.js';
+import { feedbackSuppressed } from '../../uilib/shared/feedback-guard.js';
 import { displayFeedbackDelivery, updateFeedbackContext } from './feedback-context.js';
 
 /** @type {(message: string) => boolean} */

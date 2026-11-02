@@ -1,5 +1,6 @@
-import { DATA_SELECTOR, RESERVED_PROVIDER_NAMES } from '../markup/constants.js';
-import { readInitialData, isPlainStateKey } from '../markup/data.js';
+import { RESERVED_PROVIDER_NAMES } from '../markup/constants.js';
+import { DATA_SELECTOR } from '../uilib/shared/constants.js';
+import { readInitialData, isPlainStateKey } from '../uilib/shared/initial-data.js';
 import { PERSIST_ATTRIBUTE, DATA_LIMITS } from './constants.js';
 import { jsonData } from './validate.js';
 

@@ -6,6 +6,7 @@
   "include": [
     "src/manager/page/**/*.js",
     "src/page/client/**/*.js",
+    "src/uilib/**/*.js",
     "types/components.d.ts",
     "types/jsda-kit.d.ts"
   ],

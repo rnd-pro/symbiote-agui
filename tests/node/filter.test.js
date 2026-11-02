@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { deriveFilter } from '../../src/page/client/uilib/widgets/filter/model.js';
+import { deriveFilter } from '../../src/uilib/widgets/filter/model.js';
 import { tableState } from './table-fixture.js';
 
 /** @returns {import('../../types/uilib-filter.js').UiFilterState} */

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import puppeteer from 'puppeteer-core';
-import { CHART_RUNTIME_PATH } from '../../src/page/client/uilib/widgets/chart/constants.js';
+import { CHART_RUNTIME_PATH } from '../../src/uilib/widgets/chart/constants.js';
 import { CLIENT_SCRIPT_PATH } from '../../src/markup/constants.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';

@@ -4,7 +4,7 @@ import { extname } from 'node:path';
 import { CommandError } from '../../shared/command-error.js';
 import { explorerRoot, resolveExplorerPath } from './access.js';
 import { EXPLORER_PREVIEW_BYTES } from './constants.js';
-import { MARKDOWN_LIMITS } from '../../page/client/uilib/widgets/markdown/constants.js';
+import { MARKDOWN_LIMITS } from '../../uilib/widgets/markdown/constants.js';
 
 let textExtensions = new Set([
   '.txt',

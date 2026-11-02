@@ -1,4 +1,4 @@
-import { isPlainStateKey } from '../markup/data.js';
+import { isPlainStateKey } from '../uilib/shared/initial-data.js';
 import { DATA_LIMITS } from './constants.js';
 
 /**

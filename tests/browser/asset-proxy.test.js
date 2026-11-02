@@ -167,7 +167,7 @@ test('the gallery proxy preset uses existing controls, stays opt-in, and disable
   timeout: 60_000,
 }, async (t) => {
   let fixture = await assetProxyFixture(t);
-  let gallery = await readFile(new URL('../../src/page/uilib-gallery.html', import.meta.url), 'utf8');
+  let gallery = await readFile(new URL('../../src/uilib/gallery.html', import.meta.url), 'utf8');
   let {
     document: galleryDocument,
   } = parseHTML('');

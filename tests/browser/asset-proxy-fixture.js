@@ -4,7 +4,7 @@ import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { SessionRuntime } from '../../src/sessions/runtime.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { upstreamResponse, waitForAbort } from '../node/proxy-http-fixture.js';
-import { MARKDOWN_LIMITS } from '../../src/page/client/uilib/widgets/markdown/constants.js';
+import { MARKDOWN_LIMITS } from '../../src/uilib/widgets/markdown/constants.js';
 import { tunnelProxy } from './tunnel-proxy.js';
 
 /** @param {import('node:test').TestContext} t */

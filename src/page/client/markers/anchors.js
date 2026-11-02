@@ -1,5 +1,5 @@
 import { ANNOTATION_ANCHOR_ATTRIBUTE, ANNOTATION_LIMITS } from '../../../transport/constants.js';
-import { TABLE_ITEM_TAGS } from '../uilib/widgets/table/constants.js';
+import { TABLE_ITEM_TAGS } from '../../../uilib/widgets/table/constants.js';
 
 export class SnapshotAnchors {
   prefix = crypto.randomUUID().replaceAll('-', '').slice(0, 16);

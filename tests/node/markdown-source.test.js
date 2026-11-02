@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { fetchMarkdownSource, markdownSourceUrl } from '../../src/page/client/uilib/widgets/markdown/source.js';
-import { MARKDOWN_LIMITS } from '../../src/page/client/uilib/widgets/markdown/constants.js';
+import { fetchMarkdownSource, markdownSourceUrl } from '../../src/uilib/widgets/markdown/source.js';
+import { MARKDOWN_LIMITS } from '../../src/uilib/widgets/markdown/constants.js';
 import { PROXY_SOURCE_HEADER } from '../../src/proxy/constants.js';
 
 test('Markdown source URLs resolve HTTP(S) while rejecting credentials and executable/local-file schemes', () => {

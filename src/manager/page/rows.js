@@ -1,5 +1,5 @@
 import { ToolDescriptor } from '@symbiotejs/symbiote/webmcp';
-import { UiComponent } from '../../page/client/uilib/shared/component.js';
+import { UiComponent } from '../../uilib/shared/component.js';
 import { SESSION_ROW_TEMPLATE } from './row-template.js';
 import { SESSION_STATE } from './session-state.js';
 

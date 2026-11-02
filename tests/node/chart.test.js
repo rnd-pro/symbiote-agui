@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { deriveChart, selectedIds } from '../../src/page/client/uilib/widgets/chart/model.js';
-import { readChart } from '../../src/page/client/uilib/widgets/chart/reads.js';
+import { deriveChart, selectedIds } from '../../src/uilib/widgets/chart/model.js';
+import { readChart } from '../../src/uilib/widgets/chart/reads.js';
 import { chartState } from './chart-fixture.js';
 
 test('chart models preserve zero/gaps, IDs across reorder, unrelated data, and effective selection without rewriting sources', () => {
@@ -77,7 +77,7 @@ test('chart validation rejects ambiguous IDs, executable configuration, incompat
 test('chart reads omit unrelated fields, paginate IDs, and bound oversized formatted points to 8 KiB', () => {
   let state = chartState();
   let derived = deriveChart(state);
-  let chart = /** @type {import('../../src/page/client/uilib/widgets/chart/chart.js').Chart} */ (/** @type {unknown} */ ({
+  let chart = /** @type {import('../../src/uilib/widgets/chart/chart.js').Chart} */ (/** @type {unknown} */ ({
     requireModel: () => derived,
     text: () => 'Invalid state',
   }));

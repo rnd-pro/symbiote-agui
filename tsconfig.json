@@ -35,6 +35,7 @@
   ],
   "exclude": [
     "src/manager/page/**/*.js",
-    "src/page/client/**/*.js"
+    "src/page/client/**/*.js",
+    "src/uilib/**/*.js"
   ]
 }

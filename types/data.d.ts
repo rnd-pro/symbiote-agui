@@ -78,7 +78,7 @@ export interface DataTransferState {
   fileName?: string;
   targets?: DataTarget[];
   endpoint?: import('./metadata.js').DataEndpoint;
-  failure?: { code: keyof typeof import('../src/page/client/uilib/controls/data-toolbar/constants.js').TRANSFER_FAILURES; message: string };
+  failure?: { code: keyof typeof import('../src/uilib/controls/data-toolbar/constants.js').TRANSFER_FAILURES; message: string };
 }
 
 export interface DataTransferOptions {

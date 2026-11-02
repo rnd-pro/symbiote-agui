@@ -8,8 +8,8 @@ export type UiValue = string | boolean;
 export type UiControl = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLButtonElement;
 export type UiStatus = 'ready' | 'loading' | 'empty' | 'error';
 export type UiTexts = Readonly<Record<string, string>>;
-export type UiMessageTone = keyof typeof import('../src/page/client/uilib/feedback/message/constants.js').MESSAGE_TONES;
-export type UiIconName = keyof typeof import('../src/page/client/uilib/content/icon/collection.js').ICON_NAMES;
+export type UiMessageTone = keyof typeof import('../src/uilib/feedback/message/constants.js').MESSAGE_TONES;
+export type UiIconName = keyof typeof import('../src/uilib/content/icon/collection.js').ICON_NAMES;
 
 export interface UiIconState {
   name: UiIconName | '';

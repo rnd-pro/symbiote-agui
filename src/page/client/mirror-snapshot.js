@@ -1,6 +1,6 @@
 import { CONTENT_ROOT_ID, STYLESHEET_ID } from '../../markup/constants.js';
 import { mirrorOverlays, MIRROR_OVERLAY_STYLES } from './mirror-overlays.js';
-import { TABLE_ITEM_TAGS } from './uilib/widgets/table/constants.js';
+import { TABLE_ITEM_TAGS } from '../../uilib/widgets/table/constants.js';
 import { mirrorMaps } from './mirror-maps.js';
 
 /**

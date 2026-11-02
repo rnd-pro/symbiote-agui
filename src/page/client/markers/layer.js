@@ -1,7 +1,7 @@
 import { css } from '@symbiotejs/symbiote';
 import { html } from '@symbiotejs/symbiote/core/html.js';
 import { itemizeProcessor } from '@symbiotejs/symbiote/core/itemizeProcessor-keyed.js';
-import { UiComponent } from '../uilib/shared/component.js';
+import { UiComponent } from '../../../uilib/shared/component.js';
 
 export class MarkerLayer extends UiComponent {
   init$ = {

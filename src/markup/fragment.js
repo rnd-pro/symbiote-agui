@@ -1,6 +1,7 @@
 import { DICT } from '@symbiotejs/symbiote/core/dictionary.js';
-import { PROVIDER_TAG, RESERVED_PROVIDER_NAMES } from './constants.js';
-import { readInitialData } from './data.js';
+import { RESERVED_PROVIDER_NAMES } from './constants.js';
+import { PROVIDER_TAG } from '../uilib/shared/constants.js';
+import { readInitialData } from '../uilib/shared/initial-data.js';
 import { MODULE_SELECTOR } from '../transport/constants.js';
 import { dataTargets } from '../data/targets.js';
 import { PERSIST_ATTRIBUTE } from '../data/constants.js';

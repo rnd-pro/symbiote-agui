@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import puppeteer from 'puppeteer-core';
-import { MARKDOWN_LIMITS } from '../../src/page/client/uilib/widgets/markdown/constants.js';
+import { MARKDOWN_LIMITS } from '../../src/uilib/widgets/markdown/constants.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';
 import { cli, insertStdin, sendStdin } from './helpers.js';

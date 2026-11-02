@@ -67,7 +67,7 @@ test('the production tarball runs through npm exec outside the checkout', { time
   for (let path of [
     'bin/symbiote-agui.js',
     'src/page/shell.html',
-    'src/page/theme.css',
+    'src/uilib/theme.css',
     'src/page/client/index.js',
     'src/page/client/tool-bridge.js',
     'src/mcp/server.js',

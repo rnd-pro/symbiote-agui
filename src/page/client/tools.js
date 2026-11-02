@@ -1,5 +1,5 @@
 import { getActiveWebMCPTools, executeWebMCPTool as executeNativeTool } from '@symbiotejs/symbiote/webmcp';
-import { withoutFeedback } from './feedback-guard.js';
+import { withoutFeedback } from '../../uilib/shared/feedback-guard.js';
 
 /** @returns {import('@symbiotejs/symbiote/webmcp').WebMCPRegistryEntry[]} */
 export function listPageTools() {

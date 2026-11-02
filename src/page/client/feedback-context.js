@@ -1,6 +1,6 @@
 import { PubSub } from '@symbiotejs/symbiote';
 import { FEEDBACK_CONTEXT } from '../../feedback/constants.js';
-import { withoutFeedback } from './feedback-guard.js';
+import { withoutFeedback } from '../../uilib/shared/feedback-guard.js';
 
 /** @type {import('../../../types/feedback.js').FeedbackUiState} */
 let initial = { connected: false, availability: 'disabled', pending: 0, delivery: null, status: 'ready', message: '' };

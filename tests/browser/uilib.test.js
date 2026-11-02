@@ -19,7 +19,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
     await browser?.close();
     await state.close();
   });
-  let html = await readFile(new URL('../../src/page/uilib-gallery.html', import.meta.url), 'utf8');
+  let html = await readFile(new URL('../../src/uilib/gallery.html', import.meta.url), 'utf8');
   assert.doesNotMatch(html, /<script[^>]*type="module"/);
   let session = await cli('start', 'widgets', '--no-open');
   await insertStdin('widgets', html);

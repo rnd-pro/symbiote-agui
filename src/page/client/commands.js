@@ -1,7 +1,7 @@
 import { renderMarkup, updateState } from './render.js';
 import { ToolBridge } from './tool-bridge.js';
 import { MAX_PAGE_MESSAGE_BYTES } from '../../transport/constants.js';
-import { withoutFeedback } from './feedback-guard.js';
+import { withoutFeedback } from '../../uilib/shared/feedback-guard.js';
 
 let tools = new ToolBridge();
 

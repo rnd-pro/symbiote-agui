@@ -1,4 +1,4 @@
-import { UiComponent } from '../../page/client/uilib/shared/component.js';
+import { UiComponent } from '../../uilib/shared/component.js';
 import { SESSION_STATE } from './session-state.js';
 import { SESSION_CONTROLS_TEMPLATE } from './controls-template.js';
 

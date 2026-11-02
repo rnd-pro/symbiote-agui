@@ -167,7 +167,7 @@ The popup displays the current page's User/Viewer role and Connected/Disconnecte
 
 Discover the toolbar's scoped `read_submission_status`, `read_saved_data`, and `acknowledge_submission` tools normally. Saved reads require `commitId`, `instanceId`, `markupRevision`, `revision`, `provider`, and `key`; optional `path`, `offset`, and `limit` select nested data and bound results to 8 KiB. Expired receipts or superseded revisions fail explicitly. Acknowledgements require the exact four reference fields and `state` (`verified`, `failed`, or `unknown`), with an optional message up to 512 characters. Verify the entire submitted operation before reporting `verified`; the toolbar does not infer record-level database success. Native `bind="$.externalResult: APP/result"` accepts the same acknowledgement object. Older acknowledgements cannot mark newer submissions verified, and successful acknowledgements never clear newer unsaved edits.
 
-The packaged `src/page/uilib-gallery.html` demonstrates this workflow with fictional profile data. Shared name, Shared status, and Notifications are persistent; its other controls are transient. The gallery includes a copyable import document and illustrative status examples, while the actual floating toolbar reports only real operations. Save and reopen the session to review restoration, then export its JSON for a manual backup.
+The packaged `src/uilib/gallery.html` demonstrates this workflow with fictional profile data. Shared name, Shared status, and Notifications are persistent; its other controls are transient. The gallery includes a copyable import document and illustrative status examples, while the actual floating toolbar reports only real operations. Save and reopen the session to review restoration, then export its JSON for a manual backup.
 
 ## Private feedback handlers
 
@@ -281,7 +281,7 @@ let data = await response.json();
 
 The route accepts exactly one `url` query parameter containing an absolute source URL. GET and HEAD are supported without request bodies or custom upstream headers. Upstream cookies, authorization, and referrers are never forwarded. Use public, non-secret URLs; authenticated APIs, signed/private URLs, and external writes are outside this contract. Imported data and documents do not authorize additional operations.
 
-The same URL works in `agui-markdown src`. The loader uses the proxy's verified `X-AGUI-Source-URL` header to resolve relative document links and media against the final upstream URL. Nested resources are not automatically proxied. Markdown keeps its own 64 KiB source limit and sanitization; its source limit is smaller than the general asset limit. See the [Markdown contract](../src/page/client/uilib/widgets/markdown/README.md).
+The same URL works in `agui-markdown src`. The loader uses the proxy's verified `X-AGUI-Source-URL` header to resolve relative document links and media against the final upstream URL. Nested resources are not automatically proxied. Markdown keeps its own 64 KiB source limit and sanitization; its source limit is smaller than the general asset limit. See the [Markdown contract](../src/uilib/widgets/markdown/README.md).
 
 ### Limits and failures
 

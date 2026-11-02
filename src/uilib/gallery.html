@@ -1,23 +1,26 @@
 <agui-app class="[--agui-content-width:100%] [--agui-sidebar-width:18rem]">
-  <agui-sidebar id="gallery-navigation" label="Workspace" expand-label="Expand workspace" collapse-label="Collapse workspace"
-    pub-to="APP/navigationOpen" bind="$.value: APP/navigationOpen">
+  <agui-sidebar id="gallery-navigation" label="Workspace" expand-label="Expand workspace"
+    collapse-label="Collapse workspace" pub-to="APP/navigationOpen" bind="$.value: APP/navigationOpen">
     <div class="grid gap-6">
       <section class="grid gap-3" aria-label="Browse the library">
         <h2 class="text-xs uppercase tracking-widest text-agui-muted">Explore the library</h2>
         <agui-select id="gallery-section-control" label="Section" name="gallery_section" pub-to="APP/activeSection"
           bind="$.options: APP/sectionOptions; $.value: APP/activeSection"></agui-select>
-        <p class="text-xs text-agui-muted">Choose a section or use the tabs. Switching views keeps your draft values.</p>
+        <p class="text-xs text-agui-muted">Choose a section or use the tabs. Switching views keeps your draft values.
+        </p>
       </section>
       <section class="grid gap-3" aria-label="Workspace state">
         <h2 class="text-xs uppercase tracking-widest text-agui-muted">Shared contact</h2>
         <p class="break-words text-sm">{{APP/sharedName}}</p>
         <p class="text-xs text-agui-muted">Stage: {{APP/sharedStatus}}</p>
       </section>
-      <p class="text-xs text-agui-muted">Use Save to commit shared contact values and lead records. View settings stay transient.</p>
+      <p class="text-xs text-agui-muted">Use Save to commit shared contact values and lead records. View settings stay
+        transient.</p>
     </div>
   </agui-sidebar>
   <agui-viewport id="gallery-viewport" aria-label="UI library examples">
-    <context-provider id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications tableRows" class="flex min-h-full min-w-0 flex-col">
+    <context-provider id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications tableRows"
+      class="flex min-h-full min-w-0 flex-col">
       <script type="application/json">
         {
           "activeSection": "controls",
@@ -160,40 +163,53 @@
       <agui-header id="gallery-viewport-header" floating>
         <h1 class="flex items-center gap-2"><agui-icon name="dashboard"></agui-icon>UI library</h1>
         <agui-toolbar aria-label="Gallery controls">
-          <agui-theme-toggle id="theme-toggle" ctx="APP" aria-label="Dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
-          <agui-button class="agui-button-icon" aria-label="About the gallery" title="About the gallery" popovertarget="gallery-about"><agui-icon name="info"></agui-icon></agui-button>
+          <agui-theme-toggle id="theme-toggle" ctx="APP" aria-label="Dark theme" light-label="Day"
+            dark-label="Night"></agui-theme-toggle>
+          <agui-button class="agui-button-icon" aria-label="About the gallery" title="About the gallery"
+            popovertarget="gallery-about"><agui-icon name="info"></agui-icon></agui-button>
         </agui-toolbar>
       </agui-header>
       <div class="min-w-0 flex-1 p-4 sm:p-6">
         <div class="mb-6 grid gap-2">
           <p class="text-xs uppercase tracking-widest text-agui-muted">Component gallery</p>
           <h2 class="text-2xl font-semibold">Explore the UI library</h2>
-          <p class="text-sm text-agui-muted">Interactive examples with shared data, accessible controls, and local drafts.</p>
+          <p class="text-sm text-agui-muted">Interactive examples with shared data, accessible controls, and local
+            drafts.</p>
         </div>
-        <agui-tabs id="gallery-sections" label="UI library sections" pub-to="APP/activeSection" bind="$.value: APP/activeSection">
+        <agui-tabs id="gallery-sections" label="UI library sections" pub-to="APP/activeSection"
+          bind="$.value: APP/activeSection">
           <agui-tab value="controls" label="Controls">
             <div class="space-y-6">
               <agui-toolbar aria-label="Contact filters">
-                <agui-field id="query-control" label="Search" bind="$.value: APP/query" type="search" name="query" placeholder="Name or role..."></agui-field>
-                <agui-select id="status-control" label="Status" placeholder="All statuses" name="status" bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
+                <agui-field id="query-control" label="Search" bind="$.value: APP/query" type="search" name="query"
+                  placeholder="Name or role..."></agui-field>
+                <agui-select id="status-control" label="Status" placeholder="All statuses" name="status"
+                  bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
               </agui-toolbar>
               <agui-panel id="gallery-controls" class="grid gap-5">
                 <h2>Native controls</h2>
-                <agui-field id="name-control" bind="$.label: APP/nameLabel" value="Alex" hint="Required field" required required-mark="*" name="name" autocomplete="name"></agui-field>
-                <agui-field label="Email" hint="Format: name@example.com" type="email" name="email" autocomplete="email"></agui-field>
+                <agui-field id="name-control" bind="$.label: APP/nameLabel" value="Alex" hint="Required field" required
+                  required-mark="*" name="name" autocomplete="name"></agui-field>
+                <agui-field label="Email" hint="Format: name@example.com" type="email" name="email"
+                  autocomplete="email"></agui-field>
                 <agui-field label="Follow-up date" value="2026-10-21" type="date" name="follow_up"></agui-field>
                 <agui-field label="Connected on LinkedIn" type="checkbox" checked name="connected"></agui-field>
-                <agui-field label="Email preferred" type="radio" value="email" name="preferred_channel" checked></agui-field>
-                <agui-toggle id="notifications-toggle" label="Notifications" name="notifications" pub-to="APP/notifications" bind="$.value: APP/notifications"></agui-toggle>
+                <agui-field label="Email preferred" type="radio" value="email" name="preferred_channel"
+                  checked></agui-field>
+                <agui-toggle id="notifications-toggle" label="Notifications" name="notifications"
+                  pub-to="APP/notifications" bind="$.value: APP/notifications"></agui-toggle>
                 <agui-toggle label="Unavailable option" name="disabled_toggle" disabled></agui-toggle>
-                <agui-field label="Notes" value="Prepare a proposal after the first conversation." type="textarea" name="notes" rows="3"></agui-field>
+                <agui-field label="Notes" value="Prepare a proposal after the first conversation." type="textarea"
+                  name="notes" rows="3"></agui-field>
                 <agui-field label="Read-only value" value="Saved record" readonly name="saved_value"></agui-field>
                 <agui-field label="Disabled value" value="Unavailable" disabled name="disabled_value"></agui-field>
-                <agui-field label="External validation error" value="Existing contact" error="This contact already exists." name="duplicate"></agui-field>
+                <agui-field label="External validation error" value="Existing contact"
+                  error="This contact already exists." name="duplicate"></agui-field>
                 <div class="flex flex-wrap gap-3" aria-label="Button style samples">
                   <agui-button class="agui-button-primary" set="APP/sharedStatus" value="new">New status</agui-button>
                   <agui-button toggle="APP/notifications">Toggle notifications</agui-button>
-                  <agui-button class="agui-button-ghost" set="APP/notifications" value="false">Disable notifications</agui-button>
+                  <agui-button class="agui-button-ghost" set="APP/notifications" value="false">Disable
+                    notifications</agui-button>
                   <agui-button class="agui-button-danger" set="APP/sharedStatus" value="archived">Archive</agui-button>
                   <agui-button set="APP/sharedStatus" value="new" disabled>Disabled</agui-button>
                 </div>
@@ -212,11 +228,16 @@
             <div class="space-y-6">
               <agui-panel id="gallery-bindings" class="grid content-start gap-5">
                 <h2>Application bindings</h2>
-                <agui-field label="Shared name" name="shared_name" pub-to="APP/sharedName" bind="$.value: APP/sharedName"></agui-field>
-                <agui-toggle id="navigation-toggle" label="Show navigation" pub-to="APP/navigationOpen" bind="$.value: APP/navigationOpen"></agui-toggle>
-                <agui-toggle id="inspector-toggle" label="Show inspector" pub-to="APP/inspectorOpen" bind="$.value: APP/inspectorOpen"></agui-toggle>
-                <agui-select label="Shared status" name="shared_status" pub-to="APP/sharedStatus" bind="$.options: APP/statusOptions; $.value: APP/sharedStatus"></agui-select>
-                <agui-select id="status-mirror" label="Application status" readonly placeholder="All statuses" name="status_mirror" bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
+                <agui-field label="Shared name" name="shared_name" pub-to="APP/sharedName"
+                  bind="$.value: APP/sharedName"></agui-field>
+                <agui-toggle id="navigation-toggle" label="Show navigation" pub-to="APP/navigationOpen"
+                  bind="$.value: APP/navigationOpen"></agui-toggle>
+                <agui-toggle id="inspector-toggle" label="Show inspector" pub-to="APP/inspectorOpen"
+                  bind="$.value: APP/inspectorOpen"></agui-toggle>
+                <agui-select label="Shared status" name="shared_status" pub-to="APP/sharedStatus"
+                  bind="$.options: APP/statusOptions; $.value: APP/sharedStatus"></agui-select>
+                <agui-select id="status-mirror" label="Application status" readonly placeholder="All statuses"
+                  name="status_mirror" bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
                 <agui-component class="grid gap-2 text-sm">
                   <p>Search: <output>{{APP/query}}</output></p>
                   <p>Status: <output>{{APP/status}}</output></p>
@@ -225,22 +246,32 @@
                   <p>Notifications: <output>{{APP/notifications}}</output></p>
                 </agui-component>
                 <h2>Content states</h2>
-                <agui-toggle label="Show preloader" pub-to="APP/preloaderVisible" bind="$.value: APP/preloaderVisible"></agui-toggle>
+                <agui-toggle label="Show preloader" pub-to="APP/preloaderVisible"
+                  bind="$.value: APP/preloaderVisible"></agui-toggle>
                 <div class="grid gap-4 sm:grid-cols-2">
                   <div class="grid content-start gap-2">
-                    <agui-conditional when="APP/preloaderVisible" is="false" behavior="hide"><p class="text-sm text-agui-muted">Default preloader: content hidden when disabled</p></agui-conditional>
-                    <agui-preloader id="gallery-preloader" class="text-agui-accent" bind="$.label: APP/preloaderLabel; hidden: !APP/preloaderVisible"></agui-preloader>
+                    <agui-conditional when="APP/preloaderVisible" is="false" behavior="hide">
+                      <p class="text-sm text-agui-muted">Default preloader: content hidden when disabled</p>
+                    </agui-conditional>
+                    <agui-preloader id="gallery-preloader" class="text-agui-accent"
+                      bind="$.label: APP/preloaderLabel; hidden: !APP/preloaderVisible"></agui-preloader>
                   </div>
                   <div class="grid content-start gap-2">
-                    <agui-conditional when="APP/preloaderVisible" is="false" behavior="dom-remove"><template><p class="text-sm text-agui-muted">Compact preloader: content removed when disabled</p></template></agui-conditional>
-                    <agui-preloader class="size-4 text-agui-accent" label="Loading compact preview" bind="hidden: !APP/preloaderVisible"></agui-preloader>
+                    <agui-conditional when="APP/preloaderVisible" is="false" behavior="dom-remove"><template>
+                        <p class="text-sm text-agui-muted">Compact preloader: content removed when disabled</p>
+                      </template></agui-conditional>
+                    <agui-preloader class="size-4 text-agui-accent" label="Loading compact preview"
+                      bind="hidden: !APP/preloaderVisible"></agui-preloader>
                   </div>
                 </div>
                 <agui-state status="loading" message="Loading contacts..."></agui-state>
                 <agui-state status="empty" message="No contacts match the current filters."></agui-state>
                 <agui-state id="retry-state" bind="$: APP/componentState"></agui-state>
-                <p class="text-sm text-agui-muted">Retry sends an action to the agent. This gallery does not contact an external service.</p>
-                <agui-field label="Notification message" name="notification_message" placeholder="Type a message to preview" pub-to="APP/notificationMessage" bind="$.value: APP/notificationMessage"></agui-field>
+                <p class="text-sm text-agui-muted">Retry sends an action to the agent. This gallery does not contact an
+                  external service.</p>
+                <agui-field label="Notification message" name="notification_message"
+                  placeholder="Type a message to preview" pub-to="APP/notificationMessage"
+                  bind="$.value: APP/notificationMessage"></agui-field>
                 <agui-message bind="$.message: APP/notificationMessage" close-label="Dismiss message"></agui-message>
               </agui-panel>
             </div>
@@ -251,22 +282,33 @@
                 <agui-tab value="table" label="Table">
                   <agui-panel class="grid gap-4">
                     <h2 id="gallery-table-panel">Filters, table, and cards</h2>
-                    <p class="text-sm text-agui-muted">The independent filter publishes matching IDs; the table handles sorting, selection, and paging locally. Select-all includes matching leads on other pages and keeps selections outside the filter. This table does not edit its records.</p>
-                    <agui-field label="External filter search" type="search" name="table_query" pub-to="APP/tableQuery" bind="$.value: APP/tableQuery"></agui-field>
+                    <p class="text-sm text-agui-muted">The independent filter publishes matching IDs; the table handles
+                      sorting, selection, and paging locally. Select-all includes matching leads on other pages and
+                      keeps selections outside the filter. This table does not edit its records.</p>
+                    <agui-field label="External filter search" type="search" name="table_query" pub-to="APP/tableQuery"
+                      bind="$.value: APP/tableQuery"></agui-field>
                     <agui-toolbar aria-label="Table availability">
-                      <agui-toggle label="Simulate data loading" pub-to="APP/tableLoading" bind="$.value: APP/tableLoading"></agui-toggle>
-                      <agui-toggle label="Read-only data" pub-to="APP/tableReadonly" bind="$.value: APP/tableReadonly"></agui-toggle>
+                      <agui-toggle label="Simulate data loading" pub-to="APP/tableLoading"
+                        bind="$.value: APP/tableLoading"></agui-toggle>
+                      <agui-toggle label="Read-only data" pub-to="APP/tableReadonly"
+                        bind="$.value: APP/tableReadonly"></agui-toggle>
                     </agui-toolbar>
-                    <agui-filter id="gallery-lead-filters" label="Lead filters" locale="en"
-                      pub-to="APP/tableFilters" query-pub-to="APP/tableQuery" results-to="APP/tableMatchingIds"
+                    <agui-filter id="gallery-lead-filters" label="Lead filters" locale="en" pub-to="APP/tableFilters"
+                      query-pub-to="APP/tableQuery" results-to="APP/tableMatchingIds"
                       bind="$.rows: APP/tableRows; $.fields: APP/tableColumns; $.texts: APP/tableTexts; $.value: APP/tableFilters; $.query: APP/tableQuery; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-filter>
                     <agui-table id="gallery-leads" label="Example leads" selection="multiple" page-size="3" locale="en"
                       pub-to="APP/tableSelection" sort-pub-to="APP/tableSort"
                       bind="$.rows: APP/tableRows; $.columns: APP/tableColumns; $.texts: APP/tableTexts; $.value: APP/tableSelection; $.filteredIds: APP/tableMatchingIds; $.sort: APP/tableSort; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-table>
-                    <agui-list id="gallery-lead-list" class="grid gap-4 md:grid-cols-2" label="Lead cards" selection="multiple" pub-to="APP/tableSelection"
+                    <agui-list id="gallery-lead-list" class="grid gap-4 md:grid-cols-2" label="Lead cards"
+                      selection="multiple" pub-to="APP/tableSelection"
                       bind="$.items: APP/tableRows; $.value: APP/tableSelection; $.filteredIds: APP/tableMatchingIds; $.texts: APP/tableTexts; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly">
                       <template>
-                        <agui-panel role="listitem" class="grid gap-2"><h3><button type="button" bind="onclick: ^selectItem; ariaPressed: ^_selected; disabled: ^_selectionDisabled">{{^name}}</button></h3><p class="text-sm text-agui-muted" bind="textContent: ^status"></p></agui-panel>
+                        <agui-panel process-inner-html="false" role="listitem" class="grid gap-2">
+                          <h3><button type="button"
+                              bind="onclick: ^selectItem; ariaPressed: _selected; disabled: _selectionDisabled">{{name}}</button>
+                          </h3>
+                          <p class="text-sm text-agui-muted" bind="textContent: status"></p>
+                        </agui-panel>
                       </template>
                     </agui-list>
                   </agui-panel>
@@ -274,7 +316,10 @@
                 <agui-tab value="kanban" label="Kanban">
                   <agui-panel class="grid gap-4">
                     <h2 id="gallery-kanban-panel">Kanban</h2>
-                    <p class="text-sm text-agui-muted">Drag leads between stages. Focus a card and press Alt+Left or Alt+Right to move it with the keyboard. The Table tab uses the same records and updates immediately. Unrecognized stages stay in Unassigned. Save commits record changes; Cancel restores the latest saved records. Table filters do not hide board cards.</p>
+                    <p class="text-sm text-agui-muted">Drag leads between stages. Focus a card and press Alt+Left or
+                      Alt+Right to move it with the keyboard. The Table tab uses the same records and updates
+                      immediately. Unrecognized stages stay in Unassigned. Save commits record changes; Cancel restores
+                      the latest saved records. Table filters do not hide board cards.</p>
                     <agui-kanban id="gallery-lead-board" label="Lead stages" title-key="name" description-key="notes"
                       pub-to="APP/tableRows"
                       bind="$.value: APP/tableRows; $.columns: APP/kanbanColumns; $.texts: APP/kanbanTexts; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-kanban>
@@ -287,16 +332,22 @@
             <div class="space-y-6">
               <agui-panel class="grid gap-5">
                 <h2 id="gallery-charts-panel">Charts</h2>
-                <p class="text-sm text-agui-muted">The chart runtime loads when the first chart initializes. Select a bar or donut sector to share lead selection with the table. Each chart has a keyboard-accessible data view; the line example keeps its own selection. Missing values remain gaps and zero values stay meaningful.</p>
-                <agui-chart id="gallery-monthly-chart" type="line" label="Monthly revenue" description="Prepared monthly amounts with a missing actual value in March."
-                  x-key="month" x-type="date" x-label="Month" selection="multiple" locale="en-US"
-                  pub-to="APP/monthlySelected" bind="$.rows: APP/monthlyRows; $.series: APP/monthlySeries; $.texts: APP/chartTexts; $.value: APP/monthlySelected"></agui-chart>
-                <agui-chart id="gallery-opportunity-chart" type="bar" label="Opportunity by company" description="Company amounts from the shared leads records."
-                  x-key="name" x-label="Company" selection="multiple" locale="en-US"
-                  pub-to="APP/tableSelection" bind="$.rows: APP/tableRows; $.series: APP/opportunitySeries; $.texts: APP/chartTexts; $.value: APP/tableSelection; $.readonly: APP/tableReadonly; $.loading: APP/tableLoading"></agui-chart>
-                <agui-chart id="gallery-share-chart" type="donut" label="Opportunity share" description="One nonnegative amount per company, without inferred aggregation."
-                  x-key="name" x-label="Company" selection="multiple" locale="en-US"
-                  pub-to="APP/tableSelection" bind="$.rows: APP/tableRows; $.series: APP/opportunitySeries; $.texts: APP/chartTexts; $.value: APP/tableSelection; $.readonly: APP/tableReadonly; $.loading: APP/tableLoading"></agui-chart>
+                <p class="text-sm text-agui-muted">The chart runtime loads when the first chart initializes. Select a
+                  bar or donut sector to share lead selection with the table. Each chart has a keyboard-accessible data
+                  view; the line example keeps its own selection. Missing values remain gaps and zero values stay
+                  meaningful.</p>
+                <agui-chart id="gallery-monthly-chart" type="line" label="Monthly revenue"
+                  description="Prepared monthly amounts with a missing actual value in March." x-key="month"
+                  x-type="date" x-label="Month" selection="multiple" locale="en-US" pub-to="APP/monthlySelected"
+                  bind="$.rows: APP/monthlyRows; $.series: APP/monthlySeries; $.texts: APP/chartTexts; $.value: APP/monthlySelected"></agui-chart>
+                <agui-chart id="gallery-opportunity-chart" type="bar" label="Opportunity by company"
+                  description="Company amounts from the shared leads records." x-key="name" x-label="Company"
+                  selection="multiple" locale="en-US" pub-to="APP/tableSelection"
+                  bind="$.rows: APP/tableRows; $.series: APP/opportunitySeries; $.texts: APP/chartTexts; $.value: APP/tableSelection; $.readonly: APP/tableReadonly; $.loading: APP/tableLoading"></agui-chart>
+                <agui-chart id="gallery-share-chart" type="donut" label="Opportunity share"
+                  description="One nonnegative amount per company, without inferred aggregation." x-key="name"
+                  x-label="Company" selection="multiple" locale="en-US" pub-to="APP/tableSelection"
+                  bind="$.rows: APP/tableRows; $.series: APP/opportunitySeries; $.texts: APP/chartTexts; $.value: APP/tableSelection; $.readonly: APP/tableReadonly; $.loading: APP/tableLoading"></agui-chart>
               </agui-panel>
             </div>
           </agui-tab>
@@ -304,8 +355,12 @@
             <div class="space-y-6">
               <agui-panel class="grid gap-4">
                 <h2 id="gallery-map-panel">Map</h2>
-                <p class="text-sm text-agui-muted">Select a marker or table row to share selection. Drag to pan, use the zoom buttons, or fit all mapped locations. Locations without coordinates remain in the table and are counted below the map. Tile requests go directly to OpenStreetMap; shared viewers see this viewport without interactive map controls.</p>
-                <agui-map id="gallery-locations-map" label="Example team locations" description="Fictional locations around London, with one record awaiting coordinates."
+                <p class="text-sm text-agui-muted">Select a marker or table row to share selection. Drag to pan, use the
+                  zoom buttons, or fit all mapped locations. Locations without coordinates remain in the table and are
+                  counted below the map. Tile requests go directly to OpenStreetMap; shared viewers see this viewport
+                  without interactive map controls.</p>
+                <agui-map id="gallery-locations-map" label="Example team locations"
+                  description="Fictional locations around London, with one record awaiting coordinates."
                   pub-to="APP/mapSelection" view-pub-to="APP/mapView"
                   bind="$.rows: APP/mapRows; $.value: APP/mapSelection; $.view: APP/mapView; $.tiles: APP/mapTiles; $.texts: APP/mapTexts"></agui-map>
                 <agui-table id="gallery-locations-table" label="All locations" selection="multiple"
@@ -318,18 +373,26 @@
             <div class="space-y-6">
               <agui-panel class="grid gap-4">
                 <h2 id="gallery-markdown-panel">Markdown</h2>
-                <p class="text-sm text-agui-muted">Use an external Markdown URL or edit the inline source. JSDA renders native HTML, highlighted code, and wrappers with readable fallbacks; registered components can enhance them. Document checkboxes remain disabled.</p>
+                <p class="text-sm text-agui-muted">Use an external Markdown URL or edit the inline source. JSDA renders
+                  native HTML, highlighted code, and wrappers with readable fallbacks; registered components can enhance
+                  them. Document checkboxes remain disabled.</p>
                 <agui-select id="gallery-markdown-preset" label="Source examples" pub-to="APP/markdownUrl"
                   bind="$.options: APP/markdownSourceOptions; $.value: APP/markdownUrl"></agui-select>
-                <agui-field id="gallery-markdown-url" type="text" label="Markdown URL" hint="Leave empty for inline text. Direct external URLs need CORS; proxy URLs need a configured source." pub-to="APP/markdownUrl" bind="$.value: APP/markdownUrl"></agui-field>
+                <agui-field id="gallery-markdown-url" type="text" label="Markdown URL"
+                  hint="Leave empty for inline text. Direct external URLs need CORS; proxy URLs need a configured source."
+                  pub-to="APP/markdownUrl" bind="$.value: APP/markdownUrl"></agui-field>
                 <details>
                   <summary>Enable the proxy example</summary>
-                  <p class="mt-3 text-sm text-agui-muted">Allow the public source for this gallery's session ID, then choose Project README through proxy. External documents use sanitized content without custom wrappers. Public links also expose the configured assets.</p>
+                  <p class="mt-3 text-sm text-agui-muted">Allow the public source for this gallery's session ID, then
+                    choose Project README through proxy. External documents use sanitized content without custom
+                    wrappers. Public links also expose the configured assets.</p>
                   <pre class="mt-3 overflow-auto rounded-md bg-agui-bg p-3 text-sm"><code>npx symbiote-agui proxy allow &lt;SESSION_ID&gt; https://raw.githubusercontent.com
 npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
                 </details>
-                <agui-field id="gallery-markdown-source" type="textarea" data-code label="Inline Markdown source" pub-to="APP/markdownSource" bind="$.value: APP/markdownSource"></agui-field>
-                <agui-markdown id="gallery-markdown" label="Project briefing" bind="$.value: APP/markdownSource; $.src: APP/markdownUrl; $.extensions: !APP/markdownUrl; $.texts: APP/markdownTexts"></agui-markdown>
+                <agui-field id="gallery-markdown-source" type="textarea" data-code label="Inline Markdown source"
+                  pub-to="APP/markdownSource" bind="$.value: APP/markdownSource"></agui-field>
+                <agui-markdown id="gallery-markdown" label="Project briefing"
+                  bind="$.value: APP/markdownSource; $.src: APP/markdownUrl; $.extensions: !APP/markdownUrl; $.texts: APP/markdownTexts"></agui-markdown>
               </agui-panel>
             </div>
           </agui-tab>
@@ -337,17 +400,25 @@ npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
             <div class="space-y-6">
               <agui-panel class="grid gap-4">
                 <h2 id="gallery-overlays">Dialogs and popups</h2>
-                <p class="text-sm text-agui-muted">The editor uses native modal focus and Escape dismissal. Closing keeps edits as drafts; Save and Cancel changes remain separate actions.</p>
-                <agui-toggle label="Show contact editor" pub-to="APP/galleryEditorOpen" bind="$.value: APP/galleryEditorOpen"></agui-toggle>
-                <agui-dialog id="gallery-editor" label="Edit shared contact" open-label="Open contact editor" close-label="Close contact editor"
-                  pub-to="APP/galleryEditorOpen" bind="$.value: APP/galleryEditorOpen">
-                  <agui-field label="Shared name" name="dialog_shared_name" pub-to="APP/sharedName" bind="$.value: APP/sharedName"></agui-field>
-                  <agui-select label="Shared status" name="dialog_shared_status" pub-to="APP/sharedStatus" bind="$.value: APP/sharedStatus; $.options: APP/statusOptions"></agui-select>
-                  <p class="text-sm text-agui-muted">Close the editor, then use the floating bar to save or cancel these edits.</p>
+                <p class="text-sm text-agui-muted">The editor uses native modal focus and Escape dismissal. Closing
+                  keeps edits as drafts; Save and Cancel changes remain separate actions.</p>
+                <agui-toggle label="Show contact editor" pub-to="APP/galleryEditorOpen"
+                  bind="$.value: APP/galleryEditorOpen"></agui-toggle>
+                <agui-dialog id="gallery-editor" label="Edit shared contact" open-label="Open contact editor"
+                  close-label="Close contact editor" pub-to="APP/galleryEditorOpen"
+                  bind="$.value: APP/galleryEditorOpen">
+                  <agui-field label="Shared name" name="dialog_shared_name" pub-to="APP/sharedName"
+                    bind="$.value: APP/sharedName"></agui-field>
+                  <agui-select label="Shared status" name="dialog_shared_status" pub-to="APP/sharedStatus"
+                    bind="$.value: APP/sharedStatus; $.options: APP/statusOptions"></agui-select>
+                  <p class="text-sm text-agui-muted">Close the editor, then use the floating bar to save or cancel these
+                    edits.</p>
                   <button type="button" popovertarget="gallery-editor-help">About drafts</button>
                   <div id="gallery-editor-help" popover class="agui-popover" aria-label="About draft edits">
-                    <p class="text-sm">Changes appear in all bound fields immediately. Closing this popup or the editor does not save or discard them.</p>
-                    <button class="mt-3" type="button" popovertarget="gallery-editor-help" popovertargetaction="hide">Close help</button>
+                    <p class="text-sm">Changes appear in all bound fields immediately. Closing this popup or the editor
+                      does not save or discard them.</p>
+                    <button class="mt-3" type="button" popovertarget="gallery-editor-help"
+                      popovertargetaction="hide">Close help</button>
                   </div>
                   <form method="dialog"><button type="submit">Done</button></form>
                 </agui-dialog>
@@ -364,12 +435,16 @@ npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
             <div class="space-y-6">
               <section class="grid gap-4" aria-label="Reusable feature templates">
                 <h2>Reusable features with use-template</h2>
-                <p class="text-sm text-agui-muted">One template supplies the layout and bindings. Each provider reads a different APP contact object through state and publishes edits back with pub-to. No custom JavaScript is needed.</p>
+                <p class="text-sm text-agui-muted">One template supplies the layout and bindings. Each provider reads a
+                  different APP contact object through state and publishes edits back with pub-to. No custom JavaScript
+                  is needed.</p>
                 <template id="contact-feature-template">
                   <agui-panel class="grid content-start gap-4">
                     <h3 class="text-lg font-semibold">{{^featureTitle}}</h3>
-                    <agui-field label="Contact name" name="feature_contact_name" pub-to="^contactName" bind="$.value: ^contactName"></agui-field>
-                    <agui-field label="Notes" name="feature_contact_notes" type="textarea" rows="3" pub-to="^contactNotes" bind="$.value: ^contactNotes"></agui-field>
+                    <agui-field label="Contact name" name="feature_contact_name" pub-to="^contactName"
+                      bind="$.value: ^contactName"></agui-field>
+                    <agui-field label="Notes" name="feature_contact_notes" type="textarea" rows="3"
+                      pub-to="^contactNotes" bind="$.value: ^contactNotes"></agui-field>
                     <agui-component class="text-sm text-agui-muted">
                       Draft contact: <output>{{^contactName}}</output>
                     </agui-component>
@@ -381,19 +456,24 @@ npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
                   <context-provider id="feature-contact-second" use-template="#contact-feature-template"
                     pub-to="APP/featureContactSecond" bind="state: APP/featureContactSecond"></context-provider>
                 </div>
-                <p class="text-sm text-agui-muted">Each feature owns a local view of its contact and publishes a fresh object to APP. These contact objects are transient and are not included in the gallery's Save action.</p>
+                <p class="text-sm text-agui-muted">Each feature owns a local view of its contact and publishes a fresh
+                  object to APP. These contact objects are transient and are not included in the gallery's Save action.
+                </p>
               </section>
               <agui-panel class="grid gap-4">
                 <h2 id="gallery-tabs-panel">Tabs</h2>
-                <agui-tabs id="gallery-tabs" label="Workspace views" pub-to="APP/galleryTab" bind="$.value: APP/galleryTab">
+                <agui-tabs id="gallery-tabs" label="Workspace views" pub-to="APP/galleryTab"
+                  bind="$.value: APP/galleryTab">
                   <agui-tab value="overview" label="Overview">
-                    <p class="text-sm text-agui-muted">Arrow keys move focus. Enter or Space activates a tab. Switching views preserves entered notes.</p>
+                    <p class="text-sm text-agui-muted">Arrow keys move focus. Enter or Space activates a tab. Switching
+                      views preserves entered notes.</p>
                     <agui-tabs id="gallery-nested-tabs" label="Nested guides" orientation="vertical" value="bindings">
                       <agui-tab value="bindings" label="Bindings">
                         <p class="text-sm">Bind value to common state and use pub-to to publish tab changes.</p>
                       </agui-tab>
                       <agui-tab value="keyboard" label="Keyboard">
-                        <p class="text-sm">Vertical tabs use Up and Down. Home and End move to the first and last enabled tabs.</p>
+                        <p class="text-sm">Vertical tabs use Up and Down. Home and End move to the first and last
+                          enabled tabs.</p>
                       </agui-tab>
                     </agui-tabs>
                   </agui-tab>
@@ -425,7 +505,8 @@ npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
                     <dt>Page background</dt>
                     <dd class="text-sm text-agui-muted">agui-bg</dd>
                   </div>
-                  <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-surface p-3 shadow-agui-panel">
+                  <div
+                    class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-surface p-3 shadow-agui-panel">
                     <dt>Content surface</dt>
                     <dd class="text-sm text-agui-muted">agui-surface</dd>
                   </div>
@@ -450,9 +531,11 @@ npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
                 </agui-toolbar>
                 <agui-toolbar aria-label="Icon buttons">
                   <button type="button"><agui-icon name="download"></agui-icon>Download</button>
-                  <button class="agui-button-icon" type="button" aria-label="Settings"><agui-icon name="settings"></agui-icon></button>
+                  <button class="agui-button-icon" type="button" aria-label="Settings"><agui-icon
+                      name="settings"></agui-icon></button>
                 </agui-toolbar>
-                <agui-select label="Icon" pub-to="APP/iconName" bind="$.value: APP/iconName; $.options: APP/iconOptions"></agui-select>
+                <agui-select label="Icon" pub-to="APP/iconName"
+                  bind="$.value: APP/iconName; $.options: APP/iconOptions"></agui-select>
                 <agui-icon id="dynamic-icon" bind="$.name: APP/iconName; @aria-label: APP/iconName"></agui-icon>
               </agui-panel>
             </div>
@@ -461,14 +544,19 @@ npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
             <div class="space-y-6">
               <agui-panel class="grid gap-4">
                 <h2 id="gallery-workflow">Data workflow</h2>
-                <p class="text-sm text-agui-muted">Edit Shared name, Shared status, Notifications, or lead stages, then use the floating bar. Save persists those values locally. Import replaces the draft, including the entire leads array; Cancel restores the saved values. Export includes unsaved edits.</p>
+                <p class="text-sm text-agui-muted">Edit Shared name, Shared status, Notifications, or lead stages, then
+                  use the floating bar. Save persists those values locally. Import replaces the draft, including the
+                  entire leads array; Cancel restores the saved values. Export includes unsaved edits.</p>
                 <details>
                   <summary class="min-h-10 min-w-10 cursor-pointer py-2">JSON import format</summary>
-                  <pre class="mt-3 overflow-auto rounded-md bg-agui-bg p-3 text-sm"><code>{"version":1,"changes":[{"provider":"APP","values":{"sharedName":"Morgan","sharedStatus":"new","notifications":true,"tableRows":[{"id":"lead-imported","name":"Example Company","amount":1200,"status":"new","active":true,"followUp":null}]}}]}</code></pre>
+                  <pre
+                    class="mt-3 overflow-auto rounded-md bg-agui-bg p-3 text-sm"><code>{"version":1,"changes":[{"provider":"APP","values":{"sharedName":"Morgan","sharedStatus":"new","notifications":true,"tableRows":[{"id":"lead-imported","name":"Example Company","amount":1200,"status":"new","active":true,"followUp":null}]}}]}</code></pre>
                 </details>
-                <p class="text-sm text-agui-muted">The examples below illustrate status meanings. The floating bar reports actual operations; this gallery does not simulate agent delivery or external writes.</p>
+                <p class="text-sm text-agui-muted">The examples below illustrate status meanings. The floating bar
+                  reports actual operations; this gallery does not simulate agent delivery or external writes.</p>
                 <agui-component>
-                  <dl id="submission-examples" class="grid gap-3 sm:grid-cols-2" itemize="APP/submissionExamples" item-tag="agui-submission-example">
+                  <dl id="submission-examples" class="grid gap-3 sm:grid-cols-2" itemize="APP/submissionExamples"
+                    item-tag="agui-submission-example">
                     <template>
                       <div class="grid gap-1 rounded-md border border-agui-border p-3">
                         <dt>{{label}}</dt>
@@ -482,18 +570,24 @@ npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
           </agui-tab>
         </agui-tabs>
       </div>
-      <footer class="flex flex-wrap justify-between gap-2 border-t border-agui-divider px-4 py-2 text-xs text-agui-muted"><span>Shared examples, one workspace.</span><span>Save commits declared data; view settings stay local.</span></footer>
+      <footer
+        class="flex flex-wrap justify-between gap-2 border-t border-agui-divider px-4 py-2 text-xs text-agui-muted">
+        <span>Shared examples, one workspace.</span><span>Save commits declared data; view settings stay local.</span>
+      </footer>
       <div id="gallery-about" popover class="agui-popover" aria-label="About the gallery">
         <h2 class="mb-3 font-semibold">UI library</h2>
-        <p class="text-sm text-agui-muted">Try controls, explore data, and switch views without losing draft edits. The floating toolbar saves or cancels the shared contact and lead records.</p>
+        <p class="text-sm text-agui-muted">Try controls, explore data, and switch views without losing draft edits. The
+          floating toolbar saves or cancels the shared contact and lead records.</p>
       </div>
     </context-provider>
   </agui-viewport>
-  <agui-sidebar id="gallery-inspector" side="end" label="Inspector" expand-label="Expand inspector" collapse-label="Collapse inspector"
-    pub-to="APP/inspectorOpen" bind="$.value: APP/inspectorOpen">
+  <agui-sidebar id="gallery-inspector" side="end" label="Inspector" expand-label="Expand inspector"
+    collapse-label="Collapse inspector" pub-to="APP/inspectorOpen" bind="$.value: APP/inspectorOpen">
     <div class="grid gap-4">
-      <p class="text-sm text-agui-muted">Keep notes beside any example. Collapsing this sidebar preserves its contents.</p>
-      <agui-field label="Inspector notes" type="textarea" name="inspector_notes" rows="8" value="Draft notes stay here while you work."></agui-field>
+      <p class="text-sm text-agui-muted">Keep notes beside any example. Collapsing this sidebar preserves its contents.
+      </p>
+      <agui-field label="Inspector notes" type="textarea" name="inspector_notes" rows="8"
+        value="Draft notes stay here while you work."></agui-field>
     </div>
   </agui-sidebar>
   <agui-data-toolbar id="gallery-data-actions" bind="$: AGUI_TEXT/dataToolbar"></agui-data-toolbar>

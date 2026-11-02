@@ -38,6 +38,8 @@ If any setup step fails or a requested capability remains unavailable, report th
 
 The default JSDA page bundle includes and registers every available library component. Compose them directly in HTML with Symbiote contexts; do not add imports, registration scripts, per-component JSON, or JavaScript initialization. Use these before generating custom components.
 
+Library elements accept `process-inner-html="false"` or `"true"` before initialization to disable or enable parsing of their existing children; omission keeps the component default. This does not disable their own templates or undo bindings created by an outer template. Disable it on nested layouts when the surrounding template should own their content bindings.
+
 - `agui-app`: viewport-height application shell. Direct children are one start sidebar, one `agui-viewport`, and an optional end sidebar. By default, place the header and optional footer inside the viewport. An app-level `agui-header` or `slot="header"` region and `slot="footer"` region are also supported when fixed rows outside the scroll regions are needed. Place the single `agui-data-toolbar` last as a direct child of the app so its reserved row keeps all scroll areas clear of the floating bar. Sidebars flank the viewport from 64rem upward and stack above/below it on narrower screens. Use `--agui-app-height` to embed a shorter shell; the default is `100dvh`.
 - `agui-sidebar`: independently scrolling authored content with a built-in expand/collapse button. `side="start"` is the default; use `side="end"` for the other side. Without an explicit value, it defaults to collapsed below `64rem` and expanded from `64rem`; `collapsed` keeps that default closed at every size. Unset state follows breakpoint changes without publishing edits. A bound value or explicit user/tool toggle takes precedence and survives resizing. Supply `label`, `expand-label`, and `collapse-label`, or bind `$.label`, `$.expandLabel`, and `$.collapseLabel`. Boolean `$.value` is expanded state; pair its binding with `pub-to` to share visibility with other controls. Disabled/read-only state protects visibility changes, not the fields inside. Collapsing preserves mounted content and drafts. Desktop width uses `--agui-sidebar-width` (default `18rem`); collapsed panels keep their toggle visible.
 - `agui-viewport`: independently scrolling central content. Give it an `aria-label` or `aria-labelledby`; it defaults to `role="main"` and `tabindex="0"`, preserving explicit overrides. Place existing headers, dashboards, and panels inside it. A floating header within the viewport supplies focus spacing to that scroll region; an app-level header occupies its own row and needs no `floating` flag.
@@ -268,16 +270,16 @@ Inside the preceding provider, this list shares the table's records, filter, and
 <agui-list id="lead-cards" label="Lead cards" selection="multiple" pub-to="LEADS/selected" class="grid gap-4 md:grid-cols-2"
   bind="$.items: LEADS/rows; $.value: LEADS/selected; $.filteredIds: LEADS/matchingIds; $.texts: LEADS/texts">
   <template>
-    <agui-panel role="listitem" class="grid gap-2">
-      <h3 bind="textContent: ^name"></h3>
-      <p bind="textContent: ^status"></p>
-      <button type="button" bind="onclick: ^selectItem; ariaPressed: ^_selected; disabled: ^_selectionDisabled">Select</button>
+    <agui-panel process-inner-html="false" role="listitem" class="grid gap-2">
+      <h3 bind="textContent: name"></h3>
+      <p bind="textContent: status"></p>
+      <button type="button" bind="onclick: ^selectItem; ariaPressed: _selected; disabled: _selectionDisabled">Select</button>
     </agui-panel>
   </template>
 </agui-list>
 ```
 
-Each native Itemize owner receives flat record fields plus reserved `_selected` and `_selectionDisabled`. Plain elements bind directly to `name`; nested components use `^name`. Author any controls, labels, roles, focus targets, and selected appearance yourself. Native buttons bound to `^selectItem` provide keyboard activation; checkbox/radio `onchange` bindings use their checked state. Filtering preserves IDs outside the result, and incoming assignments do not publish. Discover `set_selection` by owner `agui-list` and authored ID. See the [list contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/widgets/list/README.md).
+Each native Itemize owner receives flat record fields plus reserved `_selected` and `_selectionDisabled`. The panel above disables its extra inner HTML parsing, so its content binds item fields locally. Author any controls, labels, roles, focus targets, and selected appearance yourself. Native buttons bound to `^selectItem` provide keyboard activation; checkbox/radio `onchange` bindings use their checked state. Filtering preserves IDs outside the result, and incoming assignments do not publish. Discover `set_selection` by owner `agui-list` and authored ID. See the [list contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/widgets/list/README.md).
 
 ### Kanban example
 

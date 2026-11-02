@@ -157,6 +157,8 @@ test('default library bundle composes an HTML-only workspace with isolated conte
     '<agui-theme-toggle id="plain-theme" ctx="binding-test" show-label bind="$.label: binding-test/nameLabel"></agui-theme-toggle>',
     '<agui-state id="unlabeled-state" status="loading"></agui-state>',
     '<agui-toolbar id="unlabeled-toolbar"></agui-toolbar>',
+    '<agui-panel id="parsing-default"><span bind="textContent: binding-test/dynamicValue">Default</span></agui-panel>',
+    '<agui-panel id="parsing-disabled" process-inner-html="false"><span bind="textContent: binding-test/dynamicValue">Unparsed</span><agui-field label="Independent control" value="Still rendered"></agui-field></agui-panel>',
     '<agui-data-toolbar id="custom-data" bind="$.texts: binding-test/toolbarTexts"></agui-data-toolbar>',
     '</context-provider>',
     '<input id="native-input" aria-label="Native input">',
@@ -192,6 +194,20 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#plain-theme button', (element) => element.getAttribute('aria-label')), 'Dynamic name');
   assert.equal(await page.$eval('#unlabeled-state', (element) => element.textContent?.trim()), '');
   assert.equal(await page.$eval('#unlabeled-toolbar', (element) => element.getAttribute('aria-label')), null);
+  assert.equal(await page.$eval('#parsing-default > span', (element) => element.textContent), 'Bound');
+  assert.equal(await page.$eval('#parsing-disabled > span', (element) => element.textContent), 'Unparsed');
+  assert.equal(await page.$eval('#parsing-disabled input', (element) => element.value), 'Still rendered');
+  await page.$eval('#binding-data', (element) => {
+    let panel = /** @type {import('../../types/components.js').ComponentHost} */ (document.createElement('agui-panel'));
+    panel.processInnerHtml = false;
+    panel.id = 'parsing-enabled';
+    panel.setAttribute('process-inner-html', 'true');
+    let text = document.createElement('span');
+    text.setAttribute('bind', 'textContent: binding-test/dynamicValue');
+    panel.append(text);
+    element.append(panel);
+  });
+  assert.equal(await page.$eval('#parsing-enabled > span', (element) => element.textContent), 'Bound');
   assert.equal(await page.$eval('#custom-data .agui-data-actions button > span', (element) => element.textContent), 'Keep edits');
   assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Online/);
   await page.$eval('#custom-data', (element) => Reflect.get(element, 'transfer').failed('import', new Error('Technical details must not become UI copy.')));
@@ -204,6 +220,9 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   } }));
   assert.equal(await page.$eval('#bound-field label span span', (element) => element.textContent), 'Updated label');
   assert.equal(await page.$eval('#bound-field input', (element) => element.value), 'Updated value');
+  assert.equal(await page.$eval('#parsing-default > span', (element) => element.textContent), 'Updated value');
+  assert.equal(await page.$eval('#parsing-enabled > span', (element) => element.textContent), 'Updated value');
+  assert.equal(await page.$eval('#parsing-disabled > span', (element) => element.textContent), 'Unparsed');
   assert.equal(await page.$eval('#state-field input', (element) => element.value), 'Enabled');
   assert.equal(await page.$eval('#state-field input', (element) => element.disabled), false);
   await sendStdin('update', 'widgets', JSON.stringify({

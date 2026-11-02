@@ -4,6 +4,14 @@ import { MAX_ACTION_VALUE_CHARS } from './constants.js';
 
 /** @extends {Symbiote<import('../../../types/components.js').ComponentState>} */
 export class UiComponent extends Symbiote {
+  connectedCallback() {
+    if (!this.connectedOnce) {
+      let parsing = this.getAttribute('process-inner-html');
+      if (parsing !== null) { this.processInnerHtml = parsing !== 'false'; }
+    }
+    super.connectedCallback();
+  }
+
   get actionId() {
     return this.id || this.getAttribute('ctx')?.trim() || this.localName;
   }

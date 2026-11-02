@@ -16,10 +16,10 @@
   <agui-list id="cards" label="Record cards" id-key="key" selection="multiple" pub-to="LIST/ids"
     bind="$.items: LIST/rows; $.value: LIST/ids; $.filteredIds: LIST/matchingIds; $.texts: LIST/texts; $.readonly: LIST/readonly">
     <template>
-      <agui-panel role="listitem" bind="@data-row: ^key">
-        <h2 bind="textContent: ^name"></h2><p bind="textContent: ^notes"></p><a bind="href: ^url">Open</a><span data-record-selected bind="textContent: ^selected"></span>
-        <agui-field type="checkbox" bind="@value: ^key; @aria-label: ^name; $.value: ^_selected; $.disabled: ^_selectionDisabled; onchange: ^selectItem"></agui-field>
-        <button type="button" bind="onclick: ^selectItem; ariaPressed: ^_selected; disabled: ^_selectionDisabled">Select</button>
+      <agui-panel process-inner-html="false" role="listitem" bind="@data-row: key">
+        <h2 bind="textContent: name"></h2><p bind="textContent: notes"></p><a bind="href: url">Open</a><span data-record-selected bind="textContent: selected"></span>
+        <agui-field type="checkbox" bind="@value: key; @aria-label: name; $.value: _selected; $.disabled: _selectionDisabled; onchange: ^selectItem"></agui-field>
+        <button type="button" bind="onclick: ^selectItem; ariaPressed: _selected; disabled: _selectionDisabled">Select</button>
       </agui-panel>
     </template>
   </agui-list>

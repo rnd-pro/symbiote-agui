@@ -4,7 +4,7 @@ Use `agui-filter` to derive matching record IDs without coupling filtering to a 
 
 ## Inputs and outputs
 
-- Host attributes: `label` (tool context), `id-key` (default `id`), `locale` (document/browser default), `disabled`, `readonly`, `loading`, and `error`. Native property names are camelCase where applicable. Use native bindings or `state`; no per-widget JSON or executable formatters.
+- Host attributes: `label` (tool context), `id-key` (default `id`), `locale` (document/browser default), `disabled`, `readonly`, `loading`, and `error`. Native property names are camelCase where applicable. Use native bindings or a native `$` object merge; no per-widget JSON or executable formatters.
 - Every record requires a unique nonempty string ID, at most 128 characters. Up to 5,000 records and 24 fields are supported. Flat field keys start with an ASCII letter or underscore, followed by letters, digits, underscores, or hyphens; maximum length is 64.
 - Fields declare `key`, caller-owned `label`, `type`, and optional `filter`/`options`. Types are `text`, `number`, `date`, `boolean`, and `status`. Numbers must be finite numbers; dates must be ISO calendar dates or timestamps with seconds and an explicit timezone. Invalid/null typed values do not match active predicates.
 - Text supports `filter: "contains"`. Number/date fields support `filter: "range"` with inclusive bounds; an upper calendar date includes its full day. Boolean equality uses strings `"true"` and `"false"`. Text/status equality requires `options: [{ value, label, disabled?, tone? }]`; the empty value is reserved for clearing. Status tones are `info`, `success`, `warning`, or `danger`.

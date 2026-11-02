@@ -177,7 +177,7 @@ export class SharedView {
 
   createToolbar() {
     let content = document.createElement(COMPONENT_TAG);
-    content.innerHTML = html`<agui-data-toolbar bind="state: ${PAGE_TEXT_CONTEXT}/dataToolbar"></agui-data-toolbar>`;
+    content.innerHTML = html`<agui-data-toolbar bind="$: ${PAGE_TEXT_CONTEXT}/dataToolbar"></agui-data-toolbar>`;
     return content;
   }
 

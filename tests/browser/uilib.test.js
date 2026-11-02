@@ -152,7 +152,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
     '<agui-field id="inner-field" label="Inner" value="Inner"></agui-field>',
     '<agui-field id="outer-field" label="Outer" value="Outer"></agui-field>',
     '<agui-field id="bound-field" ctx="binding-test" bind="$.label: *nameLabel; $.value: *dynamicValue"></agui-field>',
-    '<agui-field id="state-field" bind="state: binding-test/fieldState"></agui-field>',
+    '<agui-field id="state-field" bind="$: binding-test/fieldState"></agui-field>',
     '<agui-theme-toggle id="bound-theme" ctx="binding-test" bind="$.lightLabel: binding-test/lightAction; $.darkLabel: binding-test/darkAction; @aria-label: binding-test/themeName"></agui-theme-toggle>',
     '<agui-theme-toggle id="plain-theme" ctx="binding-test" show-label bind="$.label: binding-test/nameLabel"></agui-theme-toggle>',
     '<agui-state id="unlabeled-state" status="loading"></agui-state>',
@@ -172,6 +172,19 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#bound-field input', (element) => element.value), 'Bound');
   assert.equal(await page.$eval('#state-field input', (element) => element.value), 'State value');
   assert.equal(await page.$eval('#state-field input', (element) => element.disabled), true);
+  await page.$eval('#state-field', (element) => {
+    Reflect.set(window, 'mergedFieldProxy', Reflect.get(element, '$'));
+  });
+  await page.$eval('#binding-data', (element) => {
+    let field = /** @type {import('../../types/components.js').ComponentHost} */ (document.createElement('agui-field'));
+    field.id = 'prebound-field';
+    field.$ = {
+      label: 'Before connection',
+      value: 'Prebound value',
+    };
+    element.append(field);
+  });
+  await page.waitForFunction(() => document.querySelector('#prebound-field')?.querySelector('input')?.value === 'Prebound value');
   assert.equal(await page.$eval('#bound-theme button > span', (element) => element.textContent.trim()), 'Use night mode');
   assert.equal(await page.$eval('#bound-theme button', (element) => element.getAttribute('aria-label')), 'Color preference');
   assert.equal(await page.$eval('#plain-theme button > span', (element) => element.textContent.trim()), 'Dynamic name');
@@ -193,6 +206,37 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#bound-field input', (element) => element.value), 'Updated value');
   assert.equal(await page.$eval('#state-field input', (element) => element.value), 'Enabled');
   assert.equal(await page.$eval('#state-field input', (element) => element.disabled), false);
+  await sendStdin('update', 'widgets', JSON.stringify({
+    selector: '#binding-data',
+    values: {
+      fieldState: {
+        hint: 'Merged hint',
+        extraBindingValue: 'Added',
+      },
+    },
+  }));
+  assert.equal(await page.$eval('#state-field', (element) => Reflect.get(element, '$').label), 'Updated state');
+  assert.equal(await page.$eval('#state-field input', (element) => element.value), 'Enabled');
+  assert.equal(await page.$eval('#state-field input', (element) => element.disabled), false);
+  assert.equal(await page.$eval('#state-field', (element) => Reflect.get(element, '$') === Reflect.get(window, 'mergedFieldProxy')), true);
+  await page.$eval('#state-field', (element) => {
+    let field = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    Reflect.set(window, 'mergedValueNotifications', 0);
+    field.sub('value', () => Reflect.set(window, 'mergedValueNotifications', Reflect.get(window, 'mergedValueNotifications') + 1), false);
+    field.sub('extraBindingValue', (value) => Reflect.set(window, 'mergedExtraValue', value));
+  });
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'mergedExtraValue')), 'Added');
+  await sendStdin('update', 'widgets', JSON.stringify({
+    selector: '#binding-data',
+    values: {
+      fieldState: {
+        value: 'Enabled',
+        extraBindingValue: 'Updated',
+      },
+    },
+  }));
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'mergedExtraValue')), 'Updated');
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'mergedValueNotifications')), 1);
   assert.equal(await page.$eval('#bound-theme button > span', (element) => element.textContent.trim()), 'Dim the interface');
   assert.equal(await page.$eval('#custom-data button > span', (element) => element.textContent), 'Store changes');
   assert.match(await page.$eval('#custom-data', (element) => element.textContent || ''), /Try another file/);

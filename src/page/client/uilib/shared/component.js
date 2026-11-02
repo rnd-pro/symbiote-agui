@@ -4,12 +4,6 @@ import { MAX_ACTION_VALUE_CHARS } from './constants.js';
 
 /** @extends {Symbiote<import('../../../../../types/components.js').ComponentState>} */
 export class UiComponent extends Symbiote {
-  initCallback() {
-    this.defineAccessor('state', (/** @type {import('../../../../../types/components.js').ComponentState | undefined} */ value) => {
-      if (value !== undefined) { this.add$(value, true); }
-    });
-  }
-
   /**
    * @param {import('../../../../../types/uilib.js').UiAction['action']} action
    * @param {import('../../../../../types/uilib.js').UiValue} [value]

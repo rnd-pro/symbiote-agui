@@ -1,6 +1,6 @@
 {
   "name": "symbiote-agui",
-  "version": "0.12.1",
+  "version": "0.13.1",
   "description": "Local interactive interfaces for AI agents, built with Symbiote.js.",
   "homepage": "https://rnd-pro.com/agui/",
   "license": "MIT",
@@ -62,7 +62,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.3.1",
-    "@symbiotejs/symbiote": "^3.8.3",
+    "@symbiotejs/symbiote": "^3.9.0",
     "@tailwindcss/node": "^4.3.3",
     "dompurify": "^3.4.17",
     "echarts": "^6.1.0",

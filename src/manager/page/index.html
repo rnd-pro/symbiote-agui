@@ -76,7 +76,7 @@
                 <agui-state bind="$.status: MANAGER/emptyStatus; $.message: MANAGER/empty"></agui-state>
                 <div class="sessions manager-cards" itemize="MANAGER/rows">
                   <template>
-                    <agui-session-row pub-to="MANAGER/selection" bind="state: card"></agui-session-row>
+                    <agui-session-row pub-to="MANAGER/selection" bind="$: card"></agui-session-row>
                   </template>
                 </div>
               </agui-tab>

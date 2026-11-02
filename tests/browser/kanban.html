@@ -17,7 +17,7 @@
     pub-to="WORK/records" bind="$.value: WORK/records; $.columns: WORK/stages; $.texts: WORK/texts; $.readonly: WORK/readonly; $.disabled: WORK/disabled; $.loading: WORK/loading; $.error: WORK/error"></agui-kanban>
   <agui-table id="work-table" label="Work table" id-key="key" selection="multiple" page-size="20"
     pub-to="WORK/selected" bind="$.rows: WORK/records; $.columns: WORK/tableColumns; $.texts: WORK/texts; $.value: WORK/selected"></agui-table>
-  <agui-data-toolbar id="work-toolbar" bind="state: AGUI_TEXT/dataToolbar"></agui-data-toolbar>
+  <agui-data-toolbar id="work-toolbar" bind="$: AGUI_TEXT/dataToolbar"></agui-data-toolbar>
 </context-provider>
 <context-provider ctx="OTHER">
   <script type="application/json">{"records":[{"key":"a","name":"Independent record","stage":"todo"}]}</script>

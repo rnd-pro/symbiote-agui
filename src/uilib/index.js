@@ -10,6 +10,7 @@ import { Header } from './layouts/header/header.js';
 import { Toolbar } from './layouts/toolbar/toolbar.js';
 import { Conditional } from './layouts/conditional/conditional.js';
 import { Field } from './controls/field/field.js';
+import { Button } from './controls/button/button.js';
 import { Select } from './controls/select/select.js';
 import { ThemeToggle } from './controls/theme-toggle/theme-toggle.js';
 import { Toggle } from './controls/toggle/toggle.js';
@@ -52,6 +53,7 @@ export function registerUiLibComponents() {
   Header.reg('agui-header');
   Toolbar.reg('agui-toolbar');
   Conditional.reg('agui-conditional');
+  Button.reg('agui-button');
   Field.reg('agui-field');
   Select.reg('agui-select');
   Toggle.reg('agui-toggle');

@@ -4,6 +4,10 @@ import { MAX_ACTION_VALUE_CHARS } from './constants.js';
 
 /** @extends {Symbiote<import('../../../types/components.js').ComponentState>} */
 export class UiComponent extends Symbiote {
+  get actionId() {
+    return this.id || this.getAttribute('ctx')?.trim() || this.localName;
+  }
+
   /**
    * @param {import('../../../types/uilib.js').UiAction['action']} action
    * @param {import('../../../types/uilib.js').UiValue} [value]
@@ -11,7 +15,7 @@ export class UiComponent extends Symbiote {
   announce(action, value) {
     let context = this.getAttribute('ctx')?.trim() || null;
     /** @type {import('../../../types/uilib.js').UiAction} */
-    let data = { widgetId: this.id || context || this.localName, context, action };
+    let data = { widgetId: this.actionId, context, action };
     if (typeof value === 'string' && value.length > MAX_ACTION_VALUE_CHARS) { data.valueLength = value.length; }
     else if (value !== undefined) { data.value = value; }
     return emit('agui:action', data);

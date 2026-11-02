@@ -1,5 +1,6 @@
 import { slotProcessor } from '@symbiotejs/symbiote/core/slotProcessor.js';
 import { UiComponent } from '../../shared/component.js';
+import { attributeValue } from '../../shared/attribute-value.js';
 import { CONDITIONAL_TEMPLATE } from './template.js';
 import styles from './styles.js';
 
@@ -75,9 +76,7 @@ export class Conditional extends UiComponent {
     if (!mode) {
       throw new TypeError('agui-conditional behavior must be "show", "hide", "dom-add", or "dom-remove".');
     }
-    let expected = this.$.is ?? this.getAttribute('is');
-    if (expected === 'true') { expected = true; }
-    else if (expected === 'false') { expected = false; }
+    let expected = attributeValue(this.$.is ?? this.getAttribute('is'));
     let value = this.source && this.has(this.source) ? this.$[this.source] : undefined;
     let matches = !!this.source && (expected === null || expected === undefined ? !!value : value === expected);
     let visible = mode.inverse ? !matches : matches;

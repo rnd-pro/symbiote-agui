@@ -10,6 +10,8 @@ Use `agui-conditional` for declarative boolean/string conditions on native conte
 
 Mark code-entry fields with `data-code` on `agui-field type="textarea"` or a native `textarea` to use the shared monospace font for the editable content.
 
+Use `agui-button` for declarative boolean toggles and boolean/string state assignment, with native button attributes, shared styling, and scoped activation. See the [button contract](./controls/button/README.md).
+
 Use `agui-preloader` for indeterminate loading, with caller-provided `label` or standard accessible-name attributes. Native `hidden` bindings control visibility; text color and size utilities customize appearance. It uses native progress semantics and slows its animation for reduced motion. Loading states and the data toolbar reuse it. The gallery's Bindings tab includes standalone and compact examples; the skill documents its bindings and CSS properties.
 
 Use independent `agui-filter` for typed search/AND filtering and `agui-table` for stable sorting, ID-based selection, and local pagination. The filter publishes matching IDs through `results-to`; bind those to the table's `filteredIds` while retaining the full source rows. User-edit targets publish only edits; computed results also react to incoming data without actions. Table selection reuses `agui-field`; its `indeterminate` property represents a checkbox's mixed indicator independently of its boolean `value`. Widgets share `agui-state` for loading, empty, and error feedback. See the [filter contract](./widgets/filter/README.md) and [table contract](./widgets/table/README.md) for configuration, caller-owned copy, bounded tools, and snapshot constraints. The skill supplies the HTML-only composition example.

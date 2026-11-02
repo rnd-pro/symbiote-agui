@@ -1,0 +1,24 @@
+<context-provider id="button-data" ctx="UI">
+  <script type="application/json">
+    {"showModal":false,"other":false,"currentSection":"overview","busy":false,"title":"Initial title","buttonText":"Toggle modal"}
+  </script>
+  <agui-button id="toggle-modal" toggle="UI/showModal" class="agui-button-primary" style="--forwarded: yes;" data-extra="initial" aria-label="Toggle modal" aria-controls="modal-content" tabindex="0"
+    bind="@disabled: UI/busy; @title: UI/title; ariaExpanded: UI/showModal"><agui-icon name="settings"></agui-icon><span>{{UI/buttonText}}</span></agui-button>
+  <agui-button id="open-modal" set="UI/showModal" value="true">Open modal</agui-button>
+  <agui-button id="close-modal" set="UI/showModal" value="false">Close</agui-button>
+  <agui-button id="settings" set="UI/currentSection" value="settings">Settings</agui-button>
+  <agui-button id="numeric-string" set="UI/currentSection" value="1">Literal value</agui-button>
+  <agui-button id="parent-toggle" toggle="^other">Parent context</agui-button>
+  <agui-button id="shared-toggle" ctx="UI" toggle="*other">Shared context</agui-button>
+  <agui-button id="read-only" readonly set="UI/showModal" value="true">Read only</agui-button>
+  <agui-button id="aria-disabled" aria-disabled="true" set="UI/showModal" value="true">Unavailable</agui-button>
+  <fieldset disabled><agui-button id="fieldset-disabled" set="UI/showModal" value="true">Disabled fieldset</agui-button></fieldset>
+  <agui-button id="invalid-toggle" toggle="UI/currentSection">Invalid boolean</agui-button>
+  <agui-button id="unknown-target" set="UI/missing" value="true">Unknown target</agui-button>
+  <agui-button id="ambiguous" toggle="UI/showModal" set="UI/showModal" value="true">Ambiguous</agui-button>
+  <agui-conditional id="modal-content" when="UI/showModal" is="true">Modal content</agui-conditional>
+  <form id="native-form"><input name="record" value="sample"></form>
+  <agui-button id="submit" type="submit" form="native-form" name="action" value="save" formnovalidate>Submit</agui-button>
+  <agui-button id="native-popover" popovertarget="button-popover">Popover</agui-button>
+  <div id="button-popover" popover>Native popover content</div>
+</context-provider>

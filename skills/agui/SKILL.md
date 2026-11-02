@@ -43,6 +43,7 @@ The default JSDA page bundle includes and registers every available library comp
 - `agui-viewport`: independently scrolling central content. Give it an `aria-label` or `aria-labelledby`; it defaults to `role="main"` and `tabindex="0"`, preserving explicit overrides. Place existing headers, dashboards, and panels inside it. A floating header within the viewport supplies focus spacing to that scroll region; an app-level header occupies its own row and needs no `floating` flag.
 - `agui-tabs`: authored tab layout with string active `value`, optional `pub-to`, caller-owned `label` for the tablist, and `orientation="horizontal"` (default) or `vertical`. Use direct `agui-tab` children with unique nonempty string `value` keys and caller-owned `label` text; labels, keys, and disabled state can use native property or `$` merge bindings. A disabled tab is unavailable for selection. Group `disabled`/`readonly` prevents switching without changing child fields' own edit policies. Panels stay mounted while hidden, preserving drafts and nested tab state. A missing, unknown, or disabled requested value displays the first enabled tab without publishing a correction; no enabled tabs means no visible panel and an effective value of `""`.
 - `agui-conditional`: `when` names a native context key; `is="true|false"` compares a boolean, other `is` values compare exact strings, and omitted `is` checks truthiness. `behavior` sets the matching state: `show` (default) or `hide` preserves mounted content; `dom-add` or `dom-remove` mounts/removes Itemize branches. A nonmatching condition applies the opposite state. Use a child `<template>` for inert contents and keep durable values in an outer provider. No expressions or scripts are needed. See the conditional example below.
+- `agui-button`: native button with `toggle="APP/flag"` for an existing boolean, or `set="APP/key" value="..."` for boolean/string assignment. `"true"`/`"false"` become booleans; other values stay literal strings. Use either action, or neither for native button behavior. Additional native attributes, styles, IDs, and authored content transfer to the inner button; framework/action attributes stay on the wrapper. Disabled/read-only guards and scoped `activate` apply to user and tool activation. Prefer this over custom handlers for these state actions.
 - `agui-dialog`: native modal with preserved authored contents and boolean `value` for visibility. Supply `label` and `close-label`; optional `open-label` adds a built-in opener. Native property bindings use `$.label`, `$.closeLabel`, and `$.openLabel`. The `open` attribute supplies an initially open default when no value is bound. Pair the value binding with `pub-to` for shared visibility. Closing never saves or discards fields; child controls keep their own edit policies. See the dialog/popup example below.
 - `agui-filter`: reusable search and typed AND filters over provider-bound `rows` and `fields`, independent of any view. `value` is the filter dictionary; pair it with `pub-to`, and optionally publish `query` through `query-pub-to`. `results-to` publishes matching IDs into an existing provider array, including initialization and incoming updates, without user-action notifications. Supply caller-owned `texts`, `label`, optional `locale`, and `id-key` (default `id`).
 - `agui-table`: provider-bound `rows`, typed `columns`, and caller-owned `texts`, with sorting, ID selection, and local pagination. Optional `filteredIds` consumes a filter's matching IDs; `null` shows all rows and `[]` shows none. `value` is always a string ID array; `selection="none|single|multiple"` defaults to none. Pair selection with `pub-to` and sort with `sort-pub-to`. Supply `label`, optional `locale`, and `page-size` (default 20, maximum 100). Every source row needs a unique nonempty string ID. Disabled/read-only blocks changes; `loading` and `error` show caller-owned states. The table does not edit records.
@@ -148,6 +149,23 @@ Update common application data through CLI `update`, for example `{ "selector": 
 ```
 
 Sidebar clicks, keyboard input, and scoped `set_value` tools publish visibility changes; incoming assignments and repeated values emit no changes. Sidebar tools also include `read_value` and `toggle`; discover their exact names through CLI `tools`. Keep visibility transient by default. For record-editing workspaces, declare the record keys in `persist` and place the data toolbar directly in the app as described above.
+
+### Button example
+
+```html
+<context-provider ctx="UI">
+  <script type="application/json">{"showModal":false,"currentSection":"overview"}</script>
+  <agui-button toggle="UI/showModal">Toggle modal</agui-button>
+  <agui-button set="UI/showModal" value="true">Open modal</agui-button>
+  <agui-button set="UI/showModal" value="false">Close</agui-button>
+  <agui-button set="UI/currentSection" value="settings">Settings</agui-button>
+  <agui-dialog label="Settings" close-label="Close" pub-to="UI/showModal" bind="$.value: UI/showModal">
+    <p>Application settings</p>
+  </agui-dialog>
+</context-provider>
+```
+
+Use normal native attributes for styling, accessibility, forms, or popover invokers. The default native type is `button`; supply `type="submit"` when needed. For example, `bind="@disabled: UI/busy"` forwards to the native button. IDs belong to the native button; discover the owning `agui-button`'s `activate` tool by that ID in its component description. Incoming bindings do not activate actions, and repeated `set` values do not republish. See the [button contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/controls/button/README.md).
 
 ### Conditional content example
 

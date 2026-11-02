@@ -1,4 +1,5 @@
 import { FIELD_TEMPLATE, TEXTAREA_TEMPLATE } from './controls/field/template.js';
+import { BUTTON_TEMPLATE } from './controls/button/template.js';
 import { SELECT_TEMPLATE } from './controls/select/template.js';
 import { TOGGLE_TEMPLATE } from './controls/toggle/template.js';
 import { THEME_TOGGLE_TEMPLATE } from './controls/theme-toggle/template.js';
@@ -23,6 +24,7 @@ import {
 
 export let UILIB_TEMPLATES = Object.freeze({
   field: FIELD_TEMPLATE,
+  button: BUTTON_TEMPLATE,
   textarea: TEXTAREA_TEMPLATE,
   select: SELECT_TEMPLATE,
   toggle: TOGGLE_TEMPLATE,

@@ -161,7 +161,7 @@
         <h1 class="flex items-center gap-2"><agui-icon name="dashboard"></agui-icon>UI library</h1>
         <agui-toolbar aria-label="Gallery controls">
           <agui-theme-toggle id="theme-toggle" ctx="APP" aria-label="Dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
-          <button type="button" class="agui-button-icon" aria-label="About the gallery" title="About the gallery" popovertarget="gallery-about"><agui-icon name="info"></agui-icon></button>
+          <agui-button class="agui-button-icon" aria-label="About the gallery" title="About the gallery" popovertarget="gallery-about"><agui-icon name="info"></agui-icon></agui-button>
         </agui-toolbar>
       </agui-header>
       <div class="min-w-0 flex-1 p-4 sm:p-6">
@@ -191,11 +191,11 @@
                 <agui-field label="Disabled value" value="Unavailable" disabled name="disabled_value"></agui-field>
                 <agui-field label="External validation error" value="Existing contact" error="This contact already exists." name="duplicate"></agui-field>
                 <div class="flex flex-wrap gap-3" aria-label="Button style samples">
-                  <button class="agui-button-primary" type="button">Primary</button>
-                  <button type="button">Default</button>
-                  <button class="agui-button-ghost" type="button">Ghost</button>
-                  <button class="agui-button-danger" type="button">Danger</button>
-                  <button type="button" disabled>Disabled</button>
+                  <agui-button class="agui-button-primary" set="APP/sharedStatus" value="new">New status</agui-button>
+                  <agui-button toggle="APP/notifications">Toggle notifications</agui-button>
+                  <agui-button class="agui-button-ghost" set="APP/notifications" value="false">Disable notifications</agui-button>
+                  <agui-button class="agui-button-danger" set="APP/sharedStatus" value="archived">Archive</agui-button>
+                  <agui-button set="APP/sharedStatus" value="new" disabled>Disabled</agui-button>
                 </div>
                 <agui-panel class="grid gap-2">
                   <h3 class="text-base">Nested panel</h3>

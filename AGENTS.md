@@ -9,7 +9,7 @@ Read [README.md](./README.md) for the project purpose and main workflows.
 - Split large tasks into small, reviewable stages. Maintain the task's authoritative plan as a Markdown file in `planning/`, updating it in place. Do not create separate stage completion reports or duplicate planning documents.
 - Do not add project dependencies without explicit user confirmation. Reuse existing dependencies and platform capabilities.
 - Leave Git mutations, including staging, commits, merges, and pushes, to the user. Read-only Git inspection is allowed; the user performs the final Git review.
-- At task completion, ask for review and suggest a commit message for any changes made.
+- At task completion, ask for review and suggest a commit message for any changes made. Use Conventional Commits 1.0.0 format.
 
 ## Code conventions
 

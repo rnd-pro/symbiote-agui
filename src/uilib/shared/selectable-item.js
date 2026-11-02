@@ -1,4 +1,16 @@
 /**
+ * @param {MouseEvent} event
+ * @param {HTMLElement} element
+ */
+export function isItemSelectionClick(event, element) {
+  let target = event.target;
+  if (event.defaultPrevented || !(target instanceof Element)
+    || target.closest('a, button, input, select, textarea, label, summary, [contenteditable], [role="button"], [role="link"]')) { return false; }
+  let selection = window.getSelection();
+  return !selection || selection.isCollapsed || !selection.containsNode(element, true);
+}
+
+/**
  * Bind whole-item selection without intercepting embedded controls or text selection.
  *
  * @param {HTMLElement} element
@@ -7,11 +19,7 @@
  */
 export function bindItemSelection(element, enabled, select) {
   let click = (/** @type {MouseEvent} */ event) => {
-    let target = event.target;
-    if (event.defaultPrevented || !enabled() || !(target instanceof Element)
-      || target.closest('a, button, input, select, textarea, label, summary, [contenteditable], [role="button"], [role="link"]')) { return; }
-    let selection = window.getSelection();
-    if (selection && !selection.isCollapsed && selection.containsNode(element, true)) { return; }
+    if (!enabled() || !isItemSelectionClick(event, element)) { return; }
     select();
   };
   let keydown = (/** @type {KeyboardEvent} */ event) => {

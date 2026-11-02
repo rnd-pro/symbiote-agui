@@ -3,7 +3,6 @@ export let LIST_ATTRIBUTES = Object.freeze({
   idKey: 'id-key',
   selection: 'selection',
   itemTemplate: 'item-template',
-  itemsClass: 'items-class',
   disabled: 'disabled',
   readonly: 'readonly',
   loading: 'loading',

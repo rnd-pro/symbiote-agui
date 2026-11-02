@@ -88,7 +88,6 @@ export let TABLE_TEXTS = {
 
 export let CARD_TEXTS = {
   ...TABLE_TEXTS,
-  selectItem: TABLE_TEXTS.selectRow,
   noSessions: 'No sessions saved or running in this scope.',
 };
 

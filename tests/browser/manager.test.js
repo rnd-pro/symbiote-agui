@@ -151,7 +151,7 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   assert.ok(await page.$('#manager-filter input[type="search"]'));
   assert.ok(await page.$('#manager-filter [data-field="status"] select'));
   await page.select('#manager-filter [data-field="status"] select', 'running');
-  await page.waitForFunction(() => document.querySelectorAll('#manager-cards [data-item-id]').length === 0);
+  await page.waitForFunction(() => document.querySelectorAll('#manager-cards [data-session]').length === 0);
   await page.select('#manager-filter [data-field="status"] select', '');
   await page.waitForSelector('[data-session="desk"]');
   assert.equal(await page.$eval('#manager-theme button', (element) => element.getAttribute('aria-pressed') === 'true'), false);
@@ -286,7 +286,7 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
     visible: true,
   });
   await page.type('input[type="search"]', 'not-present');
-  await page.waitForFunction(() => document.querySelectorAll('#manager-cards [data-item-id]').length === 0);
+  await page.waitForFunction(() => document.querySelectorAll('#manager-cards [data-session]').length === 0);
   await page.$eval('input[type="search"]', (element) => { element.value = ''; element.dispatchEvent(new Event('input', { bubbles: true })); });
   await page.waitForSelector('[data-session="desk"]');
   await page.select('agui-select[name="operation"] select', 'stop');
@@ -407,7 +407,7 @@ test('cards and selectable table rows share session selection and inspector acti
   await page.click('#session-views [role="tab"][value="cards"]');
   await page.click('.sessions [data-session="alpha"] summary');
   assert.equal(await page.$eval('#session-inspector', (element) => Reflect.get(element, 'hidden')), true, 'Opening a description does not select the card.');
-  await page.focus('#manager-cards [data-item-id="alpha"]');
+  await page.focus('#manager-cards [data-session="alpha"] h3 button');
   await page.keyboard.press('Enter');
   await page.waitForSelector('#session-inspector [data-session="alpha"]');
   await page.locator('#session-inspector ::-p-aria([name="Description"][role="button"])').click();
@@ -428,7 +428,7 @@ test('cards and selectable table rows share session selection and inspector acti
   assert.equal(await fallback.$('#manager-description x-manager-description-probe, #manager-description script'), null);
   await fallback.close();
   await page.bringToFront();
-  assert.equal(await page.$eval('#manager-cards [data-item-id="alpha"] > agui-field input', (element) => element.checked), true);
+  assert.equal(await page.$eval('#manager-cards [data-session="alpha"] h3 button', (element) => element.getAttribute('aria-pressed') === 'true'), true);
   await page.click('.sessions [data-session="beta"] code');
   await page.waitForSelector('#session-inspector [data-session="beta"]');
   await page.click('.sessions [data-session="alpha"] h3');
@@ -445,8 +445,8 @@ test('cards and selectable table rows share session selection and inspector acti
   assert.deepEqual(await page.$eval('agui-session-manager', (element) => Reflect.get(element, '$').selection), [
     'beta',
   ]);
-  assert.equal(await page.$eval('#manager-cards [data-item-id="alpha"] > agui-field input', (element) => element.checked), false);
-  assert.equal(await page.$eval('#manager-cards [data-item-id="beta"] > agui-field input', (element) => element.checked), true);
+  assert.equal(await page.$eval('#manager-cards [data-session="alpha"] h3 button', (element) => element.getAttribute('aria-pressed') === 'true'), false);
+  assert.equal(await page.$eval('#manager-cards [data-session="beta"] h3 button', (element) => element.getAttribute('aria-pressed') === 'true'), true);
   await page.locator('#session-inspector ::-p-aria([name="Start"][role="button"])').click();
   await notice(page, 'beta: start completed');
   assert.equal((await cli('status', 'alpha')).active, false);

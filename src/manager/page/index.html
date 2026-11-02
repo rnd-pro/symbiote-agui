@@ -73,13 +73,13 @@
                 </div>
               </agui-tab>
               <agui-tab value="cards" label="Cards">
-                <agui-list id="manager-cards" class="sessions" label="Session cards" selection="single" items-class="manager-cards" pub-to="MANAGER/selection"
+                <agui-list id="manager-cards" class="sessions manager-cards" label="Session cards" selection="single" pub-to="MANAGER/selection"
                   bind="$.rows: MANAGER/cards; $.filteredIds: MANAGER/matchingIds; $.value: MANAGER/selection; $.texts: MANAGER/cardTexts; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError">
                   <template>
-                    <agui-panel role="article" class="grid gap-3" bind="@data-session: ^sessionId; @data-state: ^statusKind">
+                    <agui-panel role="listitem" class="grid gap-3 data-[selected]:outline-2 data-[selected]:outline-agui-accent" bind="@data-session: ^sessionId; @data-state: ^statusKind; @data-selected: ^_selected">
                       <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0 break-words [overflow-wrap:anywhere]">
-                          <h3 class="font-semibold">{{^title}}</h3>
+                          <h3><agui-button class="agui-button-ghost" bind="onclick: ^selectItem; ariaPressed: ^_selected; @disabled: ^_selectionDisabled">{{^title}}</agui-button></h3>
                           <code class="text-xs text-agui-muted">/{{^sessionId}}</code>
                         </div>
                         <span class="session-status agui-chip">{{^status}}</span>

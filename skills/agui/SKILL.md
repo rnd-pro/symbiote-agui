@@ -47,7 +47,7 @@ The default JSDA page bundle includes and registers every available library comp
 - `agui-dialog`: native modal with preserved authored contents and boolean `value` for visibility. Supply `label` and `close-label`; optional `open-label` adds a built-in opener. Native property bindings use `$.label`, `$.closeLabel`, and `$.openLabel`. The `open` attribute supplies an initially open default when no value is bound. Pair the value binding with `pub-to` for shared visibility. Closing never saves or discards fields; child controls keep their own edit policies. See the dialog/popup example below.
 - `agui-filter`: reusable search and typed AND filters over provider-bound `rows` and `fields`, independent of any view. `value` is the filter dictionary; pair it with `pub-to`, and optionally publish `query` through `query-pub-to`. `results-to` publishes matching IDs into an existing provider array, including initialization and incoming updates, without user-action notifications. Supply caller-owned `texts`, `label`, optional `locale`, and `id-key` (default `id`).
 - `agui-table`: provider-bound `rows`, typed `columns`, and caller-owned `texts`, with sorting, ID selection, and local pagination. Optional `filteredIds` consumes a filter's matching IDs; `null` shows all rows and `[]` shows none. `value` is always a string ID array; `selection="none|single|multiple"` defaults to none. Pair selection with `pub-to` and sort with `sort-pub-to`. Supply `label`, optional `locale`, and `page-size` (default 20, maximum 100). Every source row needs a unique nonempty string ID. Disabled/read-only blocks changes; `loading` and `error` show caller-owned states. The table does not edit records.
-- `agui-list`: provider-bound `rows` rendered through native Itemize with an authored child `<template>` or reusable `item-template="#template-id"`. Shares the table's `id-key`, `filteredIds`, and `selection="none|single|multiple"` contracts; pair ID-array `value` with `pub-to`. Supply `label` and caller-owned `texts` (`selectItem`, `empty`, `loading`, `invalidRows`, `invalidState`, `unavailable`). Use `items-class` for layout utilities. Checkbox/radio controls and whole-item click/keyboard selection preserve embedded interactions. No item-generation scripts are needed.
+- `agui-list`: provider-bound `rows` rendered by default Itemize with an authored `<template>` or initial `item-template="#template-id"`. No slots, item wrappers, predefined controls, item styling, or keyboard targets are added. Shares `id-key`, `filteredIds`, and `selection="none|single|multiple"` contracts with the table; pair ID-array `value` with `pub-to`. Item state adds `_selected` and `_selectionDisabled`. Noninteractive clicks select through container delegation; optional template controls bind `onclick`/`onchange` to `^selectItem`. Supply `label` and caller-owned state/error `texts`. Apply layout classes to `agui-list`; its Itemize container uses `display: contents`. Host `data-state`, `data-message`, and `aria-busy` expose status; nonempty messages use `::before`. Keep rich feedback and live announcements in application markup.
 - `agui-kanban`: status editor over a provider-bound records array in `value`, with `columns: [{ value, label, disabled?, tone? }]`. Pair `pub-to` with the same provider binding; cards move between columns through native drag-and-drop or Alt+Left/Right while focused. Configure `id-key`, `status-key`, `title-key`, and optional `description-key`. Unknown statuses remain in a caller-labeled unassigned group. Provide `label` and caller-owned `texts`; disabled/read-only, loading, and errors block edits. Declare records in `persist` and use the data toolbar for Save/Cancel.
 - `agui-chart`: prepared `rows` and declarative `series` for `type="line|bar|donut"`, rendered as SVG. Supply `id-key`, `x-key`, `x-label`, `label`, optional `description`, and caller-owned `texts`. Optional `value` is a selected ID array with `selection="none|single|multiple"` and `pub-to`. A built-in data disclosure supports keyboard reading/selection. The heavy runtime loads automatically on element initialization; do not add imports or engine configuration to sessions.
 - `agui-map`: prepared location `rows`, selected IDs in `value`, and `view: { center: [latitude, longitude], zoom }`. Use `pub-to` for selection and `view-pub-to` for viewport publication. Supply caller-owned labels/texts and optional raster `tiles` with visible attribution. Leaflet and CSS load automatically on initialization; a coordinate table provides keyboard selection. Viewers receive the user's inert map viewport without Leaflet.
@@ -262,21 +262,22 @@ Discover tools by owner and authored ID in component context. `agui-filter` prov
 
 ### List example
 
-Inside the preceding provider, this list shares the table's records, filter, and selection. Add `selectItem` to the caller's `texts` dictionary. Use `selection="single"` for one selected ID; both modes publish arrays.
+Inside the preceding provider, this list shares the table's records, filter, and selection. Its button is optional template content. Use `selection="single"` for one selected ID; both modes publish arrays.
 
 ```html
-<agui-list id="lead-cards" label="Lead cards" selection="multiple" pub-to="LEADS/selected" items-class="md:grid-cols-2"
+<agui-list id="lead-cards" label="Lead cards" selection="multiple" pub-to="LEADS/selected" class="grid gap-4 md:grid-cols-2"
   bind="$.rows: LEADS/rows; $.value: LEADS/selected; $.filteredIds: LEADS/matchingIds; $.texts: LEADS/texts">
   <template>
-    <agui-panel class="grid gap-2">
+    <agui-panel role="listitem" class="grid gap-2">
       <h3 bind="textContent: ^name"></h3>
       <p bind="textContent: ^status"></p>
+      <button type="button" bind="onclick: ^selectItem; ariaPressed: ^_selected; disabled: ^_selectionDisabled">Select</button>
     </agui-panel>
   </template>
 </agui-list>
 ```
 
-Each template has a record-owned context. Plain elements bind directly to `name`; nested components such as `agui-panel` use `^name` to reach it. Record fields cannot overwrite internal selection state. Filtering preserves selected IDs outside the result; incoming assignments do not publish. Discover `set_selection` by owner `agui-list` and authored ID; its `ids` input follows the same guards as user selection. See the [list contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/widgets/list/README.md).
+Each native Itemize owner receives flat record fields plus reserved `_selected` and `_selectionDisabled`. Plain elements bind directly to `name`; nested components use `^name`. Author any controls, labels, roles, focus targets, and selected appearance yourself. Native buttons bound to `^selectItem` provide keyboard activation; checkbox/radio `onchange` bindings use their checked state. Filtering preserves IDs outside the result, and incoming assignments do not publish. Discover `set_selection` by owner `agui-list` and authored ID. See the [list contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/widgets/list/README.md).
 
 ### Kanban example
 

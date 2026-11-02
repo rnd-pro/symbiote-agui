@@ -4,7 +4,7 @@ The library owns the generic RAT component, context provider, and their initiali
 
 Group components by purpose: `layouts/` for dashboard, panel, header, and toolbar; `controls/` for field, select, toggle, and theme toggle; `feedback/` for state presentation; `content/` for icons and other display primitives; `widgets/` for data-driven views. Keep each component's logic and optional template in its own folder inside its category. Shared base classes, control markup fragments, and common constants belong in `shared/`.
 
-Call `registerUiLibComponents()` from `index.js` before the page connects. It also registers the generic RAT renderer used by list item templates. Register the page's context provider first. JSDA bundles this entry into the normal page client, with one Symbiote instance and no per-session imports.
+Call `registerUiLibComponents()` from `index.js` before the page connects. Register the page's context provider first. JSDA bundles this entry into the normal page client, with one Symbiote instance and no per-session imports.
 
 Use `agui-conditional` for declarative boolean/string conditions on native context keys. `behavior` sets the matching state: `show` (default), `hide`, `dom-add`, or `dom-remove`; nonmatches apply the opposite state. Show/hide preserve mounted content, while DOM behaviors use Itemize. See the [conditional contract](./layouts/conditional/README.md).
 

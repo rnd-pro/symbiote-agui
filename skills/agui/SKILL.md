@@ -128,6 +128,7 @@ Update common application data through CLI `update`, for example `{ "selector": 
 - Use the left/start sidebar for primary common actions, navigation, and controls or filters for the viewport's main items. Keep those controls in view while their dependent content scrolls.
 - Use the right/end sidebar for selected-item details and controls when needed.
 - For lists of cards or other repeated items, set an explicit `gap-*` on their grid or flex container, such as `class="grid gap-4"`. Check the list container for spacing between items rather than relying on margins inside each item.
+- In item blocks, align buttons and all other controls consistently to the block's left or right edge, with a clear gap from adjacent text. Keep placement consistent across repeated items so controls form stable vertical columns regardless of text length. Place checkboxes and radio buttons before (to the left of) their text labels by default; alternatively, keep labels on the left and align controls to the right edge with space between them. Preserve accessible names and label associations.
 
 ### App layout example
 

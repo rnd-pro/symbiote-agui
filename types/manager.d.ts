@@ -30,6 +30,8 @@ export interface ManagerRequest {
   command?: import('./feedback.js').FeedbackCommand;
   pageId?: string;
   viewer?: boolean;
+  connectorChange?: unknown;
+  connectorInstanceId?: string | null;
 }
 
 export interface ManagerScope {
@@ -74,6 +76,7 @@ export interface ManagerResult {
   transfer?: import('./transfer.js').TransferResult;
   transfers?: import('./transfer.js').TransferResult[];
   feedbackSettings?: import('./feedback.js').FeedbackSettings;
+  connectorSettings?: import('./connectors.js').ManagerConnectorSettings;
   connections?: import('./connections.js').GlobalConnections;
   openUrl?: string;
   error?: CommandFailure['error'];

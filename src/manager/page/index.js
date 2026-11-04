@@ -15,6 +15,7 @@ import { TRANSFER_STATE, SessionTransfers } from './transfers.js';
 import { FEEDBACK_SETTINGS_STATE, SessionFeedbackSettings } from './feedback.js';
 import { CONNECTIONS_STATE, LiveConnections } from './connections.js';
 import { busyAction } from './busy-action.js';
+import { CONNECTOR_SETTINGS_STATE, SessionConnectorSettings } from './connectors.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
@@ -25,6 +26,14 @@ export class SessionManager extends ContextProvider {
     ...TRANSFER_STATE,
     ...FEEDBACK_SETTINGS_STATE,
     ...CONNECTIONS_STATE,
+    ...CONNECTOR_SETTINGS_STATE,
+    refreshConnectors: busyAction(() => this.connectorSettings?.run()),
+    attachConnector: busyAction((event) => this.connectorSettings?.submit('attach', event)),
+    reviewConnector: busyAction((event) => this.connectorSettings?.submit('review', event)),
+    updateConnector: busyAction((event) => this.connectorSettings?.submit('update', event)),
+    grantConnector: busyAction((event) => this.connectorSettings?.submit('grant', event)),
+    revokeConnector: busyAction((event) => this.connectorSettings?.submit('revoke', event)),
+    detachConnector: busyAction((event) => this.connectorSettings?.submit('detach', event)),
     refreshConnections: busyAction(() => this.liveConnections?.refresh()),
     connection: 'Connecting...',
     connectionTone: 'info',
@@ -95,6 +104,8 @@ export class SessionManager extends ContextProvider {
   disposed = false;
   /** @type {LiveConnections | undefined} */
   liveConnections;
+  /** @type {SessionConnectorSettings | undefined} */
+  connectorSettings;
   viewEpoch = 0;
   /** @type {ProjectNavigation | undefined} */
   projects;
@@ -112,6 +123,8 @@ export class SessionManager extends ContextProvider {
   renderCallback() {
     this.liveConnections = new LiveConnections(this);
     this.feedbackSettings = new SessionFeedbackSettings(this);
+    this.connectorSettings = new SessionConnectorSettings(this);
+    this.sub('connectorAction', () => this.connectorSettings?.clearReview(), false);
     this.projects = new ProjectNavigation(this);
     this.explorer = new ProjectExplorer(this);
     this.transfers = new SessionTransfers(this);
@@ -201,6 +214,7 @@ export class SessionManager extends ContextProvider {
     this.explorer?.render();
     this.transfers?.render();
     this.feedbackSettings?.render();
+    this.connectorSettings?.render();
     this.liveConnections?.render();
     this.$.counts = `${sessions.length} total / ${sessions.filter((row) => row.active === true).length} running / ${sessions.filter((row) => row.active === false).length} stopped / ${sessions.filter((row) => row.active === null).length} unknown`;
     let states = Object.fromEntries(sessions.map((row) => [
@@ -251,6 +265,7 @@ export class SessionManager extends ContextProvider {
       discoveryError: '',
       descriptionOpen: false,
       feedbackOpen: false,
+      connectorOpen: false,
       transferOpen: false,
       transferHistoryOpen: false,
     });
@@ -258,6 +273,7 @@ export class SessionManager extends ContextProvider {
       this.feedbackSettings.settings = undefined;
       this.feedbackSettings.sessionId = '';
     }
+    this.connectorSettings?.reset();
     if (this.transfers) {
       this.transfers.history = [];
       this.transfers.result = undefined;
@@ -308,6 +324,10 @@ export class SessionManager extends ContextProvider {
     if (this.busy || !this.connection?.ready) { return; }
     if (operation === 'feedback settings') {
       await this.feedbackSettings?.open(sessionId || '');
+      return;
+    }
+    if (operation === 'connector status') {
+      await this.connectorSettings?.open(sessionId || '');
       return;
     }
     let transferKinds = /** @type {const} */ ({

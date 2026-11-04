@@ -1,0 +1,39 @@
+<context-provider ctx="RECORDS">
+  <script type="application/json">
+    {"model":{"records":[],"draft":{"id":"record-1","label":""}},"columns":[{"key":"id","type":"text","label":"ID"},{"key":"label","type":"text","label":"Label"}],"tableTexts":{"empty":"Load records to begin.","invalidColumns":"Records are unavailable."}}
+  </script>
+  <agui-app>
+    <agui-viewport>
+      <agui-header floating><h1>Local records</h1></agui-header>
+      <agui-dashboard>
+        <agui-connector action="read" pub-to="RECORDS/model" class="grid gap-4">
+          <agui-toolbar aria-label="Load records">
+            <button type="button" bind="onclick: ^run; disabled: ^unavailable">Load records</button>
+            <agui-preloader label="Loading records" bind="hidden: !^pending"></agui-preloader>
+          </agui-toolbar>
+          <p role="status">{{outcome}}</p><p role="alert">{{error}}</p>
+          <fieldset class="grid gap-4" bind="disabled: pending">
+            <context-provider ctx="MODEL" pub-to="RECORDS/model" bind="state: RECORDS/model">
+              <agui-table label="Records" selection="none" bind="$.rows: MODEL/records; $.columns: RECORDS/columns; $.texts: RECORDS/tableTexts"></agui-table>
+              <agui-panel class="grid gap-4">
+                <h2>Edit first record</h2>
+                <context-provider ctx="DRAFT" pub-to="MODEL/draft" bind="state: MODEL/draft">
+                  <agui-field label="Label" name="recordLabel" maxlength="120" pub-to="DRAFT/label" bind="$.value: DRAFT/label"></agui-field>
+                </context-provider>
+                <agui-connector action="save" pub-to="RECORDS/model" bind="$.input: MODEL/draft">
+                  <agui-toolbar aria-label="Save record">
+                    <button type="button" bind="onclick: ^run; disabled: ^unavailable">Save record</button>
+                    <button type="button" bind="onclick: ^read_receipt; disabled: ^receiptUnavailable">Check outcome</button>
+                    <agui-preloader label="Saving record" bind="hidden: !^pending"></agui-preloader>
+                  </agui-toolbar>
+                  <p role="status">{{outcome}}</p><p role="alert">{{error}}</p>
+                  <agui-conditional when="^stale" is="true"><p>The draft changed during this request. Its result has not replaced your edits.</p></agui-conditional>
+                </agui-connector>
+              </agui-panel>
+            </context-provider>
+          </fieldset>
+        </agui-connector>
+      </agui-dashboard>
+    </agui-viewport>
+  </agui-app>
+</context-provider>

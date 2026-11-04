@@ -57,13 +57,19 @@ function changeFor(request) {
 
 /**
  * @param {import('../../types/connectors.js').ConnectorCliRequest} request
+ * @param {{ change?: import('../../types/connectors.js').ConnectorChange; expectedInstanceId?: string | null }} [options]
  * @returns {Promise<import('../../types/session.js').SessionStatus>}
  */
-export async function runConnectorCommand(request) {
+export async function runConnectorCommand(request, options = {}) {
   let command = request.command;
-  let change = command === 'call' || command === 'receipt' ? undefined : changeFor(request);
+  let change = options.change ? validateConnectorChange(options.change)
+    : command === 'call' || command === 'receipt' ? undefined : changeFor(request);
   let selected = await withSessionLock(request.sessionId, async () => {
     let record = await readSession(request.sessionId);
+    let instanceId = record && isProcessAlive(record.pid) ? record.instanceId : null;
+    if (options.expectedInstanceId !== undefined && options.expectedInstanceId !== instanceId) {
+      throw new CommandError('The session lifecycle changed. Refresh connector settings before editing access.');
+    }
     if (record && isProcessAlive(record.pid)) { return {
       record,
     }; }

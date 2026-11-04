@@ -49,6 +49,9 @@ export let SESSION_CONTROLS_TEMPLATE = html`
         <button type="button" aria-label="Copy to project" title="Copy to project" bind="onclick: ^copy; disabled: ^copyDisabled"><agui-icon name="content_copy"></agui-icon>Copy</button>
         <button type="button" aria-label="Move to project" title="Save or export browser drafts and stop the session before moving it." bind="onclick: ^move; disabled: ^moveDisabled"><agui-icon name="arrow_forward"></agui-icon>Move</button>
       </agui-toolbar>
+      <agui-toolbar aria-label="Local connector backends" class="grid grid-cols-1">
+        <button type="button" aria-label="Connector backends" aria-haspopup="dialog" bind="onclick: ^connectors; disabled: ^connectorsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="settings"></agui-icon>Connectors</button>
+      </agui-toolbar>
     </section>
     <agui-toolbar aria-label="Clear session" class="grid grid-cols-1 border-t border-agui-divider pt-3">
       <button type="button" class="agui-button-danger" bind="onclick: ^clear; disabled: ^clearDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="delete"></agui-icon>Clear</button>

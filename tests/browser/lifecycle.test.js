@@ -183,12 +183,16 @@ test('inline modules, state commands, events, reload, and reconnect work in ordi
   assert.match(await page.$eval('button', (element) => element.textContent || ''), /Count: 10/);
   await sendStdin('update', 'interactive', '{"selector":"#counter","values":{"newField":42},"method":"add$"}');
   assert.equal(await page.$eval('#counter', (element) => Reflect.get(element, '$').newField), 42);
+  await page.$eval('#counter', (element) => Reflect.set(window, 'counterBeforeReconnect', element));
   await assert.rejects(sendStdin('update', 'interactive', '{"selector":"#missing","values":{}}'), (error) => hasCliError(error, 'UPDATE_FAILED'));
   await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pagehide')));
   await waitForSession('interactive', 'waiting');
   await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow')));
-  await page.waitForFunction(() => document.querySelector('button')?.textContent === 'Count: 0');
   await waitForSession('interactive', 'ready');
+  assert.equal(await page.$eval('button', (element) => element.textContent), 'Count: 10');
+  assert.equal(await page.$eval('#counter', (element) => element === Reflect.get(window, 'counterBeforeReconnect')), true);
+  assert.equal(await page.$eval('#counter', (element) => Reflect.get(element, '$').newField), 42);
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'moduleDisposed')), undefined);
   await page.goto('about:blank');
   await waitForSession('interactive', 'waiting');
   await insertStdin('interactive', '<script type="module" data-agui>throw new Error("Broken module");</script>');

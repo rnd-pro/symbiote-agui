@@ -30,6 +30,7 @@ import { runManagerTransfer } from './transfer.js';
 import { CONNECTION_OPERATIONS } from './connection-operations.js';
 import { validateConnectionRequest, listManagerConnections, runManagerConnection } from './connections.js';
 import { connectionProjectRoot } from '../sessions/connection-discovery.js';
+import { MANAGER_CONNECTOR_OPERATIONS, validateManagerConnectors, runManagerConnectors } from './connectors.js';
 
 /** @param {unknown} error */
 function failure(error) {
@@ -65,6 +66,8 @@ export function validateManagerRequest(input) {
     'command',
     'pageId',
     'viewer',
+    'connectorChange',
+    'connectorInstanceId',
   ].includes(key))
     || typeof value.id !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(value.id)
     || typeof value.operation !== 'string' || !Object.hasOwn(MANAGER_OPERATIONS, value.operation)
@@ -83,6 +86,7 @@ export function validateManagerRequest(input) {
 
 /** @param {import('../../types/manager.js').ManagerRequest} request */
 function validateScopedRequest(request) {
+  if (validateManagerConnectors(request)) { return request; }
   if (validateConnectionRequest(request)) { return request; }
   let operation = MANAGER_OPERATIONS[request.operation];
   if (validateManagerFeedback(request)) { return request; }
@@ -207,7 +211,7 @@ export class ManagerOperations {
   /** @param {import('../../types/manager.js').ManagerRequest} request */
   async dispatchScoped(request) {
     try {
-      if (['snapshot', 'describe', 'projects', 'transfer history', 'feedback settings', 'connections'].includes(request.operation) || Object.hasOwn(EXPLORER_OPERATIONS, request.operation)) { return await this.execute(request); }
+      if (['snapshot', 'describe', 'projects', 'transfer history', 'feedback settings', 'connections', 'connector status'].includes(request.operation) || Object.hasOwn(EXPLORER_OPERATIONS, request.operation)) { return await this.execute(request); }
       let fingerprint = JSON.stringify([
         request.operation,
         request.sessionId,
@@ -225,6 +229,8 @@ export class ManagerOperations {
         request.command,
         request.pageId,
         request.viewer,
+        request.connectorChange,
+        request.connectorInstanceId,
       ]);
       let requestKey = Object.hasOwn(CONNECTION_OPERATIONS, request.operation)
         ? `${this.managerRoot}\0global\0${request.id}` : this.sessionKey(request.id);
@@ -246,6 +252,9 @@ export class ManagerOperations {
 
   /** @param {import('../../types/manager.js').ManagerRequest} request */
   async execute(request) {
+    if (Object.hasOwn(MANAGER_CONNECTOR_OPERATIONS, request.operation)) {
+      return this.serialize(request.sessionId || '', () => runManagerConnectors(request, this.record));
+    }
     if (request.operation === 'connections') { return {
       ok: true,
       connections: await listManagerConnections(this.tunnelChecks),

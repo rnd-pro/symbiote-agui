@@ -30,6 +30,7 @@ export let SESSION_STATE = {
   moveDisabled: true,
   renameDisabled: true,
   feedbackDisabled: true,
+  connectorsDisabled: true,
   shareLabel: 'Attach tunnel',
   shareHint: 'Start this session to attach a public tunnel.',
   start: () => {},
@@ -44,6 +45,7 @@ export let SESSION_STATE = {
   move: () => {},
   rename: () => {},
   feedback: () => {},
+  connectors: () => {},
 };
 
 /**
@@ -91,6 +93,7 @@ export function rowState(row, disabled, act, open) {
     moveDisabled: disabled || !saved || active || unknown,
     renameDisabled: disabled || !saved || active || unknown,
     feedbackDisabled: disabled || !active || unknown,
+    connectorsDisabled: disabled || !saved || unknown,
     start: busyAction(() => act('start', row.sessionId)),
     stop: busyAction(() => act('stop', row.sessionId)),
     sync: busyAction(() => act('sync', row.sessionId)),
@@ -103,5 +106,6 @@ export function rowState(row, disabled, act, open) {
     move: () => act('move session', row.sessionId),
     rename: () => act('rename session', row.sessionId),
     feedback: busyAction(() => act('feedback settings', row.sessionId)),
+    connectors: busyAction(() => act('connector status', row.sessionId)),
   };
 }

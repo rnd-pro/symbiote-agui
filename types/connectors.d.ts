@@ -53,6 +53,32 @@ export interface ConnectorStatus {
   actions: ConnectorRequirement[];
 }
 
+export interface ConnectorInspection extends ConnectorStatus {
+  inspection: Array<{
+    name: string;
+    resolved: boolean;
+    prepared: boolean;
+    configuredSources: string[];
+    code?: string;
+  }>;
+}
+
+export interface ConnectorReview {
+  requirement: ConnectorRequirement;
+  description: string;
+  manifest?: CoreManifest;
+  files?: Awaited<ReturnType<CoreRegistry['show']>>['files'];
+  prepared?: boolean;
+  source?: string;
+}
+
+export interface ManagerConnectorSettings {
+  sessionId: string;
+  instanceId: string | null;
+  status: ConnectorInspection;
+  review?: ConnectorReview;
+}
+
 export type ConnectorChange =
   | { command: 'attach'; action: string; registry: string; address: string; cwd: string }
   | { command: 'update'; action: string; registry?: string; cwd?: string }

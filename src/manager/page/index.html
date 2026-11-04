@@ -216,6 +216,7 @@
               <button type="button" bind="onclick: MANAGER/resetStorage; disabled: MANAGER/storageDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="home"></agui-icon>Use default cache</button>
             </agui-toolbar>
           </agui-dialog>
+          <agui-connector-settings></agui-connector-settings>
           <agui-dialog id="manager-description" label="Session description" close-label="Close description" pub-to="MANAGER/descriptionOpen" bind="$.value: MANAGER/descriptionOpen">
             <agui-markdown label="Session description" bind="$.value: MANAGER/description; $.texts: MANAGER/descriptionTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown>
           </agui-dialog>

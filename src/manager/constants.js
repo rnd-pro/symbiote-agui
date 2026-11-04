@@ -1,6 +1,7 @@
 import { PROJECT_OPERATIONS } from '../projects/constants.js';
 import { TRANSFER_OPERATIONS } from '../projects/transfer/constants.js';
 import { CONNECTION_OPERATIONS } from './connection-operations.js';
+import { MANAGER_CONNECTOR_OPERATIONS } from './connector-operations.js';
 
 export let MANAGER_PATH = '/manager/';
 export let MANAGER_PROTOCOL_VERSION = 2;
@@ -33,6 +34,7 @@ export let MANAGER_OPERATIONS = Object.freeze({
   ...PROJECT_OPERATIONS,
   ...TRANSFER_OPERATIONS,
   ...MANAGER_FEEDBACK_OPERATIONS,
+  ...MANAGER_CONNECTOR_OPERATIONS,
   'configure storage': {
     bulk: false,
     confirm: false,

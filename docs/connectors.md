@@ -47,6 +47,12 @@ Calls return `connectorResult` with request/action/worker identity, resolved rev
 
 `connector call` exits 1 for rejected/unknown outcomes and retains its result in JSON output. `connector receipt <ID> <ACTION> --request <UUID>` reads a retained outcome through the running worker; reading an unknown result is a successful status operation. Repeated calls retain the original request ID and input, and never automatically rerun a possibly started operation. A changed input or scope cannot reuse another operation's ID.
 
+## Declarative interfaces and manager
+
+Use the headless [`agui-connector`](../src/uilib/controls/connector/README.md) to bind input, explicitly run an action, and publish matching results through `pub-to`. Compose existing buttons, fields, preloaders, messages, and state components. Optional initial loading is read-only; typing and reconnection never submit writes. See the [runnable example](./examples/connectors/README.md).
+
+Select a saved session in the manager and open Connectors. Attach local sources, inspect source/contract/bundle hashes, grant an exact prepared revision for a chosen invocation source and private credential profile, or update/revoke/detach it. Controls work while running or stopped. Lifecycle identity guards reject stale edits; changing projects clears the review. Granting requires explicit confirmation and executes no code. Create profiles privately with Agent Connectors; their values never enter the page.
+
 ## Browser API
 
 Marked session modules receive `callConnector` and `readConnectorReceipt` in their existing page API. They are also exported from the fully resolved `/client/index.js` URL:
@@ -66,7 +72,7 @@ let recovered = await readConnectorReceipt('save', requestId);
 
 Invoke writes from an explicit application action. Ordinary typing, binding updates, reload, and connection restoration do not submit writes automatically. The API captures input once, checks current connection/markup readiness, and suppresses calls made during an AGUI agent command. The server independently rejects calls while that page has an agent command pending. Direct agent execution uses the authenticated CLI source instead.
 
-The native `AGUI_CONNECTORS` context exposes `connected`, `current` (transport status and requirements), `pending`, and the latest `result`. Results carry their original request and script revision; applications must compare them before marking a newer draft saved. No uilib action component or automatic data-toolbar synchronization is included in this API.
+The native `AGUI_CONNECTORS` context exposes `connected`, `current` (transport status and requirements), `pending`, and the latest `result`. Results carry their original request and script revision; low-level callers must compare them before marking a newer draft saved. The declarative connector handles that check for bound input. No automatic data-toolbar synchronization is performed.
 
 Disconnect resolves pending promises as unknown. Reconnection queries retained receipts without resubmitting input. A failed receipt lookup preserves uncertainty; it does not prove that no write occurred. Running receipts can be read again explicitly. Same-document recovery retains references in memory; a full reload requires the application to retain and read its own request IDs. Unknown and completed backend outcomes remain separate from local data-cache commits and agent feedback delivery.
 

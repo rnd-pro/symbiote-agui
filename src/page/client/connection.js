@@ -25,6 +25,9 @@ export function connectSession() {
   let delay = RECONNECT_MIN_MS;
   let updates = Promise.resolve();
   let generation = 0;
+  let workerId = '';
+  /** @type {(import('../../../types/transport.js').RenderUpdate & { workerId: string }) | undefined} */
+  let applied;
   let shared = new SharedView((message) => {
     if (socket?.readyState !== WebSocket.OPEN || socket.bufferedAmount > MAX_EVENT_BYTES) { return false; }
     socket.send(message);
@@ -93,6 +96,7 @@ export function connectSession() {
       try { message = /** @type {import('../../../types/transport.js').ServerMessage} */ (JSON.parse(event.data)); }
       catch { showStatus('Connection error: invalid server message.', 'alert'); return; }
       if (message.type === 'connector-status' || message.type === 'connector-result') {
+        if (message.type === 'connector-status') { workerId = message.connectors.instanceId || ''; }
         withoutFeedback(() => receiveConnectors(message));
         return;
       }
@@ -148,8 +152,21 @@ export function connectSession() {
         }
         try {
           if (shared.role === PAGE_ROLE.VIEWER) { throw new Error('This page is a read-only viewer.'); }
-          if (message.type === 'render') { shared.rendered = true; }
-          let result = await executePageCommand(message);
+          if (message.type === 'render') {
+            shared.rendered = true;
+            setConnectorRendered(-1);
+          }
+          // A reconnect must not destroy drafts and in-memory receipt references
+          // when the same worker is only restoring its unchanged render.
+          let unchanged = message.type === 'render' && workerId && applied?.workerId === workerId
+            && applied.revision === message.revision && applied.html === message.html && applied.stylesheetUrl === message.stylesheetUrl;
+          let result = unchanged ? undefined : await executePageCommand(message);
+          if (message.type === 'render' && !unchanged) { applied = {
+            workerId,
+            revision: message.revision,
+            html: message.html,
+            stylesheetUrl: message.stylesheetUrl,
+          }; }
           if (message.type === 'render') { shared.revision = message.revision; setDataRendered(message.revision); setConnectorRendered(message.revision); }
           shared.publish();
           sendPageResult(current, message.id, result);

@@ -84,6 +84,8 @@ Read the [connector setup and CLI reference](https://github.com/rnd-pro/symbiote
 
 Keep writes explicit. Binding updates, typing, reload, and reconnect must not save. Use `load` only for an intentional initial read. Reconcile unknown/running outcomes through the same request receipt; never automatically generate a new write. Stale results must not replace newer drafts. Retain request IDs for recovery across replacement or reload. Choose the saving flow from the session description: connectors, cache commits, and feedback remain separate, and adding a connector must not cause a second external write. Maintain actual task sources, authority, and saving rules in that description.
 
+Connector registry metadata can use files, SQLite, or PostgreSQL through the same core API. Treat backend selection and migration as explicit Agent Connectors administration. A shared backend marker or metadata export includes no private connection, preparation, or execution authority. Each host must connect and review/grant access locally; unavailable database registries must fail without falling back to stale JSON. Keep the session's actual data and registry choices in its description.
+
 ### Attributes and bindings
 
 Never hardcode user-facing copy in uilib components. Supply labels, accessible names, hints, statuses, errors, and required markers through attributes or native bindings; keep shared application copy outside uilib. The page supplies common data-toolbar copy through native `AGUI_TEXT/dataToolbar`: use `bind="$: AGUI_TEXT/dataToolbar"`, or bind an application-owned `{ texts: { ... } }` state object for custom wording. Missing text keys render empty.

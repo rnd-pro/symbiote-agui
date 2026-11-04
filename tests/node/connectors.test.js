@@ -175,3 +175,38 @@ test('connector policy and CLI reject execution paths, forged sources, and unsup
     'example.records.save',
   ]));
 });
+
+test('AGUI invokes a pinned SQLite-backed registry through the existing CLI and fails closed when it goes offline', async (t) => {
+  let f = await connectorFixture(t);
+  f.cleanup(() => cli('stop', 'backend').catch(() => {}));
+  let database = join(f.directory, 'registry.sqlite');
+  await core.configureStorage(f.collection, {
+    type: 'sqlite',
+    database,
+  }, (await f.registry.read()).document.generation, f.coreRoot);
+  await f.attach();
+  await f.grant('backend', 'agent');
+  await cli('start', 'backend', '--no-open');
+  let input = join(f.directory, 'sqlite-call.json');
+  await writeFile(input, JSON.stringify({
+    requestId: randomUUID(),
+    input: {
+      value: 'database-backed',
+    },
+  }));
+  let result = await cli('connector', 'call', 'backend', 'save', '--file', input);
+  assert.equal(result.connectorResult.state, 'completed');
+  assert.equal(result.connectorResult.value.value, 'database-backed');
+  let {
+    rename,
+  } = await import('node:fs/promises');
+  await rename(database, `${database}.offline`);
+  await writeFile(input, JSON.stringify({
+    requestId: randomUUID(),
+    input: {
+      value: 'must not use a stale binding',
+    },
+  }));
+  await assert.rejects(cli('connector', 'call', 'backend', 'save', '--file', input));
+  assert.equal((await readFile(f.log, 'utf8')).trim().split('\n').length, 1);
+});

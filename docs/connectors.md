@@ -76,6 +76,12 @@ The native `AGUI_CONNECTORS` context exposes `connected`, `current` (transport s
 
 Disconnect resolves pending promises as unknown. Reconnection queries retained receipts without resubmitting input. A failed receipt lookup preserves uncertainty; it does not prove that no write occurred. Running receipts can be read again explicitly. Same-document recovery retains references in memory; a full reload requires the application to retain and read its own request IDs. Unknown and completed backend outcomes remain separate from local data-cache commits and agent feedback delivery.
 
+## Registry metadata storage
+
+Registry metadata may use files, local SQLite, or a shared PostgreSQL catalog through Agent Connectors' existing API. Configure it with that package's `registry storage` and `registry reconnect` commands; AGUI's attach, review, grant, and call workflow stays the same. The package's storage guide (`agent-connectors/docs/storage.md`) covers schema provisioning, restricted roles, and explicit metadata import/export.
+
+A portable registry marker contains only backend type and registry UUID. Database locations, connection profiles, prepared snapshots, and execution grants stay private. Each execution host still needs matching source or a verified local snapshot and its own grants. Remote binding changes cannot approve new code. Missing database access fails rather than selecting a stale file registry; sharing an AGUI or its sidecar never transfers backend access.
+
 ## Access and lifecycle
 
 - Backend calls and receipt reads require a local interactive connection. A viewer, public origin, or forwarded tunnel request cannot invoke them, even by sending a forged user/source claim. Local admission checks the WebSocket's origin, Host, and forwarding metadata; public user-role election is not backend authorization.

@@ -46,6 +46,7 @@ function managerConnectorChange(input, cwd = process.cwd()) {
     } : {}),
   });
   if (change.command === 'list' || change.command === 'status') { throw new CommandError('Use connector status to inspect settings.'); }
+  if (change.command === 'expose') { throw new CommandError('Issue public capabilities through the private connector expose CLI command.'); }
   return change;
 }
 

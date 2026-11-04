@@ -21,6 +21,31 @@ export interface ConnectorPrivate {
   epoch: string;
   routes: Record<string, string>;
   accepted: Record<string, string>;
+  exposures?: ConnectorExposure[];
+}
+
+export interface ConnectorExposureOptions {
+  revision: string;
+  actor: string;
+  origin: string;
+  resources: Record<string, string | number | boolean | null>;
+  expiresInSeconds: number;
+  requestsPerMinute: number;
+  profile?: string;
+  timeoutMs?: number;
+  resultBytes?: number;
+}
+
+export interface ConnectorExposure {
+  id: string;
+  action: string;
+  actor: string;
+  origin: string;
+  revision: string;
+  resources: ConnectorExposureOptions['resources'];
+  expiresAt: number;
+  requestsPerMinute: number;
+  tokenHash: string;
 }
 
 export interface ConnectorReference {
@@ -48,12 +73,13 @@ export interface ConnectorStatus {
   instanceId?: string;
   markupRevision: number;
   available: boolean;
-  localOnly: true;
+  localOnly: boolean;
   pending: number;
   actions: ConnectorRequirement[];
 }
 
 export interface ConnectorInspection extends ConnectorStatus {
+  exposures?: Omit<ConnectorExposure, 'tokenHash'>[];
   inspection: Array<{
     name: string;
     resolved: boolean;
@@ -86,7 +112,8 @@ export type ConnectorChange =
   | { command: 'detach' | 'describe'; action: string }
   | { command: 'list' | 'status' }
   | { command: 'grant'; action: string; revision: string; source: 'agent' | 'agui'; profile?: string; timeoutMs?: number; resultBytes?: number }
-  | { command: 'revoke'; action: string };
+  | { command: 'revoke' | 'unexpose'; action: string }
+  | { command: 'expose'; action: string; policy: ConnectorExposureOptions };
 
 export interface ConnectorCliRequest {
   kind: 'connector';
@@ -97,9 +124,11 @@ export interface ConnectorCliRequest {
 }
 
 export type ConnectorPageMessage =
+  | { type: 'connector-authorize'; action: string; token: string }
   | { type: 'connector-call'; call: ConnectorCall }
   | { type: 'connector-read'; reference: ConnectorReference };
 
 export type ConnectorServerMessage =
+  | { type: 'connector-authorized'; action: string; accepted: boolean }
   | { type: 'connector-status'; connectors: ConnectorStatus }
   | { type: 'connector-result'; result: ConnectorResult };

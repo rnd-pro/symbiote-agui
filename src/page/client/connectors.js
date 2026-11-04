@@ -1,3 +1,4 @@
+import { receiveAuthorization, setAuthorizationSender, setAuthorizationConnected } from './connector-authorization.js';
 import { PubSub } from '@symbiotejs/symbiote';
 import { withoutFeedback, feedbackSuppressed } from '../../uilib/shared/feedback-guard.js';
 import { CONNECTOR_LIMITS } from '../../connectors/constants.js';
@@ -30,11 +31,12 @@ function publish() {
 }
 
 /** @param {(message: string) => boolean} sender */
-export function setConnectorSender(sender) { send = sender; }
+export function setConnectorSender(sender) { send = sender; setAuthorizationSender(sender); }
 
 /** @param {boolean} value */
 export function setConnectorConnected(value) {
   connected = value;
+  setAuthorizationConnected(value);
   if (!value) {
     status = undefined;
     for (let request of pending.values()) {
@@ -56,6 +58,7 @@ export function setConnectorRendered(revision) { rendered = revision; publish();
 
 /** @param {import('../../../types/connectors.js').ConnectorServerMessage} message */
 export function receiveConnectors(message) {
+  if (message.type === 'connector-authorized') { receiveAuthorization(message.action, message.accepted); return; }
   if (message.type === 'connector-result') { receiveResult(message.result); return; }
   let recovering = !status?.available;
   status = message.connectors;

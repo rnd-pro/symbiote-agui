@@ -95,7 +95,7 @@ export class PageConnection {
             return;
           }
           if (page.role === PAGE_ROLE.VIEWER) { throw new Error('Viewers cannot send actions or state.'); }
-          if (message.type === 'connector-call' || message.type === 'connector-read') {
+          if (message.type === 'connector-call' || message.type === 'connector-read' || message.type === 'connector-authorize') {
             if (!this.connectors) { throw new Error('Connector transport is unavailable.'); }
             this.connectors.receive(socket, message, Buffer.byteLength(data.toString()));
             return;

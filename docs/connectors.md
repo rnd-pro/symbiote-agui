@@ -1,6 +1,6 @@
-# Local connector backends
+# Connector backends
 
-AGUI can invoke reviewed local connector scripts directly, without delivering every operation to an agent conversation. Agent Connectors owns script discovery, schemas, bundle revisions, private grants, credential profiles, execution, and receipts. AGUI adds saved action requirements, session scope, CLI controls, and a local browser bridge over its existing WebSocket.
+AGUI can invoke reviewed local connector scripts directly, without delivering every operation to an agent conversation. Agent Connectors owns script discovery, schemas, bundle revisions, private grants, credential profiles, execution, and receipts. AGUI adds saved action requirements, session scope, CLI controls, and a browser bridge over its existing WebSocket. Public backend invocation is disabled unless an owner issues an explicit [public capability](./connectors-public.md).
 
 The runner supports trusted local/team code with host-user privileges. A content checksum detects changes; it does not establish authorship, sandbox code, or authorize execution. Review the code and its resource access before granting it. Application-specific data sources, access choices, and saving rules belong in the session description.
 
@@ -84,7 +84,7 @@ A portable registry marker contains only backend type and registry UUID. Databas
 
 ## Access and lifecycle
 
-- Backend calls and receipt reads require a local interactive connection. A viewer, public origin, or forwarded tunnel request cannot invoke them, even by sending a forged user/source claim. Local admission checks the WebSocket's origin, Host, and forwarding metadata; public user-role election is not backend authorization.
+- Backend calls and receipt reads require local interactive admission or a separately issued [public capability](./connectors-public.md). Local admission checks the WebSocket's origin, Host, and forwarding metadata. A viewer cannot invoke backends; public user-role election alone grants no authority. Public and forwarded connections never inherit local grants, even through forged source claims.
 - The existing private control server handles attachment, review, grants, and CLI calls. Its credential stays outside the generated page and tunnel routes. Older workers return `NOT_IMPLEMENTED`; preserve drafts and restart explicitly to enable the feature.
 - Grants bind private session identity and action scope as well as the exact script revision. A normal stop/start retains that scope, but rejects the old worker instance on new requests. Accepted operations are cancelled during shutdown and retain their uncertain outcome when execution may have started.
 - `connector update <ID> <ACTION>` explicitly refreshes a semantic address to its current registry revision and revokes prior authority when the requirement or local source changes. Merely moving a registry alias never executes a new revision. Unchanged requirements do not require redundant regranting.

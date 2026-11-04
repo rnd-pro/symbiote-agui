@@ -43,6 +43,7 @@ export async function resolveRequirement(service, requirement) {
  * @param {string} action
  */
 export async function revokeAction(service, action) {
+  await service.publicAccess.revoke(action);
   let scope = connectorScope(service.sessionId, service.settings, action);
   for (let grant of (await core.readAuthority(service.coreRoot)).grants) {
     if (!grant.revoked && grant.scope === scope) { await core.revokeGrant(service.coreRoot, grant.id); }
@@ -88,6 +89,11 @@ export async function configureConnectors(service, change) {
     return service.status();
   }
   if (!requirement) { throw new CommandError('Unknown connector action.'); }
+  if (change.command === 'unexpose') {
+    await service.publicAccess.revoke(action);
+    return service.status();
+  }
+  if (change.command === 'expose') { return service.publicAccess.expose(requirement, change.policy); }
   if (change.command === 'detach' || change.command === 'revoke') {
     await revokeAction(service, action);
     if (change.command === 'detach') {
@@ -178,6 +184,10 @@ async function inspectConnectors(service) {
   }
   return {
     ...service.status(),
+    exposures: (service.settings.exposures ?? []).map(({
+      tokenHash,
+      ...entry
+    }) => entry),
     inspection,
   };
 }

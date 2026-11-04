@@ -62,6 +62,17 @@ function changeFor(request) {
  */
 export async function runConnectorCommand(request, options = {}) {
   let command = request.command;
+  if (command === 'expose' && !options.change) {
+    if (!request.values.file) { throw new CommandError('Expose requires a private policy JSON file.'); }
+    let stream = createReadStream(request.values.file);
+    try {
+      options.change = validateConnectorChange({
+        command,
+        action: request.action,
+        policy: JSON.parse(await readUtf8Markup(stream, CONNECTOR_LIMITS.inputBytes)),
+      });
+    } finally { stream.destroy(); }
+  }
   let change = options.change ? validateConnectorChange(options.change)
     : command === 'call' || command === 'receipt' ? undefined : changeFor(request);
   let selected = await withSessionLock(request.sessionId, async () => {

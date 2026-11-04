@@ -3,6 +3,16 @@ import { CONNECTOR_ACTION } from '../connectors/constants.js';
 import { CommandError } from '../shared/command-error.js';
 
 export const CONNECTOR_COMMANDS = Object.freeze({
+  expose: {
+    usage: 'connector expose <SESSION_ID> <ACTION> --file <POLICY_JSON>',
+    options: [
+      'file',
+    ],
+  },
+  unexpose: {
+    usage: 'connector unexpose <SESSION_ID> <ACTION>',
+    options: [],
+  },
   attach: {
     usage: 'connector attach <SESSION_ID> <ACTION> --registry <NAME|PATH> --script <ADDRESS>',
     options: [

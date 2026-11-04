@@ -165,6 +165,7 @@ export interface FragmentAnalysis {
 }
 
 export interface PageApi {
+  authorizeConnector: typeof import('../src/page/client/connector-authorization.js').authorizeConnector;
   callConnector: typeof import('../src/page/client/connectors.js').callConnector;
   readConnectorReceipt: typeof import('../src/page/client/connectors.js').readConnectorReceipt;
   emit(name: string, data?: unknown): boolean;

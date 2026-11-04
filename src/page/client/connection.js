@@ -95,7 +95,7 @@ export function connectSession() {
       let message;
       try { message = /** @type {import('../../../types/transport.js').ServerMessage} */ (JSON.parse(event.data)); }
       catch { showStatus('Connection error: invalid server message.', 'alert'); return; }
-      if (message.type === 'connector-status' || message.type === 'connector-result') {
+      if (message.type === 'connector-status' || message.type === 'connector-result' || message.type === 'connector-authorized') {
         if (message.type === 'connector-status') { workerId = message.connectors.instanceId || ''; }
         withoutFeedback(() => receiveConnectors(message));
         return;

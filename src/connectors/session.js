@@ -1,8 +1,9 @@
 import { core, assertConnectorCore } from './core.js';
 import { CONNECTOR_LIMITS } from './constants.js';
 import { emptyConnectors, validateConnectorChange, validateConnectorReference } from './validate.js';
-import { connectorFingerprints, connectorScope, readConnectorPrivate, readConnectorSnapshot, saveConnectorPrivate } from './store.js';
+import { connectorFingerprints, connectorScope, publicConnectorScope, readConnectorPrivate, readConnectorSnapshot, saveConnectorPrivate } from './store.js';
 import { configureConnectors, resolveRequirement, revokeAction } from './configure.js';
+import { PublicConnectorAccess } from './public-access.js';
 import { CommandError } from '../shared/command-error.js';
 
 export class SessionConnectors {
@@ -17,7 +18,8 @@ export class SessionConnectors {
     accepted: {},
   };
   closing = false;
-  /** @type {Map<string, { action: string; fingerprint: string; controller: AbortController; promise: Promise<import('../../types/connectors.js').ConnectorResult> }>} */
+  publicAccess = new PublicConnectorAccess(this);
+  /** @type {Map<string, { action: string; exposureId?: string; fingerprint: string; controller: AbortController; promise: Promise<import('../../types/connectors.js').ConnectorResult> }>} */
   pending = new Map();
 
   /**
@@ -55,7 +57,7 @@ export class SessionConnectors {
       contractVersion: core.CONTRACT_VERSION,
       ...this.identity(),
       available: !!this.identity().instanceId && !this.closing,
-      localOnly: true,
+      localOnly: !this.settings.exposures?.length,
       pending: this.pending.size,
       actions: structuredClone(this.policy.actions),
     };
@@ -101,8 +103,9 @@ export class SessionConnectors {
   /**
    * @param {unknown} input
    * @param {'agent' | 'agui'} source
+   * @param {string} [exposureId]
    */
-  admit(input, source) {
+  admit(input, source, exposureId) {
     let call = validateConnectorReference(input, true);
     if (this.closing || call.instanceId !== this.identity().instanceId || call.markupRevision !== this.identity().markupRevision) {
       throw new CommandError('Stale connector worker or markup identity.');
@@ -114,7 +117,8 @@ export class SessionConnectors {
       throw new CommandError('Connector input is too large.');
     }
     let captured = /** @type {import('../../types/connectors.js').ConnectorCall} */ (JSON.parse(serialized));
-    let fingerprint = `${source}:${serialized}`;
+    let exposure = exposureId ? this.publicAccess.admit(exposureId, call.action, captured.input, true) : undefined;
+    let fingerprint = `${source}:${exposureId ?? ''}:${serialized}`;
     let previous = this.pending.get(call.requestId);
     if (previous) {
       if (previous.fingerprint !== fingerprint) { throw new CommandError('Request ID already identifies another connector call.'); }
@@ -124,10 +128,15 @@ export class SessionConnectors {
     }
     if (this.pending.size >= CONNECTOR_LIMITS.pending) { throw new CommandError('Too many pending connector calls.'); }
     let controller = new AbortController();
-    let promise = this.execute(captured, requirement, source, controller.signal).finally(() => this.pending.delete(call.requestId));
+    let expiry = exposure ? setTimeout(() => controller.abort(), Math.max(1, exposure.expiresAt - Date.now())) : undefined;
+    let promise = this.execute(captured, requirement, source, controller.signal, exposureId).finally(() => {
+      clearTimeout(expiry);
+      this.pending.delete(call.requestId);
+    });
     this.pending.set(call.requestId, {
       action: call.action,
       fingerprint,
+      exposureId,
       controller,
       promise,
     });
@@ -141,9 +150,10 @@ export class SessionConnectors {
    * @param {import('../../types/connectors.js').ConnectorRequirement} requirement
    * @param {'agent' | 'agui'} source
    * @param {AbortSignal} signal
+   * @param {string} [exposureId]
    * @returns {Promise<import('../../types/connectors.js').ConnectorResult>}
    */
-  async execute(call, requirement, source, signal) {
+  async execute(call, requirement, source, signal, exposureId) {
     let reference = {
       action: call.action,
       requestId: call.requestId,
@@ -159,9 +169,10 @@ export class SessionConnectors {
       // for this invocation so a concurrent alias edit cannot change its target.
       let pinned = /** @type {import('../../types/connectors.js').CoreRegistry} */ (Object.create(registry));
       pinned.show = async () => structuredClone(resolved);
+      let exposure = exposureId ? this.publicAccess.get(exposureId, call.action) : undefined;
       invoked = true;
       let receipt = await core.runCapability(pinned, requirement.address, call.input, {
-        scope: connectorScope(this.sessionId, this.settings, call.action),
+        scope: exposure ? publicConnectorScope(this.sessionId, this.settings, exposure) : connectorScope(this.sessionId, this.settings, call.action),
         requestId: call.requestId,
         source,
         signal,
@@ -201,13 +212,17 @@ export class SessionConnectors {
   /**
    * @param {unknown} input
    * @param {'agui' | undefined} [source]
+   * @param {string} [exposureId]
    * @returns {Promise<import('../../types/connectors.js').ConnectorResult>}
    */
-  async read(input, source) {
+  async read(input, source, exposureId) {
     let reference = validateConnectorReference(input, false);
     if (reference.instanceId !== this.identity().instanceId) { throw new CommandError('Stale connector worker identity.'); }
+    let exposure = exposureId ? this.publicAccess.admit(exposureId, reference.action) : undefined;
     let receipt = await core.getReceipt(this.coreRoot, reference.requestId);
-    if (receipt.scope !== connectorScope(this.sessionId, this.settings, reference.action) || (source && receipt.source !== source)) {
+    if (exposureId) { this.publicAccess.get(exposureId, reference.action); }
+    let scope = exposure ? publicConnectorScope(this.sessionId, this.settings, exposure) : connectorScope(this.sessionId, this.settings, reference.action);
+    if (receipt.scope !== scope || (source && receipt.source !== source)) {
       throw new CommandError('Connector receipt belongs to another action or session scope.');
     }
     return {

@@ -7,6 +7,7 @@ import { prepareTextFile, readOptional } from '../library/files.js';
 import { CommandError } from '../shared/command-error.js';
 import { CONNECTOR_LIMITS, CONNECTOR_UUID } from './constants.js';
 import { emptyConnectors, validateConnectorPolicy } from './validate.js';
+import { validateExposures } from './public-policy.js';
 
 /**
  * @param {string} sessionId
@@ -37,6 +38,7 @@ export async function readConnectorPrivate(sessionId, root = getStateRoot()) {
     epoch: randomUUID(),
     routes: {},
     accepted: {},
+    exposures: [],
   }; }
   let value = /** @type {import('../../types/connectors.js').ConnectorPrivate} */ (JSON.parse(raw));
   if (!value || typeof value !== 'object' || Array.isArray(value)) { throw new CommandError('Invalid private connector settings.'); }
@@ -47,6 +49,7 @@ export async function readConnectorPrivate(sessionId, root = getStateRoot()) {
       'epoch',
       'routes',
       'accepted',
+      'exposures',
     ].includes(key)) || Object.entries(value.routes).some(([
       id,
       root,
@@ -60,6 +63,8 @@ export async function readConnectorPrivate(sessionId, root = getStateRoot()) {
     ]) => !/^[a-z][a-z0-9_-]{0,63}$/.test(name) || typeof digest !== 'string' || !/^[a-f0-9]{64}$/.test(digest))) {
     throw new CommandError('Invalid accepted connector requirements.');
   }
+  value.exposures ??= [];
+  validateExposures(value.exposures);
   return value;
 }
 
@@ -121,5 +126,18 @@ export function connectorScope(sessionId, settings, action, root = getStateRoot(
     sessionId,
     settings.epoch,
     action,
+  ])).digest('hex')}`;
+}
+
+/**
+ * @param {string} sessionId
+ * @param {import('../../types/connectors.js').ConnectorPrivate} settings
+ * @param {import('../../types/connectors.js').ConnectorExposure} exposure
+ * @param {string} [root]
+ */
+export function publicConnectorScope(sessionId, settings, exposure, root) {
+  return `agui-public:${createHash('sha256').update(JSON.stringify([
+    connectorScope(sessionId, settings, exposure.action, root),
+    exposure.id,
   ])).digest('hex')}`;
 }

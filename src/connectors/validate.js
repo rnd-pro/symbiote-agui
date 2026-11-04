@@ -1,3 +1,4 @@
+import { validateExposureOptions } from './public-policy.js';
 import { CommandError } from '../shared/command-error.js';
 import { object, keys } from '../feedback/validate-shape.js';
 import { CONNECTOR_ACTION, CONNECTOR_LIMITS, CONNECTOR_REVISION, CONNECTOR_UUID } from './constants.js';
@@ -115,6 +116,15 @@ export function validateConnectorChange(value) {
       'revision',
       'source',
     ],
+    expose: [
+      'command',
+      'action',
+      'policy',
+    ],
+    unexpose: [
+      'command',
+      'action',
+    ],
     revoke: [
       'command',
       'action',
@@ -148,6 +158,7 @@ export function validateConnectorChange(value) {
       throw new CommandError('Connector references must be bounded strings.');
     }
   }
+  if (value.command === 'expose') { value.policy = validateExposureOptions(value.policy); }
   if (value.command === 'grant' && (typeof value.revision !== 'string' || !CONNECTOR_REVISION.test(value.revision)
     || ![
       'agent',

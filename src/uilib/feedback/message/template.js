@@ -1,6 +1,4 @@
-import {
-  html,
-} from '@symbiotejs/symbiote/core/html.js';
+import { html } from '@symbiotejs/symbiote/core/html.js';
 
 export let MESSAGE_TEMPLATE = html`
   <agui-icon 

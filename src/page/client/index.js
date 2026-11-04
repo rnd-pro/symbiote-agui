@@ -25,3 +25,4 @@ export { executeWebMCPTool } from './tools.js';
 export { FEEDBACK_CONTEXT } from '../../feedback/constants.js';
 export { commitData, readDataCommit, getDataState } from './data.js';
 export { DATA_CONTEXT } from '../../data/constants.js';
+export { callConnector, readConnectorReceipt, CONNECTOR_CONTEXT } from './connectors.js';

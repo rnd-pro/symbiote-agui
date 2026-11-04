@@ -16,6 +16,10 @@ import { sampleMetadata } from './metadata-fixture.js';
 export async function writeTransferFixture(scope, id = 'desk', html = dataHtml) {
   let paths = transferPaths(scope, id);
   let files = {
+    connectors: JSON.stringify({
+      version: 1,
+      actions: [],
+    }),
     proxy: JSON.stringify({
       version: 1,
       allowedOrigins: [

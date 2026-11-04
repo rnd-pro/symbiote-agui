@@ -32,6 +32,10 @@ export interface SessionStatus {
   feedbackSettings?: import('./feedback.js').FeedbackSettings;
   data?: import('./data.js').DataStatus;
   proxy?: import('./proxy.js').ProxyStatus;
+  connectors?: import('./connectors.js').ConnectorStatus;
+  /** Private authenticated connector control results only. */
+  connectorControl?: unknown;
+  connectorResult?: import('./connectors.js').ConnectorResult;
   transferSnapshot?: import('./transfer.js').TransferSnapshot;
 }
 
@@ -88,6 +92,9 @@ export type ControlReply = ControlIdentity & (
 );
 
 export interface ControlActions {
+  connectorControl?(input: unknown): Promise<SessionStatus>;
+  connectorCall?(input: unknown): Promise<SessionStatus>;
+  connectorReceipt?(input: unknown): Promise<SessionStatus>;
   proxyStatus?(): SessionStatus;
   proxyChange?(input: unknown): Promise<SessionStatus>;
   connections?(): SessionStatus;

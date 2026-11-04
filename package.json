@@ -65,6 +65,7 @@
     "@modelcontextprotocol/server": "^2.3.1",
     "@symbiotejs/symbiote": "^3.9.0",
     "@tailwindcss/node": "^4.3.3",
+    "agent-connectors": "file:../agent-connectors",
     "dompurify": "^3.4.17",
     "echarts": "^6.1.0",
     "jsda-kit": "1.6.4",

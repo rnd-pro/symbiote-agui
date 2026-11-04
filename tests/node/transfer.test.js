@@ -132,6 +132,7 @@ test('move verifies the destination before removing source files and retains exc
   }));
   assert.equal(moved.ok, true, moved.error?.message);
   assert.deepEqual(await readTransferFiles(transferPaths(a, 'desk')), {
+    connectors: null,
     proxy: null,
     html: null,
     description: null,

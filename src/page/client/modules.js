@@ -1,6 +1,7 @@
 import { MODULE_SELECTOR } from '../../transport/constants.js';
 import { emit, submitFeedback } from '../../uilib/shared/events.js';
 import { commitData } from './data.js';
+import { callConnector, readConnectorReceipt } from './connectors.js';
 
 /** @type {import('../../../types/transport.js').ModuleCleanup[]} */
 let cleanups = [];
@@ -38,7 +39,7 @@ export async function loadModules(fragment) {
 export async function mountModules(root, modules) {
   for (let module of modules) {
     if (typeof module.default === 'function') {
-      let cleanup = await module.default(root, { emit, submitFeedback, commitData });
+      let cleanup = await module.default(root, { emit, submitFeedback, commitData, callConnector, readConnectorReceipt });
       if (typeof cleanup === 'function') { cleanups.push(cleanup); }
     }
   }

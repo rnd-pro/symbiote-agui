@@ -11,6 +11,7 @@ import { withoutFeedback } from '../../uilib/shared/feedback-guard.js';
 import { setDataSender, setDataConnected, setDataRole, setDataRendered, receiveData } from './data.js';
 import { updateSessionContext } from './session-context.js';
 import { setInformationSender, receiveSessionInformation, failInformationRequest } from './session-information.js';
+import { setConnectorSender, setConnectorConnected, setConnectorRole, setConnectorRendered, receiveConnectors } from './connectors.js';
 
 export function connectSession() {
   syncPageIdentity();
@@ -57,6 +58,11 @@ export function connectSession() {
     socket.send(message);
     return true;
   });
+  setConnectorSender((message) => {
+    if (shared.role === PAGE_ROLE.VIEWER || socket?.readyState !== WebSocket.OPEN || socket.bufferedAmount > MAX_PAGE_MESSAGE_BYTES) { return false; }
+    socket.send(message);
+    return true;
+  });
 
   function connect() {
     if (ended || paused) { return; }
@@ -75,6 +81,7 @@ export function connectSession() {
       updateSessionContext({ connected: true });
       setFeedbackConnected(true);
       setDataConnected(true);
+      setConnectorConnected(true);
       delay = RECONNECT_MIN_MS;
       syncPageIdentity();
       current.send(JSON.stringify({ type: 'hello', title: document.title }));
@@ -85,6 +92,10 @@ export function connectSession() {
       let message;
       try { message = /** @type {import('../../../types/transport.js').ServerMessage} */ (JSON.parse(event.data)); }
       catch { showStatus('Connection error: invalid server message.', 'alert'); return; }
+      if (message.type === 'connector-status' || message.type === 'connector-result') {
+        withoutFeedback(() => receiveConnectors(message));
+        return;
+      }
       if (message.type === 'session-info') {
         withoutFeedback(() => receiveSessionInformation(message));
         return;
@@ -107,6 +118,7 @@ export function connectSession() {
           updateSessionContext({ role: message.role, userConnected: message.userConnected });
           setFeedbackRole(message.role);
           setDataRole(message.role);
+          setConnectorRole(message.role);
           await shared.setRole(message);
           showStatus('');
           return;
@@ -120,6 +132,7 @@ export function connectSession() {
           updateSessionContext({ connected: false });
           setFeedbackConnected(false);
           setDataConnected(false);
+          setConnectorConnected(false);
           ended = true;
           shared.disconnect();
           clearTimeout(timer);
@@ -137,7 +150,7 @@ export function connectSession() {
           if (shared.role === PAGE_ROLE.VIEWER) { throw new Error('This page is a read-only viewer.'); }
           if (message.type === 'render') { shared.rendered = true; }
           let result = await executePageCommand(message);
-          if (message.type === 'render') { shared.revision = message.revision; setDataRendered(message.revision); }
+          if (message.type === 'render') { shared.revision = message.revision; setDataRendered(message.revision); setConnectorRendered(message.revision); }
           shared.publish();
           sendPageResult(current, message.id, result);
           showStatus('');
@@ -150,7 +163,7 @@ export function connectSession() {
     };
     current.onclose = (event) => {
       if (current === socket) { failInformationRequest(); }
-      if (current === socket) { updateSessionContext({ connected: false }); shared.disconnect(); setFeedbackConnected(false); setDataConnected(false); }
+      if (current === socket) { updateSessionContext({ connected: false }); shared.disconnect(); setFeedbackConnected(false); setDataConnected(false); setConnectorConnected(false); }
       if (event.code === 1000 && event.reason === 'Session ended') { ended = true; }
       if (event.code === PAGE_DISCONNECT_CODE) {
         ended = true;
@@ -175,6 +188,7 @@ export function connectSession() {
     updateSessionContext({ connected: false });
     setFeedbackConnected(false);
     setDataConnected(false);
+    setConnectorConnected(false);
     paused = true;
     generation += 1;
     clearTimeout(timer);

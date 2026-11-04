@@ -26,6 +26,8 @@ import { getStateRoot } from './store.js';
 import { projectEntry } from '../projects/identity.js';
 import { readProxySnapshot, changeProxyPolicy } from '../proxy/store.js';
 import { emptyProxyPolicy, proxyStatus, validateProxyChange } from '../proxy/policy.js';
+import { SessionConnectors } from '../connectors/session.js';
+import { object, keys } from '../feedback/validate-shape.js';
 
 export class SessionRuntime {
   /** @type {import('node:http').Server | undefined} */
@@ -62,11 +64,16 @@ export class SessionRuntime {
     this.record = record;
     this.feedback = new SessionFeedback(record);
     this.data = new SessionData(this);
+    this.connectors = new SessionConnectors(record.sessionId, () => ({
+      instanceId: record.instanceId,
+      markupRevision: this.latest?.revision ?? 0,
+    }));
   }
 
   /** @param {AbortSignal} signal */
   async start(signal) {
     this.proxy = await readProxySnapshot(this.record.sessionId);
+    await this.connectors.initialize();
     let cached = await readCachedMarkup(this.record.sessionId);
     let html = await this.data.restore(cached ?? '<h1>AGUI</h1><p>Waiting for generated content.</p>');
     let { classes } = analyzeMarkup(html);
@@ -91,7 +98,7 @@ export class SessionRuntime {
           await this.pages.request(socket, { type: 'render', ...this.latest });
         }
       }),
-      (message) => this.events.add(message), this.feedback, this.data);
+      (message) => this.events.add(message), this.feedback, this.data, this.connectors, (task) => this.enqueue(task));
   }
 
   /** @returns {import('../../types/session.js').SessionStatus} */
@@ -106,6 +113,7 @@ export class SessionRuntime {
       feedback: this.feedback.status(),
       data: this.data.status(),
       proxy: proxyStatus(this.record.sessionId, this.proxy.policy, !!this.assetProxy && !this.closing),
+      connectors: this.connectors.status(),
       ...(this.data.warning ? { warning: this.data.warning } : {}),
       ...(this.tunnel ? { tunnel: { ...this.tunnel.status } } : {}),
       ...(this.tunnel?.origin ? {
@@ -152,7 +160,7 @@ export class SessionRuntime {
       };
       return {
         ...this.status(),
-        transferSnapshot: await captureTransferSnapshot(scope, this.record.sessionId, this.data.source, this.data.raw, this.proxy.raw ?? null),
+        transferSnapshot: await captureTransferSnapshot(scope, this.record.sessionId, this.data.source, this.data.raw, this.proxy.raw ?? null, this.connectors.raw ?? null),
       };
     });
   }
@@ -231,6 +239,44 @@ export class SessionRuntime {
     return this.replaceMarkup('', true, true, resetData);
   }
 
+  /** @param {unknown} input */
+  connectorControl(input) {
+    return this.enqueue(async () => {
+      object(input);
+      keys(input, [
+        'instanceId',
+        'change',
+      ]);
+      if (input.instanceId !== this.record.instanceId || this.closing) { throw new CommandError('Stale connector worker identity.'); }
+      let connectorControl = await this.connectors.configure(input.change);
+      this.pages?.connectors?.notify();
+      return {
+        ...this.status(),
+        connectorControl,
+      };
+    });
+  }
+
+  /** @param {unknown} input */
+  async connectorCall(input) {
+    let job = await this.enqueue(async () => {
+      if (this.closing) { throw new CommandError('Session is closing.'); }
+      return this.connectors.admit(input, 'agent');
+    });
+    return {
+      ...this.status(),
+      connectorResult: await job.promise,
+    };
+  }
+
+  /** @param {unknown} input */
+  async connectorReceipt(input) {
+    return {
+      ...this.status(),
+      connectorResult: await this.connectors.read(input),
+    };
+  }
+
   /**
    * @param {string} html
    * @param {boolean} persist
@@ -248,6 +294,7 @@ export class SessionRuntime {
       /** @type {Awaited<ReturnType<SessionData['prepareReplacement']>> | undefined} */
       let data;
       try {
+        if (!persist) { await this.connectors.cancel(); }
         if (fromSaved) {
           let saved = await readCachedMarkup(this.record.sessionId);
           if (saved === undefined) { throw new CommandError('No saved definition to sync.', ERROR_CODE.CACHE_ERROR, EXIT_CODE.RUNTIME_ERROR); }
@@ -271,6 +318,7 @@ export class SessionRuntime {
         if (cache) { await cache.commit(); }
         else if (!persist) { await clearCachedMarkup(this.record.sessionId); }
         await data.cache?.commit();
+        if (fromSaved || !persist) { await this.connectors.reload(); }
         this.proxy = !persist ? {
           raw: undefined,
           policy: emptyProxyPolicy(),
@@ -278,6 +326,7 @@ export class SessionRuntime {
         this.assetProxy?.refreshPolicy();
         this.latest = update;
         this.data.acceptReplacement(source, data.revision, data.cache?.raw);
+        this.pages.connectors?.notify();
         return { ...this.status(), delivery: applied ? 'applied' : 'queued', ...(fromSaved ? { synced: true } : {}), ...(!persist ? { cleared: true } : {}) };
       } catch (error) {
         publishStyles(previous);
@@ -314,8 +363,10 @@ export class SessionRuntime {
 
   async close() {
     this.closing = true;
+    this.connectors.closing = true;
     try {
       await this.assetProxy?.close();
+      await this.connectors.close();
       await this.feedback.close();
       await this.pages?.close();
     }

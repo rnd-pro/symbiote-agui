@@ -6,6 +6,7 @@ import { isPageOrigin } from './page-access.js';
 import { SharedPages } from './shared-pages.js';
 import { PageFeedback } from './page-feedback.js';
 import { PageData } from './page-data.js';
+import { PageConnectors } from './page-connectors.js';
 
 export class PageConnection {
   /** @type {Set<WebSocket>} */
@@ -24,10 +25,13 @@ export class PageConnection {
    * @param {(message: Extract<import('../../types/transport.js').PageMessage, { type: 'event' }>) => void} onEvent
    * @param {import('../feedback/session-feedback.js').SessionFeedback} [feedback]
    * @param {import('../data/commits.js').SessionData} [data]
+   * @param {import('../connectors/session.js').SessionConnectors} [connectors]
+   * @param {PageConnectors['serialize']} [serialize]
    */
-  constructor(server, origin, access, initialize, onEvent, feedback, data) {
+  constructor(server, origin, access, initialize, onEvent, feedback, data, connectors, serialize) {
     this.feedback = feedback ? new PageFeedback(feedback, this.pages, this.pending) : undefined;
     this.data = data ? new PageData(data, this.pages, this.pending) : undefined;
+    this.connectors = connectors && serialize ? new PageConnectors(connectors, this.pages, this.pending, serialize) : undefined;
     this.server = new WebSocketServer({ noServer: true, maxPayload: MAX_PAGE_MESSAGE_BYTES });
     server.on('upgrade', (request, socket, head) => {
       let endpoint;
@@ -51,6 +55,8 @@ export class PageConnection {
       let viewerRequested = endpoint.searchParams.get('mode') === 'viewer';
       /** @type {import('../../types/tools.js').PagePeer} */
       let page = {
+        backendLocal: request.headers.origin === origin && request.headers.host === new URL(origin).host
+          && !Object.keys(request.headers).some((name) => name === 'forwarded' || name.startsWith('x-forwarded-') || name.startsWith('cf-')),
         socket, url: new URL(`${access.path}${endpoint.search}`, request.headers.origin).href,
         viewerRequested,
         connectedAt: new Date().toISOString(),
@@ -89,6 +95,11 @@ export class PageConnection {
             return;
           }
           if (page.role === PAGE_ROLE.VIEWER) { throw new Error('Viewers cannot send actions or state.'); }
+          if (message.type === 'connector-call' || message.type === 'connector-read') {
+            if (!this.connectors) { throw new Error('Connector transport is unavailable.'); }
+            this.connectors.receive(socket, message, Buffer.byteLength(data.toString()));
+            return;
+          }
           if (message.type === 'data-commit' || message.type === 'data-read' || message.type === 'session-info-read') {
             if (!this.data) { throw new Error('Data commits are unavailable.'); }
             this.data.receive(socket, message, Buffer.byteLength(data.toString()));
@@ -114,8 +125,9 @@ export class PageConnection {
       });
       this.feedback?.connect(socket);
       this.data?.connect(socket);
+      this.connectors?.connect(socket);
       let initialized = page.role === PAGE_ROLE.VIEWER ? Promise.resolve() : initialize(socket);
-      void initialized.then(() => { page.ready = true; this.shared.notify(); }).catch((error) => {
+      void initialized.then(() => { page.ready = true; this.shared.notify(); this.connectors?.connect(socket); }).catch((error) => {
         page.error = String(error.message);
         onEvent({ type: 'event', name: 'agui:error', data: { message: String(error.message).slice(0, 2000) } });
         console.error('Could not restore page:', error.message);

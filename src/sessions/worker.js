@@ -62,6 +62,9 @@ process.once('message', async (message) => {
     await starting;
     controller.signal.throwIfAborted();
     let endpoint = await startControlServer(record, () => runtime.status(), stopResources, {
+      connectorControl: (input) => runtime.connectorControl(input),
+      connectorCall: (input) => runtime.connectorCall(input),
+      connectorReceipt: (input) => runtime.connectorReceipt(input),
       proxyStatus: () => runtime.status(),
       proxyChange: (input) => runtime.changeProxy(input),
       insert: (html) => runtime.insert(html),

@@ -3,6 +3,8 @@ import { prepareTextFile, readOptional, removeFile } from '../library/files.js';
 import { defaultDescription, ensureDescription } from '../library/descriptions.js';
 import { clearMetadata } from '../metadata/store.js';
 import { clearRuntimeCache } from '../data/cache.js';
+import { connectorPrivatePath } from '../connectors/store.js';
+import { invalidateConnectorAuthority } from '../connectors/invalidate.js';
 
 /** @param {string} sessionId */
 export function cachePath(sessionId) {
@@ -46,10 +48,13 @@ export async function prepareCachedMarkup(sessionId, html, description = default
 /** @param {string} sessionId */
 export async function clearCachedMarkup(sessionId) {
   await assertPortableName(sessionId);
+  await invalidateConnectorAuthority(sessionId);
   let paths = definitionPaths(sessionId);
   await removeFile(paths.htmlPath);
   await removeFile(paths.descriptionPath);
   await removeFile(paths.proxyPath);
+  await removeFile(paths.connectorPath);
+  await removeFile(connectorPrivatePath(sessionId));
   await clearMetadata(sessionId);
   await clearRuntimeCache(sessionId);
 }

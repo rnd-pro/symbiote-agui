@@ -70,6 +70,7 @@ export async function readReceipt(id) {
   ]) {
     // Receipts written before proxy policies have no proxy artifact.
     if (hashes && typeof hashes === 'object' && !Array.isArray(hashes) && !Object.hasOwn(hashes, 'proxy')) { hashes.proxy = null; }
+    if (hashes && typeof hashes === 'object' && !Array.isArray(hashes) && !Object.hasOwn(hashes, 'connectors')) { hashes.connectors = null; }
     if (!hashes || Object.keys(hashes).length !== TRANSFER_FILE_KEYS.length
       || TRANSFER_FILE_KEYS.some((key) => hashes[key] !== null && !/^[a-f0-9]{64}$/.test(hashes[key] || ''))) { throw new CommandError('Invalid file hashes in the transfer receipt.'); }
   }

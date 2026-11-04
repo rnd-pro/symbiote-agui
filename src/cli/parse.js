@@ -6,6 +6,7 @@ import { parseLibraryCommand } from './library.js';
 import { parseFeedbackCommand } from './feedback.js';
 import { parseMetadataCommand } from './metadata.js';
 import { parseProxyCommand } from './proxy.js';
+import { parseConnectorCommand } from './connectors.js';
 
 /**
  * @param {string[]} args
@@ -32,6 +33,22 @@ export function parseCommand(args) {
         conversation: {
           type: 'string',
         },
+        ...Object.fromEntries([
+          'registry',
+          'path',
+          'script',
+          'revision',
+          'source',
+          'profile',
+          'timeout',
+          'result-bytes',
+          'request',
+        ].map((name) => [
+          name,
+          {
+            type: 'string',
+          },
+        ])),
       },
     });
   } catch (error) {
@@ -61,6 +78,8 @@ export function parseCommand(args) {
   }
   let library = parseLibraryCommand(positionals, values);
   if (library) { return library; }
+  let connector = parseConnectorCommand(positionals, values);
+  if (connector) { return connector; }
   let feedback = parseFeedbackCommand(positionals, values);
   if (feedback) { return feedback; }
   let proxy = parseProxyCommand(positionals, values);

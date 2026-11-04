@@ -8,6 +8,7 @@ import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { FEEDBACK_CONTROL_ROUTES, handleFeedbackControl } from './feedback-control.js';
 import { CONNECTION_CONTROL_ROUTES, handleConnectionsControl } from './connections-control.js';
 import { PROXY_CONTROL_ROUTES, handleProxyControl } from './proxy-control.js';
+import { CONNECTOR_CONTROL_ROUTES, handleConnectorControl } from './connector-control.js';
 
 /**
  * @param {import('../../types/session.js').SessionRecord} record
@@ -27,7 +28,7 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
 
     let action = `${request.method} ${request.url}`;
 
-    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update', 'POST /tools', 'POST /clear', 'POST /share', 'POST /tunnel-renew', 'POST /sync', 'POST /transfer-snapshot', ...FEEDBACK_CONTROL_ROUTES, ...CONNECTION_CONTROL_ROUTES, ...PROXY_CONTROL_ROUTES].includes(action)) {
+    if (!['GET /status', 'GET /events', 'POST /stop', 'POST /insert', 'POST /update', 'POST /tools', 'POST /clear', 'POST /share', 'POST /tunnel-renew', 'POST /sync', 'POST /transfer-snapshot', ...FEEDBACK_CONTROL_ROUTES, ...CONNECTION_CONTROL_ROUTES, ...PROXY_CONTROL_ROUTES, ...CONNECTOR_CONTROL_ROUTES].includes(action)) {
       response.writeHead(404).end();
       return;
     }
@@ -38,6 +39,7 @@ export async function startControlServer(record, getStatus, stop, actions = {}) 
 
     try {
       let result = getStatus();
+      if (CONNECTOR_CONTROL_ROUTES.includes(action)) { result = await handleConnectorControl(action, request, actions); }
       if (PROXY_CONTROL_ROUTES.includes(action)) { result = await handleProxyControl(action, request, actions); }
       if (CONNECTION_CONTROL_ROUTES.includes(action)) { result = await handleConnectionsControl(action, request, actions); }
       if (action === 'POST /transfer-snapshot') {

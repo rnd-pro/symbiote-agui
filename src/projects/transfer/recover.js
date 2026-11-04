@@ -57,6 +57,7 @@ export async function recoverTransfer(id, stateRoot) {
         let text = quarantine ?? await readOptional(join(receiptDirectory(id), 'source', key), 1024 * 1024 + 1024);
         if (text === undefined) { throw new CommandError(`Source backup ${key} is unavailable. Keep the destination and receipt ${id}.`); }
         if (quarantine === undefined && fileHashes({
+          connectors: null,
           proxy: null,
           html: null,
           description: null,
@@ -83,6 +84,7 @@ export async function recoverTransfer(id, stateRoot) {
       let temporary = `${paths[key]}.${id}.tmp`;
       let text = await readOptional(temporary, 1024 * 1024 + 1024);
       if (text !== undefined && fileHashes({
+        connectors: null,
         proxy: null,
         html: null,
         description: null,

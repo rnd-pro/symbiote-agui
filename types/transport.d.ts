@@ -132,10 +132,11 @@ export type PageCommand =
   | { type: 'tools' }
   | { type: 'call'; discoveryId: string; name: string; input: Record<string, unknown>; deadline: number };
 
-export type ServerMessage = (PageCommand & { id: string }) | { type: 'stop' }
+export type ServerMessage = (PageCommand & { id: string }) | { type: 'stop' } | import('./connectors.js').ConnectorServerMessage
   | PageRoleMessage | ({ type: 'snapshot' } & MirrorSnapshot) | FeedbackServerMessage | DataServerMessage | SessionInformationServerMessage | AnnotationServerMessage;
 
 export type PageMessage =
+  | import('./connectors.js').ConnectorPageMessage
   | FeedbackPageMessage
   | DataPageMessage
   | SessionInformationPageMessage
@@ -164,6 +165,8 @@ export interface FragmentAnalysis {
 }
 
 export interface PageApi {
+  callConnector: typeof import('../src/page/client/connectors.js').callConnector;
+  readConnectorReceipt: typeof import('../src/page/client/connectors.js').readConnectorReceipt;
   emit(name: string, data?: unknown): boolean;
   submitFeedback(event: FeedbackEvent, options: FeedbackSubmitOptions): Promise<FeedbackDelivery>;
   commitData(targets: DataTarget[], options?: { commitId?: string }): Promise<DataResult>;

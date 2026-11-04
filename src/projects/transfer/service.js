@@ -15,6 +15,8 @@ import { transferScope, transferPaths, lockTransfer, assertDestinationEmpty, qua
 import { captureTransferSnapshot, readTransferFiles, assertFilesMatch } from './snapshot.js';
 import { fileHashes, receiptDirectory, saveReceipt, markPending, clearMarkers, transferResult } from './receipts.js';
 import { checkTransferDependencies } from './dependencies.js';
+import { connectorPrivatePath } from '../../connectors/store.js';
+import { invalidateConnectorAuthority } from '../../connectors/invalidate.js';
 
 /**
  * @param {import('../../../types/transfer.js').TransferScope} scope
@@ -73,6 +75,7 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
     if (!captured) { throw new CommandError('This worker cannot capture a consistent transfer snapshot. Stop and restart it before copying.'); }
   }
   let empty = {
+    connectors: null,
     proxy: null,
     html: null,
     description: null,
@@ -105,6 +108,7 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
     await checkTransferDependencies(html, destination.folder);
     let cache = input.includeData ? await readRuntimeCache(input.sessionId, source.stateRoot) : undefined;
     let planned = {
+      connectors: files.connectors,
       proxy: files.proxy,
       html,
       description: files.description ?? defaultDescription(input.sessionId),
@@ -126,6 +130,9 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
         if (text !== null) { staged.push(await prepareNewTextFile(paths[key], text, receipt.id)); }
       }
       await markPending(receipt);
+      // Portable requirements never inherit authority from an older destination.
+      await invalidateConnectorAuthority(input.destinationSessionId, destination.stateRoot);
+      await removeFile(connectorPrivatePath(input.destinationSessionId, destination.stateRoot));
       receipt.state = 'publishing';
       await saveReceipt(receipt);
       // HTML is the last publication and makes the completed definition discoverable.
@@ -149,6 +156,8 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
           await removeFile(quarantine);
         }
         let stopped = await assertStopped(source, input.sessionId);
+        await invalidateConnectorAuthority(input.sessionId, source.stateRoot);
+        await removeFile(connectorPrivatePath(input.sessionId, source.stateRoot));
         if (stopped) { await releaseScopedSession(stopped, source.stateRoot); }
       }
       receipt.state = 'complete';

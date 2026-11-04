@@ -12,6 +12,8 @@ import { MAX_HTML_BYTES } from '../../markup/constants.js';
 import { METADATA_LIMITS } from '../../metadata/constants.js';
 import { lstat } from 'node:fs/promises';
 import { hasErrorCode } from '../../shared/system-error.js';
+import { validateConnectorPolicy } from '../../connectors/validate.js';
+import { CONNECTOR_LIMITS } from '../../connectors/constants.js';
 
 /**
  * @param {Record<import('../../../types/transfer.js').TransferFileKey, string>} paths
@@ -38,13 +40,15 @@ export async function readTransferFiles(paths) {
  * @param {string} [acceptedSource]
  * @param {string} [acceptedData]
  * @param {string | null} [acceptedProxy]
+ * @param {string | null} [acceptedConnectors]
  * @returns {Promise<import('../../../types/transfer.js').TransferSnapshot>}
  */
-export async function captureTransferSnapshot(scope, sessionId, acceptedSource, acceptedData, acceptedProxy) {
+export async function captureTransferSnapshot(scope, sessionId, acceptedSource, acceptedData, acceptedProxy, acceptedConnectors) {
   let files = await readTransferFiles(transferPaths(scope, sessionId));
   if (files.html === null) { throw new CommandError('Save a definition before copying or moving this session.'); }
   if (Buffer.byteLength(files.html) > MAX_HTML_BYTES || files.description !== null && Buffer.byteLength(files.description) > MAX_HTML_BYTES
     || files.proxy !== null && Buffer.byteLength(files.proxy) > PROXY_LIMITS.policyBytes
+    || files.connectors !== null && Buffer.byteLength(files.connectors) > CONNECTOR_LIMITS.policyBytes
     || files.metadata !== null && Buffer.byteLength(files.metadata) > METADATA_LIMITS.bytes) { throw new CommandError('Saved artifacts exceed their supported size limits.'); }
   if (acceptedSource !== undefined && (acceptedSource !== files.html || (acceptedData ?? null) !== files.data)) {
     throw new CommandError('Saved files differ from the running worker. Sync or reconcile the source before copying.');
@@ -53,6 +57,10 @@ export async function captureTransferSnapshot(scope, sessionId, acceptedSource, 
     throw new CommandError('Saved proxy policy differs from the running worker. Sync before copying.');
   }
   if (files.proxy !== null) { validateProxyPolicy(JSON.parse(files.proxy)); }
+  if (acceptedConnectors !== undefined && files.connectors !== acceptedConnectors) {
+    throw new CommandError('Saved connector requirements differ from the running worker. Sync before copying.');
+  }
+  if (files.connectors !== null) { validateConnectorPolicy(JSON.parse(files.connectors)); }
   analyzeMarkup(files.html);
   if (files.metadata !== null) { validateMetadata(JSON.parse(files.metadata)); }
   let cache = await readRuntimeCache(sessionId, scope.stateRoot);

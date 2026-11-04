@@ -13,6 +13,8 @@ import { INSERT_TIMEOUT_MS } from '../markup/constants.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { withSessionLock } from '../sessions/storage-lock.js';
+import { CONNECTOR_LIMITS } from '../connectors/constants.js';
+import { validateConnectorPolicy } from '../connectors/validate.js';
 
 /** @param {string} [query] */
 export async function listDefinitions(query = '') {
@@ -65,12 +67,15 @@ export async function saveDefinition(sessionId, file) {
 async function saveLocked(sessionId, file) {
   let description;
   let importedProxy;
+  let importedConnectors;
   let html = file === undefined ? await readCachedMarkup(sessionId) : await readMarkup(file);
   if (html === undefined && getSettings().folder) {
     let cached = cachedDefinitionPaths(sessionId);
     html = await readOptional(cached.htmlPath);
     description = await readOptional(cached.descriptionPath);
     importedProxy = await readOptional(cached.proxyPath, PROXY_LIMITS.policyBytes);
+    importedConnectors = await readOptional(cached.connectorPath, CONNECTOR_LIMITS.policyBytes);
+    if (importedConnectors !== undefined) { validateConnectorPolicy(JSON.parse(importedConnectors)); }
     if (importedProxy !== undefined) {
       try { validateProxyPolicy(JSON.parse(importedProxy)); }
       catch { throw new CommandError('Correct the private cached proxy policy before importing this definition.'); }
@@ -83,7 +88,18 @@ async function saveLocked(sessionId, file) {
   let proxy;
   let proxyPath = definitionPaths(sessionId).proxyPath;
   let published = false;
+  /** @type {import('../../types/session.js').PreparedCache | undefined} */
+  let connectors;
+  let connectorsPublished = false;
   try {
+    if (importedConnectors !== undefined) {
+      connectors = await prepareTextFile(definitionPaths(sessionId).connectorPath, importedConnectors, {
+        text: undefined,
+        maxBytes: CONNECTOR_LIMITS.policyBytes,
+      });
+      await connectors.commit();
+      connectorsPublished = true;
+    }
     if (importedProxy !== undefined) {
       proxy = await prepareTextFile(proxyPath, importedProxy, {
         text: undefined,
@@ -94,9 +110,13 @@ async function saveLocked(sessionId, file) {
     }
     await pending.commit();
   } catch (error) {
+    if (connectorsPublished && await readOptional(definitionPaths(sessionId).connectorPath, CONNECTOR_LIMITS.policyBytes) === importedConnectors) {
+      await removeFile(definitionPaths(sessionId).connectorPath);
+    }
     if (published && await readOptional(proxyPath, PROXY_LIMITS.policyBytes) === importedProxy) { await removeFile(proxyPath); }
     throw error;
   } finally {
+    await connectors?.discard();
     await proxy?.discard();
     await pending.discard();
   }

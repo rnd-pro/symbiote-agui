@@ -1,3 +1,5 @@
+import { CONNECTOR_COMMANDS } from './connectors.js';
+
 export let COMMANDS = Object.freeze({
   save: { usage: 'save <SESSION_ID> [--file <HTML_PATH>]', options: ['file'] },
   describe: { usage: 'describe <SESSION_ID> [--file <MARKDOWN_PATH>]', options: ['file'] },
@@ -108,6 +110,7 @@ export let HELP = [
   ...Object.values(FEEDBACK_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(METADATA_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(PROXY_COMMANDS).map(({ usage }) => `  ${usage}`),
+  ...Object.values(CONNECTOR_COMMANDS).map(({ usage }) => `  ${usage}`),
   '  manager [--no-open]          Open the built-in local session manager',
   '  manager status              Show the manager URL and storage scope',
   '  manager stop                Stop the manager without stopping sessions',

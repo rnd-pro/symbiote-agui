@@ -32,6 +32,7 @@ export async function transferScope(id) {
 export function transferPaths(scope, sessionId) {
   let paths = scopedDefinitionPaths(sessionId, scope.folder);
   return {
+    connectors: paths.connectorPath,
     proxy: paths.proxyPath,
     html: paths.htmlPath,
     description: paths.descriptionPath,
@@ -83,6 +84,7 @@ export async function assertDestinationEmpty(scope, sessionId) {
       `${sessionId}.html`,
       `${sessionId}.md`,
       `${sessionId}.proxy.json`,
+      `${sessionId}.connectors.json`,
     ].some((expected) => display?.toLowerCase() === expected.toLowerCase());
   })) { throw new CommandError('The destination has a conflicting name. Choose an ID that differs beyond letter case.'); }
 }

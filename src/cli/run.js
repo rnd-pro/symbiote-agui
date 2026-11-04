@@ -20,6 +20,7 @@ import { runFeedbackCommand } from './feedback.js';
 import { runMetadataCommand } from './metadata.js';
 import { renameSession } from '../sessions/rename.js';
 import { runProxyCommand } from '../proxy/service.js';
+import { runConnectorCommand } from '../connectors/service.js';
 
 /** @param {import('../../types/cli.js').CommandResult} result */
 function printResult(result) {
@@ -33,6 +34,29 @@ function printResult(result) {
 export async function run(args) {
   try {
     let request = parseCommand(args);
+    if (request.kind === 'connector') {
+      let result = await runConnectorCommand(request);
+      let failed = request.command === 'call' && result?.connectorResult && ![
+        'running',
+        'completed',
+      ].includes(result.connectorResult.state);
+      if (failed) {
+        printResult({
+          ...result,
+          ok: false,
+          error: {
+            code: ERROR_CODE.CONNECTOR_FAILED,
+            message: `Connector outcome: ${result.connectorResult?.code || result.connectorResult?.state}. Inspect the retained request before retrying.`,
+          },
+        });
+        return EXIT_CODE.RUNTIME_ERROR;
+      }
+      printResult({
+        ...result,
+        ok: true,
+      });
+      return EXIT_CODE.SUCCESS;
+    }
     if (request.kind === 'rename') {
       let result = await renameSession(request.sessionId, request.destinationSessionId);
       printResult(result);

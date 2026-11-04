@@ -27,6 +27,7 @@ export type ToolResponse =
 export type SessionToolResponse = { sessionId: string } & ToolResponse;
 
 export interface PagePeer {
+  backendLocal?: boolean;
   socket: import('ws').WebSocket;
   url?: string;
   title: string;

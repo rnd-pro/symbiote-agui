@@ -24,6 +24,7 @@ export type MetadataCliRequest =
   | { kind: 'metadata'; command: 'clear'; sessionId: string; key: string };
 
 export type CliRequest =
+  | import('./connectors.js').ConnectorCliRequest
   | { kind: 'rename'; sessionId: string; destinationSessionId: string }
   | LibraryRequest
   | FeedbackCliRequest

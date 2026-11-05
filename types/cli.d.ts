@@ -24,6 +24,7 @@ export type MetadataCliRequest =
   | { kind: 'metadata'; command: 'clear'; sessionId: string; key: string };
 
 export type CliRequest =
+  | import('./assets.js').AssetCliRequest
   | import('./connectors.js').ConnectorCliRequest
   | { kind: 'rename'; sessionId: string; destinationSessionId: string }
   | LibraryRequest
@@ -55,6 +56,7 @@ export interface CommandFailure {
 }
 
 export type CommandResult = ({ ok: true } & (SessionStatus | import('./tools.js').SessionToolResponse))
+  | ({ ok: true } & import('./assets.js').AssetResult)
   | import('./session.js').SessionRenameResult
   | (CommandFailure & SessionStatus)
   | ({ ok: true } & import('./manager.js').ManagerStatus)

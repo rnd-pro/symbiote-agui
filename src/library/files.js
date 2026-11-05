@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { link, mkdir, rename, unlink, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import { readUtf8Markup } from '../markup/read-input.js';
 import { CommandError } from '../shared/command-error.js';
 import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
@@ -72,13 +72,26 @@ export async function prepareTextFile(path, text, expected) {
  * @returns {Promise<import('../../types/session.js').PreparedCache>}
  */
 export async function prepareNewTextFile(path, text, id = randomUUID()) {
-  let temporary = `${path}.${id}.tmp`;
+  return prepareFile(path, text, {
+    id,
+  });
+}
+
+/**
+ * @param {string} path
+ * @param {string | Uint8Array} data
+ * @param {{ id?: string; replace?: boolean }} [options]
+ * @returns {Promise<import('../../types/session.js').PreparedCache>}
+ */
+export async function prepareFile(path, data, options = {}) {
+  let id = options.id ?? randomUUID();
+  let temporary = options.id ? `${path}.${id}.tmp` : join(dirname(path), `.agui-${id}.tmp`);
   await mkdir(dirname(path), {
     recursive: true,
     mode: 0o700,
   });
   try {
-    await writeFile(temporary, text, {
+    await writeFile(temporary, data, {
       flag: 'wx',
       mode: 0o600,
       flush: true,
@@ -89,7 +102,7 @@ export async function prepareNewTextFile(path, text, id = randomUUID()) {
   }
   return {
     // A link publishes a complete file atomically and fails if the target exists.
-    commit: () => link(temporary, path),
+    commit: () => options.replace ? rename(temporary, path) : link(temporary, path),
     discard: () => removeFile(temporary),
   };
 }

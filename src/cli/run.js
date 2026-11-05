@@ -21,6 +21,7 @@ import { runMetadataCommand } from './metadata.js';
 import { renameSession } from '../sessions/rename.js';
 import { runProxyCommand } from '../proxy/service.js';
 import { runConnectorCommand } from '../connectors/service.js';
+import { runAssetCommand } from '../assets/service.js';
 
 /** @param {import('../../types/cli.js').CommandResult} result */
 function printResult(result) {
@@ -34,6 +35,13 @@ function printResult(result) {
 export async function run(args) {
   try {
     let request = parseCommand(args);
+    if (request.kind === 'assets') {
+      printResult({
+        ok: true,
+        ...await runAssetCommand(request),
+      });
+      return EXIT_CODE.SUCCESS;
+    }
     if (request.kind === 'connector') {
       let result = await runConnectorCommand(request);
       let failed = request.command === 'call' && result?.connectorResult && ![

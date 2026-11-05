@@ -7,6 +7,7 @@ import { parseFeedbackCommand } from './feedback.js';
 import { parseMetadataCommand } from './metadata.js';
 import { parseProxyCommand } from './proxy.js';
 import { parseConnectorCommand } from './connectors.js';
+import { parseAssetCommand } from './assets.js';
 
 /**
  * @param {string[]} args
@@ -31,6 +32,18 @@ export function parseCommand(args) {
         key: { type: 'string' },
         'reset-data': { type: 'boolean' },
         conversation: {
+          type: 'string',
+        },
+        as: {
+          type: 'string',
+        },
+        replace: {
+          type: 'boolean',
+        },
+        offset: {
+          type: 'string',
+        },
+        limit: {
           type: 'string',
         },
         ...Object.fromEntries([
@@ -78,6 +91,8 @@ export function parseCommand(args) {
   }
   let library = parseLibraryCommand(positionals, values);
   if (library) { return library; }
+  let assets = parseAssetCommand(positionals, values);
+  if (assets) { return assets; }
   let connector = parseConnectorCommand(positionals, values);
   if (connector) { return connector; }
   let feedback = parseFeedbackCommand(positionals, values);

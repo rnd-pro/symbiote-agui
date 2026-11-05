@@ -1,4 +1,5 @@
 import { CONNECTOR_COMMANDS } from './connectors.js';
+import { ASSET_COMMANDS } from './assets.js';
 
 export let COMMANDS = Object.freeze({
   save: { usage: 'save <SESSION_ID> [--file <HTML_PATH>]', options: ['file'] },
@@ -110,6 +111,7 @@ export let HELP = [
   ...Object.values(FEEDBACK_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(METADATA_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(PROXY_COMMANDS).map(({ usage }) => `  ${usage}`),
+  ...Object.values(ASSET_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(CONNECTOR_COMMANDS).map(({ usage }) => `  ${usage}`),
   '  manager [--no-open]          Open the built-in local session manager',
   '  manager status              Show the manager URL and storage scope',
@@ -131,6 +133,8 @@ export let HELP = [
   'metadata set reads JSON from file or stdin; supplied fields replace those fields, leaving others unchanged.',
   'metadata clear --key dataFlow removes only data-flow metadata, not application data or the description.',
   'proxy allow/remove configures saved public source origins; status reports policy, limits, and forwarding availability.',
+  'assets add/list/remove manages published session files without restarting workers; add requires --replace to overwrite.',
+  'Asset commands manage files only; local asset HTTP requests are not supported.',
   'sync reloads saved HTML into running sessions without rewriting source files or running Git commands.',
   'AGUI_LIBRARY_DIR overrides the project folder; without a folder, private caching remains the default.',
   'insert replaces the session content; input is limited to 1 MiB.',

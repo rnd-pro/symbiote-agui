@@ -21,6 +21,7 @@ export function cachedDefinitionPaths(sessionId) {
     descriptionPath: join(directory, `${name}.md`),
     proxyPath: join(directory, `${name}.proxy.json`),
     connectorPath: join(directory, `${name}.connectors.json`),
+    assetsPath: join(directory, `${name}.assets`),
   };
 }
 
@@ -40,6 +41,7 @@ export function scopedDefinitionPaths(sessionId, folder) {
     descriptionPath: join(folder, `${sessionId}.md`),
     proxyPath: join(folder, `${sessionId}.proxy.json`),
     connectorPath: join(folder, `${sessionId}.connectors.json`),
+    assetsPath: join(folder, `${sessionId}.assets`),
   } : cachedDefinitionPaths(sessionId);
 }
 
@@ -70,6 +72,7 @@ export async function assertPortableName(sessionId) {
     `${sessionId}.md`,
     `${sessionId}.proxy.json`,
     `${sessionId}.connectors.json`,
+    `${sessionId}.assets`,
   ];
   let collision = files.find((file) => expected.some((name) => name.toLowerCase() === file.name.toLowerCase() && name !== file.name));
   if (collision) {

@@ -6,7 +6,7 @@ import { emptyProxyPolicy } from '../../src/proxy/policy.js';
 
 /**
  * @param {URL} url
- * @param {{ method?: string; headers?: Record<string, string>; body?: string }} [options]
+ * @param {{ method?: string; headers?: Record<string, string>; body?: string; path?: string }} [options]
  * @returns {Promise<{ status: number; headers: import('node:http').IncomingHttpHeaders; body: string }>}
  */
 export function requestProxy(url, options = {}) {

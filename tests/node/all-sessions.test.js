@@ -67,7 +67,12 @@ test('stop-all retains caches; clear-all includes stopped caches and keeps live 
     assert.equal(session.ok, true);
     if (!session.ok) { continue; }
     if (session.sessionId === 'saved-only') {
-      assert.deepEqual(session, { ok: true, sessionId: 'saved-only', state: 'stopped', active: false });
+      assert.partialDeepStrictEqual(session, {
+        ok: true,
+        sessionId: 'saved-only',
+        state: 'stopped',
+        active: false,
+      });
       continue;
     }
     assert.equal(session.active, true);
@@ -177,11 +182,18 @@ test('status all marks dead workers inactive without changing their metadata or 
   let stale = { ...await reserveSession('stale'), pid: Number(stdout) };
   await writeSession(stale);
   await save('stale');
-  assert.deepEqual(await cli('status all'), {
+  assert.partialDeepStrictEqual(await cli('status all'), {
     ok: true,
     command: 'status all',
     total: 1,
-    sessions: [{ ok: true, sessionId: 'stale', state: 'stopped', active: false }],
+    sessions: [
+      {
+        ok: true,
+        sessionId: 'stale',
+        state: 'stopped',
+        active: false,
+      },
+    ],
   });
   assert.deepEqual(await readSession('stale'), stale);
   assert.equal(await readCachedMarkup('stale'), '<p>stale</p>');

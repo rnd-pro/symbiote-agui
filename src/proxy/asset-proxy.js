@@ -1,4 +1,4 @@
-import { isPageOrigin } from '../server/page-access.js';
+import { isPageRequest } from '../server/page-access.js';
 import { finished } from 'node:stream/promises';
 import { PROXY_LIMITS, PROXY_SOURCE_HEADER } from './constants.js';
 import { proxyAllowsUrl } from './policy.js';
@@ -70,17 +70,7 @@ export class AssetProxy {
     if (headers['transfer-encoding'] || headers['content-length'] && headers['content-length'] !== '0') {
       throw new ProxyError('INVALID_REQUEST');
     }
-    let hosts = [
-      new URL(origin).host,
-      ...(this.access.publicOrigin ? [
-        new URL(this.access.publicOrigin).host,
-      ] : []),
-    ];
-    if (!hosts.includes(headers.host || '') || headers.origin !== undefined && !isPageOrigin(headers.origin, origin, this.access)
-      || headers['sec-fetch-site'] !== undefined && ![
-        'same-origin',
-        'none',
-      ].includes(String(headers['sec-fetch-site']))) { throw new ProxyError('ORIGIN_DENIED'); }
+    if (!isPageRequest(request, origin, this.access)) { throw new ProxyError('ORIGIN_DENIED'); }
     let url = new URL(request.url || '', origin);
     if (url.searchParams.getAll('url').length !== 1 || [
       ...url.searchParams.keys(),

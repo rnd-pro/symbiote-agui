@@ -32,6 +32,7 @@ export interface SessionStatus {
   feedbackSettings?: import('./feedback.js').FeedbackSettings;
   data?: import('./data.js').DataStatus;
   proxy?: import('./proxy.js').ProxyStatus;
+  assets?: import('./assets.js').AssetStatus;
   connectors?: import('./connectors.js').ConnectorStatus;
   /** Private authenticated connector control results only. */
   connectorControl?: unknown;

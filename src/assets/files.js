@@ -130,16 +130,41 @@ export async function assertAssetFileUnchanged(path, before) {
 }
 
 /**
+ * @param {string} path
+ * @param {AbortSignal} [signal]
+ * @returns {Promise<import('../../types/assets.js').AssetFile>}
+ */
+export async function openAssetFile(path, signal) {
+  signal?.throwIfAborted();
+  let info = await assetFileInfo(path);
+  let handle = await open(path, constants.O_RDONLY | (constants.O_NOFOLLOW || 0) | (constants.O_NONBLOCK || 0));
+  try {
+    signal?.throwIfAborted();
+    if (!sameAssetFile(info, await handle.stat())) { throw new CommandError('The asset changed while opening it.'); }
+    await assertAssetFileUnchanged(path, info);
+    signal?.throwIfAborted();
+    return {
+      handle,
+      info,
+    };
+  } catch (error) {
+    await handle.close();
+    throw error;
+  }
+}
+
+/**
  * Read a single bounded file without following source links or accepting concurrent edits.
  * @param {string} source
  */
 export async function readAssetSource(source) {
   let path = resolve(source);
   await directoryChain(dirname(path));
-  let before = await assetFileInfo(path);
-  let handle = await open(path, constants.O_RDONLY | (constants.O_NOFOLLOW || 0) | (constants.O_NONBLOCK || 0));
+  let {
+    handle,
+    info: before,
+  } = await openAssetFile(path);
   try {
-    if (!sameAssetFile(before, await handle.stat())) { throw new CommandError('The asset source changed while opening it.'); }
     let buffer = Buffer.alloc(before.size + 1);
     let length = 0;
     while (length < buffer.length) {

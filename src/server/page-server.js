@@ -10,6 +10,8 @@ import { TUNNEL_HEALTH_PATH } from '../tunnel/constants.js';
 import { AssetProxy } from '../proxy/asset-proxy.js';
 import { emptyProxyPolicy } from '../proxy/policy.js';
 import { PROXY_PATH } from '../proxy/constants.js';
+import { LocalAssets } from '../assets/http-server.js';
+import { definitionPaths } from '../library/paths.js';
 
 /**
  * @param {import('../../types/session.js').PageAccess} access
@@ -30,7 +32,12 @@ export async function startPageServer(access, getProxyPolicy = emptyProxyPolicy,
 
   let server = createServer({ port: { host: '127.0.0.1', port: 0 } });
   let proxy = new AssetProxy(access, getProxyPolicy, proxyDependencies);
-  server.once('close', () => { void proxy.close(); });
+  let assets = new LocalAssets(access, definitionPaths(access.path.slice(1, -1)).assetsPath);
+  await assets.initialize();
+  server.once('close', () => {
+    void proxy.close();
+    void assets.close();
+  });
   let origin = '';
   let [handler] = server.listeners('request');
   server.removeAllListeners('request');
@@ -38,6 +45,10 @@ export async function startPageServer(access, getProxyPolicy = emptyProxyPolicy,
     let pathname = request.url?.split('?')[0];
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
+    if (assets.matches(request.url)) {
+      void assets.serve(request, response, origin);
+      return;
+    }
     if (pathname === `${access.path}${PROXY_PATH}`) {
       void proxy.serve(request, response, origin);
       return;
@@ -93,9 +104,16 @@ export async function startPageServer(access, getProxyPolicy = emptyProxyPolicy,
 
   try {
     origin = await waitForServer(server);
-    return { server, url: `${origin}${access.path}`, styles, proxy };
+    return {
+      server,
+      url: `${origin}${access.path}`,
+      styles,
+      proxy,
+      assets,
+    };
   } catch (error) {
     await proxy.close();
+    await assets.close();
     await closeServer(server);
     throw error;
   }

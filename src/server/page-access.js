@@ -20,3 +20,24 @@ export function createPageAccess(record) {
 export function isPageOrigin(provided, localOrigin, access) {
   return provided === localOrigin || (!!access.publicOrigin && provided === access.publicOrigin);
 }
+
+/**
+ * @param {import('node:http').IncomingMessage} request
+ * @param {string} localOrigin
+ * @param {import('../../types/session.js').PageAccess} access
+ */
+export function isPageRequest(request, localOrigin, access) {
+  let hosts = [
+    new URL(localOrigin).host,
+    ...(access.publicOrigin ? [
+      new URL(access.publicOrigin).host,
+    ] : []),
+  ];
+  let headers = request.headers;
+  return hosts.includes(headers.host || '')
+    && (headers.origin === undefined || isPageOrigin(headers.origin, localOrigin, access))
+    && (headers['sec-fetch-site'] === undefined || [
+      'same-origin',
+      'none',
+    ].includes(String(headers['sec-fetch-site'])));
+}

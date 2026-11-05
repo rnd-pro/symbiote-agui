@@ -30,8 +30,10 @@ async function release(lock, owner) {
  * @param {string} root
  * @param {() => Promise<T>} task
  * @param {string} [name]
+ * @param {AbortSignal} [signal]
  */
-export async function withDirectoryLock(root, task, name = 'storage') {
+export async function withDirectoryLock(root, task, name = 'storage', signal) {
+  signal?.throwIfAborted();
   await mkdir(root, {
     recursive: true,
     mode: 0o700,
@@ -44,6 +46,7 @@ export async function withDirectoryLock(root, task, name = 'storage') {
     await mkdir(join(temporary, owner));
     let deadline = Date.now() + 30000;
     while (!acquired) {
+      signal?.throwIfAborted();
       try { await rename(temporary, lock); acquired = true; }
       catch (error) {
         if (![
@@ -59,9 +62,12 @@ export async function withDirectoryLock(root, task, name = 'storage') {
         let match = previous?.match(/^([1-9][0-9]*)-[a-f0-9-]{36}$/);
         if (entries.length === 1 && match && !isProcessAlive(Number(match[1]))) { await release(lock, previous); }
         if (Date.now() >= deadline) { throw storageError(lock, new Error('Storage is busy. Retry after the current operation finishes.')); }
-        await delay(20);
+        await delay(20, undefined, {
+          signal,
+        });
       }
     }
+    signal?.throwIfAborted();
     return await task();
   } finally {
     if (acquired) { await release(lock, owner); }

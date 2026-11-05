@@ -34,6 +34,8 @@ export class SessionRuntime {
   server;
   /** @type {import('../proxy/asset-proxy.js').AssetProxy | undefined} */
   assetProxy;
+  /** @type {import('../assets/http-server.js').LocalAssets | undefined} */
+  assets;
   /** @type {PageConnection | undefined} */
   pages;
   /** @type {import('../../types/markup.js').StyleCompiler | undefined} */
@@ -79,8 +81,15 @@ export class SessionRuntime {
     let { classes } = analyzeMarkup(html);
     let access = createPageAccess(this.record);
     this.access = access;
-    let { server, url, styles, proxy } = await startPageServer(access, () => this.proxy.policy);
+    let {
+      server,
+      url,
+      styles,
+      proxy,
+      assets,
+    } = await startPageServer(access, () => this.proxy.policy);
     this.assetProxy = proxy;
+    this.assets = assets;
     this.server = server;
     this.styles = styles;
     publishStyles(styles.build(classes));
@@ -113,6 +122,7 @@ export class SessionRuntime {
       feedback: this.feedback.status(),
       data: this.data.status(),
       proxy: proxyStatus(this.record.sessionId, this.proxy.policy, !!this.assetProxy && !this.closing),
+      assets: this.assets?.status(),
       connectors: this.connectors.status(),
       ...(this.data.warning ? { warning: this.data.warning } : {}),
       ...(this.tunnel ? { tunnel: { ...this.tunnel.status } } : {}),
@@ -365,7 +375,10 @@ export class SessionRuntime {
     this.closing = true;
     this.connectors.closing = true;
     try {
-      await this.assetProxy?.close();
+      await Promise.all([
+        this.assetProxy?.close(),
+        this.assets?.close(),
+      ]);
       await this.connectors.close();
       await this.feedback.close();
       await this.pages?.close();

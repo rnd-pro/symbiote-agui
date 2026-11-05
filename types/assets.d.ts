@@ -23,6 +23,24 @@ export interface AssetInventory {
   totalBytes: number;
 }
 
+export interface AssetFile {
+  handle: import('node:fs/promises').FileHandle;
+  info: import('node:fs').Stats;
+}
+
+export interface AssetStatus {
+  configured: boolean | null;
+  /** Route capability; not a claim that every published file is valid. */
+  available: boolean;
+  path: string;
+  error?: string;
+}
+
+export interface AssetHttpDependencies {
+  limits?: Partial<Record<keyof typeof import('../src/assets/constants.js').ASSET_LIMITS, number>>;
+  open?: (path: string, signal: AbortSignal) => Promise<AssetFile>;
+}
+
 export type AssetResult =
   | { sessionId: string; command: 'assets list'; total: number; totalBytes: number; offset: number; limit: number; assets: AssetEntry[] }
   | { sessionId: string; command: 'assets add'; replaced: boolean; asset: AssetEntry }

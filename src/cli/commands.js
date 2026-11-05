@@ -134,7 +134,7 @@ export let HELP = [
   'metadata clear --key dataFlow removes only data-flow metadata, not application data or the description.',
   'proxy allow/remove configures saved public source origins; status reports policy, limits, and forwarding availability.',
   'assets add/list/remove manages published session files without restarting workers; add requires --replace to overwrite.',
-  'Asset commands manage files only; local asset HTTP requests are not supported.',
+  'Running sessions serve published files at /<SESSION_ID>/_assets/<RELATIVE_PATH>; status reports route availability.',
   'sync reloads saved HTML into running sessions without rewriting source files or running Git commands.',
   'AGUI_LIBRARY_DIR overrides the project folder; without a folder, private caching remains the default.',
   'insert replaces the session content; input is limited to 1 MiB.',

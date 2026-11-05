@@ -2,6 +2,7 @@ import { SHUTDOWN_TIMEOUT_MS, SESSION_STATE } from './constants.js';
 import { requestSession } from './client.js';
 import { isProcessAlive, readSession, releaseSession } from './store.js';
 import { checkTunnelActivity } from '../tunnel/activity.js';
+import { assetStatus } from '../assets/status.js';
 
 /**
  * @param {string} sessionId
@@ -12,10 +13,16 @@ export async function statusSession(sessionId, checkTunnel = true) {
   let record = await readSession(sessionId);
 
   if (!record || !isProcessAlive(record.pid)) {
-    return { sessionId, state: SESSION_STATE.STOPPED, active: false };
+    return {
+      sessionId,
+      state: SESSION_STATE.STOPPED,
+      active: false,
+      assets: assetStatus(sessionId),
+    };
   }
 
   let status = await requestSession(record, 'status');
+  status.assets ??= assetStatus(sessionId);
   if (checkTunnel && status.tunnel) { status = await checkTunnelActivity(status); }
   return { ...status, pid: record.pid, active: status.state !== SESSION_STATE.STOPPED };
 }

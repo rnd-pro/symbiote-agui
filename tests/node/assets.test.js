@@ -463,7 +463,7 @@ test('real CLI manages stopped and running assets without changing worker state,
   assert.deepEqual(await readSession('desk'), before);
   assert.deepEqual(await readFile(runtimeCachePath('desk')), originalData);
   assert.deepEqual(await readFile(paths.descriptionPath), originalDescription);
-  assert.equal((await fetch(new URL('_assets/live.svg', before.url))).status, 404, 'HTTP serving belongs to step 2.');
+  assert.equal(await (await fetch(new URL('_assets/live.svg', before.url))).text(), '<svg/>');
   await assert.rejects(project.cli([
     'assets',
     'add',

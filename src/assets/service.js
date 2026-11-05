@@ -9,6 +9,7 @@ import { hasErrorCode } from '../shared/system-error.js';
 import { ASSET_LIMITS } from './constants.js';
 import { assetContentType, assetEntry, assetPath, assertAssetName } from './paths.js';
 import { scanAssets } from './inventory.js';
+import { withAssetLock } from './lock.js';
 import { assetRoot, assertAssetRoot, assetFileInfo, assertAssetFileUnchanged, assetFailure, readAssetSource, resolveAssetFile, pruneAssetParents } from './files.js';
 
 /**
@@ -81,7 +82,7 @@ async function removeAsset(directory, request) {
  */
 export async function runAssetCommand(request) {
   try {
-    return await withSessionLock(request.sessionId, async () => {
+    return await withSessionLock(request.sessionId, () => withAssetLock(request.sessionId, async () => {
       await assertPortableName(request.sessionId);
       let paths = definitionPaths(request.sessionId);
       let saved;
@@ -100,6 +101,6 @@ export async function runAssetCommand(request) {
         limit: request.limit,
         assets: inventory.entries.slice(request.offset, request.offset + request.limit),
       };
-    });
+    }));
   } catch (error) { throw assetFailure(error); }
 }

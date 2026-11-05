@@ -2,6 +2,8 @@
 
 For an introduction and first-use setup, see the [README](../README.md). See the [team library guide](./library.md) for Git-based reuse, folder settings, descriptions, and syncing. Interface generation, Symbiote patterns, and tool invocation are covered by the [AGUI skill](../skills/agui/SKILL.md).
 
+For local logos, images, fonts, CSS, browser modules, documents, and JSON, see [local session assets](./assets.md). The guide covers `assets add/list/remove`, portable `_assets` URLs, status, lifecycle, and public access.
+
 ## Session manager
 
 ```sh

@@ -2,6 +2,7 @@ import { CONTENT_ROOT_ID, STYLESHEET_ID } from '../../markup/constants.js';
 import { mirrorOverlays, MIRROR_OVERLAY_STYLES } from './mirror-overlays.js';
 import { TABLE_ITEM_TAGS } from '../../uilib/widgets/table/constants.js';
 import { mirrorMaps } from './mirror-maps.js';
+import { mirrorAssets } from './mirror-assets.js';
 
 /**
  * @param {number} revision
@@ -34,7 +35,8 @@ export function captureSnapshot(revision, anchors) {
   for (let element of copy.querySelectorAll(TABLE_ITEM_TAGS.join(','))) {
     element.replaceWith(...element.childNodes);
   }
-  copy.querySelectorAll('script, iframe, object, embed, base, meta, link').forEach((element) => element.remove());
+  copy.querySelectorAll('script, iframe, object, embed, base, meta').forEach((element) => element.remove());
+  mirrorAssets(copy);
   for (let element of copy.querySelectorAll('*')) {
     for (let attribute of [...element.attributes]) {
       if (/^on/i.test(attribute.name) || ['autofocus', 'contenteditable'].includes(attribute.name)) {

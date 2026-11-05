@@ -84,4 +84,6 @@ Use [`agui-connector`](./controls/connector/README.md) for headless, explicit lo
 
 Use the self-contained catalogue and examples in `skills/agui/SKILL.md` for authoring. The packaged `src/uilib/gallery.html` is the manual review fixture.
 
+Publish the files from `gallery.assets/` alongside the gallery definition before opening its Design tokens tab. `agui.png` is an unmodified copy of the original project image used in the root README; `documents/brief.md` demonstrates relative media. Use `assets add` for each file, preserving its path below `gallery.assets/`, or copy the directory to `<ID>.assets/` in a project library. See [local assets](../../docs/assets.md) for publication and sharing rules.
+
 Use grayscale surfaces with color reserved for accents and alerts. Inputs are recessed, default buttons use a solid contrasting fill, and panels have a soft border and shadow. Text inputs, selects, and buttons share `--agui-control-height` for height and minimum width. Checkbox/radio inputs occupy that same height around their smaller native indicators, including without a wrapping label. Toggle labels provide the shared control height around tracks sized by `--agui-toggle-height`. Textareas retain multiline sizing. Compact density reduces spacing without shrinking control targets.

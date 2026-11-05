@@ -51,6 +51,8 @@ AGUI runs locally by default. The CLI is enough to use it; [MCP integrations](./
 
 Interfaces can load public documents, feeds, images, and JSON through the [session asset proxy](./docs/reference.md#asset-proxy) when a source does not allow browser CORS access.
 
+Use original project logos, images, and documents as [local session assets](./docs/assets.md). They travel with saved interfaces and remain available through public sharing.
+
 With a verified [private feedback handler](./docs/reference.md#private-feedback-handlers), explicit Save or Submit actions can deliver consolidated changes to the originating conversation. The agent completes the corresponding authorized external operation and verifies the result before marking it saved. Routine edits stay local, and delivery acknowledgement is separate from external persistence. The [agent workflow](./skills/agui/SKILL.md#agent-session-feedback) covers setup and behavior when native delivery is unavailable.
 
 For repeatable operations, interfaces can also call approved [local connector backends](./docs/connectors.md) directly. Reviewed scripts, private credentials, and scoped access let an AGUI work with its data sources while the agent is away.

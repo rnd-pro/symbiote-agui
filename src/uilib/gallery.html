@@ -500,6 +500,16 @@ npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
           </agui-tab>
           <agui-tab value="design" label="Design tokens">
             <div class="space-y-6">
+              <agui-panel id="gallery-local-assets" class="grid gap-4">
+                <h2>Local assets</h2>
+                <figure class="grid justify-items-start gap-2">
+                  <img id="gallery-local-image" src="./_assets/agui.png" alt="Symbiote AGUI"
+                    width="1024" height="576" loading="lazy" class="h-auto w-56 object-contain">
+                  <figcaption class="text-sm text-agui-muted">The original AGUI image, served by this session.</figcaption>
+                </figure>
+                <agui-markdown id="gallery-local-document" src="./_assets/documents/brief.md"
+                  label="Local asset guide" bind="$.texts: APP/markdownTexts"></agui-markdown>
+              </agui-panel>
               <agui-panel class="grid gap-4">
                 <h2>Theme tokens</h2>
                 <div class="flex flex-wrap gap-2">

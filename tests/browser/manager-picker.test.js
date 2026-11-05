@@ -26,7 +26,7 @@ test('manager offers a folder picker first, preserves cancellation and falls bac
   let page = await browser.newPage();
   page.setDefaultTimeout(8000);
   await page.goto(manager.launchUrl);
-  await page.waitForFunction(() => !document.querySelector('#manager-choose-project')?.hasAttribute('disabled'));
+  await page.waitForSelector('#manager-choose-project:not(:disabled):not([aria-busy="true"])');
   await page.click('.toolbar button[aria-label="Projects"]');
   await page.waitForSelector('#manager-projects dialog[open]');
   assert.equal(await page.$eval('#manager-connect-project', (form) => form.closest('details')?.open), false);
@@ -62,12 +62,13 @@ test('manager offers a folder picker first, preserves cancellation and falls bac
   await page.waitForFunction(() => document.querySelector('.notice')?.textContent?.includes('Folder selection canceled'));
   assert.equal(await page.$(`#manager-project-list [data-project="${projectId(folder)}"]`), null);
   assert.equal(await page.$eval('#manager-projects [role="alert"]', (element) => element.textContent), '');
-  await page.waitForFunction(() => !document.querySelector('#manager-choose-project')?.hasAttribute('disabled'));
+  // Refresh may enable the control before the previous action's promise settles.
+  await page.waitForSelector('#manager-choose-project:not(:disabled):not([aria-busy="true"])');
   await page.evaluate(() => Reflect.set(window, 'pickerOutcome', 'selected'));
   await page.click('#manager-choose-project');
   await page.waitForSelector(`#manager-project-list [data-project="${projectId(folder)}"]`);
   assert.equal(page.url(), manager.url, 'Picking connects without switching scope.');
-  await page.waitForFunction(() => !document.querySelector('#manager-choose-project')?.hasAttribute('disabled'));
+  await page.waitForSelector('#manager-choose-project:not(:disabled):not([aria-busy="true"])');
   await page.evaluate(() => Reflect.set(window, 'pickerOutcome', 'error'));
   await page.click('#manager-choose-project');
   await page.waitForFunction(() => document.querySelector('#manager-projects [role="alert"]')?.textContent?.includes('picker unavailable'));

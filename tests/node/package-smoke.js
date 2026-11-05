@@ -74,12 +74,18 @@ test('the production tarball runs through npm exec outside the checkout', { time
     'src/manager/worker.js',
     'src/manager/page/index.html',
     'src/manager/page/index.js',
-    'src/manager/page/rows.js',
     'src/manager/page/connection.js',
     'src/manager/page/styles.css',
     'src/proxy/asset-proxy.js',
     'src/cli/proxy.js',
     'types/proxy.d.ts',
+    'src/assets/http-server.js',
+    'src/cli/assets.js',
+    'src/page/client/mirror-assets.js',
+    'src/uilib/gallery.assets/agui.png',
+    'src/uilib/gallery.assets/documents/brief.md',
+    'types/assets.d.ts',
+    'docs/assets.md',
     'skills/agui/SKILL.md',
   ]) {
     assert.ok(files.includes(path), `${path} must be included in the tarball.`);
@@ -113,9 +119,21 @@ test('the production tarball runs through npm exec outside the checkout', { time
   started = true;
   assert.equal(session.state, 'waiting');
   assert.equal((await cli('status', 'package-smoke')).url, session.url);
-  let managerSource = '<h1>Packaged project workflow</h1>';
+  let managerSource = '<h1>Packaged project workflow</h1><img src="./_assets/images/logo.png" alt="AGUI">';
   await writeFile(join(caller, 'manager-source.html'), managerSource);
   await cli('insert', 'package-smoke', '--file', 'manager-source.html');
+  let logo = await readFile(join(modules, 'symbiote-agui', 'src/uilib/gallery.assets/agui.png'));
+  let logoSource = join(caller, 'original logo.png');
+  await writeFile(logoSource, logo);
+  let published = await cli('assets', 'add', 'package-smoke', '--file', logoSource, '--as', 'images/logo.png');
+  assert.equal(published.asset.url, './_assets/images/logo.png');
+  let inventory = await cli('assets', 'list', 'package-smoke');
+  assert.equal(inventory.assets[0].size, logo.length);
+  assert.equal((await cli('status', 'package-smoke')).assets.available, true);
+  let assetUrl = new URL('_assets/images/logo.png', session.url);
+  let assetResponse = await fetch(assetUrl);
+  assert.equal(assetResponse.headers.get('content-type'), 'image/png');
+  assert.deepEqual(Buffer.from(await assetResponse.arrayBuffer()), logo);
   assert.equal((await cli('proxy', 'status', 'package-smoke')).proxy.enabled, false);
   let policy = await cli('proxy', 'allow', 'package-smoke', 'https://example.org');
   assert.equal(policy.proxy.enabled, true);
@@ -189,6 +207,7 @@ test('the production tarball runs through npm exec outside the checkout', { time
     });
     assert.equal(copied.transfer?.state, 'complete');
     assert.equal(await readFile(join(team, 'package-copy.html'), 'utf8'), managerSource);
+    assert.deepEqual(await readFile(join(team, 'package-copy.assets/images/logo.png')), logo);
     let selected = await manage('switch project', {
       projectId: 'default',
     });
@@ -248,8 +267,11 @@ test('the production tarball runs through npm exec outside the checkout', { time
   assert.equal((await cli('proxy', 'status', 'package-smoke')).proxy.enabled, true);
   assert.equal((await cli('proxy', 'remove', 'package-smoke', 'https://example.org')).proxy.enabled, false);
   assert.equal(new URL(restored.url).pathname, new URL(session.url).pathname);
+  assert.deepEqual(Buffer.from(await (await fetch(new URL('_assets/images/logo.png', restored.url))).arrayBuffer()), logo);
   assert.match(await (await fetch(new URL('/styles.css.js', restored.url))).text(), /123px/);
   assert.equal((await cli('clear', 'package-smoke')).cleared, true);
+  assert.equal((await fetch(new URL('_assets/images/logo.png', restored.url))).status, 404);
+  assert.deepEqual(await readFile(logoSource), logo);
   await cli('stop', 'package-smoke');
   started = false;
   assert.equal((await cli('clear', 'package-smoke')).cleared, true);

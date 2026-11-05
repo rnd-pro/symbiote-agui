@@ -19,20 +19,20 @@ export async function listProjectEntries(projectId, path = '', offset = 0, showH
   /** @type {import('../../../types/explorer.js').ProjectEntry[]} */
   let entries = [];
   try {
-    if (scope.cache && path) { throw new CommandError('Default contains saved definitions, not browsable subdirectories.'); }
     let directoryPath = await resolveExplorerPath(scope, path, showHidden);
     let directory = await opendir(directoryPath);
     let scanned = 0;
     for await (let entry of directory) {
       if (++scanned > EXPLORER_DIRECTORY_LIMIT) { throw new CommandError(`This directory exceeds the ${EXPLORER_DIRECTORY_LIMIT}-entry browsing limit.`); }
-      let name = scope.cache ? cacheDisplayName(entry.name) : entry.name;
+      let name = scope.cache && !path ? cacheDisplayName(entry.name) : entry.name;
       if (!name || !scope.cache && !showHidden && hiddenPath(name)) { continue; }
+      if (scope.cache && path && hiddenPath(name)) { continue; }
       let child = path ? `${path}/${name}` : name;
       if (!validExplorerPath(child)) { continue; }
       try {
         let resolved = await resolveExplorerPath(scope, child, showHidden);
         let info = entry.isSymbolicLink() ? await stat(resolved) : entry;
-        if (scope.cache && !info.isFile()) { continue; }
+        if (scope.cache && !info.isFile() && !(info.isDirectory() && (path || name.endsWith('.assets')))) { continue; }
         entries.push({
           name,
           path: child,

@@ -8,6 +8,7 @@ export interface TransferScope extends ConnectedProject {
 }
 export interface TransferSnapshot {
   files: TransferFiles;
+  assets?: import('./assets.js').AssetManifest | null;
 }
 export interface TransferInput {
   kind: TransferKind;
@@ -18,7 +19,7 @@ export interface TransferInput {
   includeMetadata: boolean;
 }
 export interface TransferReceipt extends TransferInput {
-  version: 1;
+  version: 1 | 2;
   id: string;
   source: TransferScope;
   destination: TransferScope;
@@ -27,6 +28,11 @@ export interface TransferReceipt extends TransferInput {
   error?: string;
   sourceHashes: TransferFiles;
   destinationHashes: TransferFiles;
+  assets?: import('./assets.js').AssetManifest | null;
+  assetDestinationRoot?: import('./assets.js').AssetIdentity;
+  assetCleanupStarted?: boolean;
+  assetRestoredRoot?: import('./assets.js').AssetIdentity;
+  assetRestoredManifest?: import('./assets.js').AssetManifest | null;
 }
 export interface TransferResult extends TransferReceipt {
   receiptPath: string;

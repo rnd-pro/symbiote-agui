@@ -5,7 +5,8 @@ import { validateProxyPolicy } from '../../proxy/policy.js';
 import { PROXY_LIMITS } from '../../proxy/constants.js';
 import { readRuntimeCache, sourceHash } from '../../data/cache.js';
 import { mergeSavedData } from '../../data/markup.js';
-import { transferPaths } from './scope.js';
+import { transferPaths, transferAssetPath } from './scope.js';
+import { snapshotAssetTree } from '../../assets/manifest.js';
 import { TRANSFER_FILE_KEYS } from './constants.js';
 import { CommandError } from '../../shared/command-error.js';
 import { MAX_HTML_BYTES } from '../../markup/constants.js';
@@ -73,6 +74,7 @@ export async function captureTransferSnapshot(scope, sessionId, acceptedSource, 
   }
   return {
     files,
+    assets: await snapshotAssetTree(transferAssetPath(scope, sessionId)),
   };
 }
 

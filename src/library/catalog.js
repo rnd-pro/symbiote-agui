@@ -5,7 +5,7 @@ import { cachedDefinitionPaths, definitionPaths, listDefinitionIds, assertPortab
 import { definitionInfo } from './descriptions.js';
 import { prepareTextFile, readOptional, removeFile } from './files.js';
 import { prepareCachedMarkup, readCachedMarkup } from '../sessions/cache.js';
-import { isProcessAlive, readSession } from '../sessions/store.js';
+import { isProcessAlive, readSession, getStateRoot, getDefaultStateRoot } from '../sessions/store.js';
 import { validateProxyPolicy } from '../proxy/policy.js';
 import { PROXY_LIMITS } from '../proxy/constants.js';
 import { requestSession } from '../sessions/client.js';
@@ -15,6 +15,11 @@ import { ERROR_CODE, EXIT_CODE } from '../shared/constants.js';
 import { withSessionLock } from '../sessions/storage-lock.js';
 import { CONNECTOR_LIMITS } from '../connectors/constants.js';
 import { validateConnectorPolicy } from '../connectors/validate.js';
+import { withAssetLocks } from '../assets/lock.js';
+import { snapshotAssetTree, assertAssetManifest, assertAssetSubset } from '../assets/manifest.js';
+import { copyAssetTree, removeAssetTree, assertAssetOwnership } from '../assets/tree.js';
+import { lstat } from 'node:fs/promises';
+import { hasErrorCode } from '../shared/system-error.js';
 
 /** @param {string} [query] */
 export async function listDefinitions(query = '') {
@@ -57,7 +62,18 @@ async function describeLocked(sessionId, file) {
  * @param {string} [file]
  */
 export async function saveDefinition(sessionId, file) {
-  return withSessionLock(sessionId, () => saveLocked(sessionId, file));
+  return withSessionLock(sessionId, () => withAssetLocks([
+    {
+      id: sessionId,
+      root: getStateRoot(),
+    },
+    ...(file === undefined && getSettings().folder ? [
+      {
+        id: sessionId,
+        root: getDefaultStateRoot(),
+      },
+    ] : []),
+  ], () => saveLocked(sessionId, file)));
 }
 
 /**
@@ -68,13 +84,18 @@ async function saveLocked(sessionId, file) {
   let description;
   let importedProxy;
   let importedConnectors;
+  /** @type {import('../../types/assets.js').AssetManifest | null | undefined} */
+  let importedAssets;
+  let cachedSource;
   let html = file === undefined ? await readCachedMarkup(sessionId) : await readMarkup(file);
   if (html === undefined && getSettings().folder) {
     let cached = cachedDefinitionPaths(sessionId);
+    cachedSource = cached;
     html = await readOptional(cached.htmlPath);
     description = await readOptional(cached.descriptionPath);
     importedProxy = await readOptional(cached.proxyPath, PROXY_LIMITS.policyBytes);
     importedConnectors = await readOptional(cached.connectorPath, CONNECTOR_LIMITS.policyBytes);
+    importedAssets = await snapshotAssetTree(cached.assetsPath);
     if (importedConnectors !== undefined) { validateConnectorPolicy(JSON.parse(importedConnectors)); }
     if (importedProxy !== undefined) {
       try { validateProxyPolicy(JSON.parse(importedProxy)); }
@@ -82,6 +103,13 @@ async function saveLocked(sessionId, file) {
     }
   }
   if (html === undefined) { throw new CommandError(`No saved definition for ${sessionId}. Provide --file <HTML_PATH>.`); }
+  let assetsPath = definitionPaths(sessionId).assetsPath;
+  if (importedAssets !== undefined) {
+    try {
+      await lstat(assetsPath);
+      throw new CommandError('Destination assets already exist. Reconcile or choose another session before importing.');
+    } catch (error) { if (!hasErrorCode(error, 'ENOENT')) { throw error; } }
+  }
   analyzeMarkup(html);
   let pending = await prepareCachedMarkup(sessionId, html, description);
   /** @type {import('../../types/session.js').PreparedCache | undefined} */
@@ -91,7 +119,12 @@ async function saveLocked(sessionId, file) {
   /** @type {import('../../types/session.js').PreparedCache | undefined} */
   let connectors;
   let connectorsPublished = false;
+  /** @type {import('../../types/assets.js').AssetRoot | undefined} */
+  let assetOwner;
   try {
+    if (cachedSource && importedAssets) {
+      await copyAssetTree(cachedSource.assetsPath, assetsPath, importedAssets, async (root) => { assetOwner = root; });
+    }
     if (importedConnectors !== undefined) {
       connectors = await prepareTextFile(definitionPaths(sessionId).connectorPath, importedConnectors, {
         text: undefined,
@@ -108,8 +141,22 @@ async function saveLocked(sessionId, file) {
       await proxy.commit();
       published = true;
     }
+    if (cachedSource) {
+      if (await readOptional(cachedSource.htmlPath) !== html) { throw new CommandError('The cached source changed during import. Review and retry.'); }
+      assertAssetManifest(await snapshotAssetTree(cachedSource.assetsPath), importedAssets ?? null);
+    }
     await pending.commit();
   } catch (error) {
+    if (assetOwner) {
+      try {
+        await assertAssetOwnership(assetsPath, assetOwner);
+        let partial = await snapshotAssetTree(assetsPath);
+        assertAssetSubset(partial, importedAssets ?? null);
+        await removeAssetTree(assetsPath, partial);
+      } catch {
+        throw new CommandError('Cache import did not finish and destination assets changed. Preserve them and reconcile before retrying.', ERROR_CODE.CACHE_ERROR, EXIT_CODE.RUNTIME_ERROR);
+      }
+    }
     if (connectorsPublished && await readOptional(definitionPaths(sessionId).connectorPath, CONNECTOR_LIMITS.policyBytes) === importedConnectors) {
       await removeFile(definitionPaths(sessionId).connectorPath);
     }

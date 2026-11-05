@@ -64,6 +64,13 @@ export class LocalAssets {
     await Promise.allSettled(Array.from(this.tasks));
   }
 
+  async reset() {
+    for (let controller of this.active) { controller.abort(new AssetHttpError('STOPPED')); }
+    await Promise.allSettled(Array.from(this.tasks));
+    this.root = undefined;
+    this.invalidRoot = false;
+  }
+
   /**
    * @param {AbortSignal} signal
    * @returns {Promise<import('../../types/assets.js').AssetRoot>}

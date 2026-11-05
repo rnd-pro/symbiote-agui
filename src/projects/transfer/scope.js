@@ -10,6 +10,15 @@ import { hasErrorCode } from '../../shared/system-error.js';
 import { assertProjectFolder } from '../identity.js';
 import { registeredProject } from '../registry.js';
 import { cacheDisplayName } from '../explorer/access.js';
+import { withAssetLocks } from '../../assets/lock.js';
+
+/**
+ * @param {import('../../../types/transfer.js').TransferScope} scope
+ * @param {string} sessionId
+ */
+export function transferAssetPath(scope, sessionId) {
+  return scopedDefinitionPaths(sessionId, scope.folder).assetsPath;
+}
 
 /**
  * @param {string} id
@@ -60,7 +69,9 @@ export function lockTransfer(receipt, task) {
   if (entries[0].root === entries[1].root && entries[0].id.toLowerCase() === entries[1].id.toLowerCase()) {
     throw new CommandError('Choose a different project or an ID that differs beyond letter case.');
   }
-  return withSessionLock(entries[0].id, () => withSessionLock(entries[1].id, task, entries[1].root, receipt.id), entries[0].root, receipt.id);
+  return withSessionLock(entries[0].id, () => withSessionLock(entries[1].id,
+    () => withAssetLocks(entries, task),
+    entries[1].root, receipt.id), entries[0].root, receipt.id);
 }
 
 /**
@@ -69,7 +80,10 @@ export function lockTransfer(receipt, task) {
  */
 export async function assertDestinationEmpty(scope, sessionId) {
   let paths = transferPaths(scope, sessionId);
-  for (let path of Object.values(paths)) {
+  for (let path of [
+    ...Object.values(paths),
+    transferAssetPath(scope, sessionId),
+  ]) {
     try { await lstat(path); }
     catch (error) { if (hasErrorCode(error, 'ENOENT')) { continue; } throw error; }
     throw new CommandError(`Destination ${sessionId} already has saved files or data. Choose another ID.`);
@@ -85,6 +99,7 @@ export async function assertDestinationEmpty(scope, sessionId) {
       `${sessionId}.md`,
       `${sessionId}.proxy.json`,
       `${sessionId}.connectors.json`,
+      `${sessionId}.assets`,
     ].some((expected) => display?.toLowerCase() === expected.toLowerCase());
   })) { throw new CommandError('The destination has a conflicting name. Choose an ID that differs beyond letter case.'); }
 }

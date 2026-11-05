@@ -7,6 +7,7 @@ import { CommandError } from '../../shared/command-error.js';
 import { canonicalPath } from '../../shared/paths.js';
 import { assertProjectFolder } from '../identity.js';
 import { registeredProject } from '../registry.js';
+import { assetRoot, resolveAssetFile, assetFileInfo } from '../../assets/files.js';
 
 /** @param {unknown} path */
 export function validExplorerPath(path) {
@@ -63,7 +64,7 @@ export async function explorerRoot(id) {
 
 /** @param {string} name */
 export function cacheDisplayName(name) {
-  let match = /^((?:[a-f0-9]{2}){1,64})\.(html|md)$/.exec(name);
+  let match = /^((?:[a-f0-9]{2}){1,64})\.(html|md|assets)$/.exec(name);
   if (!match) { return; }
   let id = Buffer.from(match[1], 'hex').toString('utf8');
   try { if (sessionKey(id) === match[1]) { return `${id}.${match[2]}`; } }
@@ -80,10 +81,19 @@ export async function resolveExplorerPath(scope, path, showHidden) {
   if (!scope.cache && !showHidden && hiddenPath(path)) { throw new CommandError('Enable hidden files and dependencies to inspect this path.'); }
   let candidate = join(scope.root, ...path.split('/'));
   if (scope.cache && path) {
-    let match = /^([^/]+)\.(html|md)$/.exec(path);
-    if (!match) { throw new CommandError('Default exposes saved HTML and Markdown definitions only.'); }
+    let match = /^([^/]+)\.(html|md|assets)(?:\/(.+))?$/.exec(path);
+    if (!match || match[2] !== 'assets' && match[3] !== undefined) { throw new CommandError('Default exposes saved definitions and their owned assets only.'); }
     let paths = cachedDefinitionPaths(match[1]);
-    candidate = match[2] === 'html' ? paths.htmlPath : paths.descriptionPath;
+    if (match[2] === 'assets') {
+      let definition = await lstat(paths.htmlPath);
+      if (!definition.isFile() || definition.isSymbolicLink()) { throw new CommandError('Asset browsing requires a regular saved definition.'); }
+      let root = await assetRoot(paths.assetsPath);
+      if (!root) { throw new CommandError('The saved asset directory is missing.'); }
+      candidate = match[3] ? await resolveAssetFile(root, match[3]) : root.path;
+      let info = await lstat(candidate);
+      if (info.isFile()) { await assetFileInfo(candidate); }
+      else if (!info.isDirectory() || info.isSymbolicLink()) { throw new CommandError('Only regular asset files and directories are browsable.'); }
+    } else { candidate = match[2] === 'html' ? paths.htmlPath : paths.descriptionPath; }
   }
   let resolved = await realpath(candidate);
   if (!within(scope.root, resolved)) { throw new CommandError('This path leaves the connected project.'); }

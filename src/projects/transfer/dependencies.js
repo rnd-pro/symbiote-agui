@@ -3,12 +3,14 @@ import { access } from 'node:fs/promises';
 import { resolve, relative, isAbsolute, sep } from 'node:path';
 import { getDefaultDefinitionFolder } from '../../library/paths.js';
 import { CommandError } from '../../shared/command-error.js';
+import { decodeAssetPath } from '../../assets/paths.js';
 
 /**
  * @param {string} html
  * @param {string | undefined} folder
+ * @param {import('../../../types/assets.js').AssetManifest | null} [assets]
  */
-export async function checkTransferDependencies(html, folder) {
+export async function checkTransferDependencies(html, folder, assets = null) {
   let {
     document,
   } = parseHTML('<html><body></body></html>');
@@ -42,6 +44,14 @@ export async function checkTransferDependencies(html, folder) {
   let root = folder || getDefaultDefinitionFolder();
   let missing = [];
   for (let reference of references) {
+    let asset = /^(?:\.\/)?_assets\/(.*)$/.exec(reference.split(/[?#]/)[0]);
+    if (asset) {
+      try {
+        let path = decodeAssetPath(asset[1]);
+        if (!assets?.files.some((file) => file.path === path)) { missing.push(reference); }
+      } catch { missing.push(reference); }
+      continue;
+    }
     if (/^(?:[a-z][a-z0-9+.-]*:|\/|#)/i.test(reference)) { continue; }
     let path;
     try { path = resolve(root, decodeURIComponent(reference.split(/[?#]/)[0])); }

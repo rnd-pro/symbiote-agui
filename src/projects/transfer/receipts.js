@@ -8,7 +8,8 @@ import { assertSessionId } from '../../sessions/identity.js';
 import { CommandError } from '../../shared/command-error.js';
 import { hasErrorCode } from '../../shared/system-error.js';
 import { validProject } from '../identity.js';
-import { TRANSFER_FILE_KEYS } from './constants.js';
+import { TRANSFER_FILE_KEYS, TRANSFER_RECEIPT_BYTES } from './constants.js';
+import { validateAssetManifest } from '../../assets/manifest.js';
 
 /** @param {string} id */
 export function receiptDirectory(id) {
@@ -27,10 +28,12 @@ export function fileHashes(files) {
 /** @param {import('../../../types/transfer.js').TransferReceipt} receipt */
 export async function saveReceipt(receipt) {
   let path = join(receiptDirectory(receipt.id), 'receipt.json');
-  let before = await readOptional(path, 16384);
-  let pending = await prepareTextFile(path, JSON.stringify(receipt, null, 2) + '\n', {
+  let text = JSON.stringify(receipt, null, 2) + '\n';
+  if (Buffer.byteLength(text) > TRANSFER_RECEIPT_BYTES) { throw new CommandError('Transfer receipt exceeds its size limit.'); }
+  let before = await readOptional(path, TRANSFER_RECEIPT_BYTES);
+  let pending = await prepareTextFile(path, text, {
     text: before,
-    maxBytes: 16384,
+    maxBytes: TRANSFER_RECEIPT_BYTES,
   });
   try { await pending.commit(); }
   finally { await pending.discard(); }
@@ -38,7 +41,7 @@ export async function saveReceipt(receipt) {
 
 /** @param {string} id */
 export async function readReceipt(id) {
-  let raw = await readOptional(join(receiptDirectory(id), 'receipt.json'), 16384);
+  let raw = await readOptional(join(receiptDirectory(id), 'receipt.json'), TRANSFER_RECEIPT_BYTES);
   if (!raw) { throw new CommandError('Transfer receipt was not found.'); }
   let receipt = /** @type {import('../../../types/transfer.js').TransferReceipt} */ (JSON.parse(raw));
   assertSessionId(receipt.sessionId);
@@ -53,7 +56,10 @@ export async function readReceipt(id) {
     } = scope;
     if (!validProject(project) || stateRoot !== stateRootForFolder(project.folder)) { throw new CommandError('Invalid scope in the transfer receipt.'); }
   }
-  if (receipt.version !== 1 || receipt.id !== id || ![
+  if (![
+    1,
+    2,
+  ].includes(receipt.version) || receipt.id !== id || ![
     'copy',
     'move',
   ].includes(receipt.kind) || ![
@@ -73,6 +79,28 @@ export async function readReceipt(id) {
     if (hashes && typeof hashes === 'object' && !Array.isArray(hashes) && !Object.hasOwn(hashes, 'connectors')) { hashes.connectors = null; }
     if (!hashes || Object.keys(hashes).length !== TRANSFER_FILE_KEYS.length
       || TRANSFER_FILE_KEYS.some((key) => hashes[key] !== null && !/^[a-f0-9]{64}$/.test(hashes[key] || ''))) { throw new CommandError('Invalid file hashes in the transfer receipt.'); }
+  }
+  if (receipt.version === 2) {
+    receipt.assets = validateAssetManifest(receipt.assets);
+    if (receipt.assetRestoredManifest !== undefined) { receipt.assetRestoredManifest = validateAssetManifest(receipt.assetRestoredManifest); }
+    if (receipt.assetCleanupStarted !== undefined && typeof receipt.assetCleanupStarted !== 'boolean') { throw new CommandError('Invalid asset cleanup state.'); }
+    for (let root of [
+      receipt.assetDestinationRoot,
+      receipt.assetRestoredRoot,
+    ]) {
+      if (root !== undefined && (!root || typeof root !== 'object' || Array.isArray(root)
+        || Object.keys(root).sort().join(',') !== 'dev,ino' || !Number.isInteger(root.dev) || root.dev < 0 || !Number.isInteger(root.ino) || root.ino < 0)) {
+        throw new CommandError('Invalid asset directory identity.');
+      }
+    }
+  } else if ([
+    'assets',
+    'assetDestinationRoot',
+    'assetRestoredRoot',
+    'assetRestoredManifest',
+    'assetCleanupStarted',
+  ].some((key) => Object.hasOwn(receipt, key))) {
+    throw new CommandError('Asset recovery fields require a version 2 receipt.');
   }
   return receipt;
 }

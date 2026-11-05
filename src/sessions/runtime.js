@@ -28,6 +28,7 @@ import { readProxySnapshot, changeProxyPolicy } from '../proxy/store.js';
 import { emptyProxyPolicy, proxyStatus, validateProxyChange } from '../proxy/policy.js';
 import { SessionConnectors } from '../connectors/session.js';
 import { object, keys } from '../feedback/validate-shape.js';
+import { withAssetLock } from '../assets/lock.js';
 
 export class SessionRuntime {
   /** @type {import('node:http').Server | undefined} */
@@ -162,7 +163,7 @@ export class SessionRuntime {
   }
 
   transferSnapshot() {
-    return this.enqueue(async () => {
+    return this.enqueue(() => withAssetLock(this.record.sessionId, async () => {
       if (this.closing || this.data.warning) { throw new CommandError('Reconcile or restart this session before copying its saved snapshot.'); }
       let scope = {
         ...projectEntry(getSettings().folder),
@@ -172,7 +173,7 @@ export class SessionRuntime {
         ...this.status(),
         transferSnapshot: await captureTransferSnapshot(scope, this.record.sessionId, this.data.source, this.data.raw, this.proxy.raw ?? null, this.connectors.raw ?? null),
       };
-    });
+    }));
   }
 
   async clear() {
@@ -326,7 +327,10 @@ export class SessionRuntime {
         };
         let applied = await this.pages.broadcast({ type: 'render', ...update });
         if (cache) { await cache.commit(); }
-        else if (!persist) { await clearCachedMarkup(this.record.sessionId); }
+        else if (!persist) {
+          await clearCachedMarkup(this.record.sessionId);
+          await this.assets?.reset();
+        }
         await data.cache?.commit();
         if (fromSaved || !persist) { await this.connectors.reload(); }
         this.proxy = !persist ? {

@@ -1,6 +1,6 @@
 import { isPageRequest } from '../server/page-access.js';
 import { ASSET_LIMITS } from './constants.js';
-import { assetPath } from './paths.js';
+import { decodeAssetPath } from './paths.js';
 import { AssetHttpError } from './http-errors.js';
 
 /**
@@ -24,11 +24,6 @@ export function readAssetRequest(request, origin, access, prefix) {
   if (!path.startsWith(prefix) || path === prefix) { throw new AssetHttpError('NOT_FOUND'); }
   if (path.length > prefix.length + ASSET_LIMITS.pathLength * 3) { throw new AssetHttpError('INVALID_REQUEST'); }
   try {
-    let segments = path.slice(prefix.length).split('/').map((segment) => {
-      let decoded = decodeURIComponent(segment);
-      if (decoded.includes('/')) { throw new Error('Encoded separator.'); }
-      return decoded;
-    });
-    return assetPath(segments.join('/'));
+    return decodeAssetPath(path.slice(prefix.length));
   } catch { throw new AssetHttpError('INVALID_REQUEST'); }
 }

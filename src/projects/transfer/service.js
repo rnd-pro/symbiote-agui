@@ -11,12 +11,14 @@ import { CommandError } from '../../shared/command-error.js';
 import { ERROR_CODE } from '../../shared/constants.js';
 import { errorMessage } from '../../shared/system-error.js';
 import { TRANSFER_FILE_KEYS } from './constants.js';
-import { transferScope, transferPaths, lockTransfer, assertDestinationEmpty, quarantinePath } from './scope.js';
+import { transferScope, transferPaths, transferAssetPath, lockTransfer, assertDestinationEmpty, quarantinePath } from './scope.js';
 import { captureTransferSnapshot, readTransferFiles, assertFilesMatch } from './snapshot.js';
 import { fileHashes, receiptDirectory, saveReceipt, markPending, clearMarkers, transferResult } from './receipts.js';
 import { checkTransferDependencies } from './dependencies.js';
 import { connectorPrivatePath } from '../../connectors/store.js';
 import { invalidateConnectorAuthority } from '../../connectors/invalidate.js';
+import { assertAssetManifest, snapshotAssetTree } from '../../assets/manifest.js';
+import { backupTransferAssets, publishTransferAssets, removeTransferAssets } from './assets.js';
 
 /**
  * @param {import('../../../types/transfer.js').TransferScope} scope
@@ -85,7 +87,7 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
   /** @type {import('../../../types/transfer.js').TransferReceipt} */
   let receipt = {
     ...input,
-    version: 1,
+    version: 2,
     id: randomUUID(),
     source,
     destination,
@@ -93,6 +95,7 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
     createdAt: new Date().toISOString(),
     sourceHashes: empty,
     destinationHashes: empty,
+    assets: null,
   };
   return lockTransfer(receipt, async () => {
     if (source.folder) { await transferScope(source.id); }
@@ -101,11 +104,17 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
     await assertStopped(destination, input.destinationSessionId);
     await assertDestinationEmpty(destination, input.destinationSessionId);
     let snapshot = await captureTransferSnapshot(source, input.sessionId);
-    if (captured) { assertFilesMatch(snapshot.files, captured.files); }
+    if (captured) {
+      assertFilesMatch(snapshot.files, captured.files);
+      if (captured.assets === undefined && snapshot.assets !== null) {
+        throw new CommandError('This worker cannot capture assets. Preserve drafts and stop or restart it before copying.');
+      }
+      assertAssetManifest(snapshot.assets ?? null, captured.assets ?? null, 'Assets changed after the worker snapshot. Retry after reviewing the source.');
+    }
     let files = snapshot.files;
     let html = files.html;
     if (html === null) { throw new CommandError('The source definition is missing.'); }
-    await checkTransferDependencies(html, destination.folder);
+    await checkTransferDependencies(html, destination.folder, snapshot.assets ?? null);
     let cache = input.includeData ? await readRuntimeCache(input.sessionId, source.stateRoot) : undefined;
     let planned = {
       connectors: files.connectors,
@@ -117,6 +126,7 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
     };
     receipt.sourceHashes = fileHashes(files);
     receipt.destinationHashes = fileHashes(planned);
+    receipt.assets = snapshot.assets ?? null;
     let paths = transferPaths(destination, input.destinationSessionId);
     let sourcePaths = transferPaths(source, input.sessionId);
     /** @type {import('../../../types/session.js').PreparedCache[]} */
@@ -125,6 +135,7 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
     try {
       if (input.kind === 'move') { await backup(receipt, files, 'source'); }
       await backup(receipt, planned, 'destination');
+      await backupTransferAssets(receipt);
       for (let key of TRANSFER_FILE_KEYS) {
         let text = planned[key];
         if (text !== null) { staged.push(await prepareNewTextFile(paths[key], text, receipt.id)); }
@@ -137,14 +148,17 @@ export async function transferSession(sourceProjectId, input, hooks = {}) {
       await saveReceipt(receipt);
       // HTML is the last publication and makes the completed definition discoverable.
       await hooks.beforePublish?.();
+      await publishTransferAssets(receipt);
       for (let pending of staged) { await pending.commit(); }
       assertFilesMatch(await readTransferFiles(paths), planned);
+      assertAssetManifest(await snapshotAssetTree(transferAssetPath(destination, input.destinationSessionId)), receipt.assets);
       await hooks.afterPublish?.();
       if (input.kind === 'move') {
         await assertStopped(source, input.sessionId);
         assertFilesMatch(await readTransferFiles(sourcePaths), files);
         receipt.state = 'cleaning-source';
         await saveReceipt(receipt);
+        await removeTransferAssets(receipt, hooks.beforeRemove);
         for (let key of TRANSFER_FILE_KEYS) {
           if (files[key] === null) { continue; }
           await hooks.beforeRemove?.(key);

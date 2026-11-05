@@ -16,6 +16,16 @@ export function assetPath(value) {
   return value;
 }
 
+/** @param {string} raw */
+export function decodeAssetPath(raw) {
+  let segments = raw.split('/').map((segment) => {
+    let decoded = decodeURIComponent(segment);
+    if (decoded.includes('/')) { throw new CommandError('Encoded asset separators are not allowed.'); }
+    return decoded;
+  });
+  return assetPath(segments.join('/'));
+}
+
 /** @param {string} path */
 export function assetContentType(path) {
   let type = ASSET_TYPES[extname(path).toLowerCase()];

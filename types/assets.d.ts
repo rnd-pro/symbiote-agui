@@ -10,10 +10,22 @@ export interface AssetEntry {
   url: string;
 }
 
-export interface AssetRoot {
-  path: string;
+export interface AssetIdentity {
   dev: number;
   ino: number;
+}
+
+export interface AssetRoot extends AssetIdentity {
+  path: string;
+}
+
+export interface AssetManifest {
+  directories: string[];
+  files: Array<{
+    path: string;
+    size: number;
+    sha256: string;
+  }>;
 }
 
 export interface AssetInventory {

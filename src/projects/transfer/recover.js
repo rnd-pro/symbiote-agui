@@ -7,6 +7,7 @@ import { readReceipt, saveReceipt, clearMarkers, transferResult, receiptDirector
 import { transferPaths, lockTransfer, quarantinePath } from './scope.js';
 import { readTransferFiles } from './snapshot.js';
 import { assertStopped } from './service.js';
+import { prepareAssetRecovery } from './assets.js';
 
 /**
  * @param {string} id
@@ -40,6 +41,7 @@ export async function recoverTransfer(id, stateRoot) {
         throw new CommandError(`Destination ${key} changed after the transfer. Keep both copies and reconcile it before recovery. Receipt: ${id}`);
       }
     }
+    let assets = await prepareAssetRecovery(receipt);
     if (receipt.kind === 'move') {
       let source = await readTransferFiles(sourcePaths);
       let hashes = fileHashes(source);
@@ -67,7 +69,12 @@ export async function recoverTransfer(id, stateRoot) {
         })[key] !== receipt.sourceHashes[key]) { throw new CommandError('The source backup changed. Recovery stopped without overwriting files.'); }
         restore.set(key, text);
       }
-      for (let [key, text] of restore) {
+      // Assets must be restored before the HTML becomes discoverable again.
+      await assets.restore();
+      for (let [
+        key,
+        text,
+      ] of restore) {
         let pending = await prepareNewTextFile(sourcePaths[key], text, `${id}-restore`);
         try { await pending.commit(); }
         finally { await pending.discard(); }
@@ -93,6 +100,7 @@ export async function recoverTransfer(id, stateRoot) {
         [key]: text,
       })[key] === receipt.destinationHashes[key]) { await removeFile(temporary); }
     }
+    await assets.cleanup();
     receipt.state = 'rolled-back';
     delete receipt.error;
     await saveReceipt(receipt);

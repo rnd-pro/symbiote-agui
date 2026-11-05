@@ -12,6 +12,7 @@ export let ASSET_LIMITS = Object.freeze({
   maxPageSize: 100,
   concurrentRequests: 8,
   timeoutMs: 30_000,
+  manifestBytes: 4 * 1024 * 1024,
 });
 
 /** @type {Readonly<Record<string, string>>} */

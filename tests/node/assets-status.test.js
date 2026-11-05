@@ -120,5 +120,5 @@ test('real worker reports asset availability and serves project-scoped files add
     'clear',
     'desk',
   ], folder);
-  assert.equal((await fetch(new URL('_assets/logo.svg', second.url))).status, 404, 'Clearing the definition revokes asset delivery even before directory cleanup is implemented.');
+  assert.equal((await fetch(new URL('_assets/logo.svg', second.url))).status, 404, 'Clearing the definition revokes asset delivery.');
 });

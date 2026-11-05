@@ -5,6 +5,9 @@ import { clearMetadata } from '../metadata/store.js';
 import { clearRuntimeCache } from '../data/cache.js';
 import { connectorPrivatePath } from '../connectors/store.js';
 import { invalidateConnectorAuthority } from '../connectors/invalidate.js';
+import { withAssetLock } from '../assets/lock.js';
+import { snapshotAssetTree } from '../assets/manifest.js';
+import { removeAssetTree } from '../assets/tree.js';
 
 /** @param {string} sessionId */
 export function cachePath(sessionId) {
@@ -47,9 +50,16 @@ export async function prepareCachedMarkup(sessionId, html, description = default
 
 /** @param {string} sessionId */
 export async function clearCachedMarkup(sessionId) {
+  return withAssetLock(sessionId, () => clearLocked(sessionId));
+}
+
+/** @param {string} sessionId */
+async function clearLocked(sessionId) {
   await assertPortableName(sessionId);
-  await invalidateConnectorAuthority(sessionId);
   let paths = definitionPaths(sessionId);
+  let assets = await snapshotAssetTree(paths.assetsPath);
+  await removeAssetTree(paths.assetsPath, assets);
+  await invalidateConnectorAuthority(sessionId);
   await removeFile(paths.htmlPath);
   await removeFile(paths.descriptionPath);
   await removeFile(paths.proxyPath);

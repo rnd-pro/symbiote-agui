@@ -5,6 +5,7 @@ export let BUTTON_ATTRIBUTES = Object.freeze([
   'toggle',
   'set',
   'value',
+  'loading',
 ]);
 
 export let RETAINED_ATTRIBUTES = new Set([

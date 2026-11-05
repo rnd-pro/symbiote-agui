@@ -180,7 +180,7 @@ Sidebar clicks, keyboard input, and scoped `set_value` tools publish visibility 
 </context-provider>
 ```
 
-Use normal native attributes for styling, accessibility, forms, or popover invokers. The default native type is `button`; supply `type="submit"` when needed. For example, `bind="@disabled: UI/busy"` forwards to the native button. IDs belong to the native button; discover the owning `agui-button`'s `activate` tool by that ID in its component description. Incoming bindings do not activate actions, and repeated `set` values do not republish. See the [button contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/controls/button/README.md).
+Use normal native attributes for styling, accessibility, forms, or popover invokers. The default native type is `button`; supply `type="submit"` when needed. For example, `bind="@disabled: UI/busy"` forwards to the native button. Use boolean `loading` or `bind="$.loading: UI/pending"` to replace direct child icons with the shared preloader while keeping the label. Loading sets `aria-busy` and blocks activation, including handlers and form/popover actions, without changing caller-owned disabled state. The application owns when loading starts and finishes. IDs belong to the native button; discover the owning `agui-button`'s `activate` tool by that ID in its component description. Incoming bindings do not activate actions, and repeated `set` values do not republish. See the [button contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/controls/button/README.md).
 
 ### Conditional content example
 

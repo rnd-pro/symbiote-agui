@@ -72,6 +72,7 @@
           "navigationOpen": true,
           "preloaderVisible": true,
           "preloaderLabel": "Loading preview",
+          "buttonLoading": false,
           "inspectorOpen": false,
           "galleryTab": "overview",
           "galleryTabNotes": "",
@@ -213,6 +214,14 @@
                   <agui-button class="agui-button-danger" set="APP/sharedStatus" value="archived">Archive</agui-button>
                   <agui-button set="APP/sharedStatus" value="new" disabled>Disabled</agui-button>
                 </div>
+                <agui-toggle label="Show button loading state" pub-to="APP/buttonLoading"
+                  bind="$.value: APP/buttonLoading"></agui-toggle>
+                <agui-toolbar aria-label="Button loading examples">
+                  <agui-button id="gallery-loading-button" class="agui-button-primary" set="APP/sharedStatus" value="new"
+                    bind="$.loading: APP/buttonLoading"><agui-icon name="refresh"></agui-icon>Refresh status</agui-button>
+                  <agui-button class="agui-button-icon" aria-label="Refresh status" set="APP/sharedStatus" value="new"
+                    bind="$.loading: APP/buttonLoading"><agui-icon name="refresh"></agui-icon></agui-button>
+                </agui-toolbar>
                 <agui-panel class="grid gap-2">
                   <h3 class="text-base">Nested panel</h3>
                   <p class="text-sm text-agui-muted">A recessed group for related fields and actions.</p>

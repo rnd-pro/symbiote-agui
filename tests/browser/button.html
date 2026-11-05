@@ -1,9 +1,9 @@
 <context-provider id="button-data" ctx="UI">
   <script type="application/json">
-    {"showModal":false,"other":false,"currentSection":"overview","busy":false,"title":"Initial title","buttonText":"Toggle modal"}
+    {"showModal":false,"other":false,"currentSection":"overview","busy":false,"loading":false,"title":"Initial title","buttonText":"Toggle modal"}
   </script>
   <agui-button id="toggle-modal" toggle="UI/showModal" class="agui-button-primary" style="--forwarded: yes;" data-extra="initial" aria-label="Toggle modal" aria-controls="modal-content" tabindex="0"
-    bind="@disabled: UI/busy; @title: UI/title; ariaExpanded: UI/showModal"><agui-icon name="settings"></agui-icon><span>{{UI/buttonText}}</span></agui-button>
+    bind="$.loading: UI/loading; @disabled: UI/busy; @title: UI/title; ariaExpanded: UI/showModal"><agui-icon name="settings"></agui-icon><span>{{UI/buttonText}}</span></agui-button>
   <agui-button id="open-modal" set="UI/showModal" value="true">Open modal</agui-button>
   <agui-button id="close-modal" set="UI/showModal" value="false">Close</agui-button>
   <agui-button id="settings" set="UI/currentSection" value="settings">Settings</agui-button>
@@ -20,5 +20,6 @@
   <form id="native-form"><input name="record" value="sample"></form>
   <agui-button id="submit" type="submit" form="native-form" name="action" value="save" formnovalidate>Submit</agui-button>
   <agui-button id="native-popover" popovertarget="button-popover">Popover</agui-button>
+  <agui-button id="loading-attribute" loading set="UI/showModal" value="true">Loading</agui-button>
   <div id="button-popover" popover>Native popover content</div>
 </context-provider>

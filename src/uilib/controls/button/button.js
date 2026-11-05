@@ -21,6 +21,9 @@ export class Button extends AttributeHost {
     toggle: undefined,
     set: undefined,
     value: undefined,
+    loading: undefined,
+    buttonLoading: false,
+    buttonBusy: 'false',
     unavailable: false,
     activate: new ToolDescriptor({
       description: 'Activate this native button and its declarative state action. Returns activation/change flags without application data.',
@@ -42,13 +45,14 @@ export class Button extends AttributeHost {
   }
 
   get unavailable() {
-    return this.disposed || !this.isConnected || !this.control || this.control.matches(':disabled')
+    return this.disposed || !this.isConnected || !!this.$.buttonLoading || !this.control || this.control.matches(':disabled')
       || this.control.hasAttribute('readonly') || this.control.getAttribute('aria-disabled') === 'true';
   }
 
   renderCallback() {
     this.control = /** @type {HTMLButtonElement} */ (this.ref.control);
     this.forwardedAttributes = transferControlAttributes(this, this.control, RETAINED_ATTRIBUTES);
+    this.control.addEventListener('click', this.blockLoadingClick, true);
     this.control.addEventListener('click', this.onClick);
     this.controlObserver = new MutationObserver(() => {
       this.$.unavailable = this.unavailable;
@@ -67,6 +71,14 @@ export class Button extends AttributeHost {
     };
     this.sub('value', syncValue);
     this.sub('attribute-value', syncValue);
+    let syncLoading = () => {
+      let loading = !!(this.$.loading ?? this.hasAttribute('loading'));
+      this.$.buttonLoading = loading;
+      this.$.buttonBusy = String(loading);
+      this.$.unavailable = this.unavailable;
+    };
+    this.sub('loading', syncLoading);
+    this.sub('attribute-loading', syncLoading);
     this.$.unavailable = this.unavailable;
   }
 
@@ -89,7 +101,7 @@ export class Button extends AttributeHost {
   }
 
   activate() {
-    if (this.unavailable) { throw new Error('This button is disabled, read-only, or disconnected.'); }
+    if (this.unavailable) { throw new Error('This button is loading, disabled, read-only, or disconnected.'); }
     this.definition();
     this.lastChanged = false;
     this.control?.click();
@@ -113,11 +125,19 @@ export class Button extends AttributeHost {
     }
   };
 
+  /** @param {MouseEvent} event */
+  blockLoadingClick = (event) => {
+    if (!this.$.buttonLoading) { return; }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+
   destroyCallback() {
     this.disposed = true;
     this.forwardedAttributes?.disconnect();
     this.controlObserver?.disconnect();
     this.control?.removeEventListener('click', this.onClick);
+    this.control?.removeEventListener('click', this.blockLoadingClick, true);
   }
 }
 

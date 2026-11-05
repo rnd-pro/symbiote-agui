@@ -206,6 +206,15 @@
   button:enabled {
     @apply cursor-pointer;
   }
+  button > agui-preloader {
+    display: none;
+  }
+  button[aria-busy='true'] > agui-preloader:not([hidden]) {
+    display: inline-flex;
+  }
+  button[aria-busy='true'] > agui-icon {
+    display: none;
+  }
   button:hover:enabled,
   .agui-button:hover:not([aria-disabled='true']):not(:disabled) {
     @apply border-agui-border-hover bg-agui-hover;

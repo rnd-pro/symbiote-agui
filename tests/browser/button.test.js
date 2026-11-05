@@ -112,6 +112,46 @@ test('declarative buttons forward native attributes and activate guarded state, 
     busy: false,
   });
   assert.equal(await page.$eval('button#toggle-modal', (element) => element.disabled), false);
+  await update({
+    loading: true,
+  });
+  assert.equal(await page.$eval('#toggle-modal', (element) => element.getAttribute('aria-busy')), 'true');
+  assert.equal(await page.$eval('#toggle-modal > agui-preloader', (element) => element.hasAttribute('hidden')), false);
+  assert.equal(await page.$eval('#toggle-modal > span', (element) => element.textContent), 'Changed text');
+  await page.$eval('button#toggle-modal', (element) => {
+    element.addEventListener('click', () => Reflect.set(window, 'loadingButtonClicked', true));
+    element.click();
+  });
+  await page.focus('#toggle-modal');
+  await page.keyboard.press('Enter');
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'loadingButtonClicked')), undefined);
+  assert.equal(await data('showModal'), false);
+  assert.equal(await page.evaluate(() => {
+    try { Reflect.get(window, 'declarativeButtonHost').activate(); return false; } catch { return true; }
+  }), true);
+  let loadingTools = await cli('tools', 'button');
+  assert.equal(loadingTools.tools.some((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.ownerName === 'agui-button'
+    && tool.key === 'activate' && JSON.parse(tool.componentDescription).id === 'toggle-modal'), false);
+  await update({
+    busy: true,
+    loading: false,
+  });
+  assert.equal(await page.$eval('#toggle-modal', (element) => element.getAttribute('aria-busy')), 'false');
+  assert.equal(await page.$eval('#toggle-modal > agui-preloader', (element) => element.hasAttribute('hidden')), true);
+  assert.equal(await page.$eval('button#toggle-modal', (element) => element.disabled), true);
+  await update({
+    busy: false,
+  });
+  assert.equal(await page.$eval('#loading-attribute', (element) => element.getAttribute('aria-busy')), 'true');
+  await page.click('#loading-attribute');
+  assert.equal(await data('showModal'), false);
+  await page.$eval('#loading-attribute', (element) => element.parentElement?.removeAttribute('loading'));
+  assert.equal(await page.$eval('#loading-attribute', (element) => element.getAttribute('aria-busy')), 'false');
+  await call('loading-attribute');
+  assert.equal(await data('showModal'), true);
+  await update({
+    showModal: false,
+  });
   await page.evaluate(() => {
     let host = Reflect.get(window, 'declarativeButtonHost');
     host.setAttribute('data-extra', 'updated');
@@ -143,6 +183,14 @@ test('declarative buttons forward native attributes and activate guarded state, 
     record: 'sample',
     action: 'save',
   });
+  await page.$eval('#submit', (element) => { if (element.parentElement) { Reflect.get(element.parentElement, '$').loading = true; } });
+  await page.evaluate(() => Reflect.deleteProperty(window, 'buttonFormResult'));
+  await page.$eval('button#submit', (element) => element.click());
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'buttonFormResult')), undefined);
+  await page.$eval('#native-popover', (element) => { if (element.parentElement) { Reflect.get(element.parentElement, '$').loading = true; } });
+  await page.click('#native-popover');
+  assert.equal(await page.$eval('#button-popover', (element) => element.matches(':popover-open')), false);
+  await page.$eval('#native-popover', (element) => { if (element.parentElement) { Reflect.get(element.parentElement, '$').loading = false; } });
   await call('native-popover');
   assert.equal(await page.$eval('#button-popover', (element) => element.matches(':popover-open')), true);
   await page.click('#native-popover');

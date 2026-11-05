@@ -251,16 +251,16 @@
                 <div class="grid gap-4 sm:grid-cols-2">
                   <div class="grid content-start gap-2">
                     <agui-conditional when="APP/preloaderVisible" is="false" behavior="hide">
-                      <p class="text-sm text-agui-muted">Default preloader: content hidden when disabled</p>
+                      <p class="text-sm text-agui-muted">Default dots preloader: content hidden when disabled</p>
                     </agui-conditional>
                     <agui-preloader id="gallery-preloader" class="text-agui-accent"
                       bind="$.label: APP/preloaderLabel; hidden: !APP/preloaderVisible"></agui-preloader>
                   </div>
                   <div class="grid content-start gap-2">
                     <agui-conditional when="APP/preloaderVisible" is="false" behavior="dom-remove"><template>
-                        <p class="text-sm text-agui-muted">Compact preloader: content removed when disabled</p>
+                        <p class="text-sm text-agui-muted">Compact ring preloader: content removed when disabled</p>
                       </template></agui-conditional>
-                    <agui-preloader class="size-4 text-agui-accent" label="Loading compact preview"
+                    <agui-preloader variant="ring" class="size-4 text-agui-accent" label="Loading compact preview"
                       bind="hidden: !APP/preloaderVisible"></agui-preloader>
                   </div>
                 </div>

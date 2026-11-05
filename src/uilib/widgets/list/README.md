@@ -6,7 +6,8 @@ Use `agui-list` to render provider-bound records with Symbiote's default Itemize
 <agui-list label="Records" selection="multiple" pub-to="APP/selectedIds" class="grid gap-4"
   bind="$.items: APP/items; $.value: APP/selectedIds; $.filteredIds: APP/matchingIds; $.texts: APP/listTexts">
   <template>
-    <agui-panel process-inner-html="false" role="listitem" class="grid gap-2">
+    <agui-panel selectable process-inner-html="false" role="listitem" class="grid gap-2"
+      bind="@data-selected: _selected; ariaDisabled: _selectionDisabled">
       <h3>{{name}}</h3>
       <button type="button" bind="onclick: ^selectItem; ariaPressed: _selected; disabled: _selectionDisabled">Select</button>
     </agui-panel>
@@ -20,6 +21,7 @@ Use `agui-list` to render provider-bound records with Symbiote's default Itemize
 - `selection="none|single|multiple"` defaults to none. `value` is always an ID array. Pair `bind="$.value: APP/selectedIds"` with `pub-to="APP/selectedIds"` for synchronization. Incoming assignments and initialization do not publish; equivalent selection sets are no-ops. Removed IDs are ignored without rewriting the provider.
 - One delegated click handler selects an item's noninteractive content. Multiple selection toggles; single selection keeps the clicked item selected. Links, controls, summaries, and text selection keep their native behavior. No automatic focus target or keyboard handler is added to items.
 - Controls are optional and authored in the item template. Bind a native button's `onclick` to `^selectItem` for standard keyboard activation. A checkbox/radio can use `bind="checked: _selected; disabled: _selectionDisabled; onchange: ^selectItem"`; its checked state determines selection. The same change binding works on an authored `agui-field` checkbox. Supply labels, radio groups, selected styling, and roles in the template. Popup binding and delegated handling never process one click twice.
+- Opt into shared card styling with `agui-panel selectable`. Bind `@data-selected` to `_selected` and `ariaDisabled` to `_selectionDisabled` for accent selection, keyboard-focus outlines, and hover feedback only while enabled. This attribute adds appearance only; keep selection behavior and keyboard controls in the list template.
 - Bind `filteredIds` to an independent filter's `results-to` array. `null` shows all records; `[]` shows none. Unknown IDs are ignored, source order is retained, and filtering preserves selections outside the result. The list does not edit, sort, or paginate records.
 - Supply `label` for the list's accessible name, and `texts` keys `empty`, `loading`, `invalidRows`, `invalidState`, and `unavailable`. `error` accepts external error text. Disabled/read-only, loading, and invalid input block selection; authored controls can bind `_selectionDisabled`. Loading/errors clear rendered items. The host exposes `data-state="ready|loading|empty|error"`, `data-message`, and `aria-busy`. Nonempty messages appear through `::before`; supply richer feedback and live announcements in application markup when needed.
 - Set layout with ordinary `class` or `style` on `agui-list`, for example `class="grid gap-4 md:grid-cols-2"`. Its Itemize container uses `display: contents`. Set gaps and item appearance yourself. Use one authored root to group a card, or multiple roots when desired. Review semantics, keyboard access, and appearance for the chosen template.

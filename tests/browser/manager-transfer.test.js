@@ -1,3 +1,4 @@
+import { openManagerSection } from './helpers.js';
 import assert from 'node:assert/strict';
 import { chmod, mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -46,7 +47,7 @@ async function fixture(t) {
 async function openTransfer(page, label) {
   await page.waitForSelector('#manager-table tr[data-row-id="desk"] input[type="radio"]');
   await page.click('#manager-table tr[data-row-id="desk"] input[type="radio"]');
-  await page.locator(`#session-inspector ::-p-aria([name="${label}"][role="button"])`).click();
+  await page.locator(`#manager-inspector ::-p-aria([name="${label}"][role="button"])`).click();
   await page.waitForSelector('#manager-transfer dialog[open]');
 }
 
@@ -88,7 +89,7 @@ test('manager renames saved IDs with all artifacts, selects the renamed session,
   await page.locator('#manager-transfer input[name="transferSessionId"]').fill('renamed');
   await page.click('#manager-transfer-form button[type="submit"]');
   await page.waitForSelector('#manager-table tr[data-row-id="renamed"]');
-  await page.waitForSelector('#session-inspector [data-session="renamed"]');
+  await page.waitForSelector('#manager-inspector [data-session="renamed"]');
   assert.equal(await page.$('#manager-table tr[data-row-id="desk"]'), null);
   assert.equal(await page.$('#manager-transfer dialog[open]'), null);
   let saved = await readTransferFiles(transferPaths(a, 'renamed'));
@@ -96,9 +97,9 @@ test('manager renames saved IDs with all artifacts, selects the renamed session,
   assert.equal(saved.description, files.description);
   assert.equal(saved.metadata, files.metadata);
   assert.match((await readRuntimeCache('renamed', a.stateRoot))?.html || '', /committed/);
-  await page.locator('#session-inspector ::-p-aria([name="Start"][role="button"])').click();
+  await page.locator('#manager-inspector ::-p-aria([name="Start"][role="button"])').click();
   await page.waitForFunction(() => document.querySelector('.notice')?.textContent?.includes('start completed'));
-  await page.waitForSelector('#session-inspector button[title*="before renaming"]:disabled');
+  await page.waitForSelector('#manager-inspector button[title*="before renaming"]:disabled');
   let running = await project.cli([
     'status',
     'renamed',
@@ -165,7 +166,7 @@ test('manager copies live sessions with explicit options, handles collisions, mo
   page.setDefaultTimeout(8000);
   await page.goto(manager.launchUrl);
   await openTransfer(page, 'Copy to project');
-  assert.equal(await page.$eval('#session-inspector button[title*="stop the session"]', (element) => element.hasAttribute('disabled')), true);
+  assert.equal(await page.$eval('#manager-inspector button[title*="stop the session"]', (element) => element.hasAttribute('disabled')), true);
   assert.match(await page.$eval('#manager-transfer details code', (element) => element.textContent || ''), /dataFlow/);
   assert.equal(await page.$eval('agui-toggle[name="transferIncludeData"] input', (element) => element.checked), false);
   await page.select('agui-select[name="transferDestination"] select', b.id);
@@ -207,7 +208,7 @@ test('manager copies live sessions with explicit options, handles collisions, mo
     'desk',
   ], a.folder);
   await page.click('.toolbar button[aria-label="Refresh"]');
-  await page.waitForFunction(() => !document.querySelector('#session-inspector button[title*="stop the session"]')?.hasAttribute('disabled'));
+  await page.waitForFunction(() => !document.querySelector('#manager-inspector button[title*="stop the session"]')?.hasAttribute('disabled'));
   await openTransfer(page, 'Move to project');
   await page.select('agui-select[name="transferDestination"] select', b.id);
   await page.click('#manager-transfer-form button[type="submit"]');
@@ -279,8 +280,8 @@ test('manager discovers an interrupted move after restart and explicitly restore
   ], a.folder);
   await page.goto(manager.launchUrl);
   await page.waitForFunction(() => document.querySelector('#transfer-recovery-notice')?.textContent?.includes('transfer needs recovery'));
-  await page.locator('::-p-aria([name="Transfers"][role="button"])').click();
-  await page.waitForSelector('#manager-transfers dialog[open]');
+  await openManagerSection(page, 'projects');
+  await page.locator('#project-views [role="tab"][value="transfers"]').click();
   await page.waitForFunction(() => document.querySelector('#manager-transfer-history')?.textContent?.includes('needs-recovery'));
   page.once('dialog', (dialog) => { void dialog.accept(); });
   await page.locator('#manager-transfer-history ::-p-aria([name="Recover incomplete transfer"][role="button"])').click();

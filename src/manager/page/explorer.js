@@ -2,7 +2,6 @@ import { highlightSourcePreview } from './source-preview.js';
 import { busyAction } from './busy-action.js';
 
 export let EXPLORER_STATE = {
-  workspaceView: 'table',
   explorerRows: {},
   explorerBreadcrumbs: {},
   explorerHidden: false,

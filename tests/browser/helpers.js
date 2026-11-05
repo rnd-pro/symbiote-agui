@@ -88,3 +88,28 @@ export function hasCliError(error, code) {
   let failure = /** @type {Error & { stdout: string }} */ (error);
   return JSON.parse(failure.stdout).error.code === code;
 }
+
+/**
+ * @param {import('puppeteer').Page} page
+ * @param {'sessions' | 'projects' | 'connections' | 'settings'} section
+ */
+export async function openManagerSection(page, section) {
+  let expand = await page.$('agui-app > agui-sidebar:not([side="end"]) button[aria-expanded="false"]');
+  if (expand) { await page.locator('agui-app > agui-sidebar:not([side="end"]) button[aria-expanded="false"]').click(); }
+  await page.locator(`#manager-navigation button[data-section="${section}"]`).click();
+  await page.waitForSelector(`#manager-navigation button[data-section="${section}"][aria-current="page"]`);
+  await page.waitForSelector(`#manager-${section}-section`, {
+    visible: true,
+  });
+}
+
+/**
+ * @param {import('puppeteer').Page} page
+ * @param {string} id
+ */
+export async function selectManagerProject(page, id) {
+  await page.locator(`#manager-project-list [data-project="${id}"] h4 button`).click();
+  await page.waitForSelector(`#manager-inspector [data-project-controls="${id}"]`, {
+    visible: true,
+  });
+}

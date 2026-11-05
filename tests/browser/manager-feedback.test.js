@@ -50,7 +50,7 @@ test('manager feedback dialog configures delivery, preserves drafts, and disable
   await page.goto(manager.launchUrl);
   await page.waitForSelector('#manager-table tr[data-row-id="desk"]');
   await page.click('#manager-table tr[data-row-id="desk"] td');
-  await page.locator('#session-inspector ::-p-aria([name="Feedback command"][role="button"])').click();
+  await page.locator('#manager-inspector ::-p-aria([name="Feedback command"][role="button"])').click();
   await page.waitForSelector('#manager-feedback dialog[open]');
   await page.waitForFunction(() => !document.querySelector('#feedback-save')?.hasAttribute('disabled'));
   await page.locator('input[name="feedbackConversation"]').fill('browser-fixture-chat');

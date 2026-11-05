@@ -5,12 +5,13 @@ import test from 'node:test';
 import puppeteer from 'puppeteer';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';
-import { cli } from './helpers.js';
+import { cli, openManagerSection } from './helpers.js';
 import { withStorageFolder } from '../../src/config/storage-scope.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { ensureSessionStarted } from '../../src/sessions/start.js';
 import { stopSession } from '../../src/sessions/lifecycle.js';
 import { TUNNEL_READY_TIMEOUT_MS } from '../../src/tunnel/constants.js';
+import { projectId } from '../../src/projects/identity.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
@@ -95,15 +96,15 @@ test('manager verifies public links and manages browsers and tunnels across proj
     };
   });
   await page.click('#manager-table tr[data-row-id="desk"] td[data-column="id"]');
-  await page.waitForSelector('#session-inspector button[aria-label="Public link"]');
+  await page.waitForSelector('#manager-inspector button[aria-label="Public link"]');
   let before = (await fixture.pids()).length;
   await fixture.setReadyAge(TUNNEL_READY_TIMEOUT_MS + 1);
   await fixture.setOrigin('https://manager-verified.trycloudflare.com');
   await fixture.delayActivity(1_500);
-  await page.click('#session-inspector button[aria-label="Public link"]');
+  await page.click('#manager-inspector button[aria-label="Public link"]');
   await page.waitForFunction(() => Reflect.get(window, 'publicCheckFinished'));
   assert.equal(await page.evaluate(() => Reflect.get(window, 'verifiedOpenedUrl')), undefined, 'No tab opens before the readiness result arrives.');
-  assert.equal(await page.$eval('#session-inspector button[aria-label="Public link"]', (button) => button.getAttribute('aria-busy')), 'true');
+  assert.equal(await page.$eval('#manager-inspector button[aria-label="Public link"]', (button) => button.getAttribute('aria-busy')), 'true');
   await page.evaluate(() => Reflect.get(window, 'releasePublicCheck')());
   await page.waitForFunction(() => Reflect.get(window, 'verifiedOpenedUrl') === 'https://manager-verified.trycloudflare.com/desk/');
   assert.equal((await fixture.pids()).length, before + 1);
@@ -135,8 +136,19 @@ test('manager verifies public links and manages browsers and tunnels across proj
   await page.waitForFunction(() => document.querySelector('.notice')?.textContent?.includes('Fixture readiness failure.'));
   assert.equal(await page.evaluate(() => Reflect.get(window, 'verifiedOpenedUrl')), undefined, 'A failed readiness check opens no tab.');
   assert.equal(await page.$eval('agui-session-manager', (owner) => Reflect.get(owner, '$').verifiedPublicUrl), '', 'A failed check clears the previous fallback URL.');
-  await page.click('#session-views [role="tab"][value="connections"]');
-  await page.waitForFunction(() => document.querySelectorAll('[data-connection-session]').length === 2);
+  await openManagerSection(page, 'connections');
+  await page.waitForFunction(() => document.querySelectorAll('[data-connection-session]').length === 2, {
+    timeout: 5000,
+  }).catch(async (error) => {
+    let diagnostic = await page.$eval('#manager-connection-list', (list) => ({
+      state: list.getAttribute('data-state'),
+      message: list.getAttribute('data-message'),
+      cards: Array.from(list.querySelectorAll('[data-connection-session]'), (card) => card.getAttribute('data-connection-session')),
+    }));
+    throw new Error(JSON.stringify(diagnostic), {
+      cause: error,
+    });
+  });
   assert.match(await page.$eval('agui-manager-connections', (element) => element.textContent || ''), /another-project/);
   assert.equal(await page.$$eval('[data-browser-connection]', (elements) => elements.length), 3);
   let pages = await cli('pages', 'desk');
@@ -148,8 +160,11 @@ test('manager verifies public links and manages browsers and tunnels across proj
     'viewer',
   ]);
   let userId = pages.pages.find((/** @type {import('../../types/tools.js').ConnectedPage} */ entry) => entry.role === 'user').pageId;
+  await page.locator(`[data-browser-connection="${userId}"] h3 button`).click();
+  await page.waitForSelector('#manager-inspector [data-selected-connection]');
+  assert.equal((await cli('pages', 'desk')).pages.length, 3, 'Selecting a browser does not disconnect it.');
   page.once('dialog', (dialog) => { void dialog.accept(); });
-  await page.click(`[data-browser-connection="${userId}"] button`);
+  await page.locator('#manager-inspector ::-p-aria([name="Disconnect browser"][role="button"])').click();
   await page.waitForFunction((id) => !document.querySelector(`[data-browser-connection="${id}"]`), {}, userId);
   await user.waitForFunction(() => document.getElementById('agui-connection')?.getAttribute('message')?.includes('Disconnected by manager'));
   await user.evaluate(() => new Promise((resolve) => setTimeout(resolve, 750)));
@@ -160,12 +175,26 @@ test('manager verifies public links and manages browsers and tunnels across proj
   await replacement.waitForSelector('#notes');
   await page.bringToFront();
   let section = '[data-connection-session="default/desk"]';
+  await page.locator(`[data-connection-session="${projectId(folder)}/desk"] h3 button`).click();
+  assert.equal(await page.$eval('#manager-inspector button.agui-button-danger', (button) => button.hasAttribute('disabled')), true);
+  await page.locator(`${section} h3 button`).click();
   page.once('dialog', (dialog) => { void dialog.accept(); });
-  await page.locator(`${section} ::-p-aria([name="Stop tunnel"][role="button"])`).click();
+  await page.locator('#manager-inspector ::-p-aria([name="Stop tunnel"][role="button"])').click();
   await page.waitForFunction((selector) => document.querySelector(selector)?.textContent?.includes('Local only'), {}, section);
   let status = await cli('status', 'desk');
   assert.equal(status.pid, originalPid);
   assert.equal(status.publicUrl, undefined);
   assert.equal(await replacement.$eval('#notes', (element) => element.isConnected), true);
+  await page.evaluate(() => {
+    let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
+    let entry = owner.liveConnections?.listing?.sessions.find((entry) => entry.project.id === 'default');
+    if (!entry) { throw new Error('Selected connection is missing.'); }
+    entry.instanceId = crypto.randomUUID();
+    owner.liveConnections?.render();
+  });
+  await page.waitForSelector('#manager-inspector', {
+    hidden: true,
+  });
+  assert.deepEqual(await page.$eval('agui-session-manager', (owner) => Reflect.get(owner, '$').connectionSelection), [], 'A replaced worker invalidates the selected connection.');
   assert.deepEqual(errors, []);
 });

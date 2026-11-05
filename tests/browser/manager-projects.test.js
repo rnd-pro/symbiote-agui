@@ -1,3 +1,4 @@
+import { openManagerSection, selectManagerProject } from './helpers.js';
 import assert from 'node:assert/strict';
 import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -28,8 +29,8 @@ async function waitForProject(page, id) {
 
 /** @param {import('puppeteer').Page} page */
 async function openProjects(page) {
-  await page.click('.toolbar button[aria-label="Projects"]');
-  await page.waitForSelector('#manager-projects dialog[open]');
+  await openManagerSection(page, 'projects');
+  await page.locator('#project-views [role="tab"][value="connected"]').click();
 }
 
 /**
@@ -59,8 +60,6 @@ async function connect(page, folder) {
  */
 async function switchProject(page, id) {
   await page.select('#manager-project-switcher select', id);
-  await page.waitForFunction(() => !document.querySelector('#manager-switch-project')?.hasAttribute('disabled'));
-  await page.click('#manager-switch-project');
   await waitForProject(page, id);
 }
 
@@ -124,20 +123,24 @@ test('manager connects projects, switches remembered scopes and Default, and pre
   await waitForProject(page, 'default');
   await page.waitForSelector('#manager-table tr[data-row-id="desk"] td[data-column=""] input');
   await page.click('#manager-table tr[data-row-id="desk"] td[data-column=""] input');
-  await page.waitForSelector('#session-inspector [data-session="desk"]');
+  await page.waitForSelector('#manager-inspector [data-session="desk"]');
   await openProjects(page);
   await connect(page, folderA);
   await connect(page, folderB);
-  assert.equal(await page.$eval('#manager-project-list [data-project="default"] button:last-child', (element) => element.hasAttribute('disabled')), true);
+  await selectManagerProject(page, 'default');
+  assert.equal(await page.$eval('#manager-inspector button.agui-button-danger', (element) => element.hasAttribute('disabled')), true);
   await page.evaluate(() => Reflect.set(window, 'managerPageMarker', 'retained'));
-  await page.locator(`#manager-project-list [data-project="${projectId(folderA)}"] ::-p-aria([name="Switch"][role="button"])`).click();
+  await selectManagerProject(page, projectId(folderA));
+  assert.equal(page.url(), manager.url, 'Selecting a project reveals its controls without switching scope.');
+  await page.locator('#manager-inspector ::-p-aria([name="Switch"][role="button"])').click();
   await waitForProject(page, projectId(folderA));
   let urlA = page.url();
   assert.equal(new URL(urlA).origin, new URL(manager.url).origin);
   assert.equal(await page.evaluate(() => Reflect.get(window, 'managerPageMarker')), 'retained', 'Switching projects retains the same page instance.');
   await page.waitForSelector('#manager-table tr[data-row-id="desk"]');
   assert.equal(await page.$eval('#manager-table tr[data-row-id="desk"] td[data-column=""] input', (element) => Reflect.get(element, 'checked')), false);
-  assert.equal(await page.$eval('#session-inspector', (element) => element.hasAttribute('hidden')), true);
+  assert.ok(await page.$(`#manager-inspector [data-project-controls="${projectId(folderA)}"]`));
+  assert.equal(await page.$('#manager-inspector [data-session="desk"]'), null);
   await page.reload();
   await waitForProject(page, projectId(folderA));
   let second = await browser.newPage();
@@ -151,7 +154,7 @@ test('manager connects projects, switches remembered scopes and Default, and pre
   await second.locator('#manager-projects details > summary').click();
   await second.locator('#manager-connect-project input').fill(join(project.projectDirectory, 'missing'));
   await second.locator('#manager-connect-project button[type="submit"]').click();
-  await second.waitForFunction(() => document.querySelector('#manager-projects [role="alert"]')?.textContent?.includes('unavailable'));
+  await second.waitForFunction(() => document.querySelector('#manager-project-error')?.textContent?.includes('unavailable'));
   assert.equal(second.url(), urlB, 'A connection failure does not navigate away.');
   await second.$eval('#manager-connect-project input', (element) => { element.value = ''; element.dispatchEvent(new Event('input', {
     bubbles: true,
@@ -160,15 +163,16 @@ test('manager connects projects, switches remembered scopes and Default, and pre
   await rm(removed, {
     recursive: true,
   });
-  await second.click('#manager-projects button[aria-label="Close projects"]');
+  await openManagerSection(second, 'sessions');
   await openProjects(second);
   let removedSelector = `#manager-project-list [data-project="${projectId(removed)}"]`;
   await second.waitForFunction((selector) => document.querySelector(selector)?.textContent?.includes('Unavailable'), {}, removedSelector);
-  assert.equal(await second.$eval(`${removedSelector} button:first-child`, (element) => element.hasAttribute('disabled')), true);
-  await second.locator(`${removedSelector} ::-p-aria([name="Forget connection"][role="button"])`).click();
+  await selectManagerProject(second, projectId(removed));
+  assert.equal(await second.$eval('#manager-inspector button.agui-button-primary', (element) => element.hasAttribute('disabled')), true);
+  await second.locator('#manager-inspector ::-p-aria([name="Forget connection"][role="button"])').click();
   await second.waitForFunction((selector) => !document.querySelector(selector), {}, removedSelector);
   await assert.rejects(stat(removed), 'Forgetting a missing connection does not recreate it.');
-  await second.click('#manager-projects button[aria-label="Close projects"]');
+  await openManagerSection(second, 'sessions');
   await second.evaluate(() => Reflect.get(document.querySelector('agui-session-manager') || {}, 'connection').socket.close());
   await second.waitForFunction(() => document.querySelector('.connection')?.textContent?.includes('Disconnected'));
   await second.waitForFunction(() => document.querySelector('.connection .agui-message-text')?.textContent === 'Connected');
@@ -176,16 +180,17 @@ test('manager connects projects, switches remembered scopes and Default, and pre
   assert.equal(second.url(), urlB);
   await openProjects(second);
   let folderASelector = `#manager-project-list [data-project="${projectId(folderA)}"]`;
-  await second.locator(`${folderASelector} ::-p-aria([name="Forget connection"][role="button"])`).click();
+  await selectManagerProject(second, projectId(folderA));
+  await second.locator('#manager-inspector ::-p-aria([name="Forget connection"][role="button"])').click();
   await second.waitForFunction((selector) => !document.querySelector(selector), {}, folderASelector);
   await page.evaluate(async () => {
     let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
     await owner.refresh();
   });
-  await second.click('#manager-projects button[aria-label="Close projects"]');
+  await openManagerSection(second, 'sessions');
   await openProjects(second);
   await second.waitForFunction((selector) => !document.querySelector(selector), {}, folderASelector);
-  await second.click('#manager-projects button[aria-label="Close projects"]');
+  await openManagerSection(second, 'sessions');
   await page.bringToFront();
   await switchProject(page, 'default');
   assert.equal(page.url(), manager.url);
@@ -227,7 +232,7 @@ test('project navigation survives session discovery failures and ignores delayed
   await waitForProject(page, 'default');
   await openProjects(page);
   await connect(page, folder);
-  await page.click('#manager-projects button[aria-label="Close projects"]');
+  await openManagerSection(page, 'sessions');
   await page.evaluate(async () => {
     let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
     let connection = owner.connection;
@@ -259,7 +264,7 @@ test('project navigation survives session discovery failures and ignores delayed
     try { await owner.projects?.run('switch project', id); }
     finally { connection.request = request; }
   }, projectId(folder));
-  await page.waitForFunction(() => document.querySelector('#manager-project-navigation [role="alert"]')?.textContent?.includes('Fixture destination launch failure.'));
+  await page.waitForFunction(() => document.querySelector('#manager-project-error')?.textContent?.includes('Fixture destination launch failure.'));
   assert.equal(page.url(), manager.url, 'A failed switch retains the current manager.');
   assert.equal(await page.evaluate(() => {
     let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
@@ -311,7 +316,7 @@ test('project navigation survives session discovery failures and ignores delayed
   await waitForProject(page, projectId(folder));
 });
 
-test('Open folder targets the selected or listed project and recovers from a desktop failure', {
+test('Open folder targets the current or listed project and recovers from a desktop failure', {
   timeout: 45000,
 }, async (t) => {
   let project = await temporaryManagerProject();
@@ -364,23 +369,31 @@ test('Open folder targets the selected or listed project and recovers from a des
   await openProjects(page);
   await connect(page, folder);
   assert.deepEqual(await page.evaluate(() => Reflect.get(window, 'folderRequests')), [], 'Discovery and connection do not open OS windows.');
-  await page.click('#manager-projects button[aria-label="Close projects"]');
-  await page.click('#manager-open-project');
-  await page.waitForFunction((path) => document.querySelector('.notice')?.textContent?.includes(`Requested opening ${path}`), {}, folder);
+  await openManagerSection(page, 'sessions');
+  await waitForProject(page, 'default');
+  await openManagerSection(page, 'projects');
+  await selectManagerProject(page, 'default');
+  await page.locator('#manager-inspector ::-p-aria([name="Open folder"][role="button"])').click();
+  await page.waitForFunction(() => {
+    let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
+    return document.querySelector('.notice')?.textContent?.includes(`Requested opening ${owner.snapshot?.storage.defaultFolder}`);
+  });
   assert.equal(page.url(), manager.url, 'Opening a selected folder does not switch the manager scope.');
   await openProjects(page);
-  await page.locator('#manager-project-list [data-project="default"] ::-p-aria([name="Open folder"][role="button"])').click();
+  await selectManagerProject(page, 'default');
+  await page.locator('#manager-inspector ::-p-aria([name="Open folder"][role="button"])').click();
   await page.waitForFunction(() => !document.querySelector('#manager-connect-project input')?.hasAttribute('disabled'));
   await page.evaluate(() => Reflect.set(window, 'folderFailure', true));
-  await page.locator(`#manager-project-list [data-project="${projectId(folder)}"] ::-p-aria([name="Open folder"][role="button"])`).click();
-  await page.waitForFunction((path) => document.querySelector('#manager-projects [role="alert"]')?.textContent?.includes(`Fixture desktop failure. Folder: ${path}`), {}, folder);
+  await selectManagerProject(page, projectId(folder));
+  await page.locator('#manager-inspector ::-p-aria([name="Open folder"][role="button"])').click();
+  await page.waitForFunction((path) => document.querySelector('#manager-project-error')?.textContent?.includes(`Fixture desktop failure. Folder: ${path}`), {}, folder);
   await page.waitForFunction(() => !document.querySelector('#manager-connect-project input')?.hasAttribute('disabled'));
   assert.deepEqual(await page.evaluate(() => Reflect.get(window, 'folderRequests')), [
-    projectId(folder),
+    'default',
     'default',
     projectId(folder),
   ]);
   assert.equal(page.url(), manager.url);
-  await page.click('#manager-projects button[aria-label="Close projects"]');
+  await openManagerSection(page, 'sessions');
   await switchProject(page, projectId(folder));
 });

@@ -25,7 +25,7 @@ Use Projects in the manager to connect existing AGUI folders and revisit them or
 
 Open folder requests the host's file manager. Project explorer browses the current project with read-only source and Markdown previews. Default presents saved definitions under readable session names and excludes private runtime records.
 
-Select a saved session to Copy to project or Move to project. Choose the destination and session ID; saved data and private metadata are explicit options. Copy preserves the original, including a running page. Move requires a stopped source, verifies the destination before removing source files, and retains excluded saved artifacts in a private backup. The destination stays stopped. Review incomplete operations in Transfers; see the [transfer and recovery controls](./reference.md#session-manager) for limits and recovery behavior.
+Select a saved session to Copy to project or Move to project. Choose the destination and session ID; saved data and private metadata are explicit options. Copy preserves the original, including a running page. Move requires a stopped source, verifies the destination before removing source files, and retains excluded saved artifacts in a private backup. The destination stays stopped. Review incomplete operations in Projects / Transfers; see the [transfer and recovery controls](./reference.md#session-manager) for limits and recovery behavior.
 
 Use Rename, or `npx symbiote-agui rename <SESSION_ID> <NEW_SESSION_ID>`, to change a stopped session's ID within its current project. It retains all saved data and metadata, with the same verification and recovery as Move. The Markdown display title and embedded references remain unchanged. Review renamed definition files in your normal Git workflow.
 

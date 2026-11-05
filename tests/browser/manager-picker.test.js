@@ -1,3 +1,4 @@
+import { openManagerSection } from './helpers.js';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -27,8 +28,8 @@ test('manager offers a folder picker first, preserves cancellation and falls bac
   page.setDefaultTimeout(8000);
   await page.goto(manager.launchUrl);
   await page.waitForSelector('#manager-choose-project:not(:disabled):not([aria-busy="true"])');
-  await page.click('.toolbar button[aria-label="Projects"]');
-  await page.waitForSelector('#manager-projects dialog[open]');
+  await openManagerSection(page, 'projects');
+  await page.locator('#project-views [role="tab"][value="connected"]').click();
   assert.equal(await page.$eval('#manager-connect-project', (form) => form.closest('details')?.open), false);
   await page.evaluate((path) => {
     let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
@@ -58,20 +59,20 @@ test('manager offers a folder picker first, preserves cancellation and falls bac
       });
     };
   }, folder);
-  await page.click('#manager-choose-project');
+  await page.locator('#manager-choose-project').click();
   await page.waitForFunction(() => document.querySelector('.notice')?.textContent?.includes('Folder selection canceled'));
   assert.equal(await page.$(`#manager-project-list [data-project="${projectId(folder)}"]`), null);
-  assert.equal(await page.$eval('#manager-projects [role="alert"]', (element) => element.textContent), '');
+  assert.equal(await page.$eval('#manager-project-error', (element) => element.textContent), '');
   // Refresh may enable the control before the previous action's promise settles.
   await page.waitForSelector('#manager-choose-project:not(:disabled):not([aria-busy="true"])');
   await page.evaluate(() => Reflect.set(window, 'pickerOutcome', 'selected'));
-  await page.click('#manager-choose-project');
+  await page.locator('#manager-choose-project').click();
   await page.waitForSelector(`#manager-project-list [data-project="${projectId(folder)}"]`);
   assert.equal(page.url(), manager.url, 'Picking connects without switching scope.');
   await page.waitForSelector('#manager-choose-project:not(:disabled):not([aria-busy="true"])');
   await page.evaluate(() => Reflect.set(window, 'pickerOutcome', 'error'));
-  await page.click('#manager-choose-project');
-  await page.waitForFunction(() => document.querySelector('#manager-projects [role="alert"]')?.textContent?.includes('picker unavailable'));
+  await page.locator('#manager-choose-project').click();
+  await page.waitForFunction(() => document.querySelector('#manager-project-error')?.textContent?.includes('picker unavailable'));
   await page.waitForSelector('#manager-connect-project input', {
     visible: true,
   });

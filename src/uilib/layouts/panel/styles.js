@@ -26,5 +26,31 @@ export default css`
       line-height: var(--text-lg--line-height, 1.5555555556);
       font-weight: var(--font-weight-semibold, 600);
     }
+    agui-panel[selectable] {
+      border-color: var(--agui-border);
+    }
+    agui-panel[selectable]:not([aria-disabled='true']) {
+      cursor: pointer;
+    }
+    @media (hover: hover) {
+      agui-panel[selectable]:not([aria-disabled='true']):not([data-selected]):hover {
+        background-color: var(--agui-hover);
+      }
+    }
+    agui-panel[selectable][data-selected] {
+      border-color: var(--agui-accent);
+      outline: 2px solid var(--agui-accent);
+    }
+    agui-panel[selectable]:has(:focus-visible) {
+      outline: 2px solid var(--agui-accent);
+      outline-offset: 3px;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      agui-panel[selectable] {
+        transition-property: border-color, background-color;
+        transition-duration: var(--agui-motion-fast);
+        transition-timing-function: var(--agui-motion-ease);
+      }
+    }
   }
 `;

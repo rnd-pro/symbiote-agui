@@ -1,17 +1,24 @@
 import { busyAction } from './busy-action.js';
 
 export let PROJECT_STATE = {
-  projectsOpen: false,
   projectFolder: '',
   projectChoice: '',
   projectOptions: [],
-  projectRows: {},
+  projectRows: [],
+  projectSelection: [],
+  selectedProjectRows: {},
+  noProjectSelection: true,
+  projectListTexts: {
+    empty: 'No connected projects.',
+    loading: 'Loading projects...',
+    invalidRows: 'Project records could not be displayed.',
+    invalidState: 'Project selection could not be displayed.',
+    unavailable: 'Project selection is unavailable.',
+  },
   projectName: 'Loading projects...',
   projectPath: '',
   projectError: '',
   projectsDisabled: true,
-  projectSwitchDisabled: true,
-  projectOpenDisabled: true,
   projectPathOpen: false,
 };
 
@@ -32,8 +39,7 @@ export class ProjectNavigation {
     this.listing = listing;
     this.discoveryError = '';
     this.owner.connection?.setProject(listing.currentProjectId);
-    let choice = String(this.owner.$.projectChoice);
-    if (!listing.projects.some((entry) => entry.id === choice)) { this.owner.$.projectChoice = listing.currentProjectId; }
+    this.owner.$.projectChoice = listing.currentProjectId;
     this.render();
     this.owner.explorer?.setProject(listing.currentProjectId);
   }
@@ -44,38 +50,40 @@ export class ProjectNavigation {
     let disabled = !owner.connection?.ready || owner.busy;
     let currentId = listing?.currentProjectId;
     let current = listing?.projects.find((entry) => entry.id === currentId);
-    let choice = listing?.projects.find((entry) => entry.id === owner.$.projectChoice);
-    owner.set$({
+    let rows = (listing?.projects || []).map((entry) => ({
+      id: entry.id,
+      name: entry.name,
+      path: entry.folder || owner.snapshot?.storage.defaultFolder || 'Default private cache',
+      current: entry.id === currentId,
+      availability: entry.available ? 'Available' : 'Unavailable',
+      error: entry.error || '',
+      lastUsed: entry.lastUsedAt ? `Last used ${new Date(entry.lastUsedAt).toLocaleString()}` : 'Not opened yet',
+      switchDisabled: disabled || !entry.available || entry.id === currentId,
+      openDisabled: disabled || !entry.available,
+      forgetDisabled: disabled || entry.id === 'default' || entry.id === currentId,
+      switchProject: busyAction(() => this.run('switch project', entry.id, currentId)),
+      openFolder: busyAction(() => this.run('open folder', entry.id, currentId)),
+      forgetProject: busyAction(() => this.run('forget project', entry.id, currentId)),
+    }));
+    owner.$ = {
       projectName: current?.name || 'Projects',
       projectPath: current?.folder || owner.snapshot?.storage.defaultFolder || 'Default private cache',
       projectError: this.issue || this.discoveryError,
       projectsDisabled: disabled,
-      projectSwitchDisabled: disabled || !choice?.available || choice.id === currentId,
-      projectOpenDisabled: disabled || !choice?.available,
       projectOptions: (listing?.projects || []).map((entry) => ({
         value: entry.id,
         label: entry.name,
         disabled: !entry.available,
       })),
-      projectRows: Object.fromEntries((listing?.projects || []).map((entry) => [
-        entry.id,
-        {
-          id: entry.id,
-          name: entry.name,
-          path: entry.folder || owner.snapshot?.storage.defaultFolder || 'Default private cache',
-          current: entry.id === currentId,
-          availability: entry.available ? 'Available' : 'Unavailable',
-          error: entry.error || '',
-          lastUsed: entry.lastUsedAt ? `Last used ${new Date(entry.lastUsedAt).toLocaleString()}` : 'Not opened yet',
-          switchDisabled: disabled || !entry.available || entry.id === currentId,
-          openDisabled: disabled || !entry.available,
-          forgetDisabled: disabled || entry.id === 'default' || entry.id === currentId,
-          switchProject: busyAction(() => this.run('switch project', entry.id, currentId)),
-          openFolder: busyAction(() => this.run('open folder', entry.id, currentId)),
-          forgetProject: busyAction(() => this.run('forget project', entry.id, currentId)),
-        },
-      ])),
-    });
+      projectRows: rows,
+    };
+    let selectedId = /** @type {string[]} */ (owner.$.projectSelection)[0];
+    let selected = rows.find((row) => row.id === selectedId);
+    owner.$.selectedProjectRows = selected ? {
+      [selected.id]: selected,
+    } : {};
+    owner.$.noProjectSelection = !selected;
+    if (selectedId && !selected) { owner.$.projectSelection = []; }
   }
 
   async refresh() {
@@ -94,11 +102,6 @@ export class ProjectNavigation {
         this.render();
       }
     } finally { this.refreshing = false; }
-  }
-
-  open() {
-    this.owner.$.projectsOpen = true;
-    return this.refresh();
   }
 
   /**
@@ -136,7 +139,6 @@ export class ProjectNavigation {
         if (!result.project || !result.projects) { throw new Error('The selected project could not open.'); }
         owner.selectProject(result.project.id);
         this.apply(result.projects);
-        owner.$.projectsOpen = false;
         owner.$.notice = `Selected ${result.project.name}.`;
         void owner.transfers?.refreshHistory();
       } else if (operation === 'open folder') {
@@ -145,10 +147,9 @@ export class ProjectNavigation {
       } else {
         if (connecting) {
           owner.$.projectFolder = '';
-          owner.$.projectChoice = result.project?.id || owner.$.projectChoice;
         }
         if (result.projects) { this.apply(result.projects); }
-        owner.$.notice = connecting ? 'Project connected. Select Switch to open it.' : 'Connection forgotten. Files and sessions are unchanged.';
+        owner.$.notice = connecting ? 'Project connected. Choose it from Connected project to open it.' : 'Connection forgotten. Files and sessions are unchanged.';
       }
     } catch (error) {
       if (owner.isCurrentView(epoch)) {

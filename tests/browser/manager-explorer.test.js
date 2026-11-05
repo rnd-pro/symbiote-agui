@@ -1,3 +1,4 @@
+import { openManagerSection } from './helpers.js';
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -35,7 +36,8 @@ async function fixture(t) {
 
 /** @param {import('puppeteer').Page} page */
 async function openExplorer(page) {
-  await page.click('#session-views [role="tab"][value="explorer"]');
+  await openManagerSection(page, 'projects');
+  await page.locator('#project-views [role="tab"][value="explorer"]').click();
   try { await page.waitForSelector('#explorer-entries [data-entry] button'); }
   catch (error) {
     let state = await page.evaluate(() => {
@@ -43,7 +45,7 @@ async function openExplorer(page) {
       return {
         active: owner.explorer?.active,
         projectId: owner.explorer?.projectId,
-        view: owner.$.workspaceView,
+        view: owner.$.projectsView,
         status: owner.$.explorerStatus,
         message: owner.$.explorerMessage,
         error: owner.$.notice,
@@ -178,6 +180,7 @@ test('manager lazily expands project folders and previews source or inert Markdo
   await page.click('#explorer-entries [data-entry="new.txt"] button');
   await page.waitForFunction(() => document.querySelector('#explorer-preview')?.textContent?.includes('ENOENT'));
   assert.equal(await page.evaluate(async () => (await fetch('/manager/files/source.html')).status), 404);
+  await openManagerSection(page, 'sessions');
   await page.click('#session-views [role="tab"][value="table"]');
   await page.waitForSelector('#manager-table tr[data-row-id="draft"]');
   assert.equal(await draftPage.$eval('input[name="draft"]', (element) => element.value), draft);

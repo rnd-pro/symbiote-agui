@@ -18,7 +18,6 @@ export let TRANSFER_STATE = {
   transferIsRename: false,
   transferIdLabel: 'Destination session ID',
   transferProjectDisabled: true,
-  transferHistoryOpen: false,
   transferHistoryRows: {},
   transferHistoryMessage: '',
   transferHistoryError: '',
@@ -108,7 +107,7 @@ export class SessionTransfers {
           recover: busyAction(() => this.recover(entry.id)),
         },
       ])),
-      transferRecoveryNotice: this.history.some((entry) => entry.recoveryRequired) ? 'A transfer needs recovery. Open Transfers to review it.' : '',
+      transferRecoveryNotice: this.history.some((entry) => entry.recoveryRequired) ? 'A transfer needs recovery. Review Projects / Transfers.' : '',
     });
   }
 
@@ -168,7 +167,11 @@ export class SessionTransfers {
   }
 
   showHistory() {
-    this.owner.$.transferHistoryOpen = true;
+    this.owner.$ = {
+      transferOpen: false,
+      appSection: 'projects',
+      projectsView: 'transfers',
+    };
     return this.refreshHistory();
   }
 

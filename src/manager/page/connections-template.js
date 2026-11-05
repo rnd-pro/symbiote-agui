@@ -7,39 +7,23 @@ export let CONNECTIONS_TEMPLATE = html`
     </agui-toolbar>
     <p class="text-sm text-agui-muted" role="status" bind="textContent: MANAGER/connectionsMessage"></p>
     <p class="whitespace-pre-wrap break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/connectionsError"></p>
-    <div class="grid gap-4" itemize="MANAGER/liveConnectionRows">
+    <agui-list id="manager-connection-list" class="grid gap-4" label="Connections" selection="single" pub-to="MANAGER/connectionSelection"
+      bind="$.items: MANAGER/liveConnectionRows; $.value: MANAGER/connectionSelection; $.texts: MANAGER/connectionListTexts">
       <template>
-        <agui-panel class="grid min-w-0 gap-3" bind="@data-connection-session: key">
+        <agui-panel selectable role="listitem" class="grid min-w-0 gap-3"
+          bind="@data-connection-session: ^sessionKey; @data-browser-connection: ^browserId; @data-selected: ^_selected; ariaDisabled: ^_selectionDisabled">
           <div class="grid min-w-0 gap-1">
-            <h3 class="break-words font-semibold">{{^project}} / {{^sessionId}}</h3>
+            <p class="text-xs text-agui-muted">{{^kindLabel}} / {{^project}} / {{^sessionId}}</p>
+            <h3 class="min-w-0"><agui-button class="agui-button-ghost" bind="onclick: ^selectItem; ariaPressed: ^_selected; @disabled: ^_selectionDisabled">{{^title}}</agui-button></h3>
             <p class="break-all text-xs text-agui-muted">{{^path}}</p>
             <p class="text-xs text-agui-muted">{{^details}}</p>
-            <p class="text-sm">{{^tunnel}}</p>
+            <p class="text-sm empty:hidden">{{^tunnel}}</p>
+            <p class="break-all text-xs text-agui-muted">{{^displayUrl}}</p>
             <p class="break-words text-sm text-agui-danger empty:hidden">{{^error}}</p>
-          </div>
-          <agui-toolbar aria-label="Session connection actions">
-            <a class="agui-button no-underline" target="_blank" rel="noopener noreferrer" bind="href: ^url; hidden: ^noLocal"><agui-icon name="open_in_new"></agui-icon>Local</a>
-            <button type="button" bind="onclick: ^openPublic; disabled: ^publicDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Public</button>
-            <button type="button" bind="onclick: ^openViewer; disabled: ^publicDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Viewer</button>
-            <button type="button" bind="onclick: ^check; disabled: ^tunnelDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Check tunnel</button>
-            <button type="button" bind="onclick: ^renew; disabled: ^tunnelDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Renew tunnel</button>
-            <button type="button" class="agui-button-danger" bind="onclick: ^stop; disabled: ^stopDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Stop tunnel</button>
-          </agui-toolbar>
-          <div class="grid gap-2" itemize="^pages">
-            <template>
-              <section class="grid min-w-0 gap-2 border-t border-agui-divider pt-3" bind="@data-browser-connection: id">
-                <h4 class="break-words font-medium">{{title}}</h4>
-                <p class="text-xs text-agui-muted">{{details}}</p>
-                <p class="break-all text-xs">{{url}}</p>
-                <agui-toolbar aria-label="Browser connection actions">
-                  <button type="button" bind="onclick: ^disconnect; disabled: ^disabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="close"></agui-icon>Disconnect browser</button>
-                </agui-toolbar>
-              </section>
-            </template>
           </div>
         </agui-panel>
       </template>
-    </div>
+    </agui-list>
   </section>
 `;
 

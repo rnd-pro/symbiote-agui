@@ -16,11 +16,13 @@ import { FEEDBACK_SETTINGS_STATE, SessionFeedbackSettings } from './feedback.js'
 import { CONNECTIONS_STATE, LiveConnections } from './connections.js';
 import { busyAction } from './busy-action.js';
 import { CONNECTOR_SETTINGS_STATE, SessionConnectorSettings } from './connectors.js';
+import { NAVIGATION_STATE, syncNavigation, syncInspector } from './navigation.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
 export class SessionManager extends ContextProvider {
   init$ = {
+    ...NAVIGATION_STATE,
     ...PROJECT_STATE,
     ...EXPLORER_STATE,
     ...TRANSFER_STATE,
@@ -60,7 +62,6 @@ export class SessionManager extends ContextProvider {
     noSelection: true,
     loading: true,
     discoveryError: '',
-    settingsOpen: false,
     descriptionOpen: false,
     description: '',
     descriptionTexts: DESCRIPTION_TEXTS,
@@ -72,9 +73,7 @@ export class SessionManager extends ContextProvider {
     saveFeedback: busyAction((event) => this.feedbackSettings?.submit(event)),
     disableFeedback: busyAction((event) => this.feedbackSettings?.submit(event, true)),
     refreshFeedback: busyAction(() => this.feedbackSettings?.run('feedback settings')),
-    openProjects: busyAction(() => this.projects?.open()),
     switchProject: busyAction(() => this.projects?.run('switch project', String(this.$.projectChoice))),
-    openProjectFolder: busyAction(() => this.projects?.run('open folder', String(this.$.projectChoice))),
     connectProject: busyAction((event) => {
       event.preventDefault();
       return this.projects?.run('connect project');
@@ -91,7 +90,10 @@ export class SessionManager extends ContextProvider {
     resetStorage: busyAction(() => this.saveStorage(true)),
     refresh: busyAction(() => Promise.all([
       this.refresh(),
-      this.$.workspaceView === 'explorer' ? this.explorer?.reload() : undefined,
+      this.explorer?.active ? this.explorer.reload() : undefined,
+      this.liveConnections?.refresh(),
+      this.$.appSection === 'projects' ? this.projects?.refresh() : undefined,
+      this.$.appSection === 'projects' && this.$.projectsView === 'transfers' ? this.transfers?.refreshHistory() : undefined,
     ])),
     bulk: busyAction(() => this.act(/** @type {import('../../../types/manager.js').ManagerOperation} */ (this.$.bulkOperation))),
   };
@@ -128,18 +130,22 @@ export class SessionManager extends ContextProvider {
     this.projects = new ProjectNavigation(this);
     this.explorer = new ProjectExplorer(this);
     this.transfers = new SessionTransfers(this);
-    this.sub('workspaceView', (view) => {
-      this.explorer?.activate(view === 'explorer');
-      this.liveConnections?.activate(view === 'connections');
-    });
+    this.sub('appSection', () => syncNavigation(this));
+    this.sub('projectsView', () => syncNavigation(this));
     this.sub('explorerHidden', () => this.explorer?.reload(), false);
     this.sub('projectChoice', () => this.projects?.render(), false);
     this.sub('theme', (theme) => setTheme(String(theme)));
     this.stopThemeSync = watchTheme((theme) => { this.$.theme = theme; });
-    this.sub('selection', () => {
-      this.renderRows();
-      this.$.inspectorOpen = !this.$.noSelection;
-    }, false);
+    for (let key of [
+      'selection',
+      'projectSelection',
+      'connectionSelection',
+    ]) {
+      this.sub(key, () => {
+        this.renderRows();
+        this.$.inspectorOpen = !this.$.inspectorHidden;
+      }, false);
+    }
     this.connection = new ManagerConnection((ready, message) => {
       if (this.disposed) { return; }
       if (!ready) {
@@ -236,6 +242,7 @@ export class SessionManager extends ContextProvider {
       ...CARD_TEXTS,
       empty: sessions.length ? CARD_TEXTS.empty : CARD_TEXTS.noSessions,
     };
+    syncInspector(this);
   }
 
   /** @param {number} epoch */
@@ -267,7 +274,6 @@ export class SessionManager extends ContextProvider {
       feedbackOpen: false,
       connectorOpen: false,
       transferOpen: false,
-      transferHistoryOpen: false,
     });
     if (this.feedbackSettings) {
       this.feedbackSettings.settings = undefined;

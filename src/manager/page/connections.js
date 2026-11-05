@@ -1,7 +1,17 @@
 import { busyAction } from './busy-action.js';
 
 export let CONNECTIONS_STATE = {
-  liveConnectionRows: {},
+  liveConnectionRows: [],
+  connectionSelection: [],
+  selectedConnectionRows: {},
+  noConnectionSelection: true,
+  connectionListTexts: {
+    empty: 'No running connections.',
+    loading: 'Loading connections...',
+    invalidRows: 'Connection records could not be displayed.',
+    invalidState: 'Connection selection could not be displayed.',
+    unavailable: 'Connection selection is unavailable.',
+  },
   connectionsMessage: 'Open Connections to inspect all running projects.',
   connectionsError: '',
   connectionsDisabled: true,
@@ -60,10 +70,16 @@ export class LiveConnections {
     if (this.listing) {
       owner.$.connectionsMessage = `${sessions.length} sessions / ${sessions.reduce((total, entry) => total + entry.pages.length, 0)} browser connections / ${sessions.filter((entry) => entry.tunnel).length} tunnels across all projects. Updated ${new Date(this.listing.checkedAt).toLocaleTimeString()}.`;
     }
-    owner.$.liveConnectionRows = Object.fromEntries(sessions.map((entry) => [
-      `${entry.project.id}/${entry.sessionId}`,
-      {
-        key: `${entry.project.id}/${entry.sessionId}`,
+    let rows = sessions.flatMap((entry) => {
+      let key = `${entry.project.id}/${entry.sessionId}`;
+      let session = {
+        id: `session:${entry.instanceId}`,
+        key,
+        sessionKey: key,
+        browserId: false,
+        isBrowser: false,
+        kindLabel: 'Session / tunnel',
+        title: entry.sessionId,
         sessionId: entry.sessionId,
         project: entry.project.name,
         path: entry.project.folder || 'Default private cache',
@@ -72,6 +88,7 @@ export class LiveConnections {
         error: entry.error || entry.tunnel?.checkError || entry.tunnel?.error || '',
         url: entry.url || '',
         noLocal: !entry.url,
+        displayUrl: entry.url || '',
         publicDisabled: disabled || !entry.tunnel,
         tunnelDisabled: disabled || !entry.tunnel,
         stopDisabled: disabled || !entry.tunnel || !entry.manageable,
@@ -80,16 +97,35 @@ export class LiveConnections {
         check: busyAction(() => this.run('connection tunnel check', entry)),
         renew: busyAction(() => this.run('connection tunnel renew', entry)),
         stop: busyAction(() => this.run('stop tunnel', entry)),
-        pages: entry.pages.map((page) => ({
-          id: page.pageId,
+        disconnectDisabled: true,
+        disconnect: null,
+      };
+      return [
+        session,
+        ...entry.pages.map((page) => ({
+          ...session,
+          id: `page:${entry.instanceId}/${page.pageId}`,
+          sessionKey: false,
+          browserId: page.pageId,
+          isBrowser: true,
+          kindLabel: 'Browser connection',
           title: page.title,
-          url: page.url,
+          displayUrl: page.url,
+          tunnel: '',
           details: `${page.role || 'interactive local'} / ${page.ready ? 'ready' : 'loading'}${page.connectedAt ? ` / connected ${new Date(page.connectedAt).toLocaleTimeString()}` : ''}`,
-          disabled: disabled || !entry.manageable,
+          disconnectDisabled: disabled || !entry.manageable,
           disconnect: busyAction(() => this.run('disconnect page', entry, page.pageId)),
         })),
-      },
-    ]));
+      ];
+    });
+    owner.$.liveConnectionRows = rows;
+    let selectedId = /** @type {string[]} */ (owner.$.connectionSelection)[0];
+    let selected = rows.find((row) => row.id === selectedId);
+    owner.$.selectedConnectionRows = selected ? {
+      [selected.id]: selected,
+    } : {};
+    owner.$.noConnectionSelection = !selected;
+    if (selectedId && !selected) { owner.$.connectionSelection = []; }
   }
 
   /**

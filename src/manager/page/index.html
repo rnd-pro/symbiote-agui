@@ -12,148 +12,233 @@
   </head>
   <body>
     <agui-app class="manager-app">
-      <agui-sidebar label="Workspace" expand-label="Expand workspace" collapse-label="Collapse workspace">
-        <div class="grid gap-6">
-          <agui-panel id="manager-project-navigation" class="grid gap-3" aria-label="Projects">
-            <div class="grid gap-1">
-              <h2 class="text-xs uppercase tracking-widest text-agui-muted">Current project</h2>
-              <p class="font-medium">{{MANAGER/projectName}}</p>
-              <p class="break-all text-xs text-agui-muted">{{MANAGER/projectPath}}</p>
-            </div>
-            <agui-select id="manager-project-switcher" label="Connected project" name="project" placeholder="Choose a project"
-              pub-to="MANAGER/projectChoice" bind="$.value: MANAGER/projectChoice; $.options: MANAGER/projectOptions; $.disabled: MANAGER/projectsDisabled"></agui-select>
-            <agui-toolbar class="grid grid-cols-1" aria-label="Project navigation">
-              <button id="manager-switch-project" type="button" class="agui-button-primary" bind="onclick: MANAGER/switchProject; disabled: MANAGER/projectSwitchDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="arrow_forward"></agui-icon>Switch</button>
-              <button id="manager-open-project" type="button" bind="onclick: MANAGER/openProjectFolder; disabled: MANAGER/projectOpenDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="open_in_new"></agui-icon>Open folder</button>
-              <button type="button" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="home"></agui-icon>Manage projects</button>
-            </agui-toolbar>
-            <p class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/projectError"></p>
-          </agui-panel>
-          <section class="grid gap-3" aria-labelledby="filters-heading">
-            <h2 id="filters-heading" class="text-xs uppercase tracking-widest text-agui-muted">Find a session</h2>
-            <agui-filter id="manager-filter" label="Session filters" results-to="MANAGER/matchingIds" pub-to="MANAGER/filters" query-pub-to="MANAGER/query"
-              bind="$.rows: MANAGER/records; $.fields: MANAGER/filterFields; $.texts: MANAGER/filterTexts; $.value: MANAGER/filters; $.query: MANAGER/query; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError"></agui-filter>
-          </section>
-          <section class="grid gap-3" aria-labelledby="bulk-heading">
-            <h2 id="bulk-heading" class="text-xs uppercase tracking-widest text-agui-muted">Scope actions</h2>
-            <agui-select label="All sessions in this scope" name="operation" pub-to="MANAGER/bulkOperation" bind="$.options: MANAGER/bulkOptions; $.value: MANAGER/bulkOperation; $.disabled: MANAGER/controlsDisabled"></agui-select>
-            <p class="text-xs text-agui-muted">Applies to the entire folder, including sessions hidden by filters.</p>
-            <agui-toolbar class="bulk" aria-label="Bulk session actions">
-              <button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; disabled: MANAGER/controlsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="check"></agui-icon>Apply to all</button>
-            </agui-toolbar>
-          </section>
-        </div>
+      <agui-sidebar label="Navigation" expand-label="Expand" collapse-label="Collapse">
+        <nav id="manager-navigation" class="grid gap-2" aria-label="Main">
+          <agui-button class="agui-button-ghost w-full justify-start aria-[current=page]:text-agui-accent" set="MANAGER/appSection" value="sessions" data-section="sessions" bind="@aria-current: MANAGER/sessionsCurrent"><agui-icon name="dashboard"></agui-icon>Sessions</agui-button>
+          <agui-button class="agui-button-ghost w-full justify-start aria-[current=page]:text-agui-accent" set="MANAGER/appSection" value="projects" data-section="projects" bind="@aria-current: MANAGER/projectsCurrent"><agui-icon name="home"></agui-icon>Projects</agui-button>
+          <agui-button class="agui-button-ghost w-full justify-start aria-[current=page]:text-agui-accent" set="MANAGER/appSection" value="connections" data-section="connections" bind="@aria-current: MANAGER/connectionsCurrent"><agui-icon name="sync"></agui-icon>Connections</agui-button>
+          <agui-button class="agui-button-ghost w-full justify-start aria-[current=page]:text-agui-accent" set="MANAGER/appSection" value="settings" data-section="settings" bind="@aria-current: MANAGER/settingsCurrent"><agui-icon name="settings"></agui-icon>Settings</agui-button>
+        </nav>
       </agui-sidebar>
-      <agui-viewport role="main" aria-label="Sessions" tabindex="0">
+      <agui-viewport role="main" aria-label="Manager workspace" tabindex="0">
         <agui-session-manager ctx="MANAGER" class="flex min-h-full min-w-0 flex-col">
           <agui-header floating>
             <h1 class="flex items-center gap-2"><agui-icon name="dashboard"></agui-icon>AGUI Manager</h1>
             <agui-toolbar class="toolbar" aria-label="Manager controls">
+              <agui-select id="manager-project-switcher" aria-label="Current project" name="project" class="w-56 max-w-full"
+                pub-to="MANAGER/projectChoice" bind="onchange: MANAGER/switchProject; $.value: MANAGER/projectChoice; $.options: MANAGER/projectOptions; $.disabled: MANAGER/projectsDisabled; @title: MANAGER/projectPath"></agui-select>
               <agui-theme-toggle id="manager-theme" ctx="MANAGER" aria-label="Dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
               <button type="button" class="agui-button-icon" aria-label="Refresh" title="Refresh" bind="onclick: MANAGER/refresh; disabled: MANAGER/refreshDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="refresh"></agui-icon></button>
-              <button type="button" class="agui-button-icon" aria-label="Projects" title="Projects" bind="onclick: MANAGER/openProjects; disabled: MANAGER/projectsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="home"></agui-icon></button>
-              <button type="button" class="agui-button-icon" aria-label="Transfers" title="Transfers" bind="onclick: MANAGER/showTransfers; disabled: MANAGER/refreshDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="content_copy"></agui-icon></button>
-              <agui-button class="agui-button-icon" aria-label="Settings" title="Settings" aria-haspopup="dialog" set="MANAGER/settingsOpen" value="true"><agui-icon name="settings"></agui-icon></agui-button>
             </agui-toolbar>
           </agui-header>
-          <div class="min-w-0 flex-1 p-4 sm:p-6">
-            <div class="mb-6 grid gap-2">
-              <p class="text-xs uppercase tracking-widest text-agui-muted">Your workspace</p>
-              <h2 class="text-2xl font-semibold">Sessions</h2>
-              <p class="counts text-sm text-agui-muted" role="status">{{MANAGER/counts}}</p>
-              <a class="agui-button w-fit no-underline" target="_blank" rel="noopener noreferrer"
-                bind="href: MANAGER/verifiedPublicUrl; hidden: !MANAGER/verifiedPublicUrl">Open verified link</a>
-              <p id="transfer-recovery-notice" class="text-sm text-agui-danger empty:hidden" role="status" bind="textContent: MANAGER/transferRecoveryNotice"></p>
-            </div>
-            <agui-tabs id="session-views" label="Workspace view" value="table" pub-to="MANAGER/workspaceView" bind="$.value: MANAGER/workspaceView">
-              <agui-tab value="table" label="Table">
-                <div class="grid gap-4">
-                  <agui-table id="manager-table" label="Sessions" selection="single" page-size="15" pub-to="MANAGER/selection"
-                    bind="$.rows: MANAGER/records; $.columns: MANAGER/columns; $.texts: MANAGER/tableTexts; $.filteredIds: MANAGER/matchingIds; $.value: MANAGER/selection; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError"></agui-table>
-                </div>
-              </agui-tab>
-              <agui-tab value="cards" label="Cards">
-                <agui-list id="manager-cards" class="sessions manager-cards" label="Session cards" selection="single" pub-to="MANAGER/selection"
-                  bind="$.items: MANAGER/cards; $.filteredIds: MANAGER/matchingIds; $.value: MANAGER/selection; $.texts: MANAGER/cardTexts; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError">
-                  <template>
-                    <agui-panel role="listitem" class="grid gap-3 data-[selected]:outline-2 data-[selected]:outline-agui-accent" bind="@data-session: ^sessionId; @data-state: ^statusKind; @data-selected: ^_selected">
-                      <div class="flex flex-wrap items-start justify-between gap-3">
-                        <div class="min-w-0 break-words [overflow-wrap:anywhere]">
-                          <h3><agui-button class="agui-button-ghost" bind="onclick: ^selectItem; ariaPressed: ^_selected; @disabled: ^_selectionDisabled">{{^title}}</agui-button></h3>
-                          <code class="text-xs text-agui-muted">/{{^sessionId}}</code>
-                        </div>
-                        <span class="session-status agui-chip">{{^status}}</span>
-                      </div>
-                      <details>
-                        <summary>Summary</summary>
-                        <div class="mt-3 grid gap-3">
-                          <p class="break-words text-sm [overflow-wrap:anywhere]">{{^summary}}</p>
-                          <p class="data-flow break-words text-sm text-agui-muted empty:hidden [overflow-wrap:anywhere]">{{^dataFlow}}</p>
-                        </div>
-                      </details>
-                      <p class="text-xs leading-6 text-agui-muted">{{^details}}</p>
-                      <p class="text-xs leading-6 text-agui-muted">{{^tunnel}}</p>
-                      <p class="error text-sm text-agui-danger">{{^error}}</p>
-                      <div class="flex flex-wrap gap-x-5 gap-y-3 text-sm">
-                        <a class="inline-flex items-center gap-2" target="_blank" rel="noopener noreferrer" bind="href: ^url; hidden: ^noLocal"><agui-icon name="open_in_new"></agui-icon>Open local page</a>
-                        <button type="button" aria-label="Public link" bind="onclick: ^openPublic; title: ^userUrl; hidden: ^noPublic; disabled: ^publicDisabled"><agui-icon name="person"></agui-icon>Public page</button>
-                        <button type="button" aria-label="Viewer page" bind="onclick: ^openViewer; title: ^viewerUrl; hidden: ^noPublic; disabled: ^publicDisabled"><agui-icon name="dashboard"></agui-icon>Viewer page</button>
-                      </div>
+          <div class="grid min-w-0 flex-1 content-start gap-4 p-4 sm:p-6">
+            <h2 class="text-2xl font-semibold" bind="textContent: MANAGER/sectionTitle"></h2>
+            <a class="agui-button w-fit no-underline" target="_blank" rel="noopener noreferrer"
+              bind="href: MANAGER/verifiedPublicUrl; hidden: !MANAGER/verifiedPublicUrl">Open verified link</a>
+            <p id="manager-project-error" class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/projectError"></p>
+            <agui-conditional when="MANAGER/appSection" is="sessions">
+              <template>
+                <section id="manager-sessions-section" class="grid min-w-0 gap-4" aria-label="Sessions">
+                  <p class="counts text-sm text-agui-muted" role="status">{{MANAGER/counts}}</p>
+                  <p id="transfer-recovery-notice" class="text-sm text-agui-danger empty:hidden" role="status" bind="textContent: MANAGER/transferRecoveryNotice"></p>
+                  <div class="grid min-w-0 gap-4 lg:grid-cols-2">
+                    <agui-panel class="grid min-w-0 content-start gap-3" aria-labelledby="filters-heading">
+                      <h3 id="filters-heading" class="text-xs uppercase tracking-widest text-agui-muted">Find a session</h3>
+                      <agui-filter id="manager-filter" label="Session filters" results-to="MANAGER/matchingIds" pub-to="MANAGER/filters" query-pub-to="MANAGER/query"
+                        bind="$.rows: MANAGER/records; $.fields: MANAGER/filterFields; $.texts: MANAGER/filterTexts; $.value: MANAGER/filters; $.query: MANAGER/query; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError"></agui-filter>
                     </agui-panel>
-                  </template>
-                </agui-list>
-              </agui-tab>
-              <agui-tab value="connections" label="Connections">
-                <agui-manager-connections></agui-manager-connections>
-              </agui-tab>
-              <agui-tab value="explorer" label="Project explorer">
-                <div id="manager-explorer" class="grid min-w-0 gap-4">
-                  <div class="grid gap-3">
-                    <h3 class="text-lg font-medium">Project explorer</h3>
-                    <p class="text-xs text-agui-muted">Read-only files from the current project. Source files are displayed as text.</p>
-                    <agui-toolbar aria-label="Explorer controls">
-                      <button type="button" bind="onclick: MANAGER/explorerRefresh; disabled: MANAGER/explorerDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="refresh"></agui-icon>Refresh files</button>
-                      <agui-toggle label="Show hidden files and dependencies" name="explorerHidden" pub-to="MANAGER/explorerHidden" bind="$.value: MANAGER/explorerHidden; $.disabled: MANAGER/explorerDisabled"></agui-toggle>
+                    <agui-panel class="grid min-w-0 content-start gap-3" aria-labelledby="bulk-heading">
+                      <h3 id="bulk-heading" class="text-xs uppercase tracking-widest text-agui-muted">Scope actions</h3>
+                      <agui-select label="All sessions in this scope" name="operation" pub-to="MANAGER/bulkOperation" bind="$.options: MANAGER/bulkOptions; $.value: MANAGER/bulkOperation; $.disabled: MANAGER/controlsDisabled"></agui-select>
+                      <p class="text-xs text-agui-muted">Applies to the entire folder, including sessions hidden by filters.</p>
+                      <agui-toolbar class="bulk" aria-label="Bulk session actions">
+                        <button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; disabled: MANAGER/controlsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="check"></agui-icon>Apply to all</button>
+                      </agui-toolbar>
+                    </agui-panel>
+                  </div>
+                  <agui-tabs id="session-views" class="min-w-0" label="Session views" value="table" pub-to="MANAGER/workspaceView" bind="$.value: MANAGER/workspaceView">
+                    <agui-tab value="table" label="Table">
+                      <div class="grid gap-4">
+                        <agui-table id="manager-table" label="Sessions" selection="single" page-size="15" pub-to="MANAGER/selection"
+                          bind="$.rows: MANAGER/records; $.columns: MANAGER/columns; $.texts: MANAGER/tableTexts; $.filteredIds: MANAGER/matchingIds; $.value: MANAGER/selection; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError"></agui-table>
+                      </div>
+                    </agui-tab>
+                    <agui-tab value="cards" label="Cards">
+                      <agui-list id="manager-cards" class="sessions manager-cards" label="Session cards" selection="single" pub-to="MANAGER/selection"
+                        bind="$.items: MANAGER/cards; $.filteredIds: MANAGER/matchingIds; $.value: MANAGER/selection; $.texts: MANAGER/cardTexts; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError">
+                        <template>
+                          <agui-panel selectable role="listitem" class="grid gap-3" bind="@data-session: ^sessionId; @data-state: ^statusKind; @data-selected: ^_selected; ariaDisabled: ^_selectionDisabled">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                              <div class="min-w-0 break-words [overflow-wrap:anywhere]">
+                                <h3><agui-button class="agui-button-ghost" bind="onclick: ^selectItem; ariaPressed: ^_selected; @disabled: ^_selectionDisabled">{{^title}}</agui-button></h3>
+                                <code class="text-xs text-agui-muted">/{{^sessionId}}</code>
+                              </div>
+                              <span class="session-status agui-chip">{{^status}}</span>
+                            </div>
+                            <details>
+                              <summary>Summary</summary>
+                              <div class="mt-3 grid gap-3">
+                                <p class="break-words text-sm [overflow-wrap:anywhere]">{{^summary}}</p>
+                                <p class="data-flow break-words text-sm text-agui-muted empty:hidden [overflow-wrap:anywhere]">{{^dataFlow}}</p>
+                              </div>
+                            </details>
+                            <p class="text-xs leading-6 text-agui-muted">{{^details}}</p>
+                            <p class="text-xs leading-6 text-agui-muted">{{^tunnel}}</p>
+                            <p class="error text-sm text-agui-danger">{{^error}}</p>
+                            <div class="flex flex-wrap gap-x-5 gap-y-3 text-sm">
+                              <a class="inline-flex items-center gap-2" target="_blank" rel="noopener noreferrer" bind="href: ^url; hidden: ^noLocal"><agui-icon name="open_in_new"></agui-icon>Open local page</a>
+                              <button type="button" aria-label="Public link" bind="onclick: ^openPublic; title: ^userUrl; hidden: ^noPublic; disabled: ^publicDisabled"><agui-icon name="person"></agui-icon>Public page</button>
+                              <button type="button" aria-label="Viewer page" bind="onclick: ^openViewer; title: ^viewerUrl; hidden: ^noPublic; disabled: ^publicDisabled"><agui-icon name="dashboard"></agui-icon>Viewer page</button>
+                            </div>
+                          </agui-panel>
+                        </template>
+                      </agui-list>
+                    </agui-tab>
+                  </agui-tabs>
+                </section>
+              </template>
+            </agui-conditional>
+            <agui-conditional when="MANAGER/appSection" is="projects">
+              <template>
+                <section id="manager-projects-section" class="grid min-w-0 gap-4" aria-label="Projects">
+                  <agui-tabs id="project-views" label="Project views" value="connected" pub-to="MANAGER/projectsView" bind="$.value: MANAGER/projectsView">
+                    <agui-tab value="connected" label="Connected projects">
+                      <agui-panel id="manager-projects">
+                        <div class="grid gap-5">
+                          <section class="grid gap-3" aria-label="Connect a project">
+                            <agui-toolbar aria-label="Choose a project folder">
+                              <button id="manager-choose-project" type="button" class="agui-button-primary" bind="onclick: MANAGER/chooseProject; disabled: MANAGER/projectsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="add"></agui-icon>Choose folder</button>
+                            </agui-toolbar>
+                            <p class="text-xs text-agui-muted">Choose an existing AGUI folder on the computer running AGUI. Connecting does not change save-folder configuration.</p>
+                            <details bind="open: MANAGER/projectPathOpen">
+                              <summary>Enter folder path</summary>
+                              <form id="manager-connect-project" class="mt-3 grid gap-3" bind="onsubmit: MANAGER/connectProject">
+                                <agui-field label="Existing project folder" name="projectFolder" required required-mark="*" maxlength="4096" autocomplete="off"
+                                  pub-to="MANAGER/projectFolder" bind="$.value: MANAGER/projectFolder; $.disabled: MANAGER/projectsDisabled"></agui-field>
+                                <p class="text-xs text-agui-muted">Relative paths use the manager's launch directory.</p>
+                                <agui-toolbar aria-label="Connect by folder path">
+                                  <button type="submit" bind="disabled: MANAGER/projectsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="add"></agui-icon>Connect project</button>
+                                </agui-toolbar>
+                              </form>
+                            </details>
+                          </section>
+                          <section class="grid gap-3" aria-labelledby="connected-projects-title">
+                            <h3 id="connected-projects-title" class="font-medium">Connected projects</h3>
+                            <agui-list id="manager-project-list" class="grid gap-3" label="Connected projects" selection="single" pub-to="MANAGER/projectSelection"
+                              bind="$.items: MANAGER/projectRows; $.value: MANAGER/projectSelection; $.texts: MANAGER/projectListTexts">
+                              <template>
+                                <agui-panel selectable role="listitem" class="grid min-w-0 gap-3" bind="@data-project: ^id; @data-selected: ^_selected; ariaDisabled: ^_selectionDisabled">
+                                  <div class="flex flex-wrap items-center gap-2">
+                                    <h4 class="min-w-0"><agui-button class="agui-button-ghost" bind="onclick: ^selectItem; ariaPressed: ^_selected; @disabled: ^_selectionDisabled">{{^name}}</agui-button></h4>
+                                    <span class="agui-chip" bind="hidden: !^current">Current</span>
+                                    <span class="text-xs text-agui-muted">{{^availability}}</span>
+                                  </div>
+                                  <p class="break-all text-xs text-agui-muted">{{^path}}</p>
+                                  <p class="text-xs text-agui-muted">{{^lastUsed}}</p>
+                                  <p class="break-words text-sm text-agui-danger empty:hidden">{{^error}}</p>
+                                </agui-panel>
+                              </template>
+                            </agui-list>
+                          </section>
+                          <p class="text-xs text-agui-muted">Forgetting a connection keeps its files and running sessions. Default and the current project cannot be forgotten.</p>
+                        </div>
+                      </agui-panel>
+                    </agui-tab>
+                    <agui-tab value="explorer" label="Project explorer">
+                      <div id="manager-explorer" class="grid min-w-0 gap-4">
+                        <div class="grid gap-3">
+                          <h3 class="text-lg font-medium">Project explorer</h3>
+                          <p class="text-xs text-agui-muted">Read-only files from the current project. Source files are displayed as text.</p>
+                          <agui-toolbar aria-label="Explorer controls">
+                            <button type="button" bind="onclick: MANAGER/explorerRefresh; disabled: MANAGER/explorerDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="refresh"></agui-icon>Refresh files</button>
+                            <agui-toggle label="Show hidden files and dependencies" name="explorerHidden" pub-to="MANAGER/explorerHidden" bind="$.value: MANAGER/explorerHidden; $.disabled: MANAGER/explorerDisabled"></agui-toggle>
+                          </agui-toolbar>
+                          <nav aria-label="Project breadcrumbs" class="flex flex-wrap gap-2" itemize="MANAGER/explorerBreadcrumbs">
+                            <template>
+                              <button type="button" bind="onclick: invoke; disabled: disabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><span bind="textContent: label"></span></button>
+                            </template>
+                          </nav>
+                        </div>
+                        <div class="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                          <agui-panel class="min-w-0">
+                            <h4 class="mb-3 text-xs uppercase tracking-widest text-agui-muted">Project files</h4>
+                            <agui-state id="explorer-status" bind="$.status: MANAGER/explorerStatus; $.message: MANAGER/explorerMessage"></agui-state>
+                            <div id="explorer-entries" class="grid min-w-0 gap-1" role="list" aria-label="Project files" itemize="MANAGER/explorerRows">
+                              <template>
+                                <div role="listitem" class="grid min-w-0 gap-1" bind="style.paddingInlineStart: indent; @data-entry: path">
+                                  <button type="button" class="w-full justify-start" bind="onclick: invoke; disabled: disabled; ariaExpanded: expanded; ariaCurrent: selected; @aria-label: actionLabel; @title: path"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>
+                                    <agui-icon bind="@name: icon"></agui-icon><span class="truncate" bind="textContent: label"></span>
+                                  </button>
+                                  <p class="break-words text-xs text-agui-danger empty:hidden" bind="textContent: issue"></p>
+                                </div>
+                              </template>
+                            </div>
+                          </agui-panel>
+                          <agui-panel id="explorer-preview" class="min-w-0">
+                            <h4 class="mb-3 break-all text-sm font-medium" bind="textContent: MANAGER/previewPath"></h4>
+                            <agui-state bind="$.status: MANAGER/previewStatus; $.message: MANAGER/previewMessage"></agui-state>
+                            <agui-conditional when="MANAGER/previewSourceHidden" is="true" behavior="hide">
+                              <template>
+                                <div class="agui-markdown-content">
+                                  <pre class="max-h-[36rem] overflow-auto whitespace-pre text-xs" tabindex="0" aria-label="File source"><code bind="textContent: MANAGER/previewText"></code></pre>
+                                </div>
+                              </template>
+                            </agui-conditional>
+                            <agui-conditional when="MANAGER/previewMarkdownHidden" is="true" behavior="hide">
+                              <template><agui-markdown label="File preview" bind="$.value: MANAGER/previewMarkdown; $.texts: MANAGER/previewTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown></template>
+                            </agui-conditional>
+                          </agui-panel>
+                        </div>
+                      </div>
+                    </agui-tab>
+                    <agui-tab value="transfers" label="Transfers">
+                      <agui-panel id="manager-transfers">
+                        <div class="grid min-w-0 gap-4">
+                          <p class="text-sm" bind="textContent: MANAGER/transferHistoryMessage"></p>
+                          <p class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/transferHistoryError"></p>
+                          <div id="manager-transfer-history" class="grid gap-4" itemize="MANAGER/transferHistoryRows">
+                            <template>
+                              <section class="grid min-w-0 gap-2 rounded-agui-panel border border-agui-border p-4">
+                                <h3 class="break-words font-medium" bind="textContent: title"></h3>
+                                <p class="text-sm" bind="textContent: state"></p>
+                                <p class="break-all text-xs text-agui-muted" bind="textContent: receipt"></p>
+                                <p class="break-all text-xs text-agui-muted empty:hidden" bind="textContent: backup"></p>
+                                <p class="break-words text-sm text-agui-danger empty:hidden" bind="textContent: error"></p>
+                                <button type="button" bind="onclick: recover; disabled: recoverDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Recover incomplete transfer</button>
+                              </section>
+                            </template>
+                          </div>
+                        </div>
+                      </agui-panel>
+                    </agui-tab>
+                  </agui-tabs>
+                </section>
+              </template>
+            </agui-conditional>
+            <agui-conditional when="MANAGER/appSection" is="connections">
+              <template>
+                <section id="manager-connections-section" class="grid min-w-0 gap-4" aria-label="Connections">
+                  <agui-manager-connections></agui-manager-connections>
+                </section>
+              </template>
+            </agui-conditional>
+            <agui-conditional when="MANAGER/appSection" is="settings">
+              <template>
+                <section id="manager-settings-section" class="grid min-w-0 gap-4" aria-label="Settings">
+                  <agui-panel id="manager-settings" class="grid gap-4">
+                    <h3 class="font-medium">AGUI folder settings</h3>
+                    <p class="text-xs text-agui-muted">Configure where the launch project saves AGUIs. Use Projects to connect or revisit folders without changing this setting.</p>
+                    <agui-field label="Save path" name="saveFolder" maxlength="4096" placeholder="Default private cache" pub-to="MANAGER/storageFolder" bind="$.value: MANAGER/storageFolder; $.disabled: MANAGER/storageDisabled"></agui-field>
+                    <p class="break-words text-xs text-agui-muted">{{MANAGER/storageHint}}</p>
+                    <p class="break-all text-xs text-agui-muted">{{MANAGER/storageContext}}</p>
+                    <agui-toolbar aria-label="AGUI folder settings">
+                      <button type="button" class="agui-button-primary" bind="onclick: MANAGER/saveStorage; disabled: MANAGER/storageDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="save"></agui-icon>Save folder and open</button>
+                      <button type="button" bind="onclick: MANAGER/resetStorage; disabled: MANAGER/storageDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="home"></agui-icon>Use default cache</button>
                     </agui-toolbar>
-                    <nav aria-label="Project breadcrumbs" class="flex flex-wrap gap-2" itemize="MANAGER/explorerBreadcrumbs">
-                      <template>
-                        <button type="button" bind="onclick: invoke; disabled: disabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><span bind="textContent: label"></span></button>
-                      </template>
-                    </nav>
-                  </div>
-                  <div class="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-                    <agui-panel class="min-w-0">
-                      <h4 class="mb-3 text-xs uppercase tracking-widest text-agui-muted">Project files</h4>
-                      <agui-state id="explorer-status" bind="$.status: MANAGER/explorerStatus; $.message: MANAGER/explorerMessage"></agui-state>
-                      <div id="explorer-entries" class="grid min-w-0 gap-1" role="list" aria-label="Project files" itemize="MANAGER/explorerRows">
-                        <template>
-                          <div role="listitem" class="grid min-w-0 gap-1" bind="style.paddingInlineStart: indent; @data-entry: path">
-                            <button type="button" class="w-full justify-start" bind="onclick: invoke; disabled: disabled; ariaExpanded: expanded; ariaCurrent: selected; @aria-label: actionLabel; @title: path"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>
-                              <agui-icon bind="@name: icon"></agui-icon><span class="truncate" bind="textContent: label"></span>
-                            </button>
-                            <p class="break-words text-xs text-agui-danger empty:hidden" bind="textContent: issue"></p>
-                          </div>
-                        </template>
-                      </div>
-                    </agui-panel>
-                    <agui-panel id="explorer-preview" class="min-w-0">
-                      <h4 class="mb-3 break-all text-sm font-medium" bind="textContent: MANAGER/previewPath"></h4>
-                      <agui-state bind="$.status: MANAGER/previewStatus; $.message: MANAGER/previewMessage"></agui-state>
-                      <agui-conditional when="MANAGER/previewSourceHidden" is="true" behavior="hide">
-                        <template>
-                          <div class="agui-markdown-content">
-                            <pre class="max-h-[36rem] overflow-auto whitespace-pre text-xs" tabindex="0" aria-label="File source"><code bind="textContent: MANAGER/previewText"></code></pre>
-                          </div>
-                        </template>
-                      </agui-conditional>
-                      <agui-conditional when="MANAGER/previewMarkdownHidden" is="true" behavior="hide">
-                        <template><agui-markdown label="File preview" bind="$.value: MANAGER/previewMarkdown; $.texts: MANAGER/previewTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown></template>
-                      </agui-conditional>
-                    </agui-panel>
-                  </div>
-                </div>
-              </agui-tab>
-            </agui-tabs>
+                  </agui-panel>
+                </section>
+              </template>
+            </agui-conditional>
           </div>
           <footer class="manager-footer">
             <span role="status">{{MANAGER/connection}}</span>
@@ -161,61 +246,6 @@
           </footer>
           <agui-message class="notice" close-label="Dismiss message" bind="$.tone: MANAGER/noticeTone; $.message: MANAGER/notice" hidden></agui-message>
           <agui-message class="connection" close-label="Dismiss message" bind="$.tone: MANAGER/connectionTone; $.message: MANAGER/connection" hidden></agui-message>
-          <agui-dialog id="manager-projects" label="Projects" close-label="Close projects" pub-to="MANAGER/projectsOpen" bind="$.value: MANAGER/projectsOpen">
-            <div class="grid gap-5">
-              <section class="grid gap-3" aria-label="Connect a project">
-                <agui-toolbar aria-label="Choose a project folder">
-                  <button id="manager-choose-project" type="button" class="agui-button-primary" bind="onclick: MANAGER/chooseProject; disabled: MANAGER/projectsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="add"></agui-icon>Choose folder</button>
-                </agui-toolbar>
-                <p class="text-xs text-agui-muted">Choose an existing AGUI folder on the computer running AGUI. Connecting does not change save-folder configuration.</p>
-                <details bind="open: MANAGER/projectPathOpen">
-                  <summary>Enter folder path</summary>
-                  <form id="manager-connect-project" class="mt-3 grid gap-3" bind="onsubmit: MANAGER/connectProject">
-                    <agui-field label="Existing project folder" name="projectFolder" required required-mark="*" maxlength="4096" autocomplete="off"
-                      pub-to="MANAGER/projectFolder" bind="$.value: MANAGER/projectFolder; $.disabled: MANAGER/projectsDisabled"></agui-field>
-                    <p class="text-xs text-agui-muted">Relative paths use the manager's launch directory.</p>
-                    <agui-toolbar aria-label="Connect by folder path">
-                      <button type="submit" bind="disabled: MANAGER/projectsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="add"></agui-icon>Connect project</button>
-                    </agui-toolbar>
-                  </form>
-                </details>
-              </section>
-              <p class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/projectError"></p>
-              <section class="grid gap-3" aria-labelledby="connected-projects-title">
-                <h2 id="connected-projects-title" class="font-medium">Connected projects</h2>
-                <div id="manager-project-list" class="grid gap-3" itemize="MANAGER/projectRows" item-tag="context-provider">
-                  <template>
-                    <section class="grid min-w-0 gap-3 rounded-agui-panel border border-agui-border p-4" bind="@data-project: id">
-                      <div class="flex flex-wrap items-center gap-2">
-                        <h3 class="font-medium">{{name}}</h3>
-                        <span class="agui-chip" bind="hidden: !current">Current</span>
-                        <span class="text-xs text-agui-muted">{{availability}}</span>
-                      </div>
-                      <p class="break-all text-xs text-agui-muted">{{path}}</p>
-                      <p class="text-xs text-agui-muted">{{lastUsed}}</p>
-                      <p class="break-words text-sm text-agui-danger empty:hidden">{{error}}</p>
-                      <agui-toolbar aria-label="Project actions">
-                        <button type="button" bind="onclick: ^switchProject; disabled: ^switchDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="arrow_forward"></agui-icon>Switch</button>
-                        <button type="button" bind="onclick: ^openFolder; disabled: ^openDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="open_in_new"></agui-icon>Open folder</button>
-                        <button type="button" bind="onclick: ^forgetProject; disabled: ^forgetDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="close"></agui-icon>Forget connection</button>
-                      </agui-toolbar>
-                    </section>
-                  </template>
-                </div>
-              </section>
-              <p class="text-xs text-agui-muted">Forgetting a connection keeps its files and running sessions. Default and the current project cannot be forgotten.</p>
-            </div>
-          </agui-dialog>
-          <agui-dialog id="manager-settings" label="AGUI folder settings" close-label="Close settings" pub-to="MANAGER/settingsOpen" bind="$.value: MANAGER/settingsOpen">
-            <p class="text-xs text-agui-muted">Configure where the launch project saves AGUIs. Use Projects to connect or revisit folders without changing this setting.</p>
-            <agui-field label="Save path" name="saveFolder" maxlength="4096" placeholder="Default private cache" pub-to="MANAGER/storageFolder" bind="$.value: MANAGER/storageFolder; $.disabled: MANAGER/storageDisabled"></agui-field>
-            <p class="break-words text-xs text-agui-muted">{{MANAGER/storageHint}}</p>
-            <p class="break-all text-xs text-agui-muted">{{MANAGER/storageContext}}</p>
-            <agui-toolbar aria-label="AGUI folder settings">
-              <button type="button" class="agui-button-primary" bind="onclick: MANAGER/saveStorage; disabled: MANAGER/storageDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="save"></agui-icon>Save folder and open</button>
-              <button type="button" bind="onclick: MANAGER/resetStorage; disabled: MANAGER/storageDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="home"></agui-icon>Use default cache</button>
-            </agui-toolbar>
-          </agui-dialog>
           <agui-connector-settings></agui-connector-settings>
           <agui-dialog id="manager-description" label="Session description" close-label="Close description" pub-to="MANAGER/descriptionOpen" bind="$.value: MANAGER/descriptionOpen">
             <agui-markdown label="Session description" bind="$.value: MANAGER/description; $.texts: MANAGER/descriptionTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown>
@@ -267,29 +297,84 @@
               </agui-toolbar>
             </form>
           </agui-dialog>
-          <agui-dialog id="manager-transfers" label="Transfers" close-label="Close transfers" pub-to="MANAGER/transferHistoryOpen" bind="$.value: MANAGER/transferHistoryOpen">
-            <div class="grid min-w-0 gap-4">
-              <p class="text-sm" bind="textContent: MANAGER/transferHistoryMessage"></p>
-              <p class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/transferHistoryError"></p>
-              <div id="manager-transfer-history" class="grid gap-4" itemize="MANAGER/transferHistoryRows">
-                <template>
-                  <section class="grid min-w-0 gap-2 rounded-agui-panel border border-agui-border p-4">
-                    <h3 class="break-words font-medium" bind="textContent: title"></h3>
-                    <p class="text-sm" bind="textContent: state"></p>
-                    <p class="break-all text-xs text-agui-muted" bind="textContent: receipt"></p>
-                    <p class="break-all text-xs text-agui-muted empty:hidden" bind="textContent: backup"></p>
-                    <p class="break-words text-sm text-agui-danger empty:hidden" bind="textContent: error"></p>
-                    <button type="button" bind="onclick: recover; disabled: recoverDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Recover incomplete transfer</button>
-                  </section>
-                </template>
-              </div>
-            </div>
-          </agui-dialog>
         </agui-session-manager>
       </agui-viewport>
-      <agui-sidebar id="session-inspector" side="end" label="Selected session" expand-label="Expand session controls" collapse-label="Collapse session controls"
-        pub-to="MANAGER/inspectorOpen" bind="$.value: MANAGER/inspectorOpen; hidden: MANAGER/noSelection" hidden>
-        <div itemize="MANAGER/selectedRows" item-tag="agui-session-controls"></div>
+      <agui-sidebar
+        id="manager-inspector"
+        side="end"
+        expand-label="Expand item controls"
+        collapse-label="Collapse item controls"
+        pub-to="MANAGER/inspectorOpen"
+        bind="$.label: MANAGER/inspectorLabel; $.value: MANAGER/inspectorOpen; hidden: MANAGER/inspectorHidden" hidden>
+        <agui-conditional when="MANAGER/inspectorKind" is="sessions" behavior="dom-add">
+          <template><div itemize="MANAGER/selectedRows" item-tag="agui-session-controls"></div></template>
+        </agui-conditional>
+        <agui-conditional when="MANAGER/inspectorKind" is="projects" behavior="dom-add">
+          <template>
+            <div itemize="MANAGER/selectedProjectRows" item-tag="context-provider">
+              <template>
+                <section class="grid min-w-0 gap-4" aria-label="Project actions" bind="@data-project-controls: id">
+                  <div class="grid min-w-0 gap-1">
+                    <h2 class="break-words font-semibold">{{name}}</h2>
+                    <p class="break-all text-xs text-agui-muted">{{path}}</p>
+                    <p class="text-xs text-agui-muted">{{availability}}</p>
+                  </div>
+                  <p class="break-words text-sm text-agui-danger empty:hidden">{{error}}</p>
+                  <agui-toolbar aria-label="Open project" class="grid grid-cols-2">
+                    <button type="button" class="agui-button-primary" bind="onclick: ^switchProject; disabled: ^switchDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="arrow_forward"></agui-icon>Switch</button>
+                    <button type="button" bind="onclick: ^openFolder; disabled: ^openDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="open_in_new"></agui-icon>Open folder</button>
+                  </agui-toolbar>
+                  <agui-toolbar aria-label="Project connection" class="grid grid-cols-1">
+                    <button type="button" class="agui-button-danger" bind="onclick: ^forgetProject; disabled: ^forgetDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="close"></agui-icon>Forget connection</button>
+                  </agui-toolbar>
+                </section>
+              </template>
+            </div>
+          </template>
+        </agui-conditional>
+        <agui-conditional when="MANAGER/inspectorKind" is="connections" behavior="dom-add">
+          <template>
+            <div itemize="MANAGER/selectedConnectionRows" item-tag="context-provider">
+              <template>
+                <section class="grid min-w-0 gap-4" aria-label="Connection actions" bind="@data-selected-connection: id">
+                  <div class="grid min-w-0 gap-1">
+                    <h2 class="break-words font-semibold">{{title}}</h2>
+                    <p class="text-xs text-agui-muted">{{kindLabel}} / {{project}} / {{sessionId}}</p>
+                    <p class="text-xs text-agui-muted">{{details}}</p>
+                  </div>
+                  <p class="break-words text-sm text-agui-danger empty:hidden">{{error}}</p>
+                  <agui-conditional when="^isBrowser" is="true" behavior="hide">
+                    <template>
+                      <agui-toolbar aria-label="Open connection page" class="grid grid-cols-2">
+                        <a class="agui-button no-underline" target="_blank" rel="noopener noreferrer" bind="href: ^url; hidden: ^noLocal"><agui-icon name="open_in_new"></agui-icon>Local</a>
+                        <button type="button" bind="onclick: ^openPublic; disabled: ^publicDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Public</button>
+                        <button type="button" bind="onclick: ^openViewer; disabled: ^publicDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Viewer</button>
+                      </agui-toolbar>
+                      <section class="grid gap-2" aria-label="Connection tunnel">
+                        <h3 class="text-xs uppercase tracking-widest text-agui-muted">Public tunnel</h3>
+                        <p class="text-xs text-agui-muted">{{^tunnel}}</p>
+                        <agui-toolbar aria-label="Tunnel maintenance" class="grid grid-cols-2">
+                          <button type="button" bind="onclick: ^check; disabled: ^tunnelDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Check tunnel</button>
+                          <button type="button" bind="onclick: ^renew; disabled: ^tunnelDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Renew tunnel</button>
+                        </agui-toolbar>
+                        <agui-toolbar aria-label="Stop public access" class="grid grid-cols-1">
+                          <button type="button" class="agui-button-danger" bind="onclick: ^stop; disabled: ^stopDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader>Stop tunnel</button>
+                        </agui-toolbar>
+                      </section>
+                    </template>
+                  </agui-conditional>
+                  <agui-conditional when="^isBrowser" is="true">
+                    <template>
+                      <agui-toolbar aria-label="Browser connection" class="grid grid-cols-1">
+                        <button type="button" class="agui-button-danger" bind="onclick: ^disconnect; disabled: ^disconnectDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="close"></agui-icon>Disconnect browser</button>
+                      </agui-toolbar>
+                    </template>
+                  </agui-conditional>
+                </section>
+              </template>
+            </div>
+          </template>
+        </agui-conditional>
       </agui-sidebar>
     </agui-app>
   </body>

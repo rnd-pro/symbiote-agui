@@ -312,7 +312,8 @@
                       selection="multiple" pub-to="APP/tableSelection"
                       bind="$.items: APP/tableRows; $.value: APP/tableSelection; $.filteredIds: APP/tableMatchingIds; $.texts: APP/tableTexts; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly">
                       <template>
-                        <agui-panel process-inner-html="false" role="listitem" class="grid gap-2">
+                        <agui-panel selectable process-inner-html="false" role="listitem" class="grid gap-2"
+                          bind="@data-selected: _selected; ariaDisabled: _selectionDisabled">
                           <h3><button type="button"
                               bind="onclick: ^selectItem; ariaPressed: _selected; disabled: _selectionDisabled">{{name}}</button>
                           </h3>

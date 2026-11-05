@@ -18,7 +18,7 @@
 @layer components {
   .manager-app {
     --agui-content-width: 100%;
-    --agui-sidebar-width: 19rem;
+    --agui-sidebar-width: 14rem;
     --agui-table-height: 55dvh;
   }
   .manager-cards {
@@ -33,9 +33,11 @@
   agui-session-controls {
     @apply block min-w-0;
   }
-  #manager-project-navigation agui-toolbar > button,
-  #session-inspector agui-toolbar > button,
-  #session-inspector agui-toolbar > .agui-button {
+  #manager-inspector {
+    --agui-sidebar-width: 20rem;
+  }
+  #manager-inspector agui-toolbar > button,
+  #manager-inspector agui-toolbar > .agui-button {
     @apply justify-start text-start;
   }
   [data-state='running'] .session-status {

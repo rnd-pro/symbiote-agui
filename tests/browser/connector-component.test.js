@@ -131,7 +131,7 @@ test('manager reviews and grants a stopped session backend through its local con
   await page.click('#session-views [role="tab"][value="cards"]');
   await page.waitForSelector('.sessions [data-session="backend"] h3');
   await page.click('.sessions [data-session="backend"] h3');
-  await page.locator('#session-inspector ::-p-aria([name="Connector backends"][role="button"])').click();
+  await page.locator('#manager-inspector ::-p-aria([name="Connector backends"][role="button"])').click();
   await page.waitForFunction(() => document.querySelector('#manager-connectors dialog')?.hasAttribute('open'));
   await page.waitForFunction(() => document.querySelector('#manager-connectors')?.textContent?.includes('access: none'));
   await page.click('#manager-connectors button[aria-label="Review source"]');

@@ -12,7 +12,7 @@
   </head>
   <body>
     <agui-app class="manager-app">
-      <agui-sidebar label="Navigation" expand-label="Expand" collapse-label="Collapse">
+      <agui-sidebar label="AGUI Manager" expand-label="Expand" collapse-label="Collapse">
         <nav id="manager-navigation" class="grid gap-2" aria-label="Main">
           <agui-button class="agui-button-ghost w-full justify-start aria-[current=page]:text-agui-accent" set="MANAGER/appSection" value="sessions" data-section="sessions" bind="@aria-current: MANAGER/sessionsCurrent"><agui-icon name="dashboard"></agui-icon>Sessions</agui-button>
           <agui-button class="agui-button-ghost w-full justify-start aria-[current=page]:text-agui-accent" set="MANAGER/appSection" value="projects" data-section="projects" bind="@aria-current: MANAGER/projectsCurrent"><agui-icon name="home"></agui-icon>Projects</agui-button>
@@ -23,7 +23,7 @@
       <agui-viewport role="main" aria-label="Manager workspace" tabindex="0">
         <agui-session-manager ctx="MANAGER" class="flex min-h-full min-w-0 flex-col">
           <agui-header floating>
-            <h1 class="flex items-center gap-2"><agui-icon name="dashboard"></agui-icon>AGUI Manager</h1>
+            <h1 class="flex items-center gap-2">{{MANAGER/sectionTitle}}</h1>
             <agui-toolbar class="toolbar" aria-label="Manager controls">
               <agui-select id="manager-project-switcher" aria-label="Current project" name="project" class="w-56 max-w-full"
                 pub-to="MANAGER/projectChoice" bind="onchange: MANAGER/switchProject; $.value: MANAGER/projectChoice; $.options: MANAGER/projectOptions; $.disabled: MANAGER/projectsDisabled; @title: MANAGER/projectPath"></agui-select>
@@ -32,7 +32,6 @@
             </agui-toolbar>
           </agui-header>
           <div class="grid min-w-0 flex-1 content-start gap-4 p-4 sm:p-6">
-            <h2 class="text-2xl font-semibold" bind="textContent: MANAGER/sectionTitle"></h2>
             <a class="agui-button w-fit no-underline" target="_blank" rel="noopener noreferrer"
               bind="href: MANAGER/verifiedPublicUrl; hidden: !MANAGER/verifiedPublicUrl">Open verified link</a>
             <p id="manager-project-error" class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/projectError"></p>

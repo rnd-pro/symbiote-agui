@@ -29,22 +29,32 @@
             },
             {
               "value": "controls",
-              "icon": "settings",
+              "icon": "tune",
               "label": "Controls"
             },
             {
               "value": "widgets",
-              "icon": "filter_list",
+              "icon": "widgets",
               "label": "Widgets"
             },
             {
               "value": "feedback",
-              "icon": "info",
+              "icon": "chat",
               "label": "Feedback"
             },
             {
+              "value": "data-flow",
+              "icon": "hub",
+              "label": "Data flow"
+            },
+            {
+              "value": "theme",
+              "icon": "palette",
+              "label": "Theme"
+            },
+            {
               "value": "assets",
-              "icon": "download",
+              "icon": "perm_media",
               "label": "Assets"
             },
             {
@@ -132,7 +142,56 @@
           "statusOptions": [{"value":"new","label":"New"},{"value":"contacted","label":"Contacted"},{"value":"archived","label":"Archived","disabled":true}],
           "componentState": {"status":"error","message":"The data source is unavailable.","retryLabel":"Retry"},
           "iconName": "search",
-          "iconOptions": [{"value":"search","label":"Search"},{"value":"settings","label":"Settings"},{"value":"person","label":"Person"}],
+          "iconOptions": [
+            {
+              "value": "search",
+              "label": "Search"
+            },
+            {
+              "value": "settings",
+              "label": "Settings"
+            },
+            {
+              "value": "person",
+              "label": "Person"
+            },
+            {
+              "value": "folder_open",
+              "label": "Project folders"
+            },
+            {
+              "value": "public",
+              "label": "Public links"
+            },
+            {
+              "value": "table_chart",
+              "label": "Tables"
+            },
+            {
+              "value": "bar_chart",
+              "label": "Charts"
+            },
+            {
+              "value": "map",
+              "label": "Maps"
+            },
+            {
+              "value": "markdown",
+              "label": "Markdown"
+            },
+            {
+              "value": "palette",
+              "label": "Theme"
+            },
+            {
+              "value": "hub",
+              "label": "Data flow"
+            },
+            {
+              "value": "terminal",
+              "label": "Terminal"
+            }
+          ],
           "submissionExamples": [
             {"label":"Populated","message":"A sample profile is ready to edit."},
             {"label":"Imported","message":"JSON imported. Changes are not saved."},
@@ -188,37 +247,6 @@
                     object to APP. These contact objects are transient and are not included in the gallery's Save action.
                   </p>
                 </section>
-              </agui-tab>
-              <agui-tab value="theme" label="Theme">
-                <agui-panel class="grid gap-4">
-                  <h2>Theme tokens</h2>
-                  <div class="flex flex-wrap gap-2">
-                    <span class="agui-chip">Neutral</span>
-                    <span class="agui-chip" data-tone="info">Information</span>
-                    <span class="agui-chip" data-tone="success">Success</span>
-                    <span class="agui-chip" data-tone="warning">Warning</span>
-                    <span class="agui-chip" data-tone="danger">Error</span>
-                  </div>
-                  <dl class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-bg p-3">
-                      <dt>Page background</dt>
-                      <dd class="text-sm text-agui-muted">agui-bg</dd>
-                    </div>
-                    <div
-                      class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-surface p-3 shadow-agui-panel">
-                      <dt>Content surface</dt>
-                      <dd class="text-sm text-agui-muted">agui-surface</dd>
-                    </div>
-                    <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-raised p-3">
-                      <dt>Read-only surface</dt>
-                      <dd class="text-sm text-agui-muted">agui-raised</dd>
-                    </div>
-                    <div class="grid gap-2 rounded-agui-inset border border-agui-accent bg-agui-accent-soft p-3">
-                      <dt>Selected state</dt>
-                      <dd class="text-sm text-agui-muted">agui-accent-soft</dd>
-                    </div>
-                  </dl>
-                </agui-panel>
               </agui-tab>
             </agui-tabs>
           </template>
@@ -326,6 +354,17 @@
                     <agui-icon name="home" aria-label="Home"></agui-icon>
                     <agui-icon name="dashboard" aria-label="Dashboard"></agui-icon>
                     <agui-icon name="mail" aria-label="Email"></agui-icon>
+                  <agui-icon name="folder_open" aria-label="Project folders"></agui-icon>
+                  <agui-icon name="public" aria-label="Public links"></agui-icon>
+                  <agui-icon name="play_arrow" aria-label="Start"></agui-icon>
+                  <agui-icon name="stop" aria-label="Stop"></agui-icon>
+                  <agui-icon name="table_chart" aria-label="Table"></agui-icon>
+                  <agui-icon name="bar_chart" aria-label="Chart"></agui-icon>
+                  <agui-icon name="map" aria-label="Map"></agui-icon>
+                  <agui-icon name="markdown" aria-label="Markdown"></agui-icon>
+                  <agui-icon name="palette" aria-label="Theme"></agui-icon>
+                  <agui-icon name="chat" aria-label="Feedback"></agui-icon>
+                  <agui-icon name="terminal" aria-label="Terminal"></agui-icon>
                     <agui-icon name="check_circle" aria-label="Complete" class="text-agui-accent"></agui-icon>
                     <agui-icon name="warning" aria-label="Warning" class="text-agui-danger"></agui-icon>
                   </agui-toolbar>
@@ -523,6 +562,53 @@
             </agui-tabs>
           </template>
         </agui-conditional>
+        <agui-conditional when="APP/activeSection" is="data-flow">
+          <template>
+            <agui-panel class="grid gap-4">
+              <div class="grid gap-1">
+                <h2 class="break-words font-medium">{{APP/sharedName}}</h2>
+                <p class="text-sm text-agui-muted">{{APP/sharedStatus}}</p>
+              </div>
+              <agui-toolbar aria-label="Contact controls">
+                <agui-button class="agui-button-primary" set="APP/galleryEditorOpen" value="true"><agui-icon name="edit"></agui-icon>Edit contact</agui-button>
+                <agui-button class="agui-button-icon" set="APP/notesOpen" value="true" aria-label="Workspace notes" title="Workspace notes"><agui-icon name="notes"></agui-icon></agui-button>
+              </agui-toolbar>
+            </agui-panel>
+          </template>
+        </agui-conditional>
+        <agui-conditional when="APP/activeSection" is="theme">
+          <template>
+            <agui-panel class="grid gap-4">
+              <h2>Theme tokens</h2>
+              <div class="flex flex-wrap gap-2">
+                <span class="agui-chip">Neutral</span>
+                <span class="agui-chip" data-tone="info">Information</span>
+                <span class="agui-chip" data-tone="success">Success</span>
+                <span class="agui-chip" data-tone="warning">Warning</span>
+                <span class="agui-chip" data-tone="danger">Error</span>
+              </div>
+              <dl class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-bg p-3">
+                  <dt>Page background</dt>
+                  <dd class="text-sm text-agui-muted">agui-bg</dd>
+                </div>
+                <div
+                  class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-surface p-3 shadow-agui-panel">
+                  <dt>Content surface</dt>
+                  <dd class="text-sm text-agui-muted">agui-surface</dd>
+                </div>
+                <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-raised p-3">
+                  <dt>Read-only surface</dt>
+                  <dd class="text-sm text-agui-muted">agui-raised</dd>
+                </div>
+                <div class="grid gap-2 rounded-agui-inset border border-agui-accent bg-agui-accent-soft p-3">
+                  <dt>Selected state</dt>
+                  <dd class="text-sm text-agui-muted">agui-accent-soft</dd>
+                </div>
+              </dl>
+            </agui-panel>
+          </template>
+        </agui-conditional>
         <agui-conditional when="APP/activeSection" is="assets">
           <template>
             <agui-panel id="gallery-local-assets" class="grid gap-4">
@@ -579,7 +665,7 @@
       </div>
     </context-provider>
   </agui-viewport>
-  <agui-sidebar id="gallery-inspector" class="[--agui-sidebar-width:24rem]" side="end" label="Example controls" expand-label="Expand example controls"
+  <agui-sidebar collapse-empty id="gallery-inspector" class="[--agui-sidebar-width:24rem]" side="end" label="Example controls" expand-label="Expand example controls"
     collapse-label="Collapse example controls">
     <div class="grid gap-6">
       <agui-conditional when="APP/activeSection" is="controls">
@@ -648,16 +734,6 @@ npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
           </agui-conditional>
         </template>
       </agui-conditional>
-    <div class="grid gap-4">
-      <div class="grid gap-1">
-        <h2 class="break-words font-medium">{{APP/sharedName}}</h2>
-        <p class="text-sm text-agui-muted">{{APP/sharedStatus}}</p>
-      </div>
-      <agui-toolbar aria-label="Contact controls">
-        <agui-button class="agui-button-primary" set="APP/galleryEditorOpen" value="true"><agui-icon name="edit"></agui-icon>Edit contact</agui-button>
-        <agui-button class="agui-button-icon" set="APP/notesOpen" value="true" aria-label="Workspace notes" title="Workspace notes"><agui-icon name="menu"></agui-icon></agui-button>
-      </agui-toolbar>
-    </div>
     </div>
   </agui-sidebar>
   <agui-data-toolbar id="gallery-data-actions" bind="$: AGUI_TEXT/dataToolbar"></agui-data-toolbar>

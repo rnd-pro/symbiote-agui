@@ -52,6 +52,7 @@ export interface UiSidebarState {
   label?: string;
   expandLabel?: string;
   collapseLabel?: string;
+  collapseEmpty?: boolean;
   disabled?: boolean;
   readonly?: boolean;
 }

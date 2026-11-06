@@ -24,7 +24,8 @@ export default css`
     }
     .agui-filter-range {
       display: grid;
-      gap: .75rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .5rem;
     }
   }
 `;

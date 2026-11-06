@@ -9,7 +9,8 @@ export let FILTER_TEMPLATE = html`
 
 export let FILTER_FIELD_TEMPLATE = html`
   <fieldset bind="disabled: unavailable; @data-field: fieldKey">
-    <legend bind="textContent: label; hidden: !isRange"></legend>
+    <legend class="block pb-2 text-xs font-medium uppercase tracking-wide text-agui-muted"
+      bind="textContent: label; hidden: !isRange"></legend>
     <agui-field type="search" maxlength="2048" pub-to="^containsValue"
       bind="hidden: !isContains; $.label: label; $.value: containsValue; $.disabled: unavailable"></agui-field>
     <agui-select pub-to="^equalsValue"

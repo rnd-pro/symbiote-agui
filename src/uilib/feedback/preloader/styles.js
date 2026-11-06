@@ -64,7 +64,9 @@ export default css`
       display: none;
     }
     .agui-preloader-indicator::-moz-progress-bar {
-      display: none;
+      /* Firefox keeps this native fill even when display: none is requested. */
+      background: transparent;
+      border: 0;
     }
     @media (prefers-reduced-motion: reduce) {
       agui-preloader[variant='ring'] > .agui-preloader-indicator,

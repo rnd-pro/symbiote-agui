@@ -14,7 +14,7 @@ export default css`
       position: absolute;
       inset-inline-end: 0;
       inset-block: .5rem;
-      inline-size: 2px;
+      inline-size: 3px;
       border-radius: 0;
       background-color: var(--agui-accent);
       pointer-events: none;

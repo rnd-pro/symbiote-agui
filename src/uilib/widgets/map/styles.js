@@ -24,7 +24,7 @@ export default css`
       isolation: isolate;
       min-inline-size: 0;
       block-size: var(--agui-map-height, 22rem);
-      background: var(--agui-surface);
+      background: #ccc;
       border: 1px solid var(--agui-divider);
       border-radius: var(--agui-radius-inset);
       overflow: hidden;

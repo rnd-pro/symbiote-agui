@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFile } from 'node:fs/promises';
-import { parseHTML } from 'linkedom';
 import puppeteer from 'puppeteer';
 import { withTimeout } from '../../src/shared/timeout.js';
 import { assetProxyFixture } from './asset-proxy-fixture.js';
 import { upstreamResponse } from '../node/proxy-http-fixture.js';
+import { galleryExamples } from './gallery-fixture.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
@@ -165,14 +164,18 @@ test('the gallery proxy preset uses existing controls, stays opt-in, and disable
   timeout: 60_000,
 }, async (t) => {
   let fixture = await assetProxyFixture(t);
-  let gallery = await readFile(new URL('../../src/uilib/gallery.html', import.meta.url), 'utf8');
-  let {
-    document: galleryDocument,
-  } = parseHTML('');
-  let template = galleryDocument.createElement('template');
-  template.innerHTML = gallery;
-  let source = template.content.querySelector('#gallery-data > script[type="application/json"]')?.textContent;
-  let panel = template.content.querySelector('#gallery-markdown')?.closest('agui-panel');
+  let examples = await galleryExamples();
+  let source = examples.querySelector('#gallery-data > script[type="application/json"]')?.textContent;
+  let panel = examples.querySelector('#gallery-markdown')?.closest('agui-panel');
+  let controls = [
+    'gallery-markdown-preset',
+    'gallery-markdown-url',
+    'gallery-markdown-source',
+  ].map((id) => {
+    let control = examples.querySelector(`#${id}`);
+    assert.ok(control);
+    return control.outerHTML;
+  }).join('\n');
   assert.ok(source && panel);
   let data = JSON.parse(source);
   let state = {
@@ -205,7 +208,7 @@ test('the gallery proxy preset uses existing controls, stays opt-in, and disable
   t.after(() => browser.close());
   let page = await browser.newPage();
   await page.goto(fixture.localUrl);
-  await fixture.runtime.insert(`<context-provider ctx="APP"><script type="application/json">${JSON.stringify(state).replaceAll('<', '\\u003c')}</script>${panel.outerHTML}</context-provider>`);
+  await fixture.runtime.insert(`<context-provider ctx="APP"><script type="application/json">${JSON.stringify(state).replaceAll('<', '\\u003c')}</script>${controls}${panel.outerHTML}</context-provider>`);
   await page.waitForFunction(() => document.querySelector('#gallery-markdown h1')?.textContent === 'Project briefing');
   assert.equal(loads, 0);
   await fixture.runtime.changeProxy({

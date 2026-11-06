@@ -1,6 +1,6 @@
-import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { parseHTML } from 'linkedom';
+import { galleryExamples } from './gallery-fixture.js';
 import { reserveSession } from '../../src/sessions/store.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { definitionPaths } from '../../src/library/paths.js';
@@ -20,14 +20,9 @@ export async function localAssetsFixture(t) {
     await tunnel.close();
     await state.close();
   });
-  let gallery = await readFile(new URL('../../src/uilib/gallery.html', import.meta.url), 'utf8');
-  let {
-    document,
-  } = parseHTML('');
-  let template = document.createElement('template');
-  template.innerHTML = gallery;
-  let panel = template.content.querySelector('#gallery-local-assets');
-  let data = template.content.querySelector('#gallery-data > script[type="application/json"]')?.textContent;
+  let examples = await galleryExamples();
+  let panel = examples.querySelector('#gallery-local-assets');
+  let data = examples.querySelector('#gallery-data > script[type="application/json"]')?.textContent;
   if (!panel || !data) { throw new Error('The gallery local asset example is missing.'); }
   let markup = `<context-provider ctx="APP"><script type="application/json">${JSON.stringify({
     markdownTexts: JSON.parse(data).markdownTexts,

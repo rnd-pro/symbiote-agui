@@ -1,8 +1,7 @@
-import { Symbiote } from '@symbiotejs/symbiote';
+import { UiComponent } from './shared/component.js';
 import { readInitialData } from './shared/initial-data.js';
 
-/** @extends {Symbiote<import('../../types/components.js').ComponentState>} */
-export class AguiComponent extends Symbiote {
+export class AguiComponent extends UiComponent {
   /** @type {import('../../types/components.js').ComponentState} */
   init$ = {};
   processInnerHtml = true;

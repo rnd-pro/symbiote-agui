@@ -1,5 +1,6 @@
 import { FIELD_TEMPLATE, TEXTAREA_TEMPLATE } from './controls/field/template.js';
 import { BUTTON_TEMPLATE } from './controls/button/template.js';
+import { NAV_TEMPLATE } from './controls/nav/template.js';
 import { SELECT_TEMPLATE } from './controls/select/template.js';
 import { TOGGLE_TEMPLATE } from './controls/toggle/template.js';
 import { THEME_TOGGLE_TEMPLATE } from './controls/theme-toggle/template.js';
@@ -8,7 +9,7 @@ import { PRELOADER_TEMPLATE } from './feedback/preloader/template.js';
 import { DATA_TOOLBAR_TEMPLATE } from './controls/data-toolbar/template.js';
 import { ICON_TEMPLATE } from './content/icon/template.js';
 import { SIDEBAR_TEMPLATE } from './layouts/sidebar/template.js';
-import { TABS_TEMPLATE, TAB_BUTTON_TEMPLATE } from './layouts/tabs/template.js';
+import { TABS_TEMPLATE, TAB_BUTTON_TEMPLATE } from './controls/tabs/template.js';
 import { CONDITIONAL_TEMPLATE } from './layouts/conditional/template.js';
 import { DIALOG_TEMPLATE } from './feedback/dialog/template.js';
 import { FILTER_TEMPLATE, FILTER_FIELD_TEMPLATE } from './widgets/filter/template.js';
@@ -25,6 +26,7 @@ import {
 export let UILIB_TEMPLATES = Object.freeze({
   field: FIELD_TEMPLATE,
   button: BUTTON_TEMPLATE,
+  nav: NAV_TEMPLATE,
   textarea: TEXTAREA_TEMPLATE,
   select: SELECT_TEMPLATE,
   toggle: TOGGLE_TEMPLATE,

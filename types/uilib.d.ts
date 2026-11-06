@@ -32,6 +32,21 @@ export interface UiSelectState extends UiControlState {
   placeholder?: string;
 }
 
+export interface UiNavItem extends UiOption {
+  icon?: UiIconName;
+}
+
+export interface UiNavState {
+  items: UiNavItem[];
+  value: string;
+  label?: string;
+  disabled?: boolean;
+  readonly?: boolean;
+  section?: string;
+  sectionName?: string;
+  sectionIcon?: UiIconName | '';
+}
+
 export interface UiSidebarState {
   value: boolean;
   label?: string;

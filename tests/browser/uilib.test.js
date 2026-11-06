@@ -24,6 +24,10 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await insertStdin('widgets', html);
   browser = await puppeteer.launch({ executablePath, headless: true, args: ['--disable-blink-features=WebMCP,WebMCPTesting'] });
   let page = await browser.newPage();
+  await page.setViewport({
+    width: 1280,
+    height: 900,
+  });
   /** @type {string[]} */
   let errors = [];
   page.on('pageerror', (error) => errors.push(String(error)));
@@ -103,14 +107,19 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   } }));
   assert.equal(await page.$eval('#status-control select', (element) => element.value), 'contacted');
   assert.equal(await page.$eval('#status-mirror select', (element) => element.value), 'contacted');
-  await page.click('#gallery-sections [role="tab"][value="bindings"]');
+  await page.select('#gallery-section-control select', 'bindings');
   await cli('events', 'widgets');
   await page.click('#retry-state button');
   let events = (await cli('events', 'widgets')).events;
   assert.equal(events.length, 1);
   assert.deepEqual(events[0].data, { widgetId: 'retry-state', context: null, action: 'retry' });
+  await page.$eval('#notifications-toggle', (element) => {
+    let control = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    control.componentDescription = 'Gallery notifications fixture';
+    control.syncWebMCPTools();
+  });
   let discovery = await cli('tools', 'widgets');
-  let setToggle = discovery.tools.find((/** @type {{key: string, ownerName: string}} */ tool) => tool.key === 'set_value' && tool.ownerName === 'agui-toggle');
+  let setToggle = discovery.tools.find((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.key === 'set_value' && tool.ownerName === 'agui-toggle' && tool.componentDescription === 'Gallery notifications fixture');
   assert.ok(setToggle);
   let toggleCall = { pageId: discovery.pageId, discoveryId: discovery.discoveryId, name: setToggle.name, input: { value: true } };
   assert.deepEqual((await sendStdin('call', 'widgets', JSON.stringify(toggleCall))).result, { value: true, changed: true });
@@ -128,7 +137,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#query-control input', (element) => element.value), 'Grace');
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { componentState: { status: 'ready' } } }));
   assert.equal(await page.$eval('#retry-state > div', (element) => element.hidden), true);
-  await page.click('#gallery-sections [role="tab"][value="layouts"]');
+  await page.select('#gallery-section-control select', 'layouts');
   assert.equal(await page.$eval('#feature-contact-first input', (element) => element.value), 'Avery');
   assert.equal(await page.$eval('#feature-contact-second input', (element) => element.value), 'Morgan');
   await page.focus('#feature-contact-first input');
@@ -137,6 +146,26 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#feature-contact-first output', (element) => element.textContent), 'Avery Lee');
   assert.equal(await page.$eval('#feature-contact-second output', (element) => element.textContent), 'Morgan');
   assert.equal(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').featureContactFirst.contactName), 'Avery Lee');
+  await page.select('#gallery-section-control select', 'data');
+  await page.type('#gallery-lead-filters input[type="search"]', 'Northstar');
+  await page.waitForFunction(() => document.querySelectorAll('#gallery-leads tbody tr').length === 1);
+  await page.click('#gallery-data-views [role="tab"][value="cards"]');
+  await page.waitForSelector('#gallery-lead-list [role="listitem"] button');
+  await page.click('#gallery-lead-list [role="listitem"] button');
+  assert.deepEqual(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').tableSelection), [
+    'lead-01',
+  ]);
+  await page.select('#gallery-section-control select', 'layouts');
+  await page.select('#gallery-section-control select', 'data');
+  assert.equal(await page.$eval('#gallery-data-views', (element) => Reflect.get(element, '$').value), 'cards');
+  assert.equal(await page.$eval('#gallery-lead-filters input[type="search"]', (element) => element.value), 'Northstar');
+  await page.click('#gallery-inspector agui-button button');
+  await page.waitForSelector('#gallery-editor dialog[open]');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => {
+    let provider = document.querySelector('#gallery-data');
+    return provider && Reflect.get(provider, '$').galleryEditorOpen === false;
+  });
   await page.setViewport({ width: 390, height: 844 });
   await page.setViewport({ width: 1280, height: 900 });
   await page.$eval('#query-control', (element) => { Reflect.set(window, 'oldField', element); });

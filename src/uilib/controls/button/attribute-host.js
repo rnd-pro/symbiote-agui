@@ -14,6 +14,7 @@ export let RETAINED_ATTRIBUTES = new Set([
   DICT.CTX_NAME_ATTR,
   DICT.EL_REF_ATTR,
   DICT.USE_TPL_ATTR,
+  'pub-map',
   'slot',
 ]);
 

@@ -36,7 +36,7 @@
   #manager-inspector {
     --agui-sidebar-width: 20rem;
   }
-  #manager-inspector agui-toolbar > button,
+  #manager-inspector agui-toolbar button,
   #manager-inspector agui-toolbar > .agui-button {
     @apply justify-start text-start;
   }

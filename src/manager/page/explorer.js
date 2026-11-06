@@ -247,7 +247,7 @@ export class ProjectExplorer {
             indent: `${depth}rem`,
             expanded: folder ? String(!!child?.expanded) : null,
             selected: entry.path === this.selectedPath ? 'true' : null,
-            icon: folder ? child?.expanded ? 'expand_more' : 'chevron_right' : 'info',
+            icon: folder ? child?.expanded ? 'folder_open' : 'folder' : 'insert_drive_file',
             disabled: disabled || entry.kind === 'unavailable',
             issue: entry.error || '',
             invoke: busyAction(() => folder ? this.toggle(entry.path) : this.preview(entry.path)),

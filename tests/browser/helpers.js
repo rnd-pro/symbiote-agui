@@ -96,8 +96,8 @@ export function hasCliError(error, code) {
 export async function openManagerSection(page, section) {
   let expand = await page.$('agui-app > agui-sidebar:not([side="end"]) button[aria-expanded="false"]');
   if (expand) { await page.locator('agui-app > agui-sidebar:not([side="end"]) button[aria-expanded="false"]').click(); }
-  await page.locator(`#manager-navigation button[data-section="${section}"]`).click();
-  await page.waitForSelector(`#manager-navigation button[data-section="${section}"][aria-current="page"]`);
+  await page.locator(`#manager-navigation button[value="${section}"]`).click();
+  await page.waitForSelector(`#manager-navigation button[value="${section}"][aria-current="page"]`);
   await page.waitForSelector(`#manager-${section}-section`, {
     visible: true,
   });

@@ -91,7 +91,7 @@ test('manager sections retain session selection, local tabs and settings drafts 
   assert.equal(await page.$eval('#project-views [role="tab"][value="explorer"]', (tab) => tab.getAttribute('aria-selected')), 'true');
   await openManagerSection(page, 'settings');
   assert.equal(await page.$eval('input[name="saveFolder"]', (element) => element.value), './draft-library');
-  assert.deepEqual(await page.$$eval('#manager-navigation [aria-current]', (buttons) => buttons.map((button) => button.getAttribute('data-section'))), [
+  assert.deepEqual(await page.$$eval('#manager-navigation [aria-current]', (buttons) => buttons.map((button) => button.getAttribute('value'))), [
     'settings',
   ]);
   assert.deepEqual(errors, []);

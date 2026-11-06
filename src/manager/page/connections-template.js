@@ -3,7 +3,7 @@ import { html } from '@symbiotejs/symbiote/core/html.js';
 export let CONNECTIONS_TEMPLATE = html`
   <section class="grid min-w-0 gap-4" aria-label="All project connections">
     <agui-toolbar aria-label="Connection discovery">
-      <button type="button" bind="onclick: MANAGER/refreshConnections; disabled: MANAGER/connectionsDisabled"><agui-preloader class="size-[1em]" aria-hidden="true"></agui-preloader><agui-icon name="refresh"></agui-icon>Refresh connections</button>
+      <agui-button type="button" bind="onclick: MANAGER/refreshConnections; @disabled: MANAGER/connectionsDisabled"><agui-icon name="refresh"></agui-icon>Refresh connections</agui-button>
     </agui-toolbar>
     <p class="text-sm text-agui-muted" role="status" bind="textContent: MANAGER/connectionsMessage"></p>
     <p class="whitespace-pre-wrap break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/connectionsError"></p>

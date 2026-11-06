@@ -5,14 +5,17 @@
  */
 export function busyAction(action) {
   return async (/** @type {Event} */ event) => {
-    let button = event instanceof SubmitEvent ? event.submitter : event.currentTarget;
-    if (!(button instanceof HTMLButtonElement)) { return action(event); }
-    if (button.getAttribute('aria-busy') === 'true') { event.preventDefault(); return; }
-    button.setAttribute('aria-busy', 'true');
+    let target = event instanceof SubmitEvent ? event.submitter : event.currentTarget;
+    let button = /** @type {import('../../uilib/controls/button/button.js').Button | null} */ (
+      target instanceof Element ? target.closest('agui-button') : null
+    );
+    if (!button) { return action(event); }
+    if (button.$.loading) { event.preventDefault(); return; }
+    button.$.loading = true;
     try {
       return await action(event);
     } finally {
-      button.removeAttribute('aria-busy');
+      button.$.loading = false;
     }
   };
 }

@@ -1,6 +1,8 @@
-export type CoreRegistry = import('agent-connectors').FileRegistry;
-export type CoreManifest = Awaited<ReturnType<CoreRegistry['show']>>['manifest'];
-export type CoreGrant = Awaited<ReturnType<typeof import('agent-connectors').grantCapability>>;
+import type { FileRegistry, Grant, Manifest } from 'agent-connectors';
+
+export type CoreRegistry = FileRegistry;
+export type CoreManifest = Manifest;
+export type CoreGrant = Grant;
 
 export interface ConnectorRequirement {
   name: string;

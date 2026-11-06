@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { access, mkdtemp, mkdir, readFile, readdir, rm, unlink, writeFile } from 'node:fs/promises';
+import { access, mkdtemp, mkdir, readFile, readdir, realpath, rm, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import test from 'node:test';
@@ -19,7 +19,7 @@ let root = fileURLToPath(new URL('../../', import.meta.url));
 test('the production tarball runs through npm exec outside the checkout', { timeout: 180_000 }, async (t) => {
   let npm = process.env.npm_execpath || '';
   assert.ok(npm, 'Run this smoke test with npm run test:package.');
-  let directory = await mkdtemp(join(tmpdir(), 'agui package '));
+  let directory = await realpath(await mkdtemp(join(tmpdir(), 'agui package ')));
   let caller = join(directory, 'caller');
   let cache = join(directory, 'cache');
   let started = false;

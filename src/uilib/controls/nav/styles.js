@@ -12,10 +12,10 @@ export default css`
     .agui-nav-item[aria-current='page']::before {
       content: '';
       position: absolute;
-      inset-inline-end: 0;
+      inset-inline-end: 6px;
       inset-block: .5rem;
       inline-size: 3px;
-      border-radius: 0;
+      border-radius: 3px;
       background-color: var(--agui-accent);
       pointer-events: none;
     }

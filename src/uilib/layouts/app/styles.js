@@ -27,6 +27,7 @@ export default css`
     agui-app > agui-sidebar[side='end'] {
       grid-row: 4;
     }
+    agui-app > agui-footer,
     agui-app > [slot='footer'] {
       grid-column: 1;
       grid-row: 5;
@@ -52,6 +53,7 @@ export default css`
         grid-column: 3;
         grid-row: 2;
       }
+      agui-app > agui-footer,
       agui-app > [slot='footer'] {
         grid-column: 1 / -1;
         grid-row: 3;

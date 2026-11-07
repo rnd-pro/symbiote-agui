@@ -41,7 +41,7 @@ test('app sidebars publish explicit edits, preserve children, and mirror without
         <agui-sidebar id="other" side="end" label="Inspector" collapsed>
           <p>Independent content</p>
         </agui-sidebar>
-        <footer slot="footer">Footer</footer>
+        <agui-footer slot="footer">Footer</agui-footer>
       </agui-app>
     </context-provider>
   `);

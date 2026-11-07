@@ -27,9 +27,6 @@
     align-items: start;
     gap: 1rem;
   }
-  .manager-footer {
-    @apply flex flex-wrap justify-between gap-2 border-t border-agui-border bg-agui-surface px-4 py-2 text-xs text-agui-muted;
-  }
   agui-session-controls {
     @apply block min-w-0;
   }

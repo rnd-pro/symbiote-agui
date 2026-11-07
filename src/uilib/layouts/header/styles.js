@@ -1,6 +1,4 @@
-import {
-  css,
-} from '@symbiotejs/symbiote';
+import { css } from '@symbiotejs/symbiote';
 
 export default css`
   @layer components {

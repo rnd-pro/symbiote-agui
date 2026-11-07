@@ -238,10 +238,10 @@
               </template>
             </agui-conditional>
           </div>
-          <footer class="manager-footer">
+          <agui-footer>
             <span role="status">{{MANAGER/connection}}</span>
             <span>{{MANAGER/checkedAt}}</span>
-          </footer>
+          </agui-footer>
           <agui-message class="notice" close-label="Dismiss message" bind="$.tone: MANAGER/noticeTone; $.message: MANAGER/notice" hidden></agui-message>
           <agui-message class="connection" close-label="Dismiss message" bind="$.tone: MANAGER/connectionTone; $.message: MANAGER/connection" hidden></agui-message>
           <agui-connector-settings></agui-connector-settings>

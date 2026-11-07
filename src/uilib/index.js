@@ -7,6 +7,7 @@ import { Tab } from './controls/tabs/tab.js';
 import { TabButton } from './controls/tabs/tab-button.js';
 import { Panel } from './layouts/panel/panel.js';
 import { Header } from './layouts/header/header.js';
+import { Footer } from './layouts/footer/footer.js';
 import { Toolbar } from './layouts/toolbar/toolbar.js';
 import { Conditional } from './layouts/conditional/conditional.js';
 import { Field } from './controls/field/field.js';
@@ -52,6 +53,7 @@ export function registerUiLibComponents() {
   Dashboard.reg('agui-dashboard');
   Panel.reg('agui-panel');
   Header.reg('agui-header');
+  Footer.reg('agui-footer');
   Toolbar.reg('agui-toolbar');
   Conditional.reg('agui-conditional');
   Button.reg('agui-button');

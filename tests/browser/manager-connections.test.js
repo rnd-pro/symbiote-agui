@@ -111,13 +111,13 @@ test('manager verifies public links and manages browsers and tunnels across proj
   assert.equal((await cli('status', 'desk')).pid, originalPid);
   assert.equal(await user.$eval('#notes', (element) => Reflect.get(element, 'value')), 'Keep this draft');
   await page.click('#session-views [role="tab"][value="cards"]');
-  await page.click('.sessions button[aria-label="Viewer page"]');
+  await page.click('#manager-cards button[aria-label="Viewer page"]');
   await page.waitForFunction(() => Reflect.get(window, 'verifiedOpenedUrl') === 'https://manager-verified.trycloudflare.com/desk/?mode=viewer');
   await page.waitForFunction(() => !Reflect.get(document.querySelector('agui-session-manager') || {}, 'busy'));
   await page.evaluate(() => {
     Reflect.set(window, 'open', () => null);
   });
-  await page.click('.sessions button[aria-label="Viewer page"]');
+  await page.click('#manager-cards button[aria-label="Viewer page"]');
   await page.waitForSelector('a[href="https://manager-verified.trycloudflare.com/desk/?mode=viewer"]', {
     visible: true,
   });
@@ -132,7 +132,7 @@ test('manager verifies public links and manages browsers and tunnels across proj
       return request(operation, options);
     };
   });
-  await page.click('.sessions button[aria-label="Viewer page"]');
+  await page.click('#manager-cards button[aria-label="Viewer page"]');
   await page.waitForFunction(() => document.querySelector('.notice')?.textContent?.includes('Fixture readiness failure.'));
   assert.equal(await page.evaluate(() => Reflect.get(window, 'verifiedOpenedUrl')), undefined, 'A failed readiness check opens no tab.');
   assert.equal(await page.$eval('agui-session-manager', (owner) => Reflect.get(owner, '$').verifiedPublicUrl), '', 'A failed check clears the previous fallback URL.');

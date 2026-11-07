@@ -1,7 +1,7 @@
 import { html } from '@symbiotejs/symbiote/core/html.js';
 
 export let SESSION_CONTROLS_TEMPLATE = html`
-  <section class="grid gap-4" aria-label="Session actions" bind="@data-session: ^sessionId; @data-state: ^statusKind">
+  <section class="grid gap-4" aria-label="Session actions" bind="@data-session: ^sessionId">
     <div class="grid min-w-0 gap-1 break-words [overflow-wrap:anywhere]">
       <h2 class="font-semibold">{{^title}}</h2>
       <code class="text-xs text-agui-muted">/{{^sessionId}}</code>

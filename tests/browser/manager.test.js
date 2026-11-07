@@ -80,7 +80,7 @@ test('manager save-folder controls persist the project setting and open the sele
  */
 async function action(page, name) {
   await page.click('#session-views [role="tab"][value="cards"]');
-  await page.click('.sessions [data-session="desk"] h3');
+  await page.click('#manager-cards [data-session="desk"] h3');
   await page.locator(`#manager-inspector [data-session="desk"] ::-p-aria([name="${name}"][role="button"])`).click();
 }
 
@@ -130,7 +130,7 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.waitForSelector('[data-session="desk"]');
   await openManagerSection(page, 'settings');
   await openManagerSection(page, 'sessions');
-  assert.match(await page.$eval('[data-session="desk"] .data-flow', (element) => element.textContent || ''), /demo.inventory/);
+  assert.match(await page.$eval('#manager-cards [data-session="desk"] details', (element) => element.textContent || ''), /demo.inventory/);
   await action(page, 'Description');
   await page.waitForSelector('#manager-description agui-markdown h1');
   assert.match(await page.$eval('#manager-description agui-markdown article', (element) => element.textContent || ''), /Initial source: json-file \(sample-inventory.json\)/);
@@ -143,7 +143,7 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
     await image.decode();
     return image.naturalWidth > 0 && image.naturalHeight > 0;
   }), true);
-  assert.match(await page.$eval('.counts', (element) => element.textContent || ''), /1 total \/ 0 running \/ 1 stopped/);
+  assert.match(await page.$eval('section[aria-label="Sessions"] > p[role="status"]', (element) => element.textContent || ''), /1 total \/ 0 running \/ 1 stopped/);
   assert.ok(await page.$('agui-app > agui-viewport #session-views'));
   assert.ok(await page.$('#manager-filter input[type="search"]'));
   assert.ok(await page.$('#manager-filter [data-field="status"] select'));
@@ -194,7 +194,7 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.waitForFunction(() => !document.querySelector('#manager-inspector button[aria-busy="true"]'));
   assert.equal(await page.$eval('#manager-table input[type="radio"]', (element) => element.checked), true, 'Snapshot refresh preserves the selected session.');
   await page.click('#session-views [role="tab"][value="cards"]');
-  await page.waitForFunction(() => document.querySelector('.counts')?.textContent?.includes('1 running'));
+  await page.waitForFunction(() => document.querySelector('section[aria-label="Sessions"] > p[role="status"]')?.textContent?.includes('1 running'));
   let pid = (await cli('status', 'desk')).pid;
   await action(page, 'Description');
   await page.waitForSelector('#manager-description agui-markdown h1');
@@ -287,20 +287,20 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.$eval('input[type="search"]', (element) => { element.value = ''; element.dispatchEvent(new Event('input', { bubbles: true })); });
   await page.waitForSelector('[data-session="desk"]');
   await page.select('agui-select[name="operation"] select', 'stop');
-  await page.click('.bulk button');
+  await page.click('agui-toolbar[aria-label="Bulk session actions"] button');
   await notice(page, 'stop completed');
   await second.bringToFront();
-  await second.waitForFunction(() => document.querySelector('.counts')?.textContent?.includes('1 stopped'), { timeout: 12_000 });
+  await second.waitForFunction(() => document.querySelector('section[aria-label="Sessions"] > p[role="status"]')?.textContent?.includes('1 stopped'), { timeout: 12_000 });
   await page.bringToFront();
-  await page.click('.toolbar button');
-  await page.waitForFunction(() => document.querySelector('.counts')?.textContent?.includes('1 stopped'));
+  await page.click('agui-header button[aria-label="Refresh"]');
+  await page.waitForFunction(() => document.querySelector('section[aria-label="Sessions"] > p[role="status"]')?.textContent?.includes('1 stopped'));
   page.once('dialog', (dialog) => { void dialog.dismiss(); });
   await action(page, 'Clear');
   assert.equal((await cli('list')).total, 1);
   page.once('dialog', (dialog) => { void dialog.accept(); });
   await action(page, 'Clear');
   await notice(page, 'clear completed');
-  await page.waitForFunction(() => document.querySelector('.counts')?.textContent?.includes('0 total'));
+  await page.waitForFunction(() => document.querySelector('section[aria-label="Sessions"] > p[role="status"]')?.textContent?.includes('0 total'));
   assert.equal((await cli('list')).total, 0);
   assert.equal((await cli('manager', 'status')).active, true);
   assert.deepEqual(errors, []);
@@ -338,7 +338,7 @@ test('manager disconnects reconcile status without replaying a mutation; generat
   await cli('stop', 'desk');
   await protocol.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
   await page.waitForFunction(() => document.querySelector('.connection .agui-message-text')?.textContent === 'Connected', { timeout: 12_000 });
-  await page.waitForFunction(() => document.querySelector('.counts')?.textContent?.includes('1 stopped'));
+  await page.waitForFunction(() => document.querySelector('section[aria-label="Sessions"] > p[role="status"]')?.textContent?.includes('1 stopped'));
   await action(page, 'Start');
   await notice(page, 'start completed');
   session = await cli('status', 'desk');
@@ -394,13 +394,13 @@ test('cards and selectable table rows share session selection and inspector acti
     });
   });
   await page.goto(manager.launchUrl);
-  await page.waitForSelector('.sessions [data-session="alpha"]');
+  await page.waitForSelector('#manager-cards [data-session="alpha"]');
   assert.equal(await page.$eval('#manager-inspector', (element) => Reflect.get(element, 'hidden')), true);
-  assert.equal(await page.$('.sessions [aria-label="Session actions"]'), null);
+  assert.equal(await page.$('#manager-cards [aria-label="Session actions"]'), null);
   assert.equal(await page.$eval('#session-views [role="tab"]', (element) => element.getAttribute('value')), 'table');
   assert.equal(await page.$eval('#session-views [role="tab"][value="table"]', (element) => element.getAttribute('aria-selected')), 'true');
   await page.click('#session-views [role="tab"][value="cards"]');
-  await page.click('.sessions [data-session="alpha"] summary');
+  await page.click('#manager-cards [data-session="alpha"] summary');
   assert.equal(await page.$eval('#manager-inspector', (element) => Reflect.get(element, 'hidden')), true, 'Opening a description does not select the card.');
   await page.focus('#manager-cards [data-session="alpha"] h3 button');
   await page.keyboard.press('Enter');
@@ -424,9 +424,9 @@ test('cards and selectable table rows share session selection and inspector acti
   await fallback.close();
   await page.bringToFront();
   assert.equal(await page.$eval('#manager-cards [data-session="alpha"] h3 button', (element) => element.getAttribute('aria-pressed') === 'true'), true);
-  await page.click('.sessions [data-session="beta"] code');
+  await page.click('#manager-cards [data-session="beta"] code');
   await page.waitForSelector('#manager-inspector [data-session="beta"]');
-  await page.click('.sessions [data-session="alpha"] h3');
+  await page.click('#manager-cards [data-session="alpha"] h3');
   await page.click('#session-views [role="tab"][value="table"]');
   assert.equal(await page.$eval('#manager-table tr[data-row-id="alpha"] td[data-column=""] input', (element) => Reflect.get(element, 'checked')), true);
   await page.click('#manager-table tr[data-row-id="beta"] td[data-column="id"]');
@@ -451,6 +451,6 @@ test('cards and selectable table rows share session selection and inspector acti
   assert.ok(await page.$('#manager-inspector [data-session="beta"]'), 'Filtering does not silently switch the action target.');
   await cli('stop', 'beta');
   await cli('clear', 'beta');
-  await page.click('.toolbar button');
+  await page.click('agui-header button[aria-label="Refresh"]');
   await page.waitForFunction(() => Reflect.get(document.querySelector('#manager-inspector') || {}, 'hidden') === true);
 });

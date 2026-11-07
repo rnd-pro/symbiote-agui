@@ -7,6 +7,15 @@ import { cli, insertStdin, sendStdin } from './helpers.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
+/**
+ * @param {import('puppeteer').Page} page
+ * @param {string} section
+ */
+async function openSection(page, section) {
+  await page.locator(`agui-nav button[value="${section}"]`).click();
+  await page.waitForSelector(`agui-nav button[value="${section}"][aria-current="page"]`);
+}
+
 test('default library bundle composes an HTML-only workspace with isolated contexts and native controls', {
   timeout: 60_000,
 }, async (t) => {
@@ -34,8 +43,8 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
   await page.goto(session.url);
   await page.waitForSelector('#name-control input');
-  await page.waitForFunction(() => document.querySelector('#submission-examples dt')?.textContent === 'Populated');
-  assert.match(await page.$eval('#submission-examples', (element) => element.textContent || ''), /The cache write failed/);
+  await page.waitForFunction(() => document.querySelector('agui-tab[value="workflow"] dt')?.textContent === 'Populated');
+  assert.match(await page.$eval('agui-tab[value="workflow"] dl', (element) => element.textContent || ''), /The cache write failed/);
   assert.equal(await page.$eval('#gallery-data-actions', (element) => Reflect.get(element, '$').roleLabel), 'User');
   assert.equal(await page.$eval('#name-control input', (element) => element.value), 'Alex');
   assert.equal(await page.$eval('#name-control label', (element) => element.control?.getAttribute('name')), 'name');
@@ -95,6 +104,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { theme: 'dark' } }));
   assert.equal(await page.$eval('#theme-toggle button', (element) => element.getAttribute('aria-pressed') === 'true'), true);
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { density: 'compact' } }));
+  await openSection(page, 'controls');
   await page.select('#status-control select', 'new');
   assert.equal(await page.$eval('#status-mirror select', (element) => element.value), '');
   assert.equal(await page.$eval('#status-control', (element) => Reflect.get(element, '$').value), 'new');
@@ -107,7 +117,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   } }));
   assert.equal(await page.$eval('#status-control select', (element) => element.value), 'contacted');
   assert.equal(await page.$eval('#status-mirror select', (element) => element.value), 'contacted');
-  await page.select('#gallery-section-control select', 'bindings');
+  await openSection(page, 'feedback');
   await cli('events', 'widgets');
   await page.click('#retry-state button');
   let events = (await cli('events', 'widgets')).events;
@@ -118,6 +128,11 @@ test('default library bundle composes an HTML-only workspace with isolated conte
     control.componentDescription = 'Gallery notifications fixture';
     control.syncWebMCPTools();
   });
+  await page.$eval('#query-control', (element) => {
+    let control = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    control.componentDescription = 'Gallery query fixture';
+    control.syncWebMCPTools();
+  });
   let discovery = await cli('tools', 'widgets');
   let setToggle = discovery.tools.find((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.key === 'set_value' && tool.ownerName === 'agui-toggle' && tool.componentDescription === 'Gallery notifications fixture');
   assert.ok(setToggle);
@@ -125,7 +140,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.deepEqual((await sendStdin('call', 'widgets', JSON.stringify(toggleCall))).result, { value: true, changed: true });
   assert.equal(await page.$eval('#notifications-toggle input', (element) => element.checked), true);
   await cli('events', 'widgets');
-  let setValue = discovery.tools.find((/** @type {{key: string, ownerName: string}} */ tool) => tool.key === 'set_value' && tool.ownerName === 'agui-field');
+  let setValue = discovery.tools.find((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.key === 'set_value' && tool.ownerName === 'agui-field' && tool.componentDescription === 'Gallery query fixture');
   assert.ok(setValue);
   let call = { pageId: discovery.pageId, discoveryId: discovery.discoveryId, name: setValue.name, input: { value: 'Grace' } };
   assert.deepEqual((await sendStdin('call', 'widgets', JSON.stringify(call))).result, { value: 'Grace', changed: true });
@@ -137,7 +152,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#query-control input', (element) => element.value), 'Grace');
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { componentState: { status: 'ready' } } }));
   assert.equal(await page.$eval('#retry-state > div', (element) => element.hidden), true);
-  await page.select('#gallery-section-control select', 'layouts');
+  await openSection(page, 'layouts');
   assert.equal(await page.$eval('#feature-contact-first input', (element) => element.value), 'Avery');
   assert.equal(await page.$eval('#feature-contact-second input', (element) => element.value), 'Morgan');
   await page.focus('#feature-contact-first input');
@@ -146,7 +161,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#feature-contact-first output', (element) => element.textContent), 'Avery Lee');
   assert.equal(await page.$eval('#feature-contact-second output', (element) => element.textContent), 'Morgan');
   assert.equal(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').featureContactFirst.contactName), 'Avery Lee');
-  await page.select('#gallery-section-control select', 'data');
+  await openSection(page, 'widgets');
   await page.type('#gallery-lead-filters input[type="search"]', 'Northstar');
   await page.waitForFunction(() => document.querySelectorAll('#gallery-leads tbody tr').length === 1);
   await page.click('#gallery-data-views [role="tab"][value="cards"]');
@@ -155,11 +170,12 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.deepEqual(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').tableSelection), [
     'lead-01',
   ]);
-  await page.select('#gallery-section-control select', 'layouts');
-  await page.select('#gallery-section-control select', 'data');
+  await openSection(page, 'layouts');
+  await openSection(page, 'widgets');
   assert.equal(await page.$eval('#gallery-data-views', (element) => Reflect.get(element, '$').value), 'cards');
   assert.equal(await page.$eval('#gallery-lead-filters input[type="search"]', (element) => element.value), 'Northstar');
-  await page.click('#gallery-inspector agui-button button');
+  await openSection(page, 'data-flow');
+  await page.click('agui-toolbar[aria-label="Contact controls"] agui-button[set="APP/galleryEditorOpen"] button');
   await page.waitForSelector('#gallery-editor dialog[open]');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => {

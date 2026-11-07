@@ -207,7 +207,7 @@ test('manager copies live sessions with explicit options, handles collisions, mo
     'stop',
     'desk',
   ], a.folder);
-  await page.click('.toolbar button[aria-label="Refresh"]');
+  await page.click('agui-header button[aria-label="Refresh"]');
   await page.waitForFunction(() => !document.querySelector('#manager-inspector button[title*="stop the session"]')?.hasAttribute('disabled'));
   await openTransfer(page, 'Move to project');
   await page.select('agui-select[name="transferDestination"] select', b.id);

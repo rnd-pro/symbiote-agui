@@ -80,7 +80,7 @@ test('manager sections retain session selection, local tabs and settings drafts 
   });
   await openManagerSection(page, 'settings');
   await page.locator('input[name="saveFolder"]').fill('./draft-library');
-  assert.equal(await page.$('#manager-settings dialog'), null);
+  assert.equal(await page.$('section[aria-label="Settings"] dialog'), null);
   await openManagerSection(page, 'sessions');
   assert.equal(await page.$eval('#manager-filter input[type="search"]', (element) => element.value), 'desk');
   assert.equal(await page.$eval('#manager-table tr[data-row-id="desk"] td[data-column=""] input', (element) => element.checked), true);

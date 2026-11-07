@@ -1,15 +1,14 @@
 <agui-app class="[--agui-content-width:100%]">
   <agui-sidebar
-    id="gallery-navigation"
     class="[--agui-sidebar-width:14rem]"
     label="Components"
     expand-label="Expand"
     collapse-label="Collapse">
-    <agui-nav id="gallery-menu" label="Library sections"
+    <agui-nav label="Library sections"
       pub-map="APP/activeSection: section; APP/sectionName: sectionName; APP/sectionIcon: sectionIcon"
       bind="$.items: APP/sectionOptions; $.value: APP/activeSection"></agui-nav>
   </agui-sidebar>
-  <agui-viewport id="gallery-viewport" aria-label="UI library examples">
+  <agui-viewport aria-label="UI library examples">
     <context-provider id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications tableRows"
       class="flex min-h-full min-w-0 flex-col">
       <script type="application/json">
@@ -206,7 +205,7 @@
           ]
         }
       </script>
-      <agui-header id="gallery-viewport-header" floating>
+      <agui-header floating>
         <h1 class="flex items-center gap-2"><agui-icon bind="$.name: APP/sectionIcon; hidden: !APP/sectionIcon"></agui-icon>{{APP/sectionName}}</h1>
         <agui-toolbar aria-label="Gallery controls">
           <agui-theme-toggle id="theme-toggle" ctx="APP" aria-label="Dark theme" light-label="Day"
@@ -218,7 +217,7 @@
       <div class="min-w-0 flex-1 p-4 sm:p-6">
         <agui-conditional when="APP/activeSection" is="layouts">
           <template>
-            <agui-tabs id="gallery-layout-views" label="Layout examples" pub-to="APP/layoutView" bind="$.value: APP/layoutView">
+            <agui-tabs label="Layout examples" pub-to="APP/layoutView" bind="$.value: APP/layoutView">
               <agui-tab value="templates" label="Templates">
                 <section class="grid gap-4" aria-label="Reusable feature templates">
                   <h2>Reusable features with use-template</h2>
@@ -232,9 +231,9 @@
                         bind="$.value: ^contactName"></agui-field>
                       <agui-field label="Notes" name="feature_contact_notes" type="textarea" rows="3"
                         pub-to="^contactNotes" bind="$.value: ^contactNotes"></agui-field>
-                      <agui-component class="text-sm text-agui-muted">
+                      <p class="text-sm text-agui-muted">
                         Draft contact: <output>{{^contactName}}</output>
-                      </agui-component>
+                      </p>
                     </agui-panel>
                   </template>
                   <div class="grid gap-4 md:grid-cols-2">
@@ -253,9 +252,9 @@
         </agui-conditional>
         <agui-conditional when="APP/activeSection" is="controls">
           <template>
-            <agui-tabs id="gallery-control-views" label="Control examples" pub-to="APP/controlView" bind="$.value: APP/controlView">
+            <agui-tabs label="Control examples" pub-to="APP/controlView" bind="$.value: APP/controlView">
               <agui-tab value="fields" label="Fields and buttons">
-                <agui-panel id="gallery-controls" class="grid gap-5">
+                <agui-panel class="grid gap-5">
                   <h2>Native controls</h2>
                   <agui-field id="name-control" bind="$.label: APP/nameLabel" value="Alex" hint="Required field" required
                     required-mark="*" name="name" autocomplete="name"></agui-field>
@@ -285,7 +284,7 @@
                   <agui-toggle label="Show button loading state" pub-to="APP/buttonLoading"
                     bind="$.value: APP/buttonLoading"></agui-toggle>
                   <agui-toolbar aria-label="Button loading examples">
-                    <agui-button id="gallery-loading-button" class="agui-button-primary" set="APP/sharedStatus" value="new"
+                    <agui-button class="agui-button-primary" set="APP/sharedStatus" value="new"
                       bind="$.loading: APP/buttonLoading"><agui-icon name="refresh"></agui-icon>Refresh status</agui-button>
                     <agui-button class="agui-button-icon" aria-label="Refresh status" set="APP/sharedStatus" value="new"
                       bind="$.loading: APP/buttonLoading"><agui-icon name="refresh"></agui-icon></agui-button>
@@ -302,13 +301,13 @@
               </agui-tab>
               <agui-tab value="tabs" label="Tabs">
                 <agui-panel class="grid gap-4">
-                  <h2 id="gallery-tabs-panel">Tabs</h2>
-                  <agui-tabs id="gallery-tabs" label="Workspace views" pub-to="APP/galleryTab"
+                  <h2>Tabs</h2>
+                  <agui-tabs label="Workspace views" pub-to="APP/galleryTab"
                     bind="$.value: APP/galleryTab">
                     <agui-tab value="overview" label="Overview">
                       <p class="text-sm text-agui-muted">Arrow keys move focus. Enter or Space activates a tab. Switching
                         views preserves entered notes.</p>
-                      <agui-tabs id="gallery-nested-tabs" label="Nested guides" orientation="vertical" value="bindings">
+                      <agui-tabs label="Nested guides" orientation="vertical" value="bindings">
                         <agui-tab value="bindings" label="Bindings">
                           <p class="text-sm">Bind value to common state and use pub-to to publish tab changes.</p>
                         </agui-tab>
@@ -319,18 +318,18 @@
                       </agui-tabs>
                     </agui-tab>
                     <agui-tab value="notes" bind="$.label: APP/galleryTabLabel">
-                      <agui-field id="gallery-tab-notes" label="Workspace notes" type="textarea" name="tab_notes" rows="4"
+                      <agui-field label="Workspace notes" type="textarea" name="tab_notes" rows="4"
                         pub-to="APP/galleryTabNotes" bind="$.value: APP/galleryTabNotes"></agui-field>
                     </agui-tab>
                     <agui-tab value="future" label="Unavailable view" disabled>
                       <p>This view is disabled.</p>
                     </agui-tab>
                   </agui-tabs>
-                  <agui-component class="text-sm text-agui-muted">Shared active tab: {{APP/galleryTab}}</agui-component>
+                  <p class="text-sm text-agui-muted">Shared active tab: {{APP/galleryTab}}</p>
                 </agui-panel>
               </agui-tab>
               <agui-tab value="bindings" label="Bindings">
-                <agui-panel id="gallery-bindings" class="grid content-start gap-5">
+                <agui-panel class="grid content-start gap-5">
                   <h2>Application bindings</h2>
                   <agui-field label="Shared name" name="shared_name" pub-to="APP/sharedName"
                     bind="$.value: APP/sharedName"></agui-field>
@@ -338,13 +337,13 @@
                     bind="$.options: APP/statusOptions; $.value: APP/sharedStatus"></agui-select>
                   <agui-select id="status-mirror" label="Application status" readonly placeholder="All statuses"
                     name="status_mirror" bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
-                  <agui-component class="grid gap-2 text-sm">
+                  <div class="grid gap-2 text-sm">
                     <p>Search: <output>{{APP/query}}</output></p>
                     <p>Status: <output>{{APP/status}}</output></p>
                     <p>Shared name: <output>{{APP/sharedName}}</output></p>
                     <p>Shared status: <output>{{APP/sharedStatus}}</output></p>
                     <p>Notifications: <output>{{APP/notifications}}</output></p>
-                  </agui-component>
+                  </div>
                   </agui-panel>
               </agui-tab>
               <agui-tab value="icons" label="Icons">
@@ -375,12 +374,12 @@
                   </agui-toolbar>
                   <agui-select label="Icon" pub-to="APP/iconName"
                     bind="$.value: APP/iconName; $.options: APP/iconOptions"></agui-select>
-                  <agui-icon id="dynamic-icon" bind="$.name: APP/iconName; @aria-label: APP/iconName"></agui-icon>
+                  <agui-icon bind="$.name: APP/iconName; @aria-label: APP/iconName"></agui-icon>
                 </agui-panel>
               </agui-tab>
               <agui-tab value="workflow" label="Data toolbar">
                 <agui-panel class="grid gap-4">
-                  <h2 id="gallery-workflow">Data workflow</h2>
+                  <h2>Data workflow</h2>
                   <p class="text-sm text-agui-muted">Edit Shared name, Shared status, Notifications, or lead stages, then
                     use the floating bar. Save persists those values locally. Import replaces the draft, including the
                     entire leads array; Cancel restores the saved values. Export includes unsaved edits.</p>
@@ -391,17 +390,15 @@
                   </details>
                   <p class="text-sm text-agui-muted">The examples below illustrate status meanings. The floating bar
                     reports actual operations; this gallery does not simulate agent delivery or external writes.</p>
-                  <agui-component>
-                    <dl id="submission-examples" class="grid gap-3 sm:grid-cols-2" itemize="APP/submissionExamples"
-                      item-tag="agui-submission-example">
-                      <template>
-                        <div class="grid gap-1 rounded-md border border-agui-border p-3">
-                          <dt>{{label}}</dt>
-                          <dd class="text-sm text-agui-muted">{{message}}</dd>
-                        </div>
-                      </template>
-                    </dl>
-                  </agui-component>
+                  <dl class="grid gap-3 sm:grid-cols-2" itemize="APP/submissionExamples"
+                    item-tag="agui-submission-example">
+                    <template>
+                      <div class="grid gap-1 rounded-md border border-agui-border p-3">
+                        <dt>{{label}}</dt>
+                        <dd class="text-sm text-agui-muted">{{message}}</dd>
+                      </div>
+                    </template>
+                  </dl>
                 </agui-panel>
               </agui-tab>
             </agui-tabs>
@@ -412,7 +409,7 @@
             <agui-tabs id="gallery-data-views" label="Widget examples" pub-to="APP/widgetView" bind="$.value: APP/widgetView">
             <agui-tab value="table" label="Table">
                 <agui-panel class="grid gap-4">
-                  <h2 id="gallery-table-panel">Leads</h2>
+                  <h2>Leads</h2>
                   <p class="text-sm text-agui-muted">The independent filter publishes matching IDs; the table handles
                     sorting, selection, and paging locally. Select-all includes matching leads on other pages and
                     keeps selections outside the filter. This table does not edit its records.</p>
@@ -440,32 +437,32 @@
               </agui-tab>
               <agui-tab value="kanban" label="Kanban">
                 <agui-panel class="grid gap-4">
-                  <h2 id="gallery-kanban-panel">Kanban</h2>
+                  <h2>Kanban</h2>
                   <p class="text-sm text-agui-muted">Drag leads between stages. Focus a card and press Alt+Left or
                     Alt+Right to move it with the keyboard. The Table tab uses the same records and updates
                     immediately. Unrecognized stages stay in Unassigned. Save commits record changes; Cancel restores
                     the latest saved records. Table filters do not hide board cards.</p>
-                  <agui-kanban id="gallery-lead-board" label="Lead stages" title-key="name" description-key="notes"
+                  <agui-kanban label="Lead stages" title-key="name" description-key="notes"
                     pub-to="APP/tableRows"
                     bind="$.value: APP/tableRows; $.columns: APP/kanbanColumns; $.texts: APP/kanbanTexts; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-kanban>
                 </agui-panel>
               </agui-tab>
               <agui-tab value="charts" label="Charts">
                 <agui-panel class="grid gap-5">
-                  <h2 id="gallery-charts-panel">Charts</h2>
+                  <h2>Charts</h2>
                   <p class="text-sm text-agui-muted">The chart runtime loads when the first chart initializes. Select a
                     bar or donut sector to share lead selection with the table. Each chart has a keyboard-accessible data
                     view; the line example keeps its own selection. Missing values remain gaps and zero values stay
                     meaningful.</p>
-                  <agui-chart id="gallery-monthly-chart" type="line" label="Monthly revenue"
+                  <agui-chart type="line" label="Monthly revenue"
                     description="Prepared monthly amounts with a missing actual value in March." x-key="month"
                     x-type="date" x-label="Month" selection="multiple" locale="en-US" pub-to="APP/monthlySelected"
                     bind="$.rows: APP/monthlyRows; $.series: APP/monthlySeries; $.texts: APP/chartTexts; $.value: APP/monthlySelected"></agui-chart>
-                  <agui-chart id="gallery-opportunity-chart" type="bar" label="Opportunity by company"
+                  <agui-chart type="bar" label="Opportunity by company"
                     description="Company amounts from the shared leads records." x-key="name" x-label="Company"
                     selection="multiple" locale="en-US" pub-to="APP/tableSelection"
                     bind="$.rows: APP/tableRows; $.series: APP/opportunitySeries; $.texts: APP/chartTexts; $.value: APP/tableSelection; $.readonly: APP/tableReadonly; $.loading: APP/tableLoading"></agui-chart>
-                  <agui-chart id="gallery-share-chart" type="donut" label="Opportunity share"
+                  <agui-chart type="donut" label="Opportunity share"
                     description="One nonnegative amount per company, without inferred aggregation." x-key="name"
                     x-label="Company" selection="multiple" locale="en-US" pub-to="APP/tableSelection"
                     bind="$.rows: APP/tableRows; $.series: APP/opportunitySeries; $.texts: APP/chartTexts; $.value: APP/tableSelection; $.readonly: APP/tableReadonly; $.loading: APP/tableLoading"></agui-chart>
@@ -473,23 +470,23 @@
               </agui-tab>
               <agui-tab value="map" label="Map">
                 <agui-panel class="grid gap-4">
-                  <h2 id="gallery-map-panel">Map</h2>
+                  <h2>Map</h2>
                   <p class="text-sm text-agui-muted">Select a marker or table row to share selection. Drag to pan, use the
                     zoom buttons, or fit all mapped locations. Locations without coordinates remain in the table and are
                     counted below the map. Tile requests go directly to OpenStreetMap; shared viewers see this viewport
                     without interactive map controls.</p>
-                  <agui-map id="gallery-locations-map" label="Example team locations"
+                  <agui-map label="Example team locations"
                     description="Fictional locations around London, with one record awaiting coordinates."
                     pub-to="APP/mapSelection" view-pub-to="APP/mapView"
                     bind="$.rows: APP/mapRows; $.value: APP/mapSelection; $.view: APP/mapView; $.tiles: APP/mapTiles; $.texts: APP/mapTexts"></agui-map>
-                  <agui-table id="gallery-locations-table" label="All locations" selection="multiple"
+                  <agui-table label="All locations" selection="multiple"
                     pub-to="APP/mapSelection"
                     bind="$.rows: APP/mapRows; $.columns: APP/mapColumns; $.value: APP/mapSelection; $.texts: APP/mapTexts"></agui-table>
                 </agui-panel>
               </agui-tab>
               <agui-tab value="markdown" label="Markdown">
                 <agui-panel class="grid gap-4">
-                  <h2 id="gallery-markdown-panel">Markdown</h2>
+                  <h2>Markdown</h2>
                   <p class="text-sm text-agui-muted">Use an external Markdown URL or edit the inline source. JSDA renders
                     native HTML, highlighted code, and wrappers with readable fallbacks; registered components can enhance
                     them. Document checkboxes remain disabled.</p>
@@ -502,7 +499,7 @@
         </agui-conditional>
         <agui-conditional when="APP/activeSection" is="feedback">
           <template>
-            <agui-tabs id="gallery-feedback-views" label="Feedback examples" pub-to="APP/feedbackView" bind="$.value: APP/feedbackView">
+            <agui-tabs label="Feedback examples" pub-to="APP/feedbackView" bind="$.value: APP/feedbackView">
               <agui-tab value="states" label="States">
                 <agui-panel class="grid gap-4">
                 <h2>Content states</h2>
@@ -523,7 +520,7 @@
                       <agui-conditional when="APP/preloaderVisible" is="false" behavior="hide">
                         <p class="text-sm text-agui-muted">Default dots preloader: content hidden when disabled</p>
                       </agui-conditional>
-                      <agui-preloader id="gallery-preloader" class="text-agui-accent"
+                      <agui-preloader class="text-agui-accent"
                         bind="$.label: APP/preloaderLabel; hidden: !APP/preloaderVisible"></agui-preloader>
                     </div>
                     <div class="grid content-start gap-2">
@@ -547,7 +544,7 @@
               </agui-tab>
               <agui-tab value="overlays" label="Dialogs and popups">
                 <agui-panel class="grid gap-4">
-                  <h2 id="gallery-overlays">Dialogs and popups</h2>
+                  <h2>Dialogs and popups</h2>
                   <p class="text-sm text-agui-muted">The editor uses native modal focus and Escape dismissal. Closing
                     keeps edits as drafts; Save and Cancel changes remain separate actions.</p>
                   <agui-button set="APP/galleryEditorOpen" value="true"><agui-icon name="edit"></agui-icon>Open contact editor</agui-button>
@@ -614,7 +611,7 @@
             <agui-panel id="gallery-local-assets" class="grid gap-4">
               <h2>Local assets</h2>
               <figure class="grid justify-items-start gap-2">
-                <img id="gallery-local-image" src="./_assets/agui.png" alt="Symbiote AGUI"
+                <img src="./_assets/agui.png" alt="Symbiote AGUI"
                   width="1024" height="576" loading="lazy" class="h-auto w-56 object-contain">
                 <figcaption class="text-sm text-agui-muted">The original AGUI image, served by this session.</figcaption>
               </figure>
@@ -653,7 +650,7 @@
         </div>
         <form method="dialog"><button type="submit">Done</button></form>
       </agui-dialog>
-      <agui-dialog id="gallery-notes" label="Workspace notes" close-label="Close notes" pub-to="APP/notesOpen" bind="$.value: APP/notesOpen">
+      <agui-dialog label="Workspace notes" close-label="Close notes" pub-to="APP/notesOpen" bind="$.value: APP/notesOpen">
         <agui-field label="Notes" type="textarea" name="inspector_notes" rows="8" pub-to="APP/inspectorNotes"
           bind="$.value: APP/inspectorNotes"></agui-field>
       </agui-dialog>
@@ -664,7 +661,7 @@
       </div>
     </context-provider>
   </agui-viewport>
-  <agui-sidebar collapse-empty id="gallery-inspector" class="[--agui-sidebar-width:24rem]" side="end" label="Example controls" expand-label="Expand example controls"
+  <agui-sidebar collapse-empty class="[--agui-sidebar-width:24rem]" side="end" label="Example controls" expand-label="Expand example controls"
     collapse-label="Collapse example controls">
     <div class="grid gap-6">
       <agui-conditional when="APP/activeSection" is="controls">

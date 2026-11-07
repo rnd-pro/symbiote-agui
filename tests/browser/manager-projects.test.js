@@ -39,7 +39,7 @@ async function openProjects(page) {
  */
 async function connect(page, folder) {
   if (!await page.$eval('#manager-connect-project', (form) => form.closest('details')?.open)) {
-    await page.locator('#manager-projects details > summary').click();
+    await page.locator('#project-views agui-tab[value="connected"] details > summary').click();
   }
   await page.waitForFunction(() => {
     let input = document.querySelector('#manager-connect-project input');
@@ -151,7 +151,7 @@ test('manager connects projects, switches remembered scopes and Default, and pre
   let urlB = second.url();
   assert.equal(page.url(), urlA, 'Another manager tab keeps its selected project.');
   await openProjects(second);
-  await second.locator('#manager-projects details > summary').click();
+  await second.locator('#project-views agui-tab[value="connected"] details > summary').click();
   await second.locator('#manager-connect-project input').fill(join(project.projectDirectory, 'missing'));
   await second.locator('#manager-connect-project button[type="submit"]').click();
   await second.waitForFunction(() => document.querySelector('#manager-project-error')?.textContent?.includes('unavailable'));

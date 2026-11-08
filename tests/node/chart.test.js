@@ -2,7 +2,51 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { deriveChart, selectedIds } from '../../src/uilib/widgets/chart/model.js';
 import { readChart } from '../../src/uilib/widgets/chart/reads.js';
+import { chartOption } from '../../src/uilib/widgets/chart/runtime/option.js';
 import { chartState } from './chart-fixture.js';
+
+test('donut categories use distinct palette colors and retain them when rows reorder', () => {
+  let state = chartState();
+  state.type = 'donut';
+  state.series = state.series.slice(0, 1);
+  state.rows = [
+    'en',
+    'es',
+    'ru',
+  ].map((key) => ({
+    key,
+    name: key,
+    revenue: 10,
+  }));
+  /** @type {import('../../types/uilib-chart.js').UiChartTheme} */
+  let theme = {
+    text: '#fff',
+    muted: '#888',
+    divider: '#333',
+    surface: '#000',
+    font: 'sans-serif',
+    reducedMotion: true,
+    colors: {
+      accent: '#f00',
+      success: '#0f0',
+      warning: '#ff0',
+      danger: '#f0f',
+      muted: '#888',
+    },
+  };
+  let readColors = () => {
+    let option = chartOption(deriveChart(state), theme);
+    let series = /** @type {{ data: { id: string, itemStyle: { color: string } }[] }[]} */ (option.series);
+    return Object.fromEntries(series[0].data.map((point) => [
+      point.id,
+      point.itemStyle.color,
+    ]));
+  };
+  let colors = readColors();
+  assert.equal(new Set(Object.values(colors)).size, state.rows.length);
+  state.rows.reverse();
+  assert.deepEqual(readColors(), colors);
+});
 
 test('chart models preserve zero/gaps, IDs across reorder, unrelated data, and effective selection without rewriting sources', () => {
   let state = chartState();

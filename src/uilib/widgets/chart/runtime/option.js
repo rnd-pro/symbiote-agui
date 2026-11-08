@@ -9,6 +9,14 @@ import { numberFormat } from '../format.js';
 export function chartOption(model, theme) {
   let state = model.state;
   let selected = new Set(model.selected);
+  let categoryColors = new Map();
+  if (state.type === 'donut') {
+    // Allocate the palette without hash collisions, independent of row order.
+    let ids = model.points.map((point) => point.id).sort();
+    ids.forEach((id, index) => {
+      categoryColors.set(id, theme.colors[CHART_COLORS[index % CHART_COLORS.length]]);
+    });
+  }
   let series = state.series.map((series, index) => {
     let color = theme.colors[series.color ?? CHART_COLORS[index % CHART_COLORS.length]];
     return {
@@ -32,7 +40,6 @@ export function chartOption(model, theme) {
         color,
       },
       data: model.points.filter((point) => state.type !== 'donut' || point.values[index] !== null).map((point) => {
-        let hash = Array.from(point.id).reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 0);
         return {
           id: point.id,
           name: point.x,
@@ -40,7 +47,7 @@ export function chartOption(model, theme) {
           selected: selected.has(point.id),
           symbolSize: selected.has(point.id) ? 10 : 6,
           itemStyle: {
-            color: state.type === 'donut' ? theme.colors[CHART_COLORS[hash % CHART_COLORS.length]] : color,
+            color: state.type === 'donut' ? categoryColors.get(point.id) : color,
             opacity: selected.size && !selected.has(point.id) ? .4 : 1,
             borderColor: selected.has(point.id) ? theme.text : 'transparent',
             borderWidth: selected.has(point.id) ? 2 : 0,

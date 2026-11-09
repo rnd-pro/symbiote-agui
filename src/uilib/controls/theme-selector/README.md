@@ -1,6 +1,6 @@
 # App theme selector
 
-`agui-theme-selector` opens a native popover from a round palette-icon button. Graphite retains the default colors; Ocean and Forest supply alternative basic color tokens. Every palette supports light, dark, and system color schemes through the existing `agui-theme-toggle`. Palettes change no typography, sizing, spacing, radii, or component styles.
+`agui-theme-selector` opens a native popover from a round palette-icon button. Graphite retains the default colors; Ocean, Forest, and Desert supply alternative basic color tokens. Every palette supports light, dark, and system color schemes through the existing `agui-theme-toggle`. Palettes change no typography, sizing, spacing, radii, or component styles.
 
 Declare a persisted palette property, bind it into `value`, and publish back to the same property:
 
@@ -14,7 +14,7 @@ Declare a persisted palette property, bind it into `value`, and publish back to 
 </context-provider>
 ```
 
-Values are `graphite` (default), `ocean`, and `forest`. Supply the accessible name with `label`, a native `$.label` binding, or `aria-label`. `disabled` and `readonly` protect edits. Standard palette names and saving copy come from `AGUI_TEXT/themeSelector`; bind caller-owned `texts` to replace them. Missing copy stays empty. Shared popover styling provides animation, native dismissal, and positioning; previews follow the current color scheme.
+Values are `graphite` (default), `ocean`, `forest`, and `desert`. Supply the accessible name with `label`, a native `$.label` binding, or `aria-label`. `disabled` and `readonly` protect edits. Standard palette names and saving copy come from `AGUI_TEXT/themeSelector`; bind caller-owned `texts` to replace them. Missing copy stays empty. Shared popover styling provides animation, native dismissal, and positioning; previews follow the current color scheme.
 
 Trusted user option clicks apply immediately and save only the `pub-to` property through AGUI's data commit API. Its provider/key must be declared with `persist`. This does not commit other drafts, submit feedback, or write to external storage. Reloads and worker restarts restore the committed palette through its provider. Palette and day/night mode are separate properties: palette clicks save the palette; toggle clicks save `<ctx>/theme` when `theme` is declared with `persist`.
 

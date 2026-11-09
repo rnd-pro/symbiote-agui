@@ -50,4 +50,21 @@
     --agui-accent-soft: light-dark(#e6f2df, #2a4027);
     --agui-on-accent: light-dark(#ffffff, #192b16);
   }
+  :root:has(body[data-palette='desert']),
+  body[data-palette='desert'],
+  agui-theme-selector button[value='desert'] .agui-theme-preview {
+    --agui-bg: light-dark(#faf6ef, #211912);
+    --agui-surface: light-dark(#fffcf7, #2d231b);
+    --agui-raised: light-dark(#eee3d2, #453529);
+    --agui-text: light-dark(#3e2f25, #f7eddd);
+    --agui-muted: light-dark(#786451, #c3ad92);
+    --agui-border: light-dark(#ddcbb4, #5c4734);
+    --agui-divider: light-dark(#eae0d2, #403124);
+    --agui-border-hover: light-dark(#b69b7e, #927355);
+    --agui-hover: light-dark(#f2e8d9, #3c2d22);
+    --agui-accent: light-dark(#9a4f2d, #e6ac77);
+    --agui-accent-hover: light-dark(#7f3f23, #f2c496);
+    --agui-accent-soft: light-dark(#f8e8da, #4b3220);
+    --agui-on-accent: light-dark(#ffffff, #2b1d12);
+  }
 }

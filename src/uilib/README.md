@@ -12,7 +12,7 @@ Mark code-entry fields with `data-code` on `agui-field type="textarea"` or a nat
 
 Use `agui-button` for declarative boolean toggles and boolean/string state assignment, with native button attributes, shared styling, and scoped activation. See the [button contract](./controls/button/README.md).
 
-Use `agui-theme-selector` for Graphite, Ocean, and Forest palettes, each compatible with the existing day/night toggle. A round palette button opens native color previews; trusted user choices save only a declared persisted palette property. See the [theme selector contract](./controls/theme-selector/README.md).
+Use `agui-theme-selector` for Graphite, Ocean, Forest, and Desert palettes, each compatible with the existing day/night toggle. A round palette button opens native color previews; trusted user choices save only a declared persisted palette property. See the [theme selector contract](./controls/theme-selector/README.md).
 
 Use `agui-preloader` for indeterminate loading, with caller-provided `label` or standard accessible-name attributes. Three animated dots are the default (`variant="dots"`); set `variant="ring"` for the rotating ring. Native `hidden` bindings control visibility; text color and size utilities customize appearance. Both variants use native progress semantics and slow their animation for reduced motion. Loading states and the data toolbar reuse it. The gallery's Bindings section includes both variants; the skill documents its bindings and CSS properties.
 

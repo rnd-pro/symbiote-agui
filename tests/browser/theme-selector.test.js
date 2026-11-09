@@ -5,6 +5,7 @@ import puppeteer from 'puppeteer';
 import { temporaryState } from '../node/state-fixture.js';
 import { SessionRuntime } from '../../src/sessions/runtime.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
+import { THEME_PALETTES } from '../../src/uilib/controls/theme-selector/palettes.js';
 
 function makeRuntime() {
   return new SessionRuntime({
@@ -60,7 +61,7 @@ test('palette and mode clicks save only their declared properties, survive reloa
   await page.waitForSelector('agui-theme-selector > button:not(:disabled)');
   await page.locator('input[name="note"]').fill('Unsaved note');
   await page.locator('agui-theme-selector > button').click();
-  assert.equal(await page.$$eval('.agui-theme-option', (buttons) => buttons.length), 3);
+  assert.equal(await page.$$eval('.agui-theme-option', (buttons) => buttons.length), THEME_PALETTES.length);
   await page.locator('.agui-theme-option[value="ocean"]').click();
   await page.waitForFunction(() => {
     let selector = document.querySelector('agui-theme-selector');
@@ -114,13 +115,13 @@ test('palette and mode clicks save only their declared properties, survive reloa
   await viewer.waitForFunction(() => document.body.dataset.palette === 'ocean');
   await page.bringToFront();
   await page.locator('agui-theme-selector > button').click();
-  await page.locator('.agui-theme-option[value="forest"]').click();
+  await page.locator('.agui-theme-option[value="desert"]').click();
   await page.waitForFunction(() => {
     let selector = document.querySelector('agui-theme-selector');
     return selector && Reflect.get(selector, '$').saveState === 'committed';
   });
   await viewer.bringToFront();
-  await viewer.waitForFunction(() => document.body.dataset.palette === 'forest');
+  await viewer.waitForFunction(() => document.body.dataset.palette === 'desert');
   await viewer.waitForFunction(() => document.body.dataset.theme === 'dark');
   await page.bringToFront();
   await page.keyboard.press('Escape');
@@ -142,7 +143,7 @@ test('palette and mode clicks save only their declared properties, survive reloa
   let restored = await browser.newPage();
   await restored.goto(runtime.record.url);
   await restored.waitForSelector('agui-theme-selector > button:not(:disabled)');
-  assert.equal(await restored.$eval('body', (body) => body.dataset.palette), 'forest');
+  assert.equal(await restored.$eval('body', (body) => body.dataset.palette), 'desert');
   assert.equal(await restored.$eval('body', (body) => body.dataset.theme), 'light');
   assert.deepEqual(errors, []);
 });

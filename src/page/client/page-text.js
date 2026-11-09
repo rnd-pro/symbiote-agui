@@ -77,6 +77,7 @@ export let themeSelectorTexts = Object.freeze({
   graphite: 'Graphite',
   ocean: 'Ocean',
   forest: 'Forest',
+  desert: 'Desert',
   saving: 'Saving palette...',
   committed: 'Palette saved',
   rejected: 'Palette could not be saved. Reconcile saved data before selecting again.',

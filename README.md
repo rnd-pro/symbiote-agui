@@ -11,6 +11,8 @@
 
 Symbiote AGUI lets your AI agent create a browser interface for the task you are working on together. Explore data, fill in forms, compare options, or work through a checklist while your agent responds to your choices.
 
+**Agent and model agnostic.** Use AGUI with any AI agent that can run shell commands, regardless of its model or provider. The same CLI and saved interfaces remain usable when you switch agents.
+
 The interface runs on your computer and opens in your normal browser. Your agent handles the interface code and updates it as the task changes.
 
 ## Why use AGUI?

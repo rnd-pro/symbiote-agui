@@ -22,17 +22,20 @@ export class Steps extends UiComponent {
     progressLabelledBy: '',
     statusState: 'ready',
     statusMessage: '',
+    '+renderInput': () => [
+      this.$.items,
+      this.$.texts,
+      this.$.value,
+      this.$.complete,
+      this.$.label,
+      ...ATTRIBUTES.map((attribute) => this.$[`attribute-${attribute}`]),
+    ],
   };
 
   renderCallback() {
-    for (let key of [
-      'items',
-      'texts',
-      'value',
-      'complete',
-      'label',
-      ...ATTRIBUTES.map((attribute) => `attribute-${attribute}`),
-    ]) { this.sub(key, () => this.refresh()); }
+    // Bindings publish sequentially; render their settled combination so an
+    // intermediate invalid value cannot queue removal of otherwise valid steps.
+    this.sub('+renderInput', () => this.refresh());
   }
 
   /** @param {string} key */

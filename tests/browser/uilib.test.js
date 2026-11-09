@@ -91,15 +91,18 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').theme), 'dark');
   assert.equal(await page.$eval('#theme-toggle button > span', (element) => element.textContent.trim()), 'Day');
   assert.equal(await page.$eval('#theme-toggle agui-icon', (element) => Reflect.get(element, '$').name), 'light_mode');
+  await page.waitForSelector('#theme-toggle button:not(:disabled)');
   await page.focus('#theme-toggle button');
   await page.keyboard.press('Space');
   await page.waitForFunction(() => document.body.dataset.theme === 'light' && document.querySelector('#theme-toggle button')?.getAttribute('aria-pressed') === 'false');
   assert.equal(await page.$eval('#theme-toggle button > span', (element) => element.textContent.trim()), 'Night');
+  await page.waitForSelector('#theme-toggle button:not(:disabled)');
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { theme: 'system' } }));
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
   await page.waitForFunction(() => document.querySelector('#theme-toggle button')?.getAttribute('aria-pressed') === 'true');
   await page.click('#theme-toggle button');
   assert.equal(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').theme), 'light');
+  await page.waitForSelector('#theme-toggle button:not(:disabled)');
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { theme: 'dark' } }));
   assert.equal(await page.$eval('#theme-toggle button', (element) => element.getAttribute('aria-pressed') === 'true'), true);
@@ -189,6 +192,8 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await page.waitForFunction(() => Reflect.get(window, 'oldField').allSubs.size === 0);
   assert.equal(await page.evaluate(() => document.adoptedStyleSheets.length), styleCount);
   assert.equal(await page.$eval('#query-control input', (element) => element.value), '');
+  // The following unrelated fixture deliberately discards this test's saved data.
+  await cli('clear', 'widgets');
   await insertStdin('widgets', [
     '<context-provider id="binding-data" ctx="binding-test"><script type="application/json">',
     '{"nameLabel":"Dynamic name","dynamicValue":"Bound","fieldState":{"label":"From state","value":"State value","disabled":true},"theme":"light","lightAction":"Use daylight","darkAction":"Use night mode","themeName":"Color preference","toolbarTexts":{"save":"Keep edits","connected":"Online","clean":"Up to date","transfer.READ_FAILED":"Cannot read this file"}}',

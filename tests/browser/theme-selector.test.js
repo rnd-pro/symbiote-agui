@@ -16,7 +16,7 @@ function makeRuntime() {
   });
 }
 
-test('palette clicks save only their declared property, survive reload and restart, and mirror to viewers', {
+test('palette and mode clicks save only their declared properties, survive reload and restart, and mirror to viewers', {
   timeout: 60_000,
 }, async (t) => {
   let state = await temporaryState();
@@ -29,12 +29,12 @@ test('palette clicks save only their declared property, survive reload and resta
     await state.close();
   });
   let saved = await prepareCachedMarkup('palettes', `
-    <context-provider ctx="APP" persist="palette note">
+    <context-provider ctx="APP" persist="palette note theme">
       <script type="application/json">{"palette":"graphite","note":"Saved note","theme":"light"}</script>
       <agui-toolbar aria-label="Appearance">
         <agui-theme-selector label="App theme" pub-to="APP/palette"
           bind="$.value: APP/palette; $: AGUI_TEXT/themeSelector"></agui-theme-selector>
-        <agui-theme-toggle ctx="APP" label="Day or night"></agui-theme-toggle>
+        <agui-theme-toggle ctx="APP" label="Day or night" bind="$: AGUI_TEXT/themeToggle"></agui-theme-toggle>
       </agui-toolbar>
       <agui-field label="Note" name="note" pub-to="APP/note" bind="$.value: APP/note"></agui-field>
     </context-provider>
@@ -70,6 +70,10 @@ test('palette clicks save only their declared property, survive reload and resta
   assert.equal(await page.$eval('.agui-theme-option[value="ocean"]', (button) => button.getAttribute('aria-pressed')), 'true');
   await page.keyboard.press('Escape');
   await page.locator('agui-theme-toggle button').click();
+  await page.waitForFunction(() => {
+    let toggle = document.querySelector('agui-theme-toggle');
+    return toggle && Reflect.get(toggle, '$').saveState === 'committed';
+  });
   assert.equal(await page.$eval('body', (body) => body.dataset.theme), 'dark');
   assert.equal(await page.$eval('body', (body) => body.dataset.palette), 'ocean');
 
@@ -77,15 +81,33 @@ test('palette clicks save only their declared property, survive reload and resta
   await page.waitForSelector('agui-theme-selector > button:not(:disabled)');
   assert.equal(await page.$eval('body', (body) => body.dataset.palette), 'ocean');
   assert.equal(await page.$eval('input[name="note"]', (input) => input.value), 'Saved note');
+  assert.equal(await page.$eval('body', (body) => body.dataset.theme), 'dark');
 
   // New palette assignments apply immediately, but initialization/bindings never save.
   await page.$eval('context-provider', (provider) => {
     Reflect.get(provider, '$').palette = 'forest';
+    Reflect.get(provider, '$').theme = 'system';
   });
   await page.waitForFunction(() => document.body.dataset.palette === 'forest');
+  await page.emulateMediaFeatures([
+    {
+      name: 'prefers-color-scheme',
+      value: 'light',
+    },
+  ]);
   await page.reload();
   await page.waitForSelector('agui-theme-selector > button:not(:disabled)');
   assert.equal(await page.$eval('body', (body) => body.dataset.palette), 'ocean');
+  assert.equal(await page.$eval('body', (body) => body.dataset.theme), 'dark');
+  await page.$eval('agui-theme-toggle', (toggle) => {
+    Reflect.apply(Reflect.get(toggle, 'commit'), toggle, [
+      false,
+    ]);
+  });
+  assert.equal(await page.$eval('body', (body) => body.dataset.theme), 'light');
+  await page.reload();
+  await page.waitForSelector('agui-theme-selector > button:not(:disabled)');
+  assert.equal(await page.$eval('body', (body) => body.dataset.theme), 'dark');
 
   let viewer = await browser.newPage();
   await viewer.goto(`${url}?mode=viewer`);
@@ -99,6 +121,17 @@ test('palette clicks save only their declared property, survive reload and resta
   });
   await viewer.bringToFront();
   await viewer.waitForFunction(() => document.body.dataset.palette === 'forest');
+  await viewer.waitForFunction(() => document.body.dataset.theme === 'dark');
+  await page.bringToFront();
+  await page.keyboard.press('Escape');
+  await page.focus('agui-theme-toggle button');
+  await page.keyboard.press('Space');
+  await page.waitForFunction(() => {
+    let toggle = document.querySelector('agui-theme-toggle');
+    return toggle && Reflect.get(toggle, '$').saveState === 'committed';
+  });
+  await viewer.bringToFront();
+  await viewer.waitForFunction(() => document.body.dataset.theme === 'light');
 
   await page.close();
   await viewer.close();
@@ -110,5 +143,6 @@ test('palette clicks save only their declared property, survive reload and resta
   await restored.goto(runtime.record.url);
   await restored.waitForSelector('agui-theme-selector > button:not(:disabled)');
   assert.equal(await restored.$eval('body', (body) => body.dataset.palette), 'forest');
+  assert.equal(await restored.$eval('body', (body) => body.dataset.theme), 'light');
   assert.deepEqual(errors, []);
 });

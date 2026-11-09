@@ -9,7 +9,7 @@
       bind="$.items: APP/sectionOptions; $.value: APP/activeSection"></agui-nav>
   </agui-sidebar>
   <agui-viewport aria-label="UI library examples">
-    <context-provider id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications tableRows palette"
+    <context-provider id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications tableRows palette theme"
       class="flex min-h-full min-w-0 flex-col">
       <script type="application/json">
         {
@@ -212,7 +212,7 @@
           <agui-theme-selector label="App theme" pub-to="APP/palette"
             bind="$.value: APP/palette; $: AGUI_TEXT/themeSelector"></agui-theme-selector>
           <agui-theme-toggle id="theme-toggle" ctx="APP" aria-label="Dark theme" light-label="Day"
-            dark-label="Night"></agui-theme-toggle>
+            dark-label="Night" bind="$: AGUI_TEXT/themeToggle"></agui-theme-toggle>
           <agui-button class="agui-button-icon" aria-label="About the gallery" title="About the gallery"
             popovertarget="gallery-about"><agui-icon name="info"></agui-icon></agui-button>
         </agui-toolbar>

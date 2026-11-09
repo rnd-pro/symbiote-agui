@@ -1,6 +1,7 @@
 import { ToolDescriptor } from '@symbiotejs/symbiote/webmcp';
 import { UiComponent } from '../../shared/component.js';
 import { feedbackSuppressed } from '../../shared/feedback-guard.js';
+import { declaredPreferenceTarget } from '../../shared/data/preferences.js';
 import { commitData, getDataState } from '../../../page/client/data.js';
 import { THEME_PALETTES } from './palettes.js';
 import { THEME_SELECTOR_TEMPLATE } from './template.js';
@@ -87,21 +88,7 @@ export class ThemeSelector extends UiComponent {
   }
 
   get saveTarget() {
-    let path = this.getAttribute('pub-to')?.trim().split('/');
-    if (path?.length !== 2) { return; }
-    let [
-      provider,
-      key,
-    ] = path;
-    let declaration = getDataState().current?.targets.find((target) => target.provider === provider);
-    if (declaration?.keys.includes(key)) {
-      return {
-        provider,
-        keys: [
-          key,
-        ],
-      };
-    }
+    return declaredPreferenceTarget(this.getAttribute('pub-to'));
   }
 
   refresh() {

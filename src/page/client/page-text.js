@@ -86,11 +86,20 @@ export let themeSelectorTexts = Object.freeze({
   unavailable: 'This theme selector is disabled or read-only.',
 });
 
+export let themeToggleTexts = Object.freeze({
+  rejected: 'Theme could not be saved. Reconcile saved data before selecting again.',
+  unknown: 'Saving is uncertain. Reload to reconcile the saved theme before selecting again.',
+  closeMessage: 'Dismiss message',
+});
+
 PubSub.registerCtx({
   dataToolbar: {
     texts: dataToolbarTexts,
   },
   themeSelector: {
     texts: themeSelectorTexts,
+  },
+  themeToggle: {
+    texts: themeToggleTexts,
   },
 }, PAGE_TEXT_CONTEXT);

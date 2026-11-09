@@ -15,6 +15,7 @@ let ATTRIBUTES = Object.freeze([
   'disabled',
   'readonly',
   'pub-to',
+  'auto-save',
 ]);
 
 export class ThemeSelector extends UiComponent {
@@ -29,6 +30,7 @@ export class ThemeSelector extends UiComponent {
     texts: undefined,
     disabled: undefined,
     readonly: undefined,
+    autoSave: undefined,
     popupId: `agui-theme-palettes-${++nextSelectorId}`,
     selectorLabel: '',
     activeValue: 'graphite',
@@ -74,6 +76,7 @@ export class ThemeSelector extends UiComponent {
     }
     for (let key of [
       'texts',
+      'autoSave',
       'saving',
       'saveState',
       'AGUI_DATA/connected',
@@ -91,6 +94,10 @@ export class ThemeSelector extends UiComponent {
     return declaredPreferenceTarget(this.getAttribute('pub-to'));
   }
 
+  get savesAutomatically() {
+    return !!(this.$.autoSave ?? this.getAttribute('auto-save') !== 'false');
+  }
+
   refresh() {
     if (!this.ready || !this.isConnected) { return; }
     let value = this.$.value ?? this.getAttribute('value') ?? 'graphite';
@@ -102,7 +109,7 @@ export class ThemeSelector extends UiComponent {
     if (value !== this.$.activeValue && !this.$.saving && saveState !== 'unknown') { saveState = 'idle'; }
     let unavailable = !!(this.$.disabled ?? this.hasAttribute('disabled'))
       || !!(this.$.readonly ?? this.hasAttribute('readonly')) || !!this.$.saving
-      || this.$.saveState === 'unknown' || !getDataState().connected;
+      || this.$.saveState === 'unknown' || (this.savesAutomatically && !getDataState().connected);
     this.set$({
       activeValue: value,
       saveState,
@@ -154,6 +161,7 @@ export class ThemeSelector extends UiComponent {
   async choose(value, event) {
     if (!event.isTrusted || feedbackSuppressed() || Reflect.get(event, 'agentInvoked') === true) { return; }
     this.commit(value);
+    if (!this.savesAutomatically) { return; }
     let target = this.saveTarget;
     if (!target) {
       this.$.saveState = 'invalidTarget';

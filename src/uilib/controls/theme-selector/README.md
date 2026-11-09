@@ -22,4 +22,6 @@ The day/night toggle saves trusted mouse and keyboard activations only. It stays
 
 `saveState` reports `idle`, `saving`, `committed`, `rejected`, `unknown`, or `invalidTarget`. The popover shows caller-owned status text, including failures. Unknown outcomes block further selection until reload reconciles saved data; saving is never automatically retried. A missing persistence declaration leaves the selection unsaved and reports `invalidTarget`.
 
-Initialization, incoming bindings, and `set_value` tools apply/publish drafts without saving. `set_value` accepts `{ value }`; `read_value` returns `{ value, saveState }`, excluding unrelated state. Viewer snapshots receive the selected palette without executing the selector. Rendered charts repaint when the palette changes.
+Set `auto-save="false"` or bind `$.autoSave` to a false-valued state property when the host owns preference storage. The selector then works without a session data connection, applies choices, and publishes through `pub-to` without committing AGUI data. The manager uses this mode with its own browser preference store, retaining choices across reloads and synchronizing tabs at the same manager URL. The host controls any persistence performed by its bindings.
+
+The selector itself never saves during initialization, incoming bindings, or `set_value` tools. `set_value` accepts `{ value }`; `read_value` returns `{ value, saveState }`, excluding unrelated state. Viewer snapshots receive the selected palette without executing the selector. Rendered charts repaint when the palette changes.

@@ -4,7 +4,8 @@ import { CONNECTION_LOST_MESSAGE, ManagerConnection } from './connection.js';
 import './controls.js';
 import { rowState } from './session-state.js';
 import { MANAGER_REFRESH_MS } from '../constants.js';
-import { getTheme, setTheme, watchTheme } from './theme.js';
+import { getTheme, setTheme, watchTheme, getPalette, setPalette, watchPalette } from './theme.js';
+import { themeSelectorTexts } from '../../page/client/page-text.js';
 import { BULK_OPTIONS } from './options.js';
 import { SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, CARD_TEXTS, DESCRIPTION_TEXTS, sessionRecords } from './view.js';
 import { formatDataFlow } from '../../metadata/format.js';
@@ -48,6 +49,8 @@ export class SessionManager extends ContextProvider {
     controlsDisabled: true,
     refreshDisabled: true,
     theme: getTheme(),
+    palette: getPalette(),
+    themeSelectorTexts,
     columns: SESSION_COLUMNS,
     filterFields: SESSION_FILTER_FIELDS,
     filterTexts: FILTER_TEXTS,
@@ -121,6 +124,8 @@ export class SessionManager extends ContextProvider {
   connection;
   /** @type {(() => void) | undefined} */
   stopThemeSync;
+  /** @type {(() => void) | undefined} */
+  stopPaletteSync;
 
   renderCallback() {
     this.liveConnections = new LiveConnections(this);
@@ -136,6 +141,8 @@ export class SessionManager extends ContextProvider {
     this.sub('projectChoice', () => this.projects?.render(), false);
     this.sub('theme', (theme) => setTheme(String(theme)));
     this.stopThemeSync = watchTheme((theme) => { this.$.theme = theme; });
+    this.sub('palette', (palette) => setPalette(String(palette)));
+    this.stopPaletteSync = watchPalette((palette) => { this.$.palette = palette; });
     for (let key of [
       'selection',
       'projectSelection',
@@ -382,6 +389,7 @@ export class SessionManager extends ContextProvider {
     this.disposed = true;
     this.viewEpoch += 1;
     this.stopThemeSync?.();
+    this.stopPaletteSync?.();
     clearInterval(this.interval);
     this.connection?.close();
   }

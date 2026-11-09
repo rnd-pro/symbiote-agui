@@ -24,6 +24,8 @@
             <agui-toolbar aria-label="Manager controls">
               <agui-select id="manager-project-switcher" aria-label="Current project" name="project" class="w-56 max-w-full"
                 pub-to="MANAGER/projectChoice" bind="onchange: MANAGER/switchProject; $.value: MANAGER/projectChoice; $.options: MANAGER/projectOptions; $.disabled: MANAGER/projectsDisabled; @title: MANAGER/projectPath"></agui-select>
+              <agui-theme-selector label="App theme" auto-save="false" pub-to="MANAGER/palette"
+                bind="$.value: MANAGER/palette; $.texts: MANAGER/themeSelectorTexts"></agui-theme-selector>
               <agui-theme-toggle id="manager-theme" ctx="MANAGER" aria-label="Dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
               <agui-button type="button" class="agui-button-icon" aria-label="Refresh" title="Refresh" bind="onclick: MANAGER/refresh; @disabled: MANAGER/refreshDisabled"><agui-icon name="refresh"></agui-icon></agui-button>
             </agui-toolbar>

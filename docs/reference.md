@@ -15,7 +15,7 @@ npx symbiote-agui manager restart
 npx symbiote-agui manager restart --no-open
 ```
 
-The built-in Symbiote page calls AGUI functions directly over its own authenticated WebSocket. It does not need an agent, MCP setup, or browser debugging. It lists running and saved sessions, descriptions, clients, process IDs, and current links. Search, status filters, individual controls, and scoped bulk actions use the shared UI library. The theme toggle selects light/dark; the initial theme follows your operating system when no preference is saved. Your choice is remembered across reloads and synchronized between tabs in the same browser at the manager URL.
+The built-in Symbiote page calls AGUI functions directly over its own authenticated WebSocket. It does not need an agent, MCP setup, or browser debugging. It lists running and saved sessions, descriptions, clients, process IDs, and current links. Search, status filters, individual controls, and scoped bulk actions use the shared UI library. The palette button selects Graphite, Ocean, Forest, or Desert; the adjacent theme toggle selects light/dark. The initial mode follows your operating system when no preference is saved. Palette and mode choices are remembered across reloads and synchronized between tabs in the same browser at the manager URL.
 
 Use the left sidebar for Sessions, Projects, Connections, and Settings. The header project selector switches the current folder immediately. Sessions contains filters, scoped actions, and Table/Cards views. Projects contains Connected projects, Explorer, and Transfers tabs. Connections inspects all projects, while Settings contains the save-folder configuration. Section changes retain filters, selected sessions, local tab choices, and settings drafts.
 

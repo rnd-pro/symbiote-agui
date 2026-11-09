@@ -255,6 +255,19 @@
     @apply text-sm text-agui-muted;
   }
   @media (prefers-reduced-motion: no-preference) {
+    @keyframes agui-details-reveal {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    @supports not ((interpolate-size: allow-keywords) and (transition-behavior: allow-discrete) and selector(details::details-content)) {
+      details[open] {
+        animation: agui-details-reveal calc(var(--agui-motion-fast) * 1.5) var(--agui-motion-ease);
+      }
+    }
     @supports (interpolate-size: allow-keywords) and (transition-behavior: allow-discrete) and selector(details::details-content) {
       details::details-content {
         interpolate-size: allow-keywords;

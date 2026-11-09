@@ -52,6 +52,7 @@ export function captureSnapshot(revision, anchors) {
     stylesheetUrl: stylesheet,
     rootStyles,
     theme: document.body.dataset.theme ?? 'system',
+    palette: document.body.dataset.palette ?? 'graphite',
     ...anchors.finish(copy),
   };
 }

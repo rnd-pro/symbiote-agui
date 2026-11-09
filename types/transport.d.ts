@@ -58,6 +58,7 @@ export interface MirrorSnapshot extends RenderUpdate {
   rootAnchor?: string;
   rootStyles?: string;
   theme?: string;
+  palette?: string;
 }
 
 export interface PageRoleMessage {

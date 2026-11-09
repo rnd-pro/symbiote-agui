@@ -47,6 +47,7 @@ export function watchChart(chart) {
         'class',
         'style',
         'data-theme',
+        'data-palette',
       ],
     });
   }

@@ -1,0 +1,53 @@
+@layer base {
+  :root,
+  body[data-palette='graphite'],
+  agui-theme-selector button[value='graphite'] .agui-theme-preview {
+    --agui-bg: light-dark(#f5f5f5, #111111);
+    --agui-surface: light-dark(#ffffff, #1c1c1c);
+    --agui-raised: light-dark(#e5e5e5, #303030);
+    --agui-text: light-dark(#171717, #f5f5f5);
+    --agui-muted: light-dark(#595959, #a3a3a3);
+    --agui-border: light-dark(#d4d4d4, #404040);
+    --agui-divider: light-dark(#e8e8e8, #2c2c2c);
+    --agui-border-hover: light-dark(#a3a3a3, #525252);
+    --agui-hover: light-dark(#ededed, #292929);
+    --agui-accent: #3e6afb;
+    --agui-accent-hover: #366bfc;
+    --agui-accent-soft: light-dark(#eff6ff, #172338);
+    --agui-on-accent: #ffffff;
+  }
+  :root:has(body[data-palette='ocean']),
+  body[data-palette='ocean'],
+  agui-theme-selector button[value='ocean'] .agui-theme-preview {
+    --agui-bg: light-dark(#f1f6fa, #0d1720);
+    --agui-surface: light-dark(#ffffff, #152330);
+    --agui-raised: light-dark(#e1ebf2, #23394a);
+    --agui-text: light-dark(#142e3d, #e9f2f8);
+    --agui-muted: light-dark(#526c7c, #9bb3c4);
+    --agui-border: light-dark(#c8d9e4, #344f62);
+    --agui-divider: light-dark(#e0eaf1, #263d4e);
+    --agui-border-hover: light-dark(#8eafc3, #56788f);
+    --agui-hover: light-dark(#e8f1f7, #203444);
+    --agui-accent: light-dark(#036d9c, #72c9f3);
+    --agui-accent-hover: light-dark(#035a82, #99dcfa);
+    --agui-accent-soft: light-dark(#e0f2fe, #17394d);
+    --agui-on-accent: light-dark(#ffffff, #0d2432);
+  }
+  :root:has(body[data-palette='forest']),
+  body[data-palette='forest'],
+  agui-theme-selector button[value='forest'] .agui-theme-preview {
+    --agui-bg: light-dark(#f4f7f2, #111a15);
+    --agui-surface: light-dark(#ffffff, #1b2920);
+    --agui-raised: light-dark(#e3ebdf, #2d4033);
+    --agui-text: light-dark(#213a29, #edf5e9);
+    --agui-muted: light-dark(#586e5c, #a6bba8);
+    --agui-border: light-dark(#cedac9, #3e5543);
+    --agui-divider: light-dark(#e4ecdf, #2d4032);
+    --agui-border-hover: light-dark(#98b096, #607e65);
+    --agui-hover: light-dark(#eaf0e5, #293b2e);
+    --agui-accent: light-dark(#326d35, #a6d58e);
+    --agui-accent-hover: light-dark(#285a2c, #bde5a8);
+    --agui-accent-soft: light-dark(#e6f2df, #2a4027);
+    --agui-on-accent: light-dark(#ffffff, #192b16);
+  }
+}

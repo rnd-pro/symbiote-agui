@@ -82,7 +82,10 @@ export class SharedView {
     if (this.observer || !root) { return; }
     this.observer = new MutationObserver(this.schedule);
     this.observer.observe(root, { subtree: true, attributes: true, childList: true, characterData: true });
-    this.observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
+    this.observer.observe(document.body, { attributes: true, attributeFilter: [
+      'data-theme',
+      'data-palette',
+    ] });
     root.addEventListener('input', this.schedule, true);
     root.addEventListener('change', this.schedule, true);
     root.addEventListener('toggle', this.schedule, true);
@@ -145,7 +148,9 @@ export class SharedView {
     if (!frame || !document || !root || !stylesheet || !rootStyles || !this.snapshot) { return; }
     let { html, stylesheetUrl } = this.snapshot;
     document.body.dataset.theme = this.snapshot.theme ?? 'system';
+    document.body.dataset.palette = this.snapshot.palette ?? 'graphite';
     frame.ownerDocument.body.dataset.theme = document.body.dataset.theme;
+    frame.ownerDocument.body.dataset.palette = document.body.dataset.palette;
     let fragment = document.createElement('template');
     fragment.innerHTML = html;
     fragment.content.querySelectorAll('agui-data-toolbar').forEach((element) => element.remove());

@@ -73,4 +73,24 @@ export let dataToolbarTexts = Object.freeze({
   ...Object.fromEntries(Object.entries(FEEDBACK_FAILURES).map(([code, message]) => [`feedback.${code}`, message])),
 });
 
-PubSub.registerCtx({ dataToolbar: { texts: dataToolbarTexts } }, PAGE_TEXT_CONTEXT);
+export let themeSelectorTexts = Object.freeze({
+  graphite: 'Graphite',
+  ocean: 'Ocean',
+  forest: 'Forest',
+  saving: 'Saving palette...',
+  committed: 'Palette saved',
+  rejected: 'Palette could not be saved. Reconcile saved data before selecting again.',
+  unknown: 'Saving is uncertain. Reload to reconcile the saved palette before selecting again.',
+  invalidTarget: 'Palette is not saved. Bind pub-to to a declared persisted property.',
+  invalidValue: 'Choose a supported theme palette.',
+  unavailable: 'This theme selector is disabled or read-only.',
+});
+
+PubSub.registerCtx({
+  dataToolbar: {
+    texts: dataToolbarTexts,
+  },
+  themeSelector: {
+    texts: themeSelectorTexts,
+  },
+}, PAGE_TEXT_CONTEXT);

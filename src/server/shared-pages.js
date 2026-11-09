@@ -3,6 +3,7 @@ import { ANNOTATION_LIMITS, PAGE_ROLE } from '../transport/constants.js';
 import { isAnnotationAnchor } from '../transport/annotations.js';
 import { STYLESHEET_PATH } from '../markup/constants.js';
 import { PageAnnotations } from './page-annotations.js';
+import { THEME_PALETTES } from '../uilib/controls/theme-selector/palettes.js';
 
 export class SharedPages {
   enabled = false;
@@ -81,6 +82,7 @@ export class SharedPages {
     if (typeof snapshot.html !== 'string' || !Number.isSafeInteger(snapshot.revision) ||
       (snapshot.rootStyles !== undefined && typeof snapshot.rootStyles !== 'string') ||
       (snapshot.theme !== undefined && !['system', 'light', 'dark'].includes(snapshot.theme)) ||
+      (snapshot.palette !== undefined && !THEME_PALETTES.includes(snapshot.palette)) ||
       ![STYLESHEET_PATH, `${STYLESHEET_PATH}?revision=${snapshot.revision}`].includes(snapshot.stylesheetUrl)) {
       throw new Error('Invalid live view.');
     }
@@ -99,6 +101,7 @@ export class SharedPages {
       stylesheetUrl: snapshot.stylesheetUrl,
       rootStyles: snapshot.rootStyles ?? '',
       theme: snapshot.theme ?? 'system',
+      palette: snapshot.palette ?? 'graphite',
       sequence: this.viewSequence,
       anchors: snapshot.anchors ?? [],
       rootAnchor: snapshot.rootAnchor,

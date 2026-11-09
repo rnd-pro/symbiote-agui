@@ -9,7 +9,7 @@
       bind="$.items: APP/sectionOptions; $.value: APP/activeSection"></agui-nav>
   </agui-sidebar>
   <agui-viewport aria-label="UI library examples">
-    <context-provider id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications tableRows"
+    <context-provider id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications tableRows palette"
       class="flex min-h-full min-w-0 flex-col">
       <script type="application/json">
         {
@@ -63,6 +63,7 @@
           ],
           "nameLabel": "Name",
           "theme": "system",
+          "palette": "graphite",
           "density": "comfortable",
           "preloaderVisible": true,
           "preloaderLabel": "Loading preview",
@@ -208,6 +209,8 @@
       <agui-header floating>
         <h1 class="flex items-center gap-2"><agui-icon bind="$.name: APP/sectionIcon; hidden: !APP/sectionIcon"></agui-icon>{{APP/sectionName}}</h1>
         <agui-toolbar aria-label="Gallery controls">
+          <agui-theme-selector label="App theme" pub-to="APP/palette"
+            bind="$.value: APP/palette; $: AGUI_TEXT/themeSelector"></agui-theme-selector>
           <agui-theme-toggle id="theme-toggle" ctx="APP" aria-label="Dark theme" light-label="Day"
             dark-label="Night"></agui-theme-toggle>
           <agui-button class="agui-button-icon" aria-label="About the gallery" title="About the gallery"
@@ -577,6 +580,7 @@
           <template>
             <agui-panel class="grid gap-4">
               <h2>Theme tokens</h2>
+              <p class="text-sm text-agui-muted">Choose Graphite, Ocean, or Forest with the palette button in the header. Each palette follows the day/night setting and is saved locally.</p>
               <div class="flex flex-wrap gap-2">
                 <span class="agui-chip">Neutral</span>
                 <span class="agui-chip" data-tone="info">Information</span>

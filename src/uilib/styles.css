@@ -2,6 +2,7 @@
 @import './shared/native-overlays.css';
 @import './shared/chips.css';
 @import './shared/scrollbars.css';
+@import './palettes.css';
 
 @utility agui-popover {
   background-color: var(--agui-popover-bg);
@@ -40,20 +41,7 @@
 
 @layer base {
   :root {
-    --agui-bg: light-dark(#f5f5f5, #111111);
     --agui-popover-bg: color-mix(in srgb, var(--agui-bg) 20%, transparent);
-    --agui-surface: light-dark(#ffffff, #1c1c1c);
-    --agui-raised: light-dark(#e5e5e5, #303030);
-    --agui-text: light-dark(#171717, #f5f5f5);
-    --agui-muted: light-dark(#595959, #a3a3a3);
-    --agui-border: light-dark(#d4d4d4, #404040);
-    --agui-divider: light-dark(#e8e8e8, #2c2c2c);
-    --agui-border-hover: light-dark(#a3a3a3, #525252);
-    --agui-hover: light-dark(#ededed, #292929);
-    --agui-accent: #3e6afb;
-    --agui-accent-hover: #366bfc;
-    --agui-accent-soft: light-dark(#eff6ff, #172338);
-    --agui-on-accent: #ffffff;
     --agui-danger: #e63232;
     --agui-danger-soft: light-dark(#fef2f2, #301c1c);
     --agui-success: #15803d;

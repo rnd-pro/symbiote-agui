@@ -10,6 +10,7 @@ import { MANAGER_PATH, MANAGER_SOCKET_PATH, MANAGER_PROTOCOL_VERSION } from './c
 import { createManagerStyles } from './styles.js';
 import { projectId, validProjectId } from '../projects/identity.js';
 import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../uilib/widgets/markdown/constants.js';
+import { DIAGRAM_RUNTIME_PATH } from '../uilib/widgets/diagram/constants.js';
 
 /**
  * @param {unknown} value
@@ -35,7 +36,11 @@ export async function startManagerServer(record, stop) {
   let assets = new URL('./page/', import.meta.url);
   let files = new Map([[MANAGER_PATH, new URL('index.html', assets)]]);
   files.set(`${MANAGER_PATH}page/theme.js`, new URL('theme.js', assets));
-  let markdownAssets = new Map([
+  let runtimeAssets = new Map([
+    [
+      DIAGRAM_RUNTIME_PATH,
+      new URL('../uilib/widgets/diagram/runtime/index.js', import.meta.url),
+    ],
     [
       MARKDOWN_RUNTIME_PATH,
       new URL('../uilib/widgets/markdown/runtime/index.js', import.meta.url),
@@ -46,7 +51,7 @@ export async function startManagerServer(record, stop) {
     ],
   ]);
   /** @type {Map<string, Promise<string>>} */
-  let markdownBundles = new Map();
+  let runtimeBundles = new Map();
   let server = createServer(async (request, response) => {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
@@ -80,15 +85,15 @@ export async function startManagerServer(record, stop) {
       response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }).end(client);
       return;
     }
-    let markdownAsset = markdownAssets.get(path);
-    if (markdownAsset) {
+    let runtimeAsset = runtimeAssets.get(path);
+    if (runtimeAsset) {
       try {
-        let bundle = markdownBundles.get(path) || jsBuild(fileURLToPath(markdownAsset));
-        markdownBundles.set(path, bundle);
+        let bundle = runtimeBundles.get(path) || jsBuild(fileURLToPath(runtimeAsset));
+        runtimeBundles.set(path, bundle);
         let script = await bundle;
         response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }).end(script);
       } catch {
-        markdownBundles.delete(path);
+        runtimeBundles.delete(path);
         response.writeHead(500).end();
       }
       return;

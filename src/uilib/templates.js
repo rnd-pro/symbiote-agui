@@ -16,6 +16,7 @@ import { FILTER_TEMPLATE, FILTER_FIELD_TEMPLATE } from './widgets/filter/templat
 import { CHART_TEMPLATE } from './widgets/chart/template.js';
 import { MAP_TEMPLATE } from './widgets/map/template.js';
 import { MARKDOWN_TEMPLATE } from './widgets/markdown/template.js';
+import { DIAGRAM_TEMPLATE } from './widgets/diagram/template.js';
 import { KANBAN_TEMPLATE, KANBAN_COLUMN_TEMPLATE, KANBAN_CARD_TEMPLATE } from './widgets/kanban/template.js';
 import { TABLE_TEMPLATE, TABLE_ROW_TEMPLATE, TABLE_HEADING_TEMPLATE, TABLE_CELL_TEMPLATE } from './widgets/table/template.js';
 import { LIST_TEMPLATE } from './widgets/list/template.js';
@@ -43,6 +44,7 @@ export let UILIB_TEMPLATES = Object.freeze({
   chart: CHART_TEMPLATE,
   map: MAP_TEMPLATE,
   markdown: MARKDOWN_TEMPLATE,
+  diagram: DIAGRAM_TEMPLATE,
   kanban: KANBAN_TEMPLATE,
   kanbanColumn: KANBAN_COLUMN_TEMPLATE,
   kanbanCard: KANBAN_CARD_TEMPLATE,

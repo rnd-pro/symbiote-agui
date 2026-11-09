@@ -88,6 +88,11 @@
           "monthlyRows": [{"id":"jan","month":"2026-01-01","actual":0,"target":1200},{"id":"feb","month":"2026-02-01","actual":1800,"target":1600},{"id":"mar","month":"2026-03-01","actual":null,"target":2000},{"id":"apr","month":"2026-04-01","actual":2600,"target":2400}],
           "monthlySeries": [{"key":"actual","valueKey":"actual","label":"Actual","color":"success","format":"currency","currency":"USD"},{"key":"target","valueKey":"target","label":"Target","color":"accent","format":"currency","currency":"USD"}],
           "monthlySelected": [],
+          "diagramView": "flow",
+          "flowSource": "flowchart LR\n  Draft --> Review{Approved?}\n  Review -->|Yes| Publish\n  Review -->|No| Draft",
+          "sequenceSource": "sequenceDiagram\n  participant User\n  participant App\n  participant Service\n  User->>App: Submit task\n  App->>Service: Validate\n  Service-->>App: Accepted\n  App-->>User: Confirmation",
+          "relationshipSource": "erDiagram\n  PROJECT ||--o{ TASK : contains\n  MEMBER ||--o{ TASK : owns",
+          "diagramTexts": {"source":"Diagram source","loading":"Loading diagram...","empty":"No diagram yet.","loadFailed":"The diagram library could not load. Reload to retry.","invalidValue":"The diagram source must be text.","invalidSource":"Check the diagram syntax.","unsupported":"This diagram type is not supported.","inputTooLarge":"The diagram source is too large.","outputTooLarge":"The rendered diagram is too large.","limitExceeded":"The diagram exceeds rendering limits.","renderFailed":"The diagram could not be rendered."},
           "markdownSource": "# Project briefing\n\nA document with **shared theme tokens**, *reactive data*, and [a reference link](https://example.com/docs).\n\n[Jump to checklist](#checklist)\n\n## Checklist\n\n- [x] Review requirements\n- [ ] Prepare proposal\n\n> These checkboxes describe the document. Use AGUI task controls for editable tasks.\n\n## Delivery\n\n1. Review the draft.\n2. Share the final proposal.\n\n| Milestone | Status | Owner |\n| --- | --- | --- |\n| Discovery | Complete | Example team |\n| Proposal | In progress | Example studio |\n\n## Highlighted code\n\n```js\nconst report = { status: 'ready', count: 2 };\n```\n\n```html\n<agui-field label=\"Example\"></agui-field>\n```\n\nLiteral template text stays literal: `{{APP/sharedName}}`.\n\n<details><summary>Native HTML disclosure</summary><p>HTML can extend a Markdown document directly.</p></details>\n\n<example-report>\n\n### Readable wrapper fallback\n\n```json\n{\"status\":\"ready\",\"count\":2}\n```\n\nThe structured data and this description remain visible when no component implementation is registered.\n\n</example-report>\n\n<agui-panel>\n\n### Registered panel\n\nThis native AGUI panel enhances the document without treating its text as RAT.\n\n</agui-panel>",
           "markdownUrl": "",
           "markdownSourceOptions": [
@@ -487,6 +492,24 @@
                     bind="$.rows: APP/mapRows; $.columns: APP/mapColumns; $.value: APP/mapSelection; $.texts: APP/mapTexts"></agui-table>
                 </agui-panel>
               </agui-tab>
+              <agui-tab value="diagrams" label="Diagrams">
+                <agui-panel class="grid gap-4">
+                  <agui-tabs label="Diagram types" pub-to="APP/diagramView" bind="$.value: APP/diagramView">
+                    <agui-tab value="flow" label="Flowchart">
+                      <agui-diagram label="Publishing workflow" description="A decision with a revision loop."
+                        bind="$.value: APP/flowSource; $.texts: APP/diagramTexts"></agui-diagram>
+                    </agui-tab>
+                    <agui-tab value="sequence" label="Sequence">
+                      <agui-diagram label="Task submission" description="Messages between a user, an app, and a service."
+                        bind="$.value: APP/sequenceSource; $.texts: APP/diagramTexts"></agui-diagram>
+                    </agui-tab>
+                    <agui-tab value="relationships" label="Relationships">
+                      <agui-diagram label="Project relationships" description="Projects contain tasks; members own them."
+                        bind="$.value: APP/relationshipSource; $.texts: APP/diagramTexts"></agui-diagram>
+                    </agui-tab>
+                  </agui-tabs>
+                </agui-panel>
+              </agui-tab>
               <agui-tab value="markdown" label="Markdown">
                 <agui-panel class="grid gap-4">
                   <h2>Markdown</h2>
@@ -680,6 +703,8 @@
       </agui-conditional>
       <agui-conditional when="APP/activeSection" is="widgets">
         <template>
+          <agui-conditional when="APP/widgetView" is="diagrams" behavior="hide">
+            <template>
           <agui-conditional when="APP/widgetView" is="map" behavior="hide">
             <template>
               <agui-conditional when="APP/widgetView" is="markdown" behavior="hide">
@@ -707,10 +732,34 @@
               </agui-conditional>
             </template>
           </agui-conditional>
+            </template>
+          </agui-conditional>
         </template>
       </agui-conditional>
       <agui-conditional when="APP/activeSection" is="widgets">
         <template>
+          <agui-conditional when="APP/widgetView" is="diagrams">
+            <template>
+              <agui-conditional when="APP/diagramView" is="flow">
+                <template>
+                  <agui-field type="textarea" rows="10" data-code label="Flowchart source" pub-to="APP/flowSource"
+                    bind="$.value: APP/flowSource"></agui-field>
+                </template>
+              </agui-conditional>
+              <agui-conditional when="APP/diagramView" is="sequence">
+                <template>
+                  <agui-field type="textarea" rows="10" data-code label="Sequence source" pub-to="APP/sequenceSource"
+                    bind="$.value: APP/sequenceSource"></agui-field>
+                </template>
+              </agui-conditional>
+              <agui-conditional when="APP/diagramView" is="relationships">
+                <template>
+                  <agui-field type="textarea" rows="10" data-code label="Relationship source" pub-to="APP/relationshipSource"
+                    bind="$.value: APP/relationshipSource"></agui-field>
+                </template>
+              </agui-conditional>
+            </template>
+          </agui-conditional>
           <agui-conditional when="APP/widgetView" is="markdown">
             <template>
           <div class="grid gap-4">

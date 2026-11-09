@@ -5,6 +5,7 @@ import { STYLESHEET_PATH, CLIENT_SCRIPT_PATH } from '../markup/constants.js';
 import { CHART_RUNTIME_PATH } from '../uilib/widgets/chart/constants.js';
 import { MAP_RUNTIME_PATH, MAP_CSS_PATH, MAP_ASSET_PREFIX } from '../uilib/widgets/map/constants.js';
 import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../uilib/widgets/markdown/constants.js';
+import { DIAGRAM_RUNTIME_PATH } from '../uilib/widgets/diagram/constants.js';
 import { serveMapAsset } from './map-assets.js';
 import { TUNNEL_HEALTH_PATH } from '../tunnel/constants.js';
 import { AssetProxy } from '../proxy/asset-proxy.js';
@@ -83,6 +84,7 @@ export async function startPageServer(access, getProxyPolicy = emptyProxyPolicy,
       MAP_RUNTIME_PATH,
       MARKDOWN_RUNTIME_PATH,
       MARKDOWN_SANITIZER_PATH,
+      DIAGRAM_RUNTIME_PATH,
     ].includes(pathname || '')) {
       response.writeHead(404).end();
       return;

@@ -20,6 +20,10 @@
           "controlView": "fields",
           "widgetView": "table",
           "feedbackView": "states",
+          "processStage": "review",
+          "processComplete": false,
+          "processStages": [{"value":"prepare","label":"Prepare"},{"value":"review","label":"Review"},{"value":"approve","label":"Approve"},{"value":"publish","label":"Publish"}],
+          "stepTexts": {"current":"Current step","completed":"Completed","pending":"Not reached","invalidItems":"Steps need unique values and text labels.","invalidValue":"Choose an existing stage."},
           "sectionOptions": [
             {
               "value": "layouts",
@@ -526,6 +530,12 @@
         <agui-conditional when="APP/activeSection" is="feedback">
           <template>
             <agui-tabs label="Feedback examples" pub-to="APP/feedbackView" bind="$.value: APP/feedbackView">
+              <agui-tab value="stages" label="Stages">
+                <agui-panel>
+                  <agui-steps label="Publishing progress"
+                    bind="$.items: APP/processStages; $.value: APP/processStage; $.complete: APP/processComplete; $.texts: APP/stepTexts"></agui-steps>
+                </agui-panel>
+              </agui-tab>
               <agui-tab value="states" label="States">
                 <agui-panel class="grid gap-4">
                 <h2>Content states</h2>
@@ -699,6 +709,20 @@
             <agui-select id="status-control" label="Status" placeholder="All statuses" name="status"
               bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
           </section>
+        </template>
+      </agui-conditional>
+      <agui-conditional when="APP/activeSection" is="feedback">
+        <template>
+          <agui-conditional when="APP/feedbackView" is="stages">
+            <template>
+              <div class="grid gap-4">
+                <agui-select label="Current stage" pub-to="APP/processStage"
+                  bind="$.options: APP/processStages; $.value: APP/processStage; $.disabled: APP/processComplete"></agui-select>
+                <agui-toggle label="All steps completed" pub-to="APP/processComplete"
+                  bind="$.value: APP/processComplete"></agui-toggle>
+              </div>
+            </template>
+          </agui-conditional>
         </template>
       </agui-conditional>
       <agui-conditional when="APP/activeSection" is="widgets">

@@ -12,8 +12,9 @@ import { ManagerOperations, validateManagerRequest } from '../../src/manager/ope
 import { withStorageFolder } from '../../src/config/storage-scope.js';
 import { ensureSessionStarted } from '../../src/sessions/start.js';
 import { stopSession } from '../../src/sessions/lifecycle.js';
+import { shareSession } from '../../src/sessions/share.js';
 import { readSession, reserveSession, writeSession, releaseSession } from '../../src/sessions/store.js';
-import { requestSession } from '../../src/sessions/client.js';
+import { CONTROL_TIMEOUT_MS } from '../../src/sessions/constants.js';
 import { PAGE_DISCONNECT_CODE } from '../../src/transport/constants.js';
 import { startControlServer } from '../../src/server/control-server.js';
 import { closeServer } from '../../src/shared/server.js';
@@ -154,7 +155,10 @@ test('public opening checks and renews once, keeps role-free URLs, and tunnel st
   let started = await ensureSessionStarted('desk', false);
   let record = await readSession('desk');
   assert.ok(record && started.url);
-  await requestSession(record, 'share');
+  // Tunnel registration can outlast an ordinary control request even on a healthy worker.
+  await fixture.setConnectionDelay(CONTROL_TIMEOUT_MS + 100);
+  await shareSession('desk');
+  await fixture.setConnectionDelay(0);
   let manager = new ManagerOperations();
   let pid = record.pid;
   let publicOptions = {
@@ -195,7 +199,7 @@ test('public opening checks and renews once, keeps role-free URLs, and tunnel st
   assert.equal(stopped.sessions?.[0].publicUrl, undefined);
   assert.equal(user.readyState, WebSocket.OPEN);
   assert.equal((await dispatch(manager, 'open public', publicOptions)).ok, false, 'Opening does not undo an intentional tunnel stop.');
-  await requestSession(record, 'share');
+  await shareSession('desk');
   await fixture.setOrigin('https://failed-open.trycloudflare.com');
   await fixture.setMode('fail');
   let failed = await dispatch(manager, 'open public', publicOptions);

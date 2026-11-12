@@ -14,6 +14,7 @@ export async function tunnelFixture(directory, origin = 'https://agui-test.trycl
   let hostname = join(directory, 'tunnel-origin');
   let readyAge = join(directory, 'tunnel-ready-age');
   let readyAfter = join(directory, 'tunnel-ready-after');
+  let connectionDelay = join(directory, 'tunnel-connection-delay');
   let fetchMock = join(directory, 'tunnel-fetch.mjs');
   let pids = join(directory, 'tunnel-pids');
   let executable = join(directory, 'fake-cloudflared');
@@ -22,6 +23,7 @@ export async function tunnelFixture(directory, origin = 'https://agui-test.trycl
   await writeFile(hostname, origin);
   await writeFile(readyAge, '0');
   await writeFile(readyAfter, '0');
+  await writeFile(connectionDelay, '0');
   await writeFile(fetchMock, `
 import { readFileSync } from 'node:fs';
 let original = globalThis.fetch;
@@ -69,7 +71,7 @@ if (mode === 'fail') {
   process.exit(2);
 }
 console.error(readFileSync(${JSON.stringify(hostname)}, 'utf8'));
-if (mode === 'ready') console.error('Registered tunnel connection');
+if (mode === 'ready') setTimeout(() => console.error('Registered tunnel connection'), Number(readFileSync(${JSON.stringify(connectionDelay)}, 'utf8')));
 if (mode === 'slow-ready') setTimeout(() => console.error('Registered tunnel connection'), 150);
 setInterval(() => {}, 1000);
 process.on('SIGTERM', () => process.exit(0));
@@ -82,6 +84,7 @@ process.on('SIGTERM', () => process.exit(0));
     setActivity: (/** @type {string} */ value) => writeFile(activity, value),
     setOrigin: (/** @type {string} */ value) => writeFile(hostname, value),
     setReadyAge: (/** @type {number} */ value) => writeFile(readyAge, String(value)),
+    setConnectionDelay: (/** @type {number} */ milliseconds) => writeFile(connectionDelay, String(milliseconds)),
     delayActivity: (/** @type {number} */ milliseconds) => writeFile(readyAfter, String(Date.now() + milliseconds)),
     async pids() {
       return (await readFile(pids, 'utf8')).trim().split('\n').map(Number);

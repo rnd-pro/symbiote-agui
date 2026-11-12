@@ -1,6 +1,6 @@
 {
   "name": "symbiote-agui",
-  "version": "0.17.3",
+  "version": "0.17.4",
   "description": "Local interactive interfaces for AI agents, built with Symbiote.js.",
   "homepage": "https://rnd-pro.com/agui/",
   "license": "MIT",

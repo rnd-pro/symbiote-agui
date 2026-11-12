@@ -17,7 +17,7 @@ export default css`
     .agui-table-scroll {
       min-inline-size: 0;
       max-inline-size: 100%;
-      max-block-size: var(--agui-table-height, 32rem);
+      max-block-size: var(--agui-table-height, 100dvh);
       overflow: auto;
       border: 1px solid var(--agui-divider);
       border-radius: var(--agui-radius-inset);

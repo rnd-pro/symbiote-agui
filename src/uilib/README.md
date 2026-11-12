@@ -6,6 +6,8 @@ Group components by purpose: `layouts/` for dashboard, panel, header, and toolba
 
 Call `registerUiLibComponents()` from `index.js` before the page connects. Register the page's context provider first. JSDA bundles this entry into the normal page client, with one Symbiote instance and no per-session imports.
 
+Use [`agui-sidebar-block`](./layouts/sidebar-block/README.md) to label and group related sidebar controls. Bind its boolean `active` state to applicability; inactive groups keep only a faded label visible while preserving mounted drafts.
+
 Use `agui-conditional` for declarative boolean/string conditions on native context keys. `behavior` sets the matching state: `show` (default), `hide`, `dom-add`, or `dom-remove`; nonmatches apply the opposite state. Show/hide preserve mounted content, while DOM behaviors use Itemize. See the [conditional contract](./layouts/conditional/README.md).
 
 Mark code-entry fields with `data-code` on `agui-field type="textarea"` or a native `textarea` to use the shared monospace font for the editable content.

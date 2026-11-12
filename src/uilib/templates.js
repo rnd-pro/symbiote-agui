@@ -10,6 +10,7 @@ import { STEPS_TEMPLATE } from './feedback/steps/template.js';
 import { DATA_TOOLBAR_TEMPLATE } from './controls/data-toolbar/template.js';
 import { ICON_TEMPLATE } from './content/icon/template.js';
 import { SIDEBAR_TEMPLATE } from './layouts/sidebar/template.js';
+import { SIDEBAR_BLOCK_TEMPLATE } from './layouts/sidebar-block/template.js';
 import { TABS_TEMPLATE, TAB_BUTTON_TEMPLATE } from './controls/tabs/template.js';
 import { CONDITIONAL_TEMPLATE } from './layouts/conditional/template.js';
 import { DIALOG_TEMPLATE } from './feedback/dialog/template.js';
@@ -39,6 +40,7 @@ export let UILIB_TEMPLATES = Object.freeze({
   dataToolbar: DATA_TOOLBAR_TEMPLATE,
   icon: ICON_TEMPLATE,
   sidebar: SIDEBAR_TEMPLATE,
+  sidebarBlock: SIDEBAR_BLOCK_TEMPLATE,
   tabs: TABS_TEMPLATE,
   tabButton: TAB_BUTTON_TEMPLATE,
   conditional: CONDITIONAL_TEMPLATE,

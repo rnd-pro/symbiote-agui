@@ -17,6 +17,10 @@
           "sectionName": "Controls",
           "sectionIcon": "settings",
           "layoutView": "templates",
+          "sidebarBlockActive": false,
+          "sidebarBlockNote": "Draft note",
+          "sidebarBlockUpdates": false,
+          "sidebarBlockFollowUp": "",
           "controlView": "fields",
           "widgetView": "table",
           "feedbackView": "states",
@@ -230,6 +234,12 @@
         <agui-conditional when="APP/activeSection" is="layouts">
           <template>
             <agui-tabs label="Layout examples" pub-to="APP/layoutView" bind="$.value: APP/layoutView">
+              <agui-tab value="sidebar-blocks" label="Sidebar blocks">
+                <agui-panel>
+                  <agui-toggle label="Activate item controls" pub-to="APP/sidebarBlockActive"
+                    bind="$.value: APP/sidebarBlockActive"></agui-toggle>
+                </agui-panel>
+              </agui-tab>
               <agui-tab value="templates" label="Templates">
                 <section class="grid gap-4" aria-label="Reusable feature templates">
                   <h2>Reusable features with use-template</h2>
@@ -700,7 +710,29 @@
   </agui-viewport>
   <agui-sidebar collapse-empty class="[--agui-sidebar-width:24rem]" side="end" label="Example controls" expand-label="Expand example controls"
     collapse-label="Collapse example controls">
-    <div class="grid gap-6">
+    <div class="grid gap-2">
+      <agui-conditional when="APP/activeSection" is="layouts"><template>
+        <agui-conditional when="APP/layoutView" is="sidebar-blocks"><template>
+          <agui-sidebar-block label="Filters">
+            <agui-field label="Search" type="search" pub-to="APP/query" bind="$.value: APP/query"></agui-field>
+          </agui-sidebar-block>
+          <agui-sidebar-block label="Item controls" bind="$.active: APP/sidebarBlockActive">
+            <agui-field label="Note" pub-to="APP/sidebarBlockNote" bind="$.value: APP/sidebarBlockNote"></agui-field>
+            <agui-button set="APP/sidebarBlockActive" value="false">Deactivate</agui-button>
+          </agui-sidebar-block>
+          <agui-sidebar-block label="Preferences">
+            <agui-field type="checkbox" label="Receive updates" pub-to="APP/sidebarBlockUpdates"
+              bind="$.value: APP/sidebarBlockUpdates"></agui-field>
+          </agui-sidebar-block>
+          <agui-sidebar-block label="Follow-up">
+            <agui-field type="date" label="Next review" pub-to="APP/sidebarBlockFollowUp"
+              bind="$.value: APP/sidebarBlockFollowUp"></agui-field>
+          </agui-sidebar-block>
+          <agui-sidebar-block label="Attachments" active="false">
+            <agui-field type="url" label="Reference URL"></agui-field>
+          </agui-sidebar-block>
+        </template></agui-conditional>
+      </template></agui-conditional>
       <agui-conditional when="APP/activeSection" is="controls">
         <template>
           <section class="grid gap-4" aria-label="Binding inputs">

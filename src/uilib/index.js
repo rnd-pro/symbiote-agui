@@ -1,6 +1,7 @@
 import { Dashboard } from './layouts/dashboard/dashboard.js';
 import { App } from './layouts/app/app.js';
 import { Sidebar } from './layouts/sidebar/sidebar.js';
+import { SidebarBlock } from './layouts/sidebar-block/sidebar-block.js';
 import { Viewport } from './layouts/viewport/viewport.js';
 import { Tabs } from './controls/tabs/tabs.js';
 import { Tab } from './controls/tabs/tab.js';
@@ -55,6 +56,7 @@ export function registerUiLibComponents() {
   Tabs.reg('agui-tabs');
   Dashboard.reg('agui-dashboard');
   Panel.reg('agui-panel');
+  SidebarBlock.reg('agui-sidebar-block');
   Header.reg('agui-header');
   Footer.reg('agui-footer');
   Toolbar.reg('agui-toolbar');

@@ -173,6 +173,8 @@ test('packaged records example reads and saves verified data without executable 
   let started = await cli('start', 'records', '--no-open');
   let page = await browser.newPage();
   page.setDefaultTimeout(8000);
+  // Initial page rendering gets a separate budget from control interactions.
+  page.setDefaultNavigationTimeout(30_000);
   /** @type {string[]} */
   let errors = [];
   page.on('pageerror', (error) => errors.push(String(error)));

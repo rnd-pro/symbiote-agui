@@ -100,7 +100,9 @@ for (let native of [false, true]) {
     browser = await puppeteer.launch({
       executablePath,
       headless: true,
-      args: [native ? '--enable-blink-features=WebMCPTesting' : '--disable-blink-features=WebMCP,WebMCPTesting'],
+      args: [
+        native ? '--enable-blink-features=WebMCP' : '--disable-blink-features=WebMCP,WebMCPTesting',
+      ],
       timeout: 10_000,
       protocolTimeout: 10_000,
     });

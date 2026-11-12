@@ -22,7 +22,7 @@ test('native map tools stay registered through zoom and expose current viewport 
     executablePath,
     headless: true,
     args: [
-      '--enable-blink-features=WebMCPTesting',
+      '--enable-blink-features=WebMCP',
     ],
   });
   let page = await browser.newPage();

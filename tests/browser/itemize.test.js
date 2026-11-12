@@ -26,7 +26,9 @@ for (let native of [false, true]) {
     browser = await puppeteer.launch({
       executablePath,
       headless: true,
-      args: [native ? '--enable-blink-features=WebMCPTesting' : '--disable-blink-features=WebMCP,WebMCPTesting'],
+      args: [
+        native ? '--enable-blink-features=WebMCP' : '--disable-blink-features=WebMCP,WebMCPTesting',
+      ],
     });
     let session = await cli('start', sessionId, '--no-open');
     let page = await browser.newPage();

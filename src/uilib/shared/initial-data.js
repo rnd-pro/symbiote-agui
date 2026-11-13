@@ -11,6 +11,22 @@ export function isPlainStateKey(key) {
 }
 
 /**
+ * @param {unknown} value
+ * @returns {import('../../../types/components.js').ComponentState}
+ */
+export function providerState(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)
+    || ![
+      Object.prototype,
+      null,
+    ].includes(Object.getPrototypeOf(value))
+    || Object.keys(value).some((key) => !isPlainStateKey(key))) {
+    throw new Error('Provider state must be a plain object with local state keys.');
+  }
+  return /** @type {import('../../../types/components.js').ComponentState} */ (value);
+}
+
+/**
  * @param {Element} element
  * @returns {import('../../../types/components.js').ComponentState}
  */

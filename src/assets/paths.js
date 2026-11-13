@@ -29,7 +29,7 @@ export function decodeAssetPath(raw) {
 /** @param {string} path */
 export function assetContentType(path) {
   let type = ASSET_TYPES[extname(path).toLowerCase()];
-  if (!type) { throw new CommandError('Unsupported asset type. Use an image, font, CSS, browser module, JSON, Markdown, or text file.'); }
+  if (!type) { throw new CommandError('Unsupported asset type. Use an image, font, CSS, browser module, JSON, Markdown, HTML fragment, or text file.'); }
   return type;
 }
 

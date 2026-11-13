@@ -24,6 +24,7 @@ import { Preloader } from './feedback/preloader/preloader.js';
 import { Steps } from './feedback/steps/steps.js';
 import { DataToolbar } from './controls/data-toolbar/data-toolbar.js';
 import { Icon } from './content/icon/icon.js';
+import { HtmlImport } from './content/import/import.js';
 import { Dialog } from './feedback/dialog/dialog.js';
 import { Chart } from './widgets/chart/chart.js';
 import { ChartDataTable } from './widgets/chart/data-table.js';
@@ -76,6 +77,7 @@ export function registerUiLibComponents() {
   Message.reg('agui-message');
   DataToolbar.reg('agui-data-toolbar');
   Icon.reg('agui-icon');
+  HtmlImport.reg('agui-import');
   TableCell.reg('agui-table-cell');
   TableRow.reg('agui-table-row');
   TableHeading.reg('agui-table-heading');

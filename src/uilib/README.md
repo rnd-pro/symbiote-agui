@@ -6,7 +6,11 @@ Group components by purpose: `layouts/` for dashboard, panel, header, and toolba
 
 Call `registerUiLibComponents()` from `index.js` before the page connects. Register the page's context provider first. JSDA bundles this entry into the normal page client, with one Symbiote instance and no per-session imports.
 
+`context-provider src="./_assets/data.json"` loads external object data with native bindings, cancellation, and reactive loading/error outputs. Bound `state` and inline values take precedence over fetched defaults. See [provider data sources](./context-provider.md) for precedence, editing, and persistence.
+
 Use [`agui-sidebar-block`](./layouts/sidebar-block/README.md) to label and group related sidebar controls. Bind its boolean `active` state to applicability; inactive groups keep only a faded label visible while preserving mounted drafts.
+
+Use [`agui-import`](./content/import/README.md) to compose trusted HTML fragments from a `src` URL. Imported children support native bindings and registered components; source changes replace the chunk and cancel stale requests. Keep persisted provider declarations in the main saved definition.
 
 Use `agui-conditional` for declarative boolean/string conditions on native context keys. `behavior` sets the matching state: `show` (default), `hide`, `dom-add`, or `dom-remove`; nonmatches apply the opposite state. Show/hide preserve mounted content, while DOM behaviors use Itemize. See the [conditional contract](./layouts/conditional/README.md).
 
@@ -94,6 +98,6 @@ Use [`agui-connector`](./controls/connector/README.md) for headless, explicit lo
 
 Use the self-contained catalogue and examples in `skills/agui/SKILL.md` for authoring. The packaged `src/uilib/gallery.html` is the HTML-only manual review fixture. Its sidebar selector owns global navigation, viewport tabs switch related data views, and sidebar filters and Markdown inputs stay beside the scrolling content. The end sidebar contains brief shared-contact identification and actions; notes and editing open in dialogs. Sidebars use their responsive defaults, and the header stays sticky inside the viewport.
 
-Publish the files from `gallery.assets/` alongside the gallery definition before opening its Design tokens section. `agui.png` is an unmodified copy of the original project image used in the root README; `documents/brief.md` demonstrates relative media. Use `assets add` for each file, preserving its path below `gallery.assets/`, or copy the directory to `<ID>.assets/` in a project library. See [local assets](../../docs/assets.md) for publication and sharing rules.
+Publish the files from `gallery.assets/` alongside the gallery definition before opening its Assets section. `agui.png` is an unmodified copy of the original project image used in the root README; `documents/brief.md` demonstrates relative media, and `documents/panel.html` demonstrates a reusable HTML fragment. Use `assets add` for each file, preserving its path below `gallery.assets/`, or copy the directory to `<ID>.assets/` in a project library. See [local assets](../../docs/assets.md) for publication and sharing rules.
 
 Use grayscale surfaces with color reserved for accents and alerts. Inputs are recessed, default buttons use a solid contrasting fill, and panels have a soft border and shadow. Text inputs, selects, and buttons share `--agui-control-height` for height and minimum width. Checkbox/radio inputs occupy that same height around their smaller native indicators, including without a wrapping label. Toggle labels provide the shared control height around tracks sized by `--agui-toggle-height`. Textareas retain multiline sizing. Compact density reduces spacing without shrinking control targets.

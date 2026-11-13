@@ -25,6 +25,8 @@
           "widgetView": "table",
           "feedbackView": "states",
           "processStage": "review",
+          "importStage": "edit",
+          "importNote": "",
           "processComplete": false,
           "processStages": [{"value":"prepare","label":"Prepare"},{"value":"review","label":"Review"},{"value":"approve","label":"Approve"},{"value":"publish","label":"Publish"}],
           "stepTexts": {"current":"Current step","completed":"Completed","pending":"Not reached","invalidItems":"Steps need unique values and text labels.","invalidValue":"Choose an existing stage."},
@@ -664,6 +666,14 @@
               </figure>
               <agui-markdown id="gallery-local-document" src="./_assets/documents/brief.md"
                 label="Local asset guide" bind="$.texts: APP/markdownTexts"></agui-markdown>
+              <agui-import src="./_assets/documents/panel.html"></agui-import>
+              <agui-panel class="grid gap-3">
+                <h3>Outside the imported fragment</h3>
+                <dl class="grid gap-3">
+                  <div><dt class="text-xs text-agui-muted">Published stage</dt><dd>{{APP/importStage}}</dd></div>
+                  <div><dt class="text-xs text-agui-muted">Published note</dt><dd>{{APP/importNote}}</dd></div>
+                </dl>
+              </agui-panel>
             </agui-panel>
           </template>
         </agui-conditional>

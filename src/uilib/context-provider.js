@@ -1,7 +1,8 @@
 import { AguiComponent } from './component.js';
 import { initializeContext, releaseContext } from './contexts.js';
 import { DICT, css } from '@symbiotejs/symbiote';
-import { isPlainStateKey, readInitialData } from './shared/initial-data.js';
+import { providerState, readInitialData } from './shared/initial-data.js';
+import { CONTEXT_SOURCE_DEFAULTS, ContextSource } from './context-source.js';
 
 export class ContextProvider extends AguiComponent {
   processInnerHtml = true;
@@ -15,6 +16,11 @@ export class ContextProvider extends AguiComponent {
   /** @type {Set<string>} */
   stateKeys = new Set();
   applyingState = false;
+  sourceLoader = new ContextSource(this);
+  /** @type {import('../../types/components.js').ComponentState} */
+  init$ = {
+    ...CONTEXT_SOURCE_DEFAULTS,
+  };
 
   /**
    * @param {string | DocumentFragment} [template]
@@ -28,15 +34,19 @@ export class ContextProvider extends AguiComponent {
     super.render(template, shadow);
   }
 
-  /** @param {unknown} value */
-  applyState(value) {
-    if (value === undefined) { return; }
-    if (!value || typeof value !== 'object' || Array.isArray(value)
-      || ![Object.prototype, null].includes(Object.getPrototypeOf(value))
-      || Object.keys(value).some((key) => !isPlainStateKey(key))) {
-      throw new Error('Provider state must be a plain object with local state keys.');
+  /**
+   * @param {unknown} value
+   * @param {boolean} [fromSource]
+   */
+  applyState(value, fromSource = false) {
+    if (value === undefined) {
+      if (!fromSource) { this.sourceLoader.setBound(false); }
+      return;
     }
-    let next = { ...value };
+    let next = {
+      ...providerState(value),
+    };
+    if (!fromSource) { this.sourceLoader.setBound(true); }
     this.applyingState = true;
     try {
       let previous = this.boundState;
@@ -74,10 +84,21 @@ export class ContextProvider extends AguiComponent {
 
   connectedCallback() {
     let initialize = !this.connectedOnce;
+    if (initialize) {
+      this.init$ = {
+        ...CONTEXT_SOURCE_DEFAULTS,
+        ...this.init$,
+      };
+    }
+    let initial = initialize ? readInitialData(this) : {};
+    if (initialize) { this.sourceLoader.inlineKeys = Object.keys(initial); }
     let name = this.getAttribute(DICT.CTX_NAME_ATTR)?.trim();
     if (initialize && name) {
       this.providedName = name;
-      this.providedContext = initializeContext(name, { ...this.init$, ...readInitialData(this) });
+      this.providedContext = initializeContext(name, {
+        ...this.init$,
+        ...initial,
+      });
     }
     super.connectedCallback();
 
@@ -86,6 +107,11 @@ export class ContextProvider extends AguiComponent {
         this.mirrorProperty(key);
       }
     }
+    this.sourceLoader.schedule();
+  }
+
+  renderCallback() {
+    this.sourceLoader.connect();
   }
 
   /** @param {string} key */
@@ -124,6 +150,7 @@ export class ContextProvider extends AguiComponent {
   }
 
   disconnectedCallback() {
+    this.sourceLoader.cancel();
     super.disconnectedCallback();
     queueMicrotask(() => {
       if (!this.isConnected && this.providedContext) {
@@ -133,4 +160,7 @@ export class ContextProvider extends AguiComponent {
   }
 }
 
+ContextProvider.bindAttributes({
+  src: 'attribute-src',
+});
 ContextProvider.rootStyles = css`@layer components { context-provider { display: contents; } }`;

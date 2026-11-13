@@ -93,6 +93,7 @@ test('Markdown loads on demand, sanitizes with native/fallback paths, bounds out
     '<unknown-markdown-wrapper>\n\n### Unknown wrapper fallback\n\nReadable **content**.\n\n</unknown-markdown-wrapper>',
     '<agui-panel>\n\nLiteral {{DOCS/secret}}\n\n</agui-panel>',
     '<agui-icon name="info" aria-label="Information"></agui-icon>',
+    '<agui-import src="https://example.test/unsafe.html">Import fallback</agui-import>',
     '<details open><summary>More</summary><p>HTML disclosure</p></details>',
     '<picture><source srcset="https://example.test/one.png 1x, https://example.test/two.png 2x"><img src="https://example.test/fallback.png" alt="Responsive diagram" onerror="window.markdownAttack=true"></picture>',
     '<span onclick="window.markdownAttack = true">raw HTML</span>',
@@ -116,6 +117,7 @@ test('Markdown loads on demand, sanitizes with native/fallback paths, bounds out
   await sanitizerRequests[0].continue();
   await page.waitForFunction(() => document.querySelector('#first-document article')?.textContent?.includes('Latest revision'));
   assert.equal(await page.$('#first-document article script, #first-document article [onclick], #first-document article [onerror], #first-document x-markdown-probe[bind], #first-document article agui-toggle'), null);
+  assert.equal(await page.$('#first-document agui-import'), null);
   assert.ok(await page.$('#first-document details[open] summary'));
   assert.ok(await page.$('#first-document picture source[srcset]'));
   assert.equal(await page.$eval('#first-document x-markdown-probe', (element) => element.getAttribute('data-config-label')), 'Prepared config');

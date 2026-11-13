@@ -1,3 +1,9 @@
+export let MARKDOWN_INERT_WRAPPERS = Object.freeze([
+  'agui-markdown',
+  'agui-import',
+  'context-provider',
+]);
+
 export let MARKDOWN_ELEMENTS = Object.freeze([
   'h1',
   'h2',
@@ -106,10 +112,7 @@ export function markdownPolicy(html, extensions = true) {
   let attributes = new Set(MARKDOWN_SAFE_ATTRIBUTES);
   for (let element of template.content.querySelectorAll('*')) {
     let name = element.localName;
-    if (!/^[a-z][\w.-]*-[\w.-]+$/.test(name) || [
-      'agui-markdown',
-      'context-provider',
-    ].includes(name)) { continue; }
+    if (!/^[a-z][\w.-]*-[\w.-]+$/.test(name) || MARKDOWN_INERT_WRAPPERS.includes(name)) { continue; }
     if (!extensions) { unwrappedTags.add(name); continue; }
     customTags.add(name);
     let component = customElements.get(name);

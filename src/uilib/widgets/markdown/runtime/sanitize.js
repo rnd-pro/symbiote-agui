@@ -1,5 +1,5 @@
 import { MARKDOWN_SANITIZER_PATH, MARKDOWN_LIMITS } from '../constants.js';
-import { markdownPolicy, linkDestination, resourceDestination, resourceSourceSet } from './policy.js';
+import { MARKDOWN_INERT_WRAPPERS, markdownPolicy, linkDestination, resourceDestination, resourceSourceSet } from './policy.js';
 
 /** @type {Promise<typeof import('../sanitizer/index.js')> | undefined} */
 let pending;
@@ -22,8 +22,7 @@ export async function markdownFragment(html, headingPrefix, baseUrl, extensions 
         elements: policy.elements,
         attributes: policy.attributes,
         replaceWithChildrenElements: [
-          'agui-markdown',
-          'context-provider',
+          ...MARKDOWN_INERT_WRAPPERS,
           ...policy.unwrappedTags,
         ],
         comments: false,

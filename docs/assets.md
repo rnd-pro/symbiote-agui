@@ -1,6 +1,6 @@
 # Local session assets
 
-Publish original logos, images, fonts, styles, browser modules, Markdown, and JSON beside an interface. AGUI serves these files through the page's own server, so they work locally and through public tunnels without another host or base64 embedding. Use the [asset proxy](./reference.md#asset-proxy) instead for approved external public sources.
+Publish original logos, images, fonts, styles, browser modules, HTML fragments, Markdown, and JSON beside an interface. AGUI serves these files through the page's own server, so they work locally and through public tunnels without another host or base64 embedding. Use the [asset proxy](./reference.md#asset-proxy) instead for approved external public sources.
 
 ## Publish and use files
 
@@ -19,6 +19,7 @@ Use session-relative URLs in the interface:
 ```html
 <img src="./_assets/images/logo.svg" alt="Project logo">
 <agui-markdown src="./_assets/documents/brief.md" label="Brief"></agui-markdown>
+<agui-import src="./_assets/fragments/details.html"></agui-import>
 ```
 
 Supply the Markdown widget's caller-owned status texts as usual. Relative Markdown media resolve against the served document URL. CSS URLs and imports resolve against the CSS file; imports inside browser modules resolve against the module URL. Native `fetch(new URL('./_assets/data.json', document.baseURI))` reads JSON without a wrapper.
@@ -61,16 +62,16 @@ The complete directory is published, not just files referenced by the current ma
 
 `status` includes `assets.configured` for directory presence, `assets.available` for the running worker's route capability, and `assets.path` for its URL prefix. Stopped and older workers report unavailable; capability does not certify every file or mean a public tunnel is healthy.
 
-The packaged gallery uses `src/uilib/gallery.assets/agui.png` and `documents/brief.md`. Publish both with `assets add`, preserving their relative paths, or copy that directory to the gallery session's `<ID>.assets/` folder. Its Design tokens tab demonstrates the original project image and Markdown media.
+The packaged gallery's Assets section uses the files in `src/uilib/gallery.assets/`, including its original image, Markdown guide, and HTML fragment. Publish them with `assets add`, preserving their relative paths, or copy that directory to the gallery session's `<ID>.assets/` folder.
 
 ## Supported files and limits
 
 - Raster images: PNG, JPEG, GIF, WebP, AVIF, BMP, and ICO; vector images: SVG.
 - Fonts: WOFF, WOFF2, TTF, and OTF.
-- CSS, JS/MJS browser modules, JSON, Markdown (`.md` and `.markdown`), and plain text.
+- CSS, JS/MJS browser modules, JSON, Markdown (`.md` and `.markdown`), HTML fragments (`.html` and `.htm`), and plain text. HTML fragments are served as `text/plain` with `nosniff`; `agui-import` reads and inserts their markup, while opening an asset URL directly displays its source.
 - Up to 16 MiB per file, 128 MiB per tree, 512 files, and 2,048 total file/directory entries.
 - Portable relative paths: up to 32 segments, 1,024 characters total, and 255 per segment. Use letters, digits, underscores, hyphens, dots, and spaces; segments must start with a letter, digit, or underscore and must not end with a dot or space. Case-only collisions, hidden/reserved names, encoded names, traversal, and links are rejected.
-- GET and HEAD only, with eight concurrent responses and a 30-second deadline. No directory indexes, range streaming, HTML documents, arbitrary file downloads, recursive imports, or server-side module execution.
+- GET and HEAD only, with eight concurrent responses and a 30-second deadline. No directory indexes, range streaming, executable HTML document serving, arbitrary file downloads, recursive filesystem imports, or server-side module execution.
 
 The Markdown widget has its own smaller source/render limits. Supported extensions do not guarantee valid image, font, or module contents; browsers still validate those formats. Invalid manually edited trees fail rather than silently skip files. `assets remove` can remove an oversized or unsupported regular file to repair a tree.
 

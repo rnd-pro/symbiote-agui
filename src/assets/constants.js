@@ -37,4 +37,6 @@ export let ASSET_TYPES = Object.freeze({
   '.md': 'text/markdown; charset=utf-8',
   '.markdown': 'text/markdown; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8',
+  '.html': 'text/plain; charset=utf-8',
+  '.htm': 'text/plain; charset=utf-8',
 });

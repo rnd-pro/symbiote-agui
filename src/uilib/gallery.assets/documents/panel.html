@@ -1,0 +1,67 @@
+<context-provider ctx="GALLERY_IMPORT" pub-map="APP/importStage: stage; APP/importNote: note">
+  <script type="application/json">
+    {
+      "stage": "edit",
+      "noteOpen": false,
+      "note": "",
+      "stages": [
+        { "value": "edit", "label": "Edit" },
+        { "value": "review", "label": "Review" },
+        { "value": "done", "label": "Reviewed" }
+      ],
+      "stepTexts": {
+        "current": "Current step",
+        "completed": "Completed",
+        "pending": "Not reached",
+        "invalidItems": "Check the review stages.",
+        "invalidValue": "Choose a review stage."
+      }
+    }
+  </script>
+  <agui-panel class="grid gap-4">
+    <h3>Imported contact review</h3>
+    <agui-steps label="Contact review" bind="$.items: GALLERY_IMPORT/stages; $.value: GALLERY_IMPORT/stage; $.texts: GALLERY_IMPORT/stepTexts"></agui-steps>
+    <agui-conditional when="GALLERY_IMPORT/stage" is="edit">
+      <template>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <agui-field label="Shared name" pub-to="APP/sharedName" bind="$.value: APP/sharedName"></agui-field>
+          <agui-select label="Shared status" pub-to="APP/sharedStatus" bind="$.value: APP/sharedStatus; $.options: APP/statusOptions"></agui-select>
+        </div>
+        <agui-toggle label="Notifications" pub-to="APP/notifications" bind="$.value: APP/notifications"></agui-toggle>
+        <agui-conditional when="GALLERY_IMPORT/noteOpen">
+          <template><agui-field label="Review note" type="textarea" rows="3" pub-to="GALLERY_IMPORT/note" bind="$.value: GALLERY_IMPORT/note"></agui-field></template>
+        </agui-conditional>
+        <agui-toolbar aria-label="Contact editing actions">
+          <agui-button toggle="GALLERY_IMPORT/noteOpen"><agui-icon name="comment"></agui-icon>Toggle note</agui-button>
+          <agui-button set="GALLERY_IMPORT/stage" value="review">Review<agui-icon name="arrow_forward"></agui-icon></agui-button>
+        </agui-toolbar>
+      </template>
+    </agui-conditional>
+    <agui-conditional when="GALLERY_IMPORT/stage" is="review">
+      <template>
+        <dl class="grid gap-4 sm:grid-cols-2">
+          <div><dt class="text-xs text-agui-muted">Name</dt><dd>{{APP/sharedName}}</dd></div>
+          <div><dt class="text-xs text-agui-muted">Status</dt><dd>{{APP/sharedStatus}}</dd></div>
+          <div><dt class="text-xs text-agui-muted">Notifications</dt><dd>
+            <agui-conditional when="APP/notifications" is="true">Enabled</agui-conditional>
+            <agui-conditional when="APP/notifications" is="false">Disabled</agui-conditional>
+          </dd></div>
+        </dl>
+        <agui-conditional when="GALLERY_IMPORT/note">
+          <template><agui-field label="Review note" type="textarea" rows="3" readonly bind="$.value: GALLERY_IMPORT/note"></agui-field></template>
+        </agui-conditional>
+        <agui-toolbar aria-label="Contact review actions">
+          <agui-button set="GALLERY_IMPORT/stage" value="edit"><agui-icon name="arrow_back"></agui-icon>Back</agui-button>
+          <agui-button set="GALLERY_IMPORT/stage" value="done"><agui-icon name="check"></agui-icon>Mark reviewed</agui-button>
+        </agui-toolbar>
+      </template>
+    </agui-conditional>
+    <agui-conditional when="GALLERY_IMPORT/stage" is="done">
+      <template>
+        <p class="text-agui-accent">Reviewed: {{APP/sharedName}}</p>
+        <agui-toolbar aria-label="Review follow-up"><agui-button set="GALLERY_IMPORT/stage" value="edit"><agui-icon name="edit"></agui-icon>Edit again</agui-button></agui-toolbar>
+      </template>
+    </agui-conditional>
+    <p class="text-sm text-agui-muted">Shared fields use gallery Save. Notes and the review stage reset on reload.</p>
+  </agui-panel>
+</context-provider>

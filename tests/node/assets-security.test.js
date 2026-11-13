@@ -204,18 +204,19 @@ test('inventory and imports enforce file and traversal budgets, including manual
   });
 });
 
-test('manual hidden or unsupported content fails closed and browser modules are imported as bytes', async (t) => {
+test('manual hidden or unsupported content fails closed and browser modules and HTML are imported as bytes', async (t) => {
   let fixture = await assetFixture();
   t.after(() => fixture.close());
   let rootPath = definitionPaths('desk').assetsPath;
   let html = join(fixture.directory, 'page.html');
   await writeFile(html, '<script>throw new Error("must not run")</script>');
-  await assert.rejects(fixture.run([
+  await fixture.run([
     'add',
     'desk',
     '--file',
     html,
-  ]), /Unsupported asset/);
+  ]);
+  assert.equal(await readFile(join(rootPath, 'page.html'), 'utf8'), '<script>throw new Error("must not run")</script>');
   let script = join(fixture.directory, 'module.html.js');
   let source = 'throw new Error("must never be imported on the server");';
   await writeFile(script, source);
@@ -226,7 +227,7 @@ test('manual hidden or unsupported content fails closed and browser modules are 
     script,
   ]);
   assert.equal(await readFile(join(rootPath, 'module.html.js'), 'utf8'), source);
-  await writeFile(join(rootPath, 'page.html'), '<h1>Not published</h1>');
+  await writeFile(join(rootPath, 'program.exe'), 'Not published');
   await assert.rejects(fixture.run([
     'list',
     'desk',
@@ -235,7 +236,7 @@ test('manual hidden or unsupported content fails closed and browser modules are 
     'remove',
     'desk',
     '--path',
-    'page.html',
+    'program.exe',
   ]);
   await mkdir(join(rootPath, '.hidden'));
   await assert.rejects(fixture.run([

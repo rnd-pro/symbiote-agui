@@ -53,6 +53,19 @@ test('local HTTP assets preserve binary bytes and MIME types, support HEAD, and 
   }
   let module = await fetch(fixture.url('module.html.js'));
   assert.match(module.headers.get('content-type') || '', /^text\/javascript/);
+  for (let name of [
+    'fragment.html',
+    'fragment.htm',
+  ]) {
+    let html = '<agui-panel>Fragment</agui-panel><script>window.assetScript = true;</script>';
+    await writeFile(join(fixture.directory, name), html);
+    let fragment = await fetch(fixture.url(name));
+    assert.equal(fragment.status, 200);
+    assert.equal(await fragment.text(), html);
+    assert.equal(fragment.headers.get('content-type'), 'text/plain; charset=utf-8');
+    assert.equal(fragment.headers.get('x-content-type-options'), 'nosniff');
+    assert.match(fragment.headers.get('content-security-policy') || '', /^sandbox;/);
+  }
   let ranged = await fetch(fixture.url('binary.png'), {
     headers: {
       range: 'bytes=0-1',
@@ -176,7 +189,7 @@ test('raw asset paths reject traversal, double decoding, hidden files and direct
   ]) { assert.equal((await requestProxy(fixture.url(), {
     path,
   })).status, 404, path); }
-  assert.equal((await fetch(fixture.url('page.html'))).status, 415);
+  assert.equal((await fetch(fixture.url('program.exe'))).status, 415);
   await mkdir(join(fixture.directory, 'directory.svg'));
   assert.notEqual((await fetch(fixture.url('directory.svg'))).status, 200);
 });

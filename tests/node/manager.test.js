@@ -1,15 +1,17 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import test from 'node:test';
 import { once } from 'node:events';
-import { get } from 'node:http';
+import { createServer, get } from 'node:http';
 import { WebSocket } from 'ws';
 import { temporaryState } from './state-fixture.js';
 import { ManagerOperations, validateManagerRequest } from '../../src/manager/operations.js';
 import { startManager, statusManager, stopManager } from '../../src/manager/lifecycle.js';
-import { readManager, reserveManager, releaseManager } from '../../src/manager/registry.js';
+import { managerDirectory, readManager, reserveManager, releaseManager } from '../../src/manager/registry.js';
+import { stopManagerRecord } from '../../src/manager/client.js';
+import { closeServer, waitForServer } from '../../src/shared/server.js';
 import { startManagerServer } from '../../src/manager/server.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { readSession, writeSession } from '../../src/sessions/store.js';
@@ -227,6 +229,39 @@ test('detached manager reuses its URL and survives session stop-all and clear-al
   assert.equal((await statusManager()).active, true);
   assert.equal((await stopManager()).active, false);
   assert.equal((await statusManager()).active, false);
+});
+
+test('manager shutdown tolerates an empty registry and restart can reserve it without accepting malformed entries', async (t) => {
+  let state = await temporaryState();
+  /** @type {import('../../types/manager.js').ManagerRecord} */
+  let record = await reserveManager();
+  let server = createServer(async (_request, response) => {
+    // Hold the filesystem shape between instance removal and registry removal.
+    await rename(managerDirectory(record), join(state.directory, 'retired-manager'));
+    response.writeHead(200, {
+      'Content-Type': 'application/json',
+    }).end(JSON.stringify({
+      instanceId: record.instanceId,
+      pid: record.pid,
+    }));
+  });
+  t.after(async () => {
+    await closeServer(server);
+    await state.close();
+  });
+  server.listen(0, '127.0.0.1');
+  record.url = `${await waitForServer(server)}/manager/`;
+  await stopManagerRecord(record);
+  assert.equal(await readManager(), undefined);
+  assert.equal((await statusManager()).active, false);
+  let next = await reserveManager();
+  assert.notEqual(next.instanceId, record.instanceId);
+  assert.equal((await readManager())?.instanceId, next.instanceId);
+  await releaseManager(next);
+  await mkdir(join(state.directory, '.manager', 'invalid'), {
+    recursive: true,
+  });
+  await assert.rejects(readManager(), /Invalid manager registry/);
 });
 
 test('manager restart replaces only the manager and starts it when stopped', {

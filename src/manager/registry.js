@@ -19,6 +19,8 @@ export function managerDirectory(record) { return join(registryPath(record.state
 export async function readManager(root = getDefaultStateRoot()) {
   try {
     let entries = await readdir(registryPath(root));
+    // Shutdown removes the instance before removing its enclosing registry.
+    if (!entries.length) { return undefined; }
     let instanceId = entries[0];
     if (entries.length !== 1 || !instanceId || !/^[a-f0-9-]{36}$/.test(instanceId)) { throw new Error('Invalid manager registry.'); }
     let record = JSON.parse(await readFile(join(registryPath(root), instanceId, 'manager.json'), 'utf8'));

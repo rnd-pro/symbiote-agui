@@ -9,6 +9,10 @@ export default css`
     agui-list > .agui-list-items {
       display: contents;
     }
+    agui-list > .agui-list-items > * {
+      /* Itemize reuses structural hosts; pending exit timers must not remove reused items. */
+      transition: none;
+    }
     agui-list[data-message]:not([data-message=''])::before {
       content: attr(data-message);
       grid-column: 1 / -1;

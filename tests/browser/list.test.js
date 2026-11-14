@@ -29,6 +29,12 @@ test('declarative lists render authored templates and publish guarded ID selecti
     ],
   });
   let page = await browser.newPage();
+  await page.emulateMediaFeatures([
+    {
+      name: 'prefers-reduced-motion',
+      value: 'no-preference',
+    },
+  ]);
   /** @type {string[]} */
   let errors = [];
   page.on('pageerror', (error) => errors.push(String(error)));
@@ -66,6 +72,26 @@ test('declarative lists render authored templates and publish guarded ID selecti
   assert.equal(await page.$$eval('#plain section', (elements) => elements.length), 3);
   assert.equal(await page.$$eval('#plain aside', (elements) => elements.length), 3);
   assert.equal(await page.$eval('#cards [data-record-selected]', (element) => element.textContent), 'record field');
+  // Empty and refill within one exit-animation window must not retain or later remove reused items.
+  let rapidFiltering = await page.$eval('#list-data', async (element) => {
+    let state = Reflect.get(element, '$');
+    let count = () => document.querySelectorAll('#cards [data-row]').length;
+    state.query = 'missing';
+    let emptyCount = count();
+    state.query = '';
+    let restoredCount = count();
+    await new Promise((resolve) => setTimeout(resolve, 550));
+    return {
+      emptyCount,
+      restoredCount,
+      retainedCount: count(),
+    };
+  });
+  assert.deepEqual(rapidFiltering, {
+    emptyCount: 0,
+    restoredCount: 3,
+    retainedCount: 3,
+  });
   assert.deepEqual(await checked('#cards'), [
     'b',
   ]);

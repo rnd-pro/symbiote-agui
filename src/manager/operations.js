@@ -20,7 +20,7 @@ import { validateManagerFeedback, runManagerFeedback } from './feedback.js';
 import { configureManagerStorage, managerStorageSettings } from './storage.js';
 import { PROJECT_OPERATIONS } from '../projects/constants.js';
 import { listProjects, registeredProject } from '../projects/registry.js';
-import { validProjectId, projectId } from '../projects/identity.js';
+import { projectId } from '../projects/identity.js';
 import { runProjectOperation, validateProjectRequest } from './projects.js';
 import { validateExplorerRequest } from '../projects/explorer/requests.js';
 import { EXPLORER_OPERATIONS } from '../projects/explorer/constants.js';
@@ -31,6 +31,8 @@ import { CONNECTION_OPERATIONS } from './connection-operations.js';
 import { validateConnectionRequest, listManagerConnections, runManagerConnection } from './connections.js';
 import { connectionProjectRoot } from '../sessions/connection-discovery.js';
 import { MANAGER_CONNECTOR_OPERATIONS, validateManagerConnectors, runManagerConnectors } from './connectors.js';
+import { ALL_PROJECTS, validManagerScope } from './scope.js';
+import { dispatchAllProjects } from './all-projects.js';
 
 /** @param {unknown} error */
 function failure(error) {
@@ -71,7 +73,7 @@ export function validateManagerRequest(input) {
   ].includes(key))
     || typeof value.id !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(value.id)
     || typeof value.operation !== 'string' || !Object.hasOwn(MANAGER_OPERATIONS, value.operation)
-    || (value.scopeProjectId !== undefined && !validProjectId(value.scopeProjectId))
+    || (value.scopeProjectId !== undefined && !validManagerScope(value.scopeProjectId))
     || (value.all !== undefined && typeof value.all !== 'boolean')
     || (value.confirm !== undefined && typeof value.confirm !== 'boolean')) {
     throw new CommandError('Invalid management request.');
@@ -188,6 +190,9 @@ export class ManagerOperations {
       this.assertScope();
       let request = validateManagerRequest(input);
       if (Object.hasOwn(CONNECTION_OPERATIONS, request.operation)) { return await this.dispatchScoped(request); }
+      if (request.scopeProjectId === ALL_PROJECTS) {
+        return await withStorageFolder(this.defaultFolder, () => this.dispatchScoped(request));
+      }
       let folder = this.defaultFolder;
       if (request.scopeProjectId) {
         if (!this.folders.has(request.scopeProjectId)) {
@@ -213,6 +218,7 @@ export class ManagerOperations {
     try {
       if (['snapshot', 'describe', 'projects', 'transfer history', 'feedback settings', 'connections', 'connector status'].includes(request.operation) || Object.hasOwn(EXPLORER_OPERATIONS, request.operation)) { return await this.execute(request); }
       let fingerprint = JSON.stringify([
+        request.scopeProjectId,
         request.operation,
         request.sessionId,
         !!request.all,
@@ -233,7 +239,8 @@ export class ManagerOperations {
         request.connectorInstanceId,
       ]);
       let requestKey = Object.hasOwn(CONNECTION_OPERATIONS, request.operation)
-        ? `${this.managerRoot}\0global\0${request.id}` : this.sessionKey(request.id);
+        ? `${this.managerRoot}\0global\0${request.id}`
+        : request.scopeProjectId === ALL_PROJECTS ? `${this.managerRoot}\0all-projects\0${request.id}` : this.sessionKey(request.id);
       let previous = this.requests.get(requestKey);
       if (previous) {
         if (previous.fingerprint !== fingerprint) { throw new CommandError('Request ID was already used for another operation.'); }
@@ -252,6 +259,9 @@ export class ManagerOperations {
 
   /** @param {import('../../types/manager.js').ManagerRequest} request */
   async execute(request) {
+    if (request.scopeProjectId === ALL_PROJECTS && !Object.hasOwn(CONNECTION_OPERATIONS, request.operation)) {
+      return dispatchAllProjects(this, request);
+    }
     if (Object.hasOwn(MANAGER_CONNECTOR_OPERATIONS, request.operation)) {
       return this.serialize(request.sessionId || '', () => runManagerConnectors(request, this.record));
     }

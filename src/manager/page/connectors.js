@@ -57,7 +57,7 @@ export class SessionConnectorSettings {
     this.sessionId = sessionId;
     this.owner.set$({
       connectorOpen: true,
-      connectorSession: sessionId,
+      connectorSession: this.owner.session(sessionId)?.sessionId || sessionId,
       connectorNewAction: '',
       connectorRegistry: '',
       connectorAddress: '',
@@ -156,7 +156,7 @@ export class SessionConnectorSettings {
     if (!Object.hasOwn(changes, command) || command === 'grant' && owner.$.connectorGrantDisabled
       || command !== 'attach' && owner.$.connectorActionDisabled) { return; }
     if (command !== 'attach' && command !== 'review'
-      && !confirm(`${command} ${this.sessionId}/${action}? ${command === 'grant' ? 'Reviewed local code will run with host-user privileges when explicitly invoked.' : 'Active work may be cancelled; external writes cannot be rolled back.'}`)) { return; }
+      && !confirm(`${command} ${owner.$.connectorSession}/${action}? ${command === 'grant' ? 'Reviewed local code will run with host-user privileges when explicitly invoked.' : 'Active work may be cancelled; external writes cannot be rolled back.'}`)) { return; }
     return this.run(changes[/** @type {keyof typeof changes} */ (command)]());
   }
 

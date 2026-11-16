@@ -28,7 +28,7 @@ export class SessionFeedbackSettings {
     this.settings = undefined;
     owner.set$({
       feedbackOpen: true,
-      feedbackSession: sessionId,
+      feedbackSession: owner.session(sessionId)?.sessionId || sessionId,
       feedbackConversation: '',
       feedbackCommand: JSON.stringify({
         executable: '',
@@ -45,7 +45,8 @@ export class SessionFeedbackSettings {
 
   render() {
     let owner = this.owner;
-    let active = owner.snapshot?.sessions.some((row) => row.sessionId === this.sessionId && row.active === true && row.ok);
+    let row = owner.session(this.sessionId);
+    let active = row?.active === true && row.ok;
     let disabled = !owner.connection?.ready || owner.busy || !active || !this.settings;
     owner.set$({
       feedbackDisabled: disabled,

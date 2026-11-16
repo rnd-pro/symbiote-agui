@@ -40,6 +40,7 @@ export interface ManagerScope {
 }
 
 export type ManagerSession = SessionOperationResult & {
+  project?: ConnectedProject;
   definition?: DefinitionInfo;
   definitionError?: string;
 };
@@ -64,7 +65,7 @@ export interface ManagerStorageSettings {
 export interface ManagerResult {
   ok: boolean;
   cancelled?: boolean;
-  sessions?: SessionOperationResult[];
+  sessions?: ManagerSession[];
   description?: DefinitionInfo;
   snapshot?: ManagerSnapshot;
   manager?: ManagerStatus;

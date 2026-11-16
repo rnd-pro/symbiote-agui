@@ -1,8 +1,10 @@
 import { sessionStatus } from './view.js';
+import { managerSessionKey } from '../scope.js';
 import { busyAction } from './busy-action.js';
 
 export let SESSION_STATE = {
   sessionId: '',
+  projectName: '',
   title: '',
   summary: '',
   dataFlow: '',
@@ -64,6 +66,7 @@ export function rowState(row, disabled, act, open) {
     : 'reachability unchecked';
   return {
     sessionId: row.sessionId,
+    projectName: row.project?.name || '',
     title: row.definition?.title || row.sessionId,
     summary: row.definition?.summary || (saved ? 'Saved interface' : 'No saved definition'),
     dataFlow: row.definition?.dataFlowSummary || '',
@@ -94,18 +97,18 @@ export function rowState(row, disabled, act, open) {
     renameDisabled: disabled || !saved || active || unknown,
     feedbackDisabled: disabled || !active || unknown,
     connectorsDisabled: disabled || !saved || unknown,
-    start: busyAction(() => act('start', row.sessionId)),
-    stop: busyAction(() => act('stop', row.sessionId)),
-    sync: busyAction(() => act('sync', row.sessionId)),
-    clear: busyAction(() => act('clear', row.sessionId)),
-    share: busyAction(() => act('share', row.sessionId)),
-    check: busyAction(() => act('tunnel check', row.sessionId)),
-    renew: busyAction(() => act('tunnel renew', row.sessionId)),
-    describe: busyAction(() => act('describe', row.sessionId)),
-    copy: () => act('copy session', row.sessionId),
-    move: () => act('move session', row.sessionId),
-    rename: () => act('rename session', row.sessionId),
-    feedback: busyAction(() => act('feedback settings', row.sessionId)),
-    connectors: busyAction(() => act('connector status', row.sessionId)),
+    start: busyAction(() => act('start', managerSessionKey(row))),
+    stop: busyAction(() => act('stop', managerSessionKey(row))),
+    sync: busyAction(() => act('sync', managerSessionKey(row))),
+    clear: busyAction(() => act('clear', managerSessionKey(row))),
+    share: busyAction(() => act('share', managerSessionKey(row))),
+    check: busyAction(() => act('tunnel check', managerSessionKey(row))),
+    renew: busyAction(() => act('tunnel renew', managerSessionKey(row))),
+    describe: busyAction(() => act('describe', managerSessionKey(row))),
+    copy: () => act('copy session', managerSessionKey(row)),
+    move: () => act('move session', managerSessionKey(row)),
+    rename: () => act('rename session', managerSessionKey(row)),
+    feedback: busyAction(() => act('feedback settings', managerSessionKey(row))),
+    connectors: busyAction(() => act('connector status', managerSessionKey(row))),
   };
 }

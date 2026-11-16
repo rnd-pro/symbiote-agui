@@ -35,7 +35,7 @@ export let NAVIGATION_STATE = {
 export function syncNavigation(owner) {
   let section = String(owner.$.appSection);
   let projects = section === 'projects';
-  owner.explorer?.activate(projects && owner.$.projectsView === 'explorer');
+  owner.explorer?.activate(projects && !owner.$.allProjects && owner.$.projectsView === 'explorer');
   owner.liveConnections?.activate(section === 'connections');
   owner.renderRows();
   if (projects) {

@@ -5,6 +5,7 @@ export let SESSION_CONTROLS_TEMPLATE = html`
     <div class="grid min-w-0 gap-1 break-words [overflow-wrap:anywhere]">
       <h2 class="font-semibold">{{^title}}</h2>
       <code class="text-xs text-agui-muted">/{{^sessionId}}</code>
+      <p class="text-xs text-agui-muted empty:hidden">{{^projectName}}</p>
       <p class="text-xs text-agui-muted">{{^details}}</p>
     </div>
     <p class="error text-sm text-agui-danger">{{^error}}</p>

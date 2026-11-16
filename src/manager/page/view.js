@@ -1,3 +1,5 @@
+import { managerSessionKey } from '../scope.js';
+
 /** @type {import('../../../types/uilib-table.js').UiTableColumn[]} */
 export let SESSION_COLUMNS = [
   {
@@ -47,6 +49,21 @@ export let SESSION_COLUMNS = [
     type: 'number',
     sortable: true,
   },
+];
+
+/** @type {import('../../../types/uilib-table.js').UiTableColumn[]} */
+export let ALL_PROJECT_SESSION_COLUMNS = [
+  {
+    ...SESSION_COLUMNS[0],
+    key: 'sessionId',
+  },
+  {
+    key: 'project',
+    label: 'Project',
+    type: 'text',
+    sortable: true,
+  },
+  ...SESSION_COLUMNS.slice(1),
 ];
 
 /** @type {import('../../../types/uilib-data.js').UiDataField[]} */
@@ -109,11 +126,13 @@ export function sessionStatus(row) {
 /** @param {import('../../../types/manager.js').ManagerSession[]} sessions */
 export function sessionRecords(sessions) {
   return sessions.map((row) => ({
-    id: row.sessionId,
+    id: managerSessionKey(row),
+    sessionId: row.sessionId,
+    project: row.project?.name || '',
     title: row.definition?.title || row.sessionId,
     status: sessionStatus(row),
     clients: row.clients ?? 0,
     pid: row.pid ?? null,
-    search: `${row.definition?.description || ''} ${JSON.stringify(row.definition?.metadata ?? {})}`,
+    search: `${row.project?.name || ''} ${row.definition?.description || ''} ${JSON.stringify(row.definition?.metadata ?? {})}`,
   }));
 }

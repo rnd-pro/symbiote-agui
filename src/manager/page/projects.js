@@ -1,8 +1,11 @@
 import { busyAction } from './busy-action.js';
+import { ALL_PROJECTS } from '../scope.js';
 
 export let PROJECT_STATE = {
   projectFolder: '',
   projectChoice: '',
+  allProjects: false,
+  scopeActionsHint: 'Applies to the entire folder, including sessions hidden by filters.',
   projectOptions: [],
   projectRows: [],
   projectSelection: [],
@@ -40,6 +43,11 @@ export class ProjectNavigation {
     this.discoveryError = '';
     this.owner.connection?.setProject(listing.currentProjectId);
     this.owner.$.projectChoice = listing.currentProjectId;
+    this.owner.$.allProjects = listing.currentProjectId === ALL_PROJECTS;
+    this.owner.$.scopeActionsHint = this.owner.$.allProjects
+      ? 'Applies to all connected projects and Default, including sessions hidden by filters.'
+      : PROJECT_STATE.scopeActionsHint;
+    if (this.owner.$.allProjects && this.owner.$.projectsView === 'explorer') { this.owner.$.projectsView = 'connected'; }
     this.render();
     this.owner.explorer?.setProject(listing.currentProjectId);
   }
@@ -49,6 +57,7 @@ export class ProjectNavigation {
     let listing = this.listing;
     let disabled = !owner.connection?.ready || owner.busy;
     let currentId = listing?.currentProjectId;
+    let all = currentId === ALL_PROJECTS;
     let current = listing?.projects.find((entry) => entry.id === currentId);
     let rows = (listing?.projects || []).map((entry) => ({
       id: entry.id,
@@ -66,15 +75,21 @@ export class ProjectNavigation {
       forgetProject: busyAction(() => this.run('forget project', entry.id, currentId)),
     }));
     owner.$ = {
-      projectName: current?.name || 'Projects',
-      projectPath: current?.folder || owner.snapshot?.storage.defaultFolder || 'Default private cache',
-      projectError: this.issue || this.discoveryError,
+      projectName: all ? 'All projects' : current?.name || 'Projects',
+      projectPath: all ? 'Connected projects and the default cache' : current?.folder || owner.snapshot?.storage.defaultFolder || 'Default private cache',
+      projectError: this.issue || this.discoveryError || (all ? listing?.projects.filter((entry) => !entry.available).map((entry) => `${entry.name}: ${entry.error}`).join('\n') : ''),
       projectsDisabled: disabled,
-      projectOptions: (listing?.projects || []).map((entry) => ({
-        value: entry.id,
-        label: entry.name,
-        disabled: !entry.available,
-      })),
+      projectOptions: [
+        {
+          value: ALL_PROJECTS,
+          label: 'All projects',
+        },
+        ...(listing?.projects || []).map((entry) => ({
+          value: entry.id,
+          label: entry.name,
+          disabled: !entry.available,
+        })),
+      ],
       projectRows: rows,
     };
     let selectedId = /** @type {string[]} */ (owner.$.projectSelection)[0];
@@ -113,6 +128,14 @@ export class ProjectNavigation {
     let owner = this.owner;
     let connection = owner.connection;
     if (!connection?.ready || owner.busy || sourceId !== this.listing?.currentProjectId) { return; }
+    if (operation === 'switch project' && projectId === ALL_PROJECTS) {
+      this.issue = '';
+      owner.selectProject(ALL_PROJECTS);
+      await this.refresh();
+      await owner.refresh();
+      void owner.transfers?.refreshHistory();
+      return;
+    }
     let folder = String(owner.$.projectFolder).trim();
     if (operation === 'connect project' && !folder) { this.issue = 'Enter an existing folder path.'; this.render(); return; }
     let selected = this.listing?.projects.find((entry) => entry.id === projectId);

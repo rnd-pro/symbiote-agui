@@ -1,4 +1,5 @@
 import { busyAction } from './busy-action.js';
+import { managerSessionKey } from '../scope.js';
 
 export let TRANSFER_STATE = {
   transferOpen: false,
@@ -46,14 +47,15 @@ export class SessionTransfers {
   open(kind, sessionId) {
     let owner = this.owner;
     if (!owner.connection?.ready || owner.busy) { return; }
-    let row = owner.snapshot?.sessions.find((entry) => entry.sessionId === sessionId);
+    let row = owner.session(sessionId);
     if (!row?.definition) { owner.$.notice = 'Save this AGUI before transferring it.'; return; }
     this.kind = kind;
     this.sourceId = sessionId;
     this.result = undefined;
     let listing = owner.projects?.listing;
-    let destination = kind === 'rename' ? listing?.projects.find((entry) => entry.id === listing.currentProjectId)
-      : listing?.projects.find((entry) => entry.available && entry.id !== listing.currentProjectId)
+    let projectId = row.project?.id || listing?.currentProjectId;
+    let destination = kind === 'rename' ? listing?.projects.find((entry) => entry.id === projectId)
+      : listing?.projects.find((entry) => entry.available && entry.id !== projectId)
       || listing?.projects.find((entry) => entry.available);
     let titles = {
       copy: 'Copy to project',
@@ -70,9 +72,9 @@ export class SessionTransfers {
       transferTitle: titles[kind],
       transferIsRename: kind === 'rename',
       transferIdLabel: kind === 'rename' ? 'New session ID' : 'Destination session ID',
-      transferSource: `${owner.$.projectName} / ${sessionId}`,
+      transferSource: `${row.project?.name || owner.$.projectName} / ${row.sessionId}`,
       transferDestination: destination?.id || '',
-      transferSessionId: kind === 'rename' ? sessionId : destination?.id === listing?.currentProjectId ? `${sessionId.slice(0, 59)}-copy` : sessionId,
+      transferSessionId: kind === 'rename' ? row.sessionId : destination?.id === projectId ? `${row.sessionId.slice(0, 59)}-copy` : row.sessionId,
       transferIncludeData: kind === 'rename',
       transferIncludeMetadata: kind === 'rename',
       transferMetadata: JSON.stringify(row.definition.metadata || {}, null, 2),
@@ -151,7 +153,10 @@ export class SessionTransfers {
       await owner.refresh();
       if (this.kind === 'rename' && owner.isCurrentView(epoch)) {
         owner.$.selection = [
-          receipt.destinationSessionId,
+          managerSessionKey({
+            sessionId: receipt.destinationSessionId,
+            project: owner.$.allProjects ? receipt.destination : undefined,
+          }),
         ];
       }
       owner.explorer?.reload();

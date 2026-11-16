@@ -1,6 +1,7 @@
 import { MANAGER_SOCKET_PATH, MANAGER_CLIENT_TIMEOUT_MS } from '../constants.js';
 import { TUNNEL_OPEN_TIMEOUT_MS } from '../../tunnel/constants.js';
 import { validProjectId } from '../../projects/identifiers.js';
+import { managerSessionKey, validManagerScope } from '../scope.js';
 
 export const CONNECTION_LOST_MESSAGE = 'Connection lost. The operation outcome may be unknown. Reconnecting will refresh status; actions are not replayed.';
 
@@ -14,6 +15,8 @@ export class ManagerConnection {
   retry = 500;
   /** @type {string | undefined} */
   projectId;
+  /** @type {import('../../../types/manager.js').ManagerSession[]} */
+  sessions = [];
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   reconnect;
 
@@ -26,13 +29,13 @@ export class ManagerConnection {
     this.connected = connected;
     let fragment = location.hash.slice(1);
     let requestedProject = new URL(location.href).searchParams.get('project');
-    if (validProjectId(requestedProject)) { this.projectId = requestedProject || undefined; }
+    if (validManagerScope(requestedProject)) { this.projectId = requestedProject || undefined; }
     this.token = '';
     try {
       if (/^[a-f0-9]{64}$/.test(fragment)) { localStorage.setItem('agui-manager-token', fragment); }
       this.token = localStorage.getItem('agui-manager-token') || '';
       let project = requestedProject || sessionStorage.getItem('agui-manager-project');
-      if (validProjectId(project)) { this.projectId = project || undefined; }
+      if (validManagerScope(project)) { this.projectId = project || undefined; }
     } catch { this.token = fragment; }
     history.replaceState(null, '', `${location.pathname}${location.search}`);
   }
@@ -95,13 +98,22 @@ export class ManagerConnection {
         socket.close();
       }, operation === 'open public' || operation.endsWith('tunnel renew') ? TUNNEL_OPEN_TIMEOUT_MS : MANAGER_CLIENT_TIMEOUT_MS);
       this.pending.set(id, { resolve, reject, timer });
-      socket.send(JSON.stringify({ ...options, scopeProjectId: this.projectId, id, operation }));
+      let session = this.sessions.find((row) => managerSessionKey(row) === options.sessionId);
+      socket.send(JSON.stringify({
+        ...options,
+        ...(session ? {
+          sessionId: session.sessionId,
+        } : {}),
+        scopeProjectId: options.scopeProjectId ?? session?.project?.id ?? this.projectId,
+        id,
+        operation,
+      }));
     });
   }
 
   /** @param {string} projectId */
   setProject(projectId) {
-    if (!validProjectId(projectId)) { throw new Error('Choose a connected project.'); }
+    if (!validManagerScope(projectId)) { throw new Error('Choose a connected project.'); }
     this.projectId = projectId;
     let url = new URL(location.href);
     if (projectId === 'default') { url.searchParams.delete('project'); }

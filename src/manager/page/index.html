@@ -47,7 +47,7 @@
                     <agui-panel class="grid min-w-0 content-start gap-3" aria-labelledby="bulk-heading">
                       <h3 id="bulk-heading" class="text-xs uppercase tracking-widest text-agui-muted">Scope actions</h3>
                       <agui-select label="All sessions in this scope" name="operation" pub-to="MANAGER/bulkOperation" bind="$.options: MANAGER/bulkOptions; $.value: MANAGER/bulkOperation; $.disabled: MANAGER/controlsDisabled"></agui-select>
-                      <p class="text-xs text-agui-muted">Applies to the entire folder, including sessions hidden by filters.</p>
+                      <p class="text-xs text-agui-muted">{{MANAGER/scopeActionsHint}}</p>
                       <agui-toolbar aria-label="Bulk session actions">
                         <agui-button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; @disabled: MANAGER/controlsDisabled"><agui-icon name="check"></agui-icon>Apply to all</agui-button>
                       </agui-toolbar>
@@ -67,6 +67,7 @@
                               <div class="min-w-0 break-words [overflow-wrap:anywhere]">
                                 <h3><button type="button" class="agui-button-ghost" bind="onclick: ^selectItem; ariaPressed: ^_selected; @disabled: ^_selectionDisabled">{{^title}}</button></h3>
                                 <code class="text-xs text-agui-muted">/{{^sessionId}}</code>
+                                <p class="text-xs text-agui-muted empty:hidden">{{^projectName}}</p>
                               </div>
                               <span class="session-status agui-chip">{{^status}}</span>
                             </div>
@@ -135,7 +136,7 @@
                         <p class="text-xs text-agui-muted">Forgetting a connection keeps its files and running sessions. Default and the current project cannot be forgotten.</p>
                       </agui-panel>
                     </agui-tab>
-                    <agui-tab value="explorer" label="Project explorer">
+                    <agui-tab value="explorer" label="Project explorer" bind="$.disabled: MANAGER/allProjects">
                       <div class="grid min-w-0 gap-4">
                         <div class="grid gap-3">
                           <h3 class="text-lg font-medium">Project explorer</h3>

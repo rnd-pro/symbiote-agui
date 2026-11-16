@@ -1,5 +1,6 @@
 import { highlightSourcePreview } from './source-preview.js';
 import { busyAction } from './busy-action.js';
+import { ALL_PROJECTS } from '../scope.js';
 
 export let EXPLORER_STATE = {
   explorerRows: {},
@@ -55,6 +56,7 @@ export class ProjectExplorer {
 
   /** @param {string} projectId */
   setProject(projectId) {
+    if (projectId === ALL_PROJECTS) { this.active = false; }
     if (this.projectId === projectId) { return; }
     this.projectId = projectId;
     this.reload();
@@ -90,7 +92,7 @@ export class ProjectExplorer {
     this.directoryPath = '';
     this.clearPreview();
     this.render();
-    if (this.active && this.projectId && this.owner.connection?.ready) { return this.load(''); }
+    if (this.active && this.projectId && this.projectId !== ALL_PROJECTS && this.owner.connection?.ready) { return this.load(''); }
   }
 
   clearPreview() {

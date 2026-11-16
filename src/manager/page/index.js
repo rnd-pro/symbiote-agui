@@ -7,7 +7,7 @@ import { MANAGER_REFRESH_MS } from '../constants.js';
 import { getTheme, setTheme, watchTheme, getPalette, setPalette, watchPalette } from './theme.js';
 import { themeSelectorTexts } from '../../page/client/page-text.js';
 import { BULK_OPTIONS } from './options.js';
-import { SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, CARD_TEXTS, DESCRIPTION_TEXTS, sessionRecords } from './view.js';
+import { SESSION_COLUMNS, ALL_PROJECT_SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, CARD_TEXTS, DESCRIPTION_TEXTS, sessionRecords } from './view.js';
 import { formatDataFlow } from '../../metadata/format.js';
 import { guardNativeRegistrations } from '../../uilib/shared/native-webmcp.js';
 import { PROJECT_STATE, ProjectNavigation } from './projects.js';
@@ -18,6 +18,7 @@ import { CONNECTIONS_STATE, LiveConnections } from './connections.js';
 import { busyAction } from './busy-action.js';
 import { CONNECTOR_SETTINGS_STATE, SessionConnectorSettings } from './connectors.js';
 import { NAVIGATION_STATE, syncNavigation, syncInspector } from './navigation.js';
+import { ALL_PROJECTS, managerSessionKey } from '../scope.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
@@ -189,9 +190,10 @@ export class SessionManager extends SymContext {
       if (!this.isCurrentView(epoch)) { return; }
       if (!result.ok || !result.snapshot) { throw new Error(result.error?.message || 'Session discovery failed.'); }
       this.snapshot = result.snapshot;
+      this.connection.sessions = result.snapshot.sessions;
       this.projects?.apply(result.snapshot.projects);
       let selection = /** @type {string[]} */ (this.$.selection);
-      let retained = selection.filter((id) => result.snapshot?.sessions.some((row) => row.sessionId === id));
+      let retained = selection.filter((id) => result.snapshot?.sessions.some((row) => managerSessionKey(row) === id));
       if (retained.length !== selection.length) { this.$.selection = retained; }
       if (!this.loaded) { this.$.storageFolder = result.snapshot.storage.folder || ''; }
       this.$.storageHint = result.snapshot.storage.message;
@@ -201,8 +203,13 @@ export class SessionManager extends SymContext {
       this.$.discoveryError = '';
       this.loaded = true;
       this.$.records = sessionRecords(result.snapshot.sessions);
+      this.$.columns = this.$.allProjects ? ALL_PROJECT_SESSION_COLUMNS : SESSION_COLUMNS;
+      this.$.filterFields = this.$.allProjects ? [
+        ...ALL_PROJECT_SESSION_COLUMNS,
+        SESSION_FILTER_FIELDS.at(-1),
+      ] : SESSION_FILTER_FIELDS;
       this.$.loading = false;
-      this.$.scope = result.snapshot.scope.settings.folder || `Private cache: ${result.snapshot.scope.stateRoot}`;
+      this.$.scope = this.$.allProjects ? 'All projects' : result.snapshot.scope.settings.folder || `Private cache: ${result.snapshot.scope.stateRoot}`;
       this.$.checkedAt = `Updated ${new Date(result.snapshot.checkedAt).toLocaleTimeString()}`;
       this.renderRows();
     } catch (error) {
@@ -232,15 +239,15 @@ export class SessionManager extends SymContext {
     this.liveConnections?.render();
     this.$.counts = `${sessions.length} total / ${sessions.filter((row) => row.active === true).length} running / ${sessions.filter((row) => row.active === false).length} stopped / ${sessions.filter((row) => row.active === null).length} unknown`;
     let states = Object.fromEntries(sessions.map((row) => [
-      row.sessionId,
+      managerSessionKey(row),
       rowState(row, disabled, (operation, id) => this.act(operation, id), (viewer) => {
-        return this.liveConnections?.open(row.sessionId, this.connection?.projectId || 'default', viewer, row.instanceId);
+        return this.liveConnections?.open(row.sessionId, row.project?.id || this.connection?.projectId || 'default', viewer, row.instanceId);
       }),
     ]));
     let selected = /** @type {string[]} */ (this.$.selection)[0];
     this.$.cards = sessions.map((row) => ({
-      id: row.sessionId,
-      ...states[row.sessionId],
+      id: managerSessionKey(row),
+      ...states[managerSessionKey(row)],
     }));
     this.$.noSelection = !selected || !states[selected];
     this.$.selectedRows = selected && states[selected] ? {
@@ -258,15 +265,22 @@ export class SessionManager extends SymContext {
     return !this.disposed && this.isConnected && epoch === this.viewEpoch;
   }
 
+  /** @param {string} key */
+  session(key) {
+    return this.snapshot?.sessions.find((row) => managerSessionKey(row) === key);
+  }
+
   /** @param {string} projectId */
   selectProject(projectId) {
     if (this.connection?.projectId === projectId) { return; }
     this.viewEpoch += 1;
     this.connection?.setProject(projectId);
+    if (this.connection) { this.connection.sessions = []; }
     this.snapshot = undefined;
     this.loaded = false;
     this.set$({
       projectChoice: projectId,
+      allProjects: projectId === ALL_PROJECTS,
       selection: [],
       matchingIds: [],
       records: [],
@@ -353,7 +367,9 @@ export class SessionManager extends SymContext {
       this.transfers?.open(transferKinds[/** @type {keyof typeof transferKinds} */ (operation)], sessionId || '');
       return;
     }
-    let target = sessionId || 'all sessions in this scope';
+    let row = sessionId ? this.session(sessionId) : undefined;
+    let target = row ? `${row.project ? `${row.project.name} / ` : ''}${row.sessionId}`
+      : sessionId || (this.$.allProjects ? 'all sessions across connected projects and Default' : 'all sessions in this scope');
     let confirmations = {
       clear: `Clear ${target}? This deletes saved HTML and Markdown, including files in your Git library, and clears live content.`,
       sync: `Sync ${target}? Running interfaces reload their saved definition. Unsaved edits are discarded; committed data is retained.`,
@@ -375,8 +391,10 @@ export class SessionManager extends SymContext {
         this.$.descriptionOpen = true;
       }
       this.$.noticeTone = !result.ok || result.sessions?.some((row) => !row.ok) ? 'alert' : 'info';
-      this.$.notice = (result.description ? `Description loaded for ${sessionId}.` : result.sessions?.map((row) => `${row.sessionId}: ${row.ok ? `${operation} completed` : row.error.message}`).join('\n'))
-        || result.error?.message || 'No matching sessions for this operation.';
+      this.$.notice = [
+        result.description ? `Description loaded for ${target}.` : result.sessions?.map((row) => `${row.project ? `${row.project.name} / ` : ''}${row.sessionId}: ${row.ok ? `${operation} completed` : row.error.message}`).join('\n'),
+        result.error?.message,
+      ].filter(Boolean).join('\n') || 'No matching sessions for this operation.';
       await this.refresh();
     } catch (error) {
       if (!this.isCurrentView(epoch)) { return; }

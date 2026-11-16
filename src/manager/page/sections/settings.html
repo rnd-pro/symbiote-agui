@@ -1,0 +1,13 @@
+<section class="grid min-w-0 gap-4" aria-label="Settings">
+  <agui-panel class="grid gap-4">
+    <h3 class="font-medium">AGUI folder settings</h3>
+    <p class="text-xs text-agui-muted">Configure where the launch project saves AGUIs. Use Projects to connect or revisit folders without changing this setting.</p>
+    <agui-field label="Save path" name="saveFolder" maxlength="4096" placeholder="Default private cache" pub-to="MANAGER/storageFolder" bind="$.value: MANAGER/storageFolder; $.disabled: MANAGER/storageDisabled"></agui-field>
+    <p class="break-words text-xs text-agui-muted">{{MANAGER/storageHint}}</p>
+    <p class="break-all text-xs text-agui-muted">{{MANAGER/storageContext}}</p>
+    <agui-toolbar aria-label="AGUI folder settings">
+      <agui-button type="button" class="agui-button-primary" bind="onclick: MANAGER/saveStorage; @disabled: MANAGER/storageDisabled"><agui-icon name="save"></agui-icon>Save folder and open</agui-button>
+      <agui-button type="button" bind="onclick: MANAGER/resetStorage; @disabled: MANAGER/storageDisabled"><agui-icon name="storage"></agui-icon>Use default cache</agui-button>
+    </agui-toolbar>
+  </agui-panel>
+</section>

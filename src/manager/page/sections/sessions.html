@@ -1,0 +1,57 @@
+<section class="grid min-w-0 gap-4" aria-label="Sessions">
+  <p class="text-sm text-agui-muted" role="status">{{MANAGER/counts}}</p>
+  <p id="transfer-recovery-notice" class="text-sm text-agui-danger empty:hidden" role="status" bind="textContent: MANAGER/transferRecoveryNotice"></p>
+  <div class="grid min-w-0 gap-4 lg:grid-cols-2">
+    <agui-panel class="grid min-w-0 content-start gap-3" aria-labelledby="filters-heading">
+      <h3 id="filters-heading" class="text-xs uppercase tracking-widest text-agui-muted">Find a session</h3>
+      <agui-filter id="manager-filter" label="Session filters" results-to="MANAGER/matchingIds" pub-to="MANAGER/filters" query-pub-to="MANAGER/query"
+        bind="$.rows: MANAGER/records; $.fields: MANAGER/filterFields; $.texts: MANAGER/filterTexts; $.value: MANAGER/filters; $.query: MANAGER/query; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError"></agui-filter>
+    </agui-panel>
+    <agui-panel class="grid min-w-0 content-start gap-3" aria-labelledby="bulk-heading">
+      <h3 id="bulk-heading" class="text-xs uppercase tracking-widest text-agui-muted">Scope actions</h3>
+      <agui-select label="All sessions in this scope" name="operation" pub-to="MANAGER/bulkOperation" bind="$.options: MANAGER/bulkOptions; $.value: MANAGER/bulkOperation; $.disabled: MANAGER/controlsDisabled"></agui-select>
+      <p class="text-xs text-agui-muted">{{MANAGER/scopeActionsHint}}</p>
+      <agui-toolbar aria-label="Bulk session actions">
+        <agui-button type="button" class="agui-button-primary" bind="onclick: MANAGER/bulk; @disabled: MANAGER/controlsDisabled"><agui-icon name="check"></agui-icon>Apply to all</agui-button>
+      </agui-toolbar>
+    </agui-panel>
+  </div>
+  <agui-tabs id="session-views" class="min-w-0" label="Session views" value="table" pub-to="MANAGER/workspaceView" bind="$.value: MANAGER/workspaceView">
+    <agui-tab value="table" label="Table">
+      <agui-table id="manager-table" label="Sessions" selection="single" page-size="15" pub-to="MANAGER/selection"
+        bind="$.rows: MANAGER/records; $.columns: MANAGER/columns; $.texts: MANAGER/tableTexts; $.filteredIds: MANAGER/matchingIds; $.value: MANAGER/selection; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError"></agui-table>
+    </agui-tab>
+    <agui-tab value="cards" label="Cards">
+      <agui-list id="manager-cards" class="manager-cards" label="Session cards" selection="single" pub-to="MANAGER/selection"
+        bind="$.items: MANAGER/cards; $.filteredIds: MANAGER/matchingIds; $.value: MANAGER/selection; $.texts: MANAGER/cardTexts; $.loading: MANAGER/loading; $.error: MANAGER/discoveryError">
+        <template>
+          <agui-panel selectable role="listitem" class="grid gap-3" bind="@data-session: ^sessionId; @data-state: ^statusKind; @data-selected: ^_selected; ariaDisabled: ^_selectionDisabled">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0 break-words [overflow-wrap:anywhere]">
+                <h3><button type="button" class="agui-button-ghost" bind="onclick: ^selectItem; ariaPressed: ^_selected; @disabled: ^_selectionDisabled">{{^title}}</button></h3>
+                <code class="text-xs text-agui-muted">/{{^sessionId}}</code>
+                <p class="text-xs text-agui-muted empty:hidden">{{^projectName}}</p>
+              </div>
+              <span class="session-status agui-chip">{{^status}}</span>
+            </div>
+            <details>
+              <summary>Summary</summary>
+              <div class="mt-3 grid gap-3">
+                <p class="break-words text-sm [overflow-wrap:anywhere]">{{^summary}}</p>
+                <p class="break-words text-sm text-agui-muted empty:hidden [overflow-wrap:anywhere]">{{^dataFlow}}</p>
+              </div>
+            </details>
+            <p class="text-xs leading-6 text-agui-muted">{{^details}}</p>
+            <p class="text-xs leading-6 text-agui-muted">{{^tunnel}}</p>
+            <p class="error text-sm text-agui-danger">{{^error}}</p>
+            <div class="flex flex-wrap gap-x-5 gap-y-3 text-sm">
+              <a class="inline-flex items-center gap-2" target="_blank" rel="noopener noreferrer" bind="href: ^url; hidden: ^noLocal"><agui-icon name="open_in_new"></agui-icon>Open local page</a>
+              <agui-button type="button" aria-label="Public link" bind="onclick: ^openPublic; title: ^userUrl; @hidden: ^noPublic; @disabled: ^publicDisabled"><agui-icon name="public"></agui-icon>Public page</agui-button>
+              <agui-button type="button" aria-label="Viewer page" bind="onclick: ^openViewer; title: ^viewerUrl; @hidden: ^noPublic; @disabled: ^publicDisabled"><agui-icon name="visibility"></agui-icon>Viewer page</agui-button>
+            </div>
+          </agui-panel>
+        </template>
+      </agui-list>
+    </agui-tab>
+  </agui-tabs>
+</section>

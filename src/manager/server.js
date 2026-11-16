@@ -8,6 +8,7 @@ import { closeServer, waitForServer } from '../shared/server.js';
 import { ManagerOperations } from './operations.js';
 import { MANAGER_PATH, MANAGER_SOCKET_PATH, MANAGER_PROTOCOL_VERSION } from './constants.js';
 import { createManagerStyles } from './styles.js';
+import { MANAGER_SECTIONS } from './sections.js';
 import { projectId } from '../projects/identity.js';
 import { validManagerScope } from './scope.js';
 import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../uilib/widgets/markdown/constants.js';
@@ -37,6 +38,12 @@ export async function startManagerServer(record, stop) {
   let assets = new URL('./page/', import.meta.url);
   let files = new Map([[MANAGER_PATH, new URL('index.html', assets)]]);
   files.set(`${MANAGER_PATH}page/theme.js`, new URL('theme.js', assets));
+  for (let [
+    name,
+    file,
+  ] of Object.entries(MANAGER_SECTIONS)) {
+    files.set(`${MANAGER_PATH}page/sections/${name}.html`, file);
+  }
   let runtimeAssets = new Map([
     [
       DIAGRAM_RUNTIME_PATH,

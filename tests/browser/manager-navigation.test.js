@@ -36,6 +36,10 @@ test('manager sections retain session selection, local tabs and settings drafts 
   ]);
   let page = await browser.newPage();
   let errors = /** @type {string[]} */ ([]);
+  let fragments = /** @type {string[]} */ ([]);
+  page.on('request', (request) => {
+    if (request.url().includes('/page/sections/')) { fragments.push(request.url()); }
+  });
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.goto(manager.launchUrl);
   await page.waitForSelector('#manager-table tr[data-row-id="desk"]');
@@ -105,4 +109,23 @@ test('manager sections retain session selection, local tabs and settings drafts 
     'settings',
   ]);
   assert.deepEqual(errors, []);
+  assert.equal(new Set(fragments).size, fragments.length, 'Mounted sections load once and retain their contents across navigation.');
+  let failedPage = await browser.newPage();
+  await failedPage.setRequestInterception(true);
+  failedPage.on('request', (request) => {
+    if (request.url().endsWith('/page/sections/sessions.html')) {
+      void request.respond({
+        status: 503,
+        contentType: 'text/html',
+        body: 'Unavailable',
+      });
+    } else { void request.continue(); }
+  });
+  await failedPage.goto(manager.launchUrl);
+  await failedPage.waitForSelector('sym-import[src$="sessions.html"] agui-state[status="error"]:not([hidden]) [role="alert"]');
+  assert.equal(await failedPage.$('#manager-table'), null);
+  await openManagerSection(failedPage, 'settings');
+  await failedPage.waitForSelector('input[name="saveFolder"]', {
+    visible: true,
+  });
 });

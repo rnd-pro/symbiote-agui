@@ -10,7 +10,15 @@
           "sidebarBlockUpdates": false,
           "sidebarBlockFollowUp": "",
           "controlView": "fields",
+          "breadcrumbLocation": "references",
+          "breadcrumbReadonly": false,
+          "breadcrumbItems": [
+            {"value":"workspace","label":"Workspace","icon":"folder_open"},
+            {"value":"documents","label":"Documents"},
+            {"value":"references","label":"References"}
+          ],
           "widgetView": "table",
+          "explorerSelectBranches": false,
           "explorerSelection": [],
           "explorerExpanded": [],
           "explorerItems": [
@@ -360,6 +368,17 @@
                   <p class="text-sm text-agui-muted">Shared active tab: {{APP/galleryTab}}</p>
                 </agui-panel>
               </agui-tab>
+              <agui-tab value="breadcrumbs" label="Breadcrumbs">
+                <agui-panel class="grid gap-4">
+                  <h2>Breadcrumbs</h2>
+                  <p class="text-sm text-agui-muted">Select a path segment to publish its value. The current location is highlighted; the hosting app supplies the trail and handles navigation.</p>
+                  <agui-breadcrumbs label="Document location" pub-to="APP/breadcrumbLocation"
+                    bind="$.items: APP/breadcrumbItems; $.value: APP/breadcrumbLocation; $.readonly: APP/breadcrumbReadonly"></agui-breadcrumbs>
+                  <p class="text-sm">Selected location: <output>{{APP/breadcrumbLocation}}</output></p>
+                  <agui-toggle label="Read-only navigation" pub-to="APP/breadcrumbReadonly"
+                    bind="$.value: APP/breadcrumbReadonly"></agui-toggle>
+                </agui-panel>
+              </agui-tab>
               <agui-tab value="bindings" label="Bindings">
                 <agui-panel class="grid content-start gap-5">
                   <h2>Application bindings</h2>
@@ -469,8 +488,10 @@
                 <agui-panel class="grid gap-4">
                   <h2>Explorer</h2>
                   <p class="text-sm text-agui-muted">Expand groups and select an item. Selection and expanded IDs publish to shared state without application JavaScript.</p>
+                  <agui-toggle label="Allow folder selection" pub-to="APP/explorerSelectBranches"
+                    bind="$.value: APP/explorerSelectBranches"></agui-toggle>
                   <agui-explorer label="Documents and assets" class="grid gap-1" pub-to="APP/explorerSelection" expanded-pub-to="APP/explorerExpanded"
-                    bind="$.items: APP/explorerItems; $.value: APP/explorerSelection; $.expanded: APP/explorerExpanded; $.texts: APP/explorerTexts"></agui-explorer>
+                    bind="$.items: APP/explorerItems; $.value: APP/explorerSelection; $.expanded: APP/explorerExpanded; $.texts: APP/explorerTexts; $.selectBranches: APP/explorerSelectBranches"></agui-explorer>
                   <p class="text-sm">Selected: <output>{{APP/explorerSelection}}</output></p>
                 </agui-panel>
               </agui-tab>

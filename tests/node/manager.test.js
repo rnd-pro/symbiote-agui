@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { mkdir, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import test from 'node:test';
 import { once } from 'node:events';
@@ -20,6 +20,7 @@ import { runAllSessions } from '../../src/sessions/all.js';
 import { parseCommand } from '../../src/cli/parse.js';
 import { connectProject } from '../../src/projects/registry.js';
 import { temporaryManagerProject } from './manager-storage-fixture.js';
+import { MANAGER_SECTIONS } from '../../src/manager/sections.js';
 
 /** @param {string} sessionId */
 async function save(sessionId) {
@@ -187,6 +188,17 @@ test('manager WebSocket requires its origin and credential; assets cannot serve 
   let response = await fetch(endpoint.url);
   assert.match(response.headers.get('content-security-policy') || '', /frame-ancestors 'none'/);
   assert.equal(response.headers.get('x-frame-options'), 'DENY');
+  for (let [
+    name,
+    file,
+  ] of Object.entries(MANAGER_SECTIONS)) {
+    let section = await fetch(`${endpoint.url}page/sections/${name}.html`);
+    assert.equal(section.status, 200);
+    assert.match(section.headers.get('content-type') || '', /^text\/html/);
+    assert.equal(await section.text(), await readFile(file, 'utf8'));
+  }
+  assert.equal((await fetch(`${endpoint.url}page/sections/unknown.html`)).status, 404);
+  assert.equal((await fetch(`${endpoint.url}page/sections/registry.js`)).status, 404);
   let bundle = await (await fetch(`${endpoint.url}page/index.js`)).text();
   assert.match(bundle, /agui-dashboard/);
   assert.match(bundle, /agui-toggle/);

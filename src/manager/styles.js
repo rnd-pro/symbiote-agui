@@ -7,11 +7,17 @@ import { UILIB_TEMPLATES } from '../uilib/templates.js';
 import { SESSION_CONTROLS_TEMPLATE } from './page/controls-template.js';
 import { CONNECTIONS_TEMPLATE } from './page/connections-template.js';
 import { CONNECTOR_SETTINGS_TEMPLATE } from './page/connectors-template.js';
+import { MANAGER_SECTIONS } from './sections.js';
 
 export async function createManagerStyles() {
-  let [compiler, html] = await Promise.all([
+  let [
+    compiler,
+    html,
+    sections,
+  ] = await Promise.all([
     compileStyles(new URL('./page/styles.css', import.meta.url)),
     readFile(new URL('./page/index.html', import.meta.url), 'utf8'),
+    Promise.all(Object.values(MANAGER_SECTIONS).map((file) => readFile(file, 'utf8'))),
   ]);
   let { document } = parseHTML(html);
   let fragment = document.createDocumentFragment();
@@ -21,6 +27,7 @@ export async function createManagerStyles() {
     SESSION_CONTROLS_TEMPLATE,
     CONNECTIONS_TEMPLATE,
     CONNECTOR_SETTINGS_TEMPLATE,
+    ...sections,
   ].join('\n');
   fragment.append(document.body, templates.content);
   return cssMin(compiler.build(analyzeFragment(fragment).classes));

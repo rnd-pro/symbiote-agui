@@ -38,7 +38,7 @@ async function fixture(t) {
 async function openExplorer(page) {
   await openManagerSection(page, 'projects');
   await page.locator('#project-views [role="tab"][value="explorer"]').click();
-  try { await page.waitForSelector('#explorer-entries [data-entry] button'); }
+  try { await page.waitForSelector('#explorer-entries button[value^="session:"]'); }
   catch (error) {
     let state = await page.evaluate(() => {
       let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
@@ -57,6 +57,27 @@ async function openExplorer(page) {
   }
 }
 
+/**
+ * @param {import('puppeteer').Page} page
+ * @param {string} sessionId
+ */
+async function openSessionAssets(page, sessionId) {
+  for (let value of [
+    `session:${sessionId}`,
+    `${sessionId}.assets`,
+  ]) {
+    let button = await page.waitForSelector(`#explorer-entries button[value="${value}"]`);
+    assert.ok(button);
+    if (await button.evaluate((element) => element.getAttribute('aria-expanded') !== 'true')) {
+      await button.click();
+    }
+  }
+  await page.waitForFunction((path) => {
+    let owner = /** @type {import('../../src/manager/page/index.js').SessionManager | null} */ (document.querySelector('agui-session-manager'));
+    return owner?.explorer?.directories.get(path)?.loaded;
+  }, {}, `${sessionId}.assets`);
+}
+
 test('manager lazily expands project folders and previews source or inert Markdown while sessions stay available', {
   timeout: 45000,
 }, async (t) => {
@@ -67,21 +88,29 @@ test('manager lazily expands project folders and previews source or inert Markdo
   } = await fixture(t);
   let htmlSource = '<script>window.explorerExecuted = true;</script>\n````\n<explorer-probe></explorer-probe><agui-field label="Must stay inert"></agui-field>';
   let javascriptSource = `/* ${'Long source comment. '.repeat(3600)} */\r\nexport let label = '🌍';\r\n// Keep Windows line endings.\r`;
+  let assets = join(folder, 'draft.assets');
+  let longName = `${'segment-'.repeat(18)}notes.txt`;
+  await mkdir(assets);
   await Promise.all([
-    mkdir(join(folder, 'docs')),
-    mkdir(join(folder, 'empty')),
-    mkdir(join(folder, 'pages')),
-    writeFile(join(folder, '.hidden.txt'), 'Hidden fixture.'),
-    writeFile(join(folder, 'data.json'), '{"fixture":"current"}'),
-    writeFile(join(folder, 'source.html'), htmlSource),
-    writeFile(join(folder, 'source.JS'), javascriptSource),
-    writeFile(join(folder, 'styles.css'), '.example { color: red; }\n'),
+    mkdir(join(assets, 'docs')),
+    mkdir(join(assets, 'empty')),
+    mkdir(join(assets, 'pages')),
+    writeFile(join(assets, '.hidden.txt'), 'Hidden fixture.'),
+    writeFile(join(assets, 'data.json'), '{"fixture":"current"}'),
+    writeFile(join(assets, 'source.html'), htmlSource),
+    writeFile(join(assets, 'source.JS'), javascriptSource),
+    writeFile(join(assets, 'styles.css'), '.example { color: red; }\n'),
+    writeFile(join(assets, longName), 'Long path preview.'),
     writeFile(join(folder, 'draft.html'), '<agui-field label="Draft" name="draft" value="Keep"></agui-field>'),
+    writeFile(join(folder, 'zeta.html'), '<h1>Another saved interface</h1>'),
+    ...Array.from({
+      length: EXPLORER_PAGE_SIZE,
+    }, (_, index) => writeFile(join(folder, `noise-${index}.txt`), 'Unrelated project file.')),
   ]);
-  await writeFile(join(folder, 'docs', 'guide.md'), '# Project guide\n\nRead-only preview.\n\n<explorer-probe>Fallback document content</explorer-probe>\n<agui-field label="Do not instantiate"></agui-field>\n<script>window.explorerExecuted = true;</script>');
+  await writeFile(join(assets, 'docs', 'guide.md'), '# Project guide\n\nRead-only preview.\n\n<explorer-probe>Fallback document content</explorer-probe>\n<agui-field label="Do not instantiate"></agui-field>\n<script>window.explorerExecuted = true;</script>');
   await Promise.all(Array.from({
     length: EXPLORER_PAGE_SIZE + 1,
-  }, (_, index) => writeFile(join(folder, 'pages', `entry-${String(index).padStart(3, '0')}.txt`), 'Page fixture.')));
+  }, (_, index) => writeFile(join(assets, 'pages', `entry-${String(index).padStart(3, '0')}.txt`), 'Page fixture.')));
   await project.cli([
     'config',
     'folder',
@@ -108,7 +137,7 @@ test('manager lazily expands project folders and previews source or inert Markdo
   page.on('pageerror', (error) => { errors.push(String(error)); t.diagnostic(String(error)); });
   await page.goto(manager.launchUrl);
   await page.waitForSelector('#manager-table tr[data-row-id="draft"]');
-  assert.equal(await page.$('#explorer-entries [data-entry]'), null, 'Browsing is deferred until the explorer is selected.');
+  assert.equal(await page.$('#explorer-entries button[value]'), null, 'Browsing is deferred until the explorer is selected.');
   await page.evaluate(() => {
     customElements.define('explorer-probe', class extends HTMLElement {
       constructor() {
@@ -118,11 +147,18 @@ test('manager lazily expands project folders and previews source or inert Markdo
     });
   });
   await openExplorer(page);
-  assert.equal(await page.$('#explorer-entries [data-entry="docs/guide.md"]'), null, 'Nested entries are fetched on expansion.');
-  assert.equal(await page.$('#explorer-entries [data-entry=".hidden.txt"]'), null);
-  await page.click('#explorer-entries [data-entry="docs"] button');
-  await page.waitForSelector('#explorer-entries [data-entry="docs/guide.md"] button');
-  await page.click('#explorer-entries [data-entry="docs/guide.md"] button');
+  assert.deepEqual(await page.$$eval('#explorer-entries button[value]', (buttons) => buttons.map((button) => button.getAttribute('value'))), [
+    'session:draft',
+    'session:zeta',
+  ]);
+  await openSessionAssets(page, 'draft');
+  await page.locator(`#explorer-entries ::-p-aria([name="Preview ${longName}"][role="button"])`).click();
+  await page.waitForFunction(() => document.querySelector('#explorer-preview pre code')?.textContent === 'Long path preview.');
+  assert.equal(await page.$('#explorer-entries button[value="draft.assets/docs/guide.md"]'), null, 'Nested entries are fetched on expansion.');
+  assert.equal(await page.$('#explorer-entries button[value="draft.assets/.hidden.txt"]'), null);
+  await page.click('#explorer-entries button[value="draft.assets/docs"]');
+  await page.waitForSelector('#explorer-entries button[value="draft.assets/docs/guide.md"]');
+  await page.click('#explorer-entries button[value="draft.assets/docs/guide.md"]');
   await page.waitForSelector('#explorer-preview agui-markdown h1');
   assert.equal(await page.$eval('#explorer-preview agui-markdown h1', (element) => element.textContent), 'Project guide');
   assert.equal(await page.$('#explorer-preview agui-field'), null);
@@ -130,7 +166,7 @@ test('manager lazily expands project folders and previews source or inert Markdo
   assert.equal(await page.evaluate(() => !!Reflect.get(window, 'explorerConstructed')), false);
   assert.equal(await page.evaluate(() => !!Reflect.get(window, 'explorerExecuted')), false);
   assert.ok(await page.$('nav[aria-label="Project breadcrumbs"] button'));
-  await page.click('#explorer-entries [data-entry="source.html"] button');
+  await page.click('#explorer-entries button[value="draft.assets/source.html"]');
   await page.waitForFunction(() => document.querySelector('#explorer-preview pre code')?.textContent?.includes('<script>'));
   await page.waitForSelector('#explorer-preview pre code .hljs-tag');
   assert.equal(await page.$eval('#explorer-preview pre code', (element) => element.textContent), htmlSource);
@@ -154,30 +190,32 @@ test('manager lazily expands project folders and previews source or inert Markdo
       source: '.example { color: red; }\n',
     },
   ]) {
-    await page.click(`#explorer-entries [data-entry="${preview.path}"] button`);
+    await page.click(`#explorer-entries button[value="draft.assets/${preview.path}"]`);
     await page.waitForSelector(`#explorer-preview pre code ${preview.token}`);
     assert.equal(await page.$eval('#explorer-preview pre code', (element) => element.textContent), preview.source);
   }
-  await page.click('#explorer-entries [data-entry="empty"] button');
+  await page.click('#explorer-entries button[value="draft.assets/empty"]');
   await page.waitForFunction(() => document.querySelector('#explorer-entries')?.textContent?.includes('This folder is empty.'));
-  await page.click('#explorer-entries [data-entry="pages"] button');
-  await page.waitForSelector('#explorer-entries [data-entry="pages/entry-099.txt"]');
-  assert.equal(await page.$('#explorer-entries [data-entry="pages/entry-100.txt"]'), null);
+  await page.click('#explorer-entries button[value="draft.assets/pages"]');
+  await page.waitForSelector('#explorer-entries button[value="draft.assets/pages/entry-099.txt"]');
+  assert.equal(await page.$('#explorer-entries button[value="draft.assets/pages/entry-100.txt"]'), null);
   await page.locator('#explorer-entries ::-p-aria([name="Load more entries"][role="button"])').click();
-  await page.waitForSelector('#explorer-entries [data-entry="pages/entry-100.txt"]');
+  await page.waitForSelector('#explorer-entries button[value="draft.assets/pages/entry-100.txt"]');
   await page.locator('agui-toggle[name="explorerHidden"] input').click();
-  await page.waitForSelector('#explorer-entries [data-entry=".hidden.txt"] button');
-  await page.click('#explorer-entries [data-entry=".hidden.txt"] button');
+  await openSessionAssets(page, 'draft');
+  await page.waitForSelector('#explorer-entries button[value="draft.assets/.hidden.txt"]');
+  await page.click('#explorer-entries button[value="draft.assets/.hidden.txt"]');
   await page.waitForFunction(() => document.querySelector('#explorer-preview pre code')?.textContent === 'Hidden fixture.');
   await page.focus('agui-toggle[name="explorerHidden"] input');
   await page.keyboard.press('Space');
-  await page.waitForFunction(() => !document.querySelector('#explorer-entries [data-entry=".hidden.txt"]'));
+  await page.waitForFunction(() => !document.querySelector('#explorer-entries button[value="draft.assets/.hidden.txt"]'));
   assert.equal(await page.$eval('#explorer-preview pre code', (element) => element.textContent), '', 'Hiding content also clears its preview.');
-  await writeFile(join(folder, 'new.txt'), 'New file.');
+  await writeFile(join(assets, 'new.txt'), 'New file.');
   await page.locator('::-p-aria([name="Refresh files"][role="button"])').click();
-  await page.waitForSelector('#explorer-entries [data-entry="new.txt"] button');
-  await rm(join(folder, 'new.txt'));
-  await page.click('#explorer-entries [data-entry="new.txt"] button');
+  await openSessionAssets(page, 'draft');
+  await page.waitForSelector('#explorer-entries button[value="draft.assets/new.txt"]');
+  await rm(join(assets, 'new.txt'));
+  await page.click('#explorer-entries button[value="draft.assets/new.txt"]');
   await page.waitForFunction(() => document.querySelector('#explorer-preview')?.textContent?.includes('ENOENT'));
   assert.equal(await page.evaluate(async () => (await fetch('/manager/files/source.html')).status), 404);
   await openManagerSection(page, 'sessions');
@@ -207,7 +245,7 @@ test('Default uses readable definitions and explorer drops delayed responses aft
     '--file',
     source,
   ]);
-  await writeFile(join(folder, 'current.txt'), 'Current project content.');
+  await writeFile(join(folder, 'current.html'), 'Current project content.');
   let connected = await connectProject(folder);
   let manager = await project.cli([
     'manager',
@@ -218,8 +256,9 @@ test('Default uses readable definitions and explorer drops delayed responses aft
   await page.goto(manager.launchUrl);
   await page.waitForSelector('#manager-table tr[data-row-id="demo-desk"]');
   await openExplorer(page);
-  await page.waitForSelector('#explorer-entries [data-entry="demo-desk.html"] button');
-  await page.click('#explorer-entries [data-entry="demo-desk.html"] button');
+  await page.click('#explorer-entries button[value="session:demo-desk"]');
+  await page.waitForSelector('#explorer-entries button[value="demo-desk.html"]');
+  await page.click('#explorer-entries button[value="demo-desk.html"]');
   await page.waitForFunction(() => document.querySelector('#explorer-preview pre code')?.textContent === '<h1>Saved default definition</h1>');
   await page.evaluate(async (id) => {
     let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
@@ -246,7 +285,7 @@ test('Default uses readable definitions and explorer drops delayed responses aft
     await pending;
     connection.request = request;
   }, connected.id);
-  await page.waitForSelector('#explorer-entries [data-entry="current.txt"] button');
+  await page.waitForSelector('#explorer-entries button[value="session:current"]');
   assert.equal(await page.$eval('#explorer-preview pre code', (element) => element.textContent), '');
   await page.evaluate(async () => {
     let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
@@ -280,6 +319,6 @@ test('Default uses readable definitions and explorer drops delayed responses aft
     connection.request = request;
   });
   await page.waitForFunction(() => document.querySelector('.connection .agui-message-text')?.textContent === 'Connected');
-  await page.waitForSelector('#explorer-entries [data-entry="demo-desk.html"] button');
-  assert.equal(await page.$('#explorer-entries [data-entry="STALE.txt"]'), null);
+  await page.waitForSelector('#explorer-entries button[value="session:demo-desk"]');
+  assert.equal(await page.$('#explorer-entries button[value="STALE.txt"]'), null);
 });

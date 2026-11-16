@@ -40,6 +40,7 @@ import { TableHeading } from './widgets/table/heading.js';
 import { Filter } from './widgets/filter/filter.js';
 import { FilterField } from './widgets/filter/field.js';
 import { List } from './widgets/list/list.js';
+import { Explorer } from './widgets/explorer/explorer.js';
 import { watchScrollbarActivity } from './shared/scrollbars.js';
 import {
   Message,
@@ -81,6 +82,7 @@ export function registerUiLibComponents() {
   Filter.reg('agui-filter');
   Table.reg('agui-table');
   List.reg('agui-list');
+  Explorer.reg('agui-explorer');
   ChartDataTable.reg('agui-chart-data');
   Chart.reg('agui-chart');
   MapDataTable.reg('agui-map-data');

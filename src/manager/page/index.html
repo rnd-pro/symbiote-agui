@@ -140,7 +140,7 @@
                       <div class="grid min-w-0 gap-4">
                         <div class="grid gap-3">
                           <h3 class="text-lg font-medium">Project explorer</h3>
-                          <p class="text-xs text-agui-muted">Read-only files from the current project. Source files are displayed as text.</p>
+                          <p class="text-xs text-agui-muted">Expand an AGUI to inspect its HTML, description and assets. Source files are displayed as text.</p>
                           <agui-toolbar aria-label="Explorer controls">
                             <agui-button type="button" bind="onclick: MANAGER/explorerRefresh; @disabled: MANAGER/explorerDisabled"><agui-icon name="refresh"></agui-icon>Refresh files</agui-button>
                           </agui-toolbar>
@@ -153,18 +153,11 @@
                         </div>
                         <div class="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
                           <agui-panel class="min-w-0">
-                            <h4 class="mb-3 text-xs uppercase tracking-widest text-agui-muted">Project files</h4>
+                            <h4 class="mb-3 text-xs uppercase tracking-widest text-agui-muted">AGUIs</h4>
                             <agui-state bind="$.status: MANAGER/explorerStatus; $.message: MANAGER/explorerMessage"></agui-state>
-                            <div id="explorer-entries" class="grid min-w-0 gap-1" role="list" aria-label="Project files" itemize="MANAGER/explorerRows">
-                              <template>
-                                <div role="listitem" class="grid min-w-0 gap-1" bind="style.paddingInlineStart: indent; @data-entry: path">
-                                  <agui-button type="button" class="w-full justify-start" bind="onclick: invoke; @disabled: disabled; ariaExpanded: expanded; ariaCurrent: selected; @aria-label: actionLabel; @title: path">
-                                    <agui-icon bind="$.name: ^icon"></agui-icon><span class="truncate" bind="textContent: ^label"></span>
-                                  </agui-button>
-                                  <p class="break-words text-xs text-agui-danger empty:hidden" bind="textContent: issue"></p>
-                                </div>
-                              </template>
-                            </div>
+                            <agui-explorer id="explorer-entries" label="Saved AGUIs" class="grid min-w-0 gap-1"
+                              pub-to="MANAGER/explorerSelection" expanded-pub-to="MANAGER/explorerExpanded" request-pub-to="MANAGER/explorerRequest"
+                              bind="$.items: MANAGER/explorerItems; $.value: MANAGER/explorerSelection; $.expanded: MANAGER/explorerExpanded; $.texts: MANAGER/explorerTexts; $.disabled: MANAGER/explorerDisabled"></agui-explorer>
                           </agui-panel>
                           <agui-panel id="explorer-preview" class="min-w-0">
                             <h4 class="mb-3 break-all text-sm font-medium" bind="textContent: MANAGER/previewPath"></h4>

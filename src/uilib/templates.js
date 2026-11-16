@@ -21,11 +21,13 @@ import { DIAGRAM_TEMPLATE } from './widgets/diagram/template.js';
 import { KANBAN_TEMPLATE, KANBAN_COLUMN_TEMPLATE, KANBAN_CARD_TEMPLATE } from './widgets/kanban/template.js';
 import { TABLE_TEMPLATE, TABLE_ROW_TEMPLATE, TABLE_HEADING_TEMPLATE, TABLE_CELL_TEMPLATE } from './widgets/table/template.js';
 import { LIST_TEMPLATE } from './widgets/list/template.js';
+import { EXPLORER_TEMPLATE } from './widgets/explorer/template.js';
 import {
   MESSAGE_TEMPLATE,
 } from './feedback/message/template.js';
 
 export let UILIB_TEMPLATES = Object.freeze({
+  explorer: EXPLORER_TEMPLATE,
   field: FIELD_TEMPLATE,
   button: BUTTON_TEMPLATE,
   nav: NAV_TEMPLATE,

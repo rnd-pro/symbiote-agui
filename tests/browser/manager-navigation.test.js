@@ -74,7 +74,9 @@ test('manager sections retain session selection, local tabs and settings drafts 
   await page.waitForSelector('#manager-inspector', {
     hidden: true,
   });
-  await page.waitForSelector('#explorer-entries [data-entry="desk.html"]');
+  await page.waitForSelector('#explorer-entries button[value="session:desk"]');
+  await page.click('#explorer-entries button[value="session:desk"]');
+  await page.waitForSelector('#explorer-entries button[value="desk.html"]');
   await openManagerSection(page, 'connections');
   assert.deepEqual(await page.$eval('agui-session-manager', (element) => {
     let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (element);

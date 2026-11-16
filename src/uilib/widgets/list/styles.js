@@ -2,18 +2,18 @@ import { css } from '@symbiotejs/symbiote';
 
 export default css`
   @layer components {
-    agui-list {
+    :is(agui-list, agui-explorer) {
       display: block;
       min-inline-size: 0;
     }
-    agui-list > .agui-list-items {
+    :is(agui-list, agui-explorer) > .agui-list-items {
       display: contents;
     }
-    agui-list > .agui-list-items > * {
+    :is(agui-list, agui-explorer) > .agui-list-items > * {
       /* Itemize reuses structural hosts; pending exit timers must not remove reused items. */
       transition: none;
     }
-    agui-list[data-message]:not([data-message=''])::before {
+    :is(agui-list, agui-explorer)[data-message]:not([data-message=''])::before {
       content: attr(data-message);
       grid-column: 1 / -1;
     }

@@ -11,6 +11,17 @@
           "sidebarBlockFollowUp": "",
           "controlView": "fields",
           "widgetView": "table",
+          "explorerSelection": [],
+          "explorerExpanded": [],
+          "explorerItems": [
+            {"id":"documents","label":"Documents","branch":true},
+            {"id":"brief","parentId":"documents","label":"Brief.md"},
+            {"id":"references","parentId":"documents","label":"References","branch":true},
+            {"id":"links","parentId":"references","label":"Links.md"},
+            {"id":"assets","label":"Assets","branch":true},
+            {"id":"overview","parentId":"assets","label":"Overview.svg"}
+          ],
+          "explorerTexts": {"empty":"No entries.","invalidRows":"Check the hierarchy.","invalidState":"Check explorer state.","unavailable":"This entry is unavailable.","expand":"Expand","collapse":"Collapse","select":"Select","more":"Load more","retry":"Retry"},
           "feedbackView": "states",
           "processStage": "review",
           "importStage": "edit",
@@ -454,6 +465,15 @@
                   </agui-list>
                 </div>
               </agui-tab>
+              <agui-tab value="explorer" label="Explorer">
+                <agui-panel class="grid gap-4">
+                  <h2>Explorer</h2>
+                  <p class="text-sm text-agui-muted">Expand groups and select an item. Selection and expanded IDs publish to shared state without application JavaScript.</p>
+                  <agui-explorer label="Documents and assets" class="grid gap-1" pub-to="APP/explorerSelection" expanded-pub-to="APP/explorerExpanded"
+                    bind="$.items: APP/explorerItems; $.value: APP/explorerSelection; $.expanded: APP/explorerExpanded; $.texts: APP/explorerTexts"></agui-explorer>
+                  <p class="text-sm">Selected: <output>{{APP/explorerSelection}}</output></p>
+                </agui-panel>
+              </agui-tab>
               <agui-tab value="kanban" label="Kanban">
                 <agui-panel class="grid gap-4">
                   <h2>Kanban</h2>
@@ -746,6 +766,7 @@
             </sym-conditional>
         </sym-conditional>
       <sym-conditional when="APP/activeSection" is="widgets">
+          <sym-conditional when="APP/widgetView" is="explorer" behavior="hide">
           <sym-conditional when="APP/widgetView" is="diagrams" behavior="hide">
           <sym-conditional when="APP/widgetView" is="map" behavior="hide">
               <sym-conditional when="APP/widgetView" is="markdown" behavior="hide">
@@ -765,6 +786,7 @@
               </sym-conditional>
           </div>
                 </sym-conditional>
+            </sym-conditional>
             </sym-conditional>
             </sym-conditional>
         </sym-conditional>

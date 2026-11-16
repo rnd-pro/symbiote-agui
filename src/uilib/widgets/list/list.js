@@ -107,7 +107,7 @@ export class List extends UiComponent {
     this.issue = '';
     try {
       if (!this.itemTemplate || this.resolveTemplate() !== this.itemTemplate) { throw new Error('invalidState'); }
-      this.model = deriveList(state);
+      this.model = this.deriveModel(state);
     } catch (error) {
       this.model = undefined;
       this.issue = error instanceof Error && error.message === 'invalidRows' ? 'invalidRows' : 'invalidState';
@@ -135,6 +135,11 @@ export class List extends UiComponent {
   /** @param {string} key */
   text(key) {
     return String((/** @type {import('../../../../types/uilib.js').UiTexts} */ (this.$.texts))?.[key] ?? '');
+  }
+
+  /** @param {import('../../../../types/uilib-list.js').UiListState} state */
+  deriveModel(state) {
+    return deriveList(state);
   }
 
   requireModel() {
@@ -176,7 +181,7 @@ export class List extends UiComponent {
 
   /** @param {MouseEvent} event */
   onClick = (event) => {
-    if (event.target instanceof Element && event.target.closest('agui-list') === this
+    if (event.target instanceof Element && event.composedPath().find((node) => node instanceof List) === this
       && isItemSelectionClick(event, this.ref.items)) { this.selectItem(event); }
   };
 

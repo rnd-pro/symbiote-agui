@@ -1,9 +1,24 @@
 import { highlightSourcePreview } from './source-preview.js';
 import { busyAction } from './busy-action.js';
 import { ALL_PROJECTS } from '../scope.js';
+import { sessionExplorerItems } from './explorer-items.js';
 
 export let EXPLORER_STATE = {
-  explorerRows: {},
+  explorerItems: [],
+  explorerSelection: [],
+  explorerExpanded: [],
+  explorerRequest: null,
+  explorerTexts: {
+    empty: '',
+    invalidRows: 'Explorer entries could not be displayed.',
+    invalidState: 'Explorer state could not be displayed.',
+    unavailable: 'This explorer entry is unavailable.',
+    expand: 'Expand',
+    collapse: 'Collapse',
+    select: 'Preview',
+    more: 'Load more entries',
+    retry: 'Retry folder',
+  },
   explorerBreadcrumbs: {},
   explorerHidden: false,
   explorerDisabled: true,
@@ -30,7 +45,6 @@ export let EXPLORER_STATE = {
 /**
  * @typedef {object} DirectoryNode
  * @property {string} path
- * @property {boolean} expanded
  * @property {boolean} loaded
  * @property {boolean} loading
  * @property {import('../../../types/explorer.js').ProjectEntry[]} entries
@@ -48,10 +62,24 @@ export class ProjectExplorer {
   previewVersion = 0;
   directoryPath = '';
   selectedPath = '';
+  /** @type {import('../../../types/uilib-explorer.js').UiExplorerNode[]} */
+  items = [];
+  /** @type {Map<string, string>} */
+  nodeIds = new Map();
 
   /** @param {import('./index.js').SessionManager} owner */
   constructor(owner) {
     this.owner = owner;
+    owner.sub('explorerSelection', (ids) => {
+      let entry = this.items.find((item) => item.id === ids?.[0]);
+      if (entry && !entry.branch && typeof entry.path === 'string') { void this.preview(entry.path); }
+    }, false);
+    owner.sub('explorerRequest', (request) => {
+      let entry = this.items.find((item) => item.id === request?.id);
+      if (entry?.branch && typeof entry.path === 'string') {
+        void this.load(entry.path, request.action === 'more' ? this.directories.get(entry.path)?.nextOffset ?? 0 : 0);
+      }
+    }, false);
   }
 
   /** @param {string} projectId */
@@ -89,6 +117,12 @@ export class ProjectExplorer {
   reload() {
     this.revision += 1;
     this.directories.clear();
+    this.nodeIds.clear();
+    this.owner.set$({
+      explorerSelection: [],
+      explorerExpanded: [],
+      explorerRequest: null,
+    });
     this.directoryPath = '';
     this.clearPreview();
     this.render();
@@ -125,7 +159,6 @@ export class ProjectExplorer {
     if (!node) {
       node = {
         path,
-        expanded: true,
         loaded: false,
         loading: false,
         entries: [],
@@ -140,19 +173,24 @@ export class ProjectExplorer {
     let revision = this.revision;
     this.render();
     try {
-      let result = await connection.request('project entries', {
-        projectId: this.projectId,
-        path,
-        offset,
-        showHidden: !!this.owner.$.explorerHidden,
-      });
-      if (!this.current(revision)) { return; }
-      if (!result.ok || !result.directory) { throw new Error(result.error?.message || 'The project directory could not load.'); }
-      node.entries = offset ? [
+      let entries = offset ? [
         ...node.entries,
-        ...result.directory.entries,
-      ] : result.directory.entries;
-      node.nextOffset = result.directory.nextOffset;
+      ] : [];
+      let nextOffset = /** @type {number | undefined} */ (offset);
+      do {
+        let result = await connection.request('project entries', {
+          projectId: this.projectId,
+          path,
+          offset: nextOffset,
+          showHidden: !!this.owner.$.explorerHidden,
+        });
+        if (!this.current(revision)) { return; }
+        if (!result.ok || !result.directory) { throw new Error(result.error?.message || 'The project directory could not load.'); }
+        entries.push(...result.directory.entries);
+        nextOffset = result.directory.nextOffset;
+      } while (!path && nextOffset !== undefined);
+      node.entries = entries;
+      node.nextOffset = nextOffset;
       node.loaded = true;
     } catch (error) {
       if (this.current(revision)) { node.error = error instanceof Error ? error.message : String(error); }
@@ -162,22 +200,17 @@ export class ProjectExplorer {
   }
 
   /** @param {string} path */
-  async toggle(path) {
-    let node = this.directories.get(path);
-    if (node?.expanded) { node.expanded = false; }
-    else {
-      if (node) { node.expanded = true; }
-      this.directoryPath = path;
-      if (!node?.loaded) { await this.load(path); }
-    }
-    this.render();
-  }
-
-  /** @param {string} path */
   async reveal(path) {
     this.directoryPath = path;
     let node = this.directories.get(path);
-    if (node) { node.expanded = true; }
+    let expanded = new Set(/** @type {string[]} */ (this.owner.$.explorerExpanded));
+    let sessionId = /^([^/]+)\.assets(?:\/|$)/.exec(path)?.[1];
+    if (sessionId) { expanded.add(`session:${sessionId}`); }
+    let parts = path ? path.split('/') : [];
+    for (let index = 0; index < parts.length; index += 1) { expanded.add(this.entryId(parts.slice(0, index + 1).join('/'))); }
+    this.owner.$.explorerExpanded = [
+      ...expanded,
+    ];
     if (!node?.loaded) { await this.load(path); }
     this.render();
   }
@@ -230,60 +263,14 @@ export class ProjectExplorer {
 
   render() {
     let disabled = !this.owner.connection?.ready;
-    /** @type {[string, object][]} */
-    let rows = [];
-    /**
-     * @param {DirectoryNode} node
-     * @param {number} depth
-     */
-    let append = (node, depth) => {
-      for (let entry of node.entries) {
-        let child = this.directories.get(entry.path);
-        let folder = entry.kind === 'directory';
-        rows.push([
-          `entry:${entry.path}`,
-          {
-            path: entry.path,
-            label: entry.name,
-            actionLabel: `${folder ? child?.expanded ? 'Collapse' : 'Expand' : 'Preview'} ${entry.name}`,
-            indent: `${depth}rem`,
-            expanded: folder ? String(!!child?.expanded) : null,
-            selected: entry.path === this.selectedPath ? 'true' : null,
-            icon: folder ? child?.expanded ? 'folder_open' : 'folder' : 'insert_drive_file',
-            disabled: disabled || entry.kind === 'unavailable',
-            issue: entry.error || '',
-            invoke: busyAction(() => folder ? this.toggle(entry.path) : this.preview(entry.path)),
-          },
-        ]);
-        if (child?.expanded) { append(child, depth + 1); }
-      }
-      let message = node.error || (node.loading ? 'Loading folder...' : !node.entries.length && node.path ? 'This folder is empty.' : '');
-      if (message && node.path || node.nextOffset !== undefined) {
-        rows.push([
-          `status:${node.path}`,
-          {
-            path: '',
-            label: message || 'Load more entries',
-            actionLabel: message || 'Load more entries',
-            indent: `${depth}rem`,
-            expanded: null,
-            selected: null,
-            icon: node.error ? 'refresh' : 'more_horiz',
-            disabled: disabled || node.loading || !node.error && node.nextOffset === undefined,
-            issue: '',
-            invoke: busyAction(() => this.load(node.path, node.nextOffset ?? 0)),
-          },
-        ]);
-      }
-    };
     let root = this.directories.get('');
-    if (root) { append(root, 0); }
+    this.items = sessionExplorerItems(this.directories, (path) => this.entryId(path));
     let parts = this.directoryPath ? this.directoryPath.split('/') : [];
     this.owner.set$({
       explorerDisabled: disabled,
-      explorerRows: Object.fromEntries(rows),
-      explorerStatus: root?.error ? 'error' : root?.loading && !root.loaded ? 'loading' : root?.loaded && !root.entries.length ? 'empty' : 'ready',
-      explorerMessage: root?.error || (root?.loading ? 'Loading project files...' : 'This project folder is empty.'),
+      explorerItems: this.items,
+      explorerStatus: root?.error ? 'error' : root?.loading && !root.loaded ? 'loading' : root?.loaded && !this.items.length ? 'empty' : 'ready',
+      explorerMessage: root?.error || (root?.loading ? 'Loading saved AGUIs...' : 'No saved AGUIs in this project.'),
       explorerBreadcrumbs: Object.fromEntries([
         [
           'root',
@@ -303,5 +290,15 @@ export class ProjectExplorer {
         ]),
       ]),
     });
+  }
+
+  /** @param {string} path */
+  entryId(path) {
+    let id = this.nodeIds.get(path);
+    if (!id) {
+      id = path.length <= 128 ? path : `path:${this.nodeIds.size}`;
+      this.nodeIds.set(path, id);
+    }
+    return id;
   }
 }

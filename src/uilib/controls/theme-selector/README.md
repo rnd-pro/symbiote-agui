@@ -5,13 +5,13 @@
 Declare a persisted palette property, bind it into `value`, and publish back to the same property:
 
 ```html
-<context-provider ctx="APP" persist="palette theme">
+<sym-context ctx="APP" persist="palette theme">
   <script type="application/json">{"palette":"graphite","theme":"system"}</script>
   <agui-theme-selector label="App theme" pub-to="APP/palette"
     bind="$.value: APP/palette; $: AGUI_TEXT/themeSelector"></agui-theme-selector>
   <agui-theme-toggle ctx="APP" light-label="Day" dark-label="Night"
     bind="$: AGUI_TEXT/themeToggle"></agui-theme-toggle>
-</context-provider>
+</sym-context>
 ```
 
 Values are `graphite` (default), `ocean`, `forest`, and `desert`. Supply the accessible name with `label`, a native `$.label` binding, or `aria-label`. `disabled` and `readonly` protect edits. Standard palette names and saving copy come from `AGUI_TEXT/themeSelector`; bind caller-owned `texts` to replace them. Missing copy stays empty. Shared popover styling provides animation, native dismissal, and positioning; previews follow the current color scheme.

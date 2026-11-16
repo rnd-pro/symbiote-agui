@@ -1,4 +1,4 @@
-<context-provider id="table-data" ctx="RECORDS">
+<sym-context id="table-data" ctx="RECORDS">
   <script type="application/json">
     {
       "rows":[
@@ -31,4 +31,4 @@
     bind="$.rows: RECORDS/rows; $.columns: RECORDS/columns; $.texts: RECORDS/texts; $.value: RECORDS/ids; $.filteredIds: RECORDS/matchingIds; $.sort: RECORDS/sort; $.readonly: RECORDS/readonly; $.loading: RECORDS/loading; $.error: RECORDS/error"></agui-table>
   <agui-table id="single-table" label="Pick one contact" id-key="key" selection="single" page-size="2"
     pub-to="RECORDS/singleIds" bind="$.rows: RECORDS/rows; $.columns: RECORDS/columns; $.texts: RECORDS/texts; $.value: RECORDS/singleIds"></agui-table>
-</context-provider>
+</sym-context>

@@ -281,6 +281,7 @@ export class AguiMap extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.disposed = true;
     cancelAnimationFrame(this.paintFrame);
     this.resizeObserver?.disconnect();

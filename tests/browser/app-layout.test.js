@@ -23,7 +23,7 @@ test('app sidebars publish explicit edits, preserve children, and mirror without
   });
   let session = await cli('start', 'app-layout', '--no-open');
   await insertStdin('app-layout', `
-    <context-provider id="app" ctx="LAYOUT">
+    <sym-context id="app" ctx="LAYOUT">
       <script type="application/json">{"open":true,"other":false,"title":"Navigation","draft":"Original"}</script>
       <agui-app>
         <agui-header><h1>Workspace</h1></agui-header>
@@ -43,7 +43,7 @@ test('app sidebars publish explicit edits, preserve children, and mirror without
         </agui-sidebar>
         <agui-footer slot="footer">Footer</agui-footer>
       </agui-app>
-    </context-provider>
+    </sym-context>
   `);
   browser = await puppeteer.launch({
     executablePath,

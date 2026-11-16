@@ -79,11 +79,12 @@ test('server parsing validates fragments and collects classes from nested templa
   let markup = '<template id="outer"><template id="inner"><p class="p-8 w-[123px]">Text</p></template></template><user-card use-template="#outer"><script type="application/json">{"name":"Alex"}</script></user-card>';
   let result = analyzeMarkup(markup);
   assert.deepEqual(result.classes, ['p-8', 'w-[123px]']);
-  assert.ok(result.tags.has('user-card'));
+  let list = analyzeMarkup('<template id="record"><p class="gap-4">{{name}}</p></template><sym-component><ul itemize="items" use-template="#record"></ul></sym-component>');
+  assert.deepEqual(list.classes, ['gap-4']);
   for (let invalid of [
     '<user-card use-template="#missing"></user-card>',
-    '<agui-component><script type="text/json">{broken}</script></agui-component>',
-    '<context-provider ctx="same"></context-provider><context-provider ctx="same"></context-provider>',
+    '<sym-component><script type="application/json">{broken}</script></sym-component>',
+    '<sym-context ctx="same"></sym-context><sym-context ctx="same"></sym-context>',
     '<script type="module" data-agui src="/missing.js"></script>',
   ]) {
     assert.throws(() => analyzeMarkup(invalid));

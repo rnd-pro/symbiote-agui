@@ -61,7 +61,7 @@ For repeatable operations, interfaces can also call approved [local connector ba
 
 ## UI library
 
-AGUI includes a reusable UI library that lets agents build dynamic applications declaratively with RAT, using only predefined custom HTML tags and attributes, without needing access to the JavaScript runtime. It speeds up UI generation and significantly reduces token consumption. See the [AGUI skill](./skills/agui/SKILL.md#built-in-ui-foundation) for usage guidance.
+AGUI combines the [Symbiote HTML-app foundation](https://github.com/symbiotejs/symbiote.js/tree/main/html-app) with a themed UI library. Agents can build dynamic applications declaratively with RAT, using HTML tags and attributes without needing access to the JavaScript runtime. It speeds up UI generation and significantly reduces token consumption. See the [AGUI skill](./skills/agui/SKILL.md#built-in-ui-foundation) for usage guidance.
 
 ## Manage sessions in your browser
 

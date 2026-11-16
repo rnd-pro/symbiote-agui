@@ -202,6 +202,7 @@ export class Markdown extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.stopSource();
     this.disposed = true;
     this.revision += 1;

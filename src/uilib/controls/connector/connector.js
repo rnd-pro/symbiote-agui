@@ -197,7 +197,7 @@ export class Connector extends UiComponent {
     this.refresh();
   }
 
-  destroyCallback() { this.disposed = true; }
+  destroyCallback() { super.destroyCallback(); this.disposed = true; }
 }
 
 Connector.bindAttributes({

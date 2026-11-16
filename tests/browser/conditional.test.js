@@ -103,7 +103,7 @@ test('conditional content follows native contexts, preserves hidden drafts, and 
   assert.equal(await page.$eval('#hidden-draft', (element) => Reflect.get(window, 'hiddenConditionalField') === element), true);
   assert.equal(await page.$eval('#inverse-reset', (element) => Reflect.get(window, 'inverseRemovedConditionalField') === element), false);
   let after = await cli('tools', 'conditional');
-  assert.equal(after.tools.some((/** @type {import('../../types/tools.js').PageTool} */ tool) => resetTools.some((/** @type {import('../../types/tools.js').PageTool} */ previous) => previous.name === tool.name)), false);
+  assert.equal(after.tools.some((/** @type {import('../../types/tools.js').PageTool} */ tool) => resetTools.some((/** @type {import('../../types/tools.js').PageTool} */ previous) => previous.ownerId === tool.ownerId)), false);
   await update({
     enabled: true,
   });
@@ -165,7 +165,7 @@ test('conditional content follows native contexts, preserves hidden drafts, and 
         element.setAttribute('is', matches ? 'false' : 'true');
       }, scenario.behavior, matches);
       assert.equal(await hidden('retarget'), matches ? scenario.matchedHidden : scenario.unmatchedHidden, scenario.behavior);
-      assert.equal(await page.$eval('#retarget .agui-conditional-content', (element) => !!element.firstElementChild),
+      assert.equal(await page.$eval('#retarget', (element) => !!element.firstElementChild),
         matches ? scenario.matchedMounted : scenario.unmatchedMounted, scenario.behavior);
     }
   }
@@ -177,7 +177,7 @@ test('conditional content follows native contexts, preserves hidden drafts, and 
   });
   assert.equal(await page.$eval('#preserved input', (element) => element.value), 'Original');
   await page.evaluate(() => {
-    let provider = document.createElement('context-provider');
+    let provider = document.createElement('sym-context');
     provider.setAttribute('ctx', 'LATE');
     provider.innerHTML = '<script type="application/json">{"enabled":true}</script>';
     document.querySelector('#conditional-data')?.append(provider);

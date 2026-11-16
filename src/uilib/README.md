@@ -6,17 +6,17 @@ Group components by purpose: `layouts/` for dashboard, panel, header, and toolba
 
 Call `registerUiLibComponents()` from `index.js` before the page connects. Register the page's context provider first. JSDA bundles this entry into the normal page client, with one Symbiote instance and no per-session imports.
 
-`context-provider src="./_assets/data.json"` loads external object data with native bindings, cancellation, and reactive loading/error outputs. Bound `state` and inline values take precedence over fetched defaults. See [provider data sources](./context-provider.md) for precedence, editing, and persistence.
+Application behavior comes from [Symbiote HTML-app](https://github.com/symbiotejs/symbiote.js/blob/main/html-app/README.md), included by the default page bundle. Use `sym-component`, `sym-context`, `sym-collection`, `sym-conditional`, `sym-import`, and `sym-router` directly. AGUI components inherit its base class for JSON defaults, actions, `pub-map`, native Itemize, and lifecycle cleanup; this library adds presentation, widget interactions, and AGUI integration.
+
+A named `sym-context` owns one native PubSub context. Use `$` object bindings and optional `pub-to` for feature writeback; incoming objects merge shallowly and omitted fields remain. Bind URL attributes with `@src`; loading/error outputs are native computed signals. See HTML-app's contracts rather than implementing separate loaders or state adapters.
+
+Use `sym-import` for reviewed application fragments and `sym-conditional` for visibility or DOM mounting. Imports require HTML responses and validate executable markup; replaced content releases native subscriptions and tools. Keep persisted declarations in the main saved definition. AGUI `persist` and its data toolbar remain worker-backed Save/Cancel; HTML-app browser storage is a separate opt-in capability.
 
 Use [`agui-sidebar-block`](./layouts/sidebar-block/README.md) to label and group related sidebar controls. Bind its boolean `active` state to applicability; inactive groups keep only a faded label visible while preserving mounted drafts.
 
-Use [`agui-import`](./content/import/README.md) to compose trusted HTML fragments from a `src` URL. Imported children support native bindings and registered components; source changes replace the chunk and cancel stale requests. Keep persisted provider declarations in the main saved definition.
-
-Use `agui-conditional` for declarative boolean/string conditions on native context keys. `behavior` sets the matching state: `show` (default), `hide`, `dom-add`, or `dom-remove`; nonmatches apply the opposite state. Show/hide preserve mounted content, while DOM behaviors use Itemize. See the [conditional contract](./layouts/conditional/README.md).
-
 Mark code-entry fields with `data-code` on `agui-field type="textarea"` or a native `textarea` to use the shared monospace font for the editable content.
 
-Use `agui-button` for declarative boolean toggles and boolean/string state assignment, with native button attributes, shared styling, and scoped activation. See the [button contract](./controls/button/README.md).
+Use native buttons with HTML-app `[toggle]` / `[set]` bindings for state actions. Use `agui-button` for native attribute forwarding, loading presentation, and scoped activation. See the [button contract](./controls/button/README.md).
 
 Use `agui-theme-selector` for Graphite, Ocean, Forest, and Desert palettes, each compatible with the existing day/night toggle. A round palette button opens native color previews; trusted user choices save only a declared persisted palette property. See the [theme selector contract](./controls/theme-selector/README.md).
 
@@ -82,7 +82,7 @@ Keep all user-facing copy outside uilib and pass it through host attributes or n
 
 Use host attributes for primitive defaults, native `bind="$.label: APP/nameLabel"` assignments for dynamic state properties, and `bind="$: APP/componentState"` for objects. Components own local state by default. Share application data through one common provider when needed; do not add a provider or JSON parser for every field. Use explicit native bindings to pass shared application data into local component properties; `ctx` does not change their storage scope.
 
-Declare state in `init$` and use native `$`, `add$()`, and `sub()` directly. Assigning an object to `$` merges supplied keys, adds missing keys, and preserves omitted fields and the existing proxy, including before connection. Nested objects are replaced by reference; every supplied key notifies, even unchanged primitives. Do not add state adapters, scope resolvers, subscription wrappers, property proxies, or separate default models. Native `sub()` owns subscription cleanup; the existing context provider owns shared application state and its replacement lifecycle.
+Declare state in `init$` and use native `$`, `add$()`, and `sub()` directly. Assigning an object to `$` merges supplied keys, adds missing keys, and preserves omitted fields and the existing proxy, including before connection. Nested objects are replaced by reference; every supplied key notifies, even unchanged primitives. Do not add state adapters, scope resolvers, subscription wrappers, property proxies, or separate default models. Native `sub()` owns subscription cleanup; native `sym-context` owns shared application state and its replacement lifecycle.
 
 Controls own their native inputs in their templates. Configure them through host attributes and native bindings, without light DOM slots or a slot processor. Bound local properties take precedence over attribute defaults. Property bindings are incoming assignments; user edits update local control state and emit events. Add `pub-to="APP/name"` to explicitly publish changed values through the native `$` proxy to an existing context property. This is shared by fields, textareas, selects, checkboxes, radios, and toggles, including tool-driven edits. Pair it with `bind="$.value: APP/name"` for synchronization in both directions without handlers. Initialization and incoming assignments do not publish; disabled/read-only controls remain protected. The target attribute is read on each edit, so normal attribute bindings can change or remove it.
 

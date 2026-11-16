@@ -19,7 +19,7 @@ Use session-relative URLs in the interface:
 ```html
 <img src="./_assets/images/logo.svg" alt="Project logo">
 <agui-markdown src="./_assets/documents/brief.md" label="Brief"></agui-markdown>
-<agui-import src="./_assets/fragments/details.html"></agui-import>
+<sym-import src="./_assets/fragments/details.html"></sym-import>
 ```
 
 Supply the Markdown widget's caller-owned status texts as usual. Relative Markdown media resolve against the served document URL. CSS URLs and imports resolve against the CSS file; imports inside browser modules resolve against the module URL. Native `fetch(new URL('./_assets/data.json', document.baseURI))` reads JSON without a wrapper.
@@ -68,7 +68,7 @@ The packaged gallery's Assets section uses the files in `src/uilib/gallery.asset
 
 - Raster images: PNG, JPEG, GIF, WebP, AVIF, BMP, and ICO; vector images: SVG.
 - Fonts: WOFF, WOFF2, TTF, and OTF.
-- CSS, JS/MJS browser modules, JSON, Markdown (`.md` and `.markdown`), HTML fragments (`.html` and `.htm`), and plain text. HTML fragments are served as `text/plain` with `nosniff`; `agui-import` reads and inserts their markup, while opening an asset URL directly displays its source.
+- CSS, JS/MJS browser modules, JSON, Markdown (`.md` and `.markdown`), HTML fragments (`.html` and `.htm`), and plain text. HTML fragments are served as `text/html` for native `sym-import`, with `nosniff` and a sandboxed, no-script Content Security Policy on direct navigation. Imported fragments are reviewed application markup and use the receiving page's execution context.
 - Up to 16 MiB per file, 128 MiB per tree, 512 files, and 2,048 total file/directory entries.
 - Portable relative paths: up to 32 segments, 1,024 characters total, and 255 per segment. Use letters, digits, underscores, hyphens, dots, and spaces; segments must start with a letter, digit, or underscore and must not end with a dot or space. Case-only collisions, hidden/reserved names, encoded names, traversal, and links are rejected.
 - GET and HEAD only, with eight concurrent responses and a 30-second deadline. No directory indexes, range streaming, executable HTML document serving, arbitrary file downloads, recursive filesystem imports, or server-side module execution.

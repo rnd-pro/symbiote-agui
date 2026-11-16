@@ -36,17 +36,17 @@ If any setup step fails or a requested capability remains unavailable, report th
 
 ## Built-in UI foundation
 
-The default JSDA page bundle includes and registers every available library component. Compose them directly in HTML with Symbiote contexts; do not add imports, registration scripts, per-component JSON, or JavaScript initialization. Use these before generating custom components.
+The default page bundle includes Symbiote HTML-app and AGUI visual components. Use `sym-component`, `sym-context`, `sym-collection`, `sym-conditional`, `sym-import`, and `sym-router` for application behavior; compose styled AGUI controls and widgets around them without additional imports or initialization. Prefer declarative HTML-app actions before writing modules. Read the [HTML-app API](https://github.com/symbiotejs/symbiote.js/blob/main/html-app/README.md) for state, actions, collections, templates, sources, imports, storage, and routing contracts.
 
-Library elements accept `process-inner-html="false"` or `"true"` before initialization to disable or enable parsing of their existing children; omission keeps the component default. This does not disable their own templates or undo bindings created by an outer template. Disable it on nested layouts when the surrounding template should own their content bindings. Layouts such as `agui-header` and `agui-panel` already process authored markup; reuse that owner instead of adding `agui-component` solely for bindings or Itemize.
+Library elements accept `process-inner-html="false"` or `"true"` before initialization to disable or enable parsing of their existing children; omission keeps the component default. This does not disable their own templates or undo bindings created by an outer template. Disable it on nested layouts when the surrounding template should own their content bindings. Layouts such as `agui-header` and `agui-panel` already process authored markup; reuse that owner instead of adding `sym-component` solely for bindings or Itemize.
 
 - `agui-app`: viewport-height application shell. Direct children are one start sidebar, one `agui-viewport`, and an optional end sidebar. By default, place `agui-header` and optional `agui-footer` inside the viewport. Direct app-level headers/footers or `slot="header"`/`slot="footer"` regions are also supported when fixed rows outside the scroll regions are needed. Place the single `agui-data-toolbar` last as a direct child of the app so its reserved row keeps all scroll areas clear of the floating bar. Sidebars flank the viewport from 64rem upward and stack above/below it on narrower screens. Use `--agui-app-height` to embed a shorter shell; the default is `100dvh`.
 - `agui-sidebar`: independently scrolling authored content with a built-in expand/collapse button. `side="start"` is the default; use `side="end"` for the other side. Without an explicit value, it defaults to collapsed below `64rem` and expanded from `64rem`; `collapsed` keeps that default closed at every size. Unset state follows breakpoint changes without publishing edits. A bound value or explicit user/tool toggle takes precedence and survives resizing. Supply `label`, `expand-label`, and `collapse-label`, or bind `$.label`, `$.expandLabel`, and `$.collapseLabel`. Boolean `$.value` is expanded state; pair its binding with `pub-to` to share visibility with other controls. Disabled/read-only state protects visibility changes, not the fields inside. Collapsing preserves mounted content and drafts. Desktop width uses `--agui-sidebar-width` (default `18rem`); collapsed panels keep their toggle visible. Set `collapse-empty` or boolean `$.collapseEmpty` to collapse and disable the toggle while no visible text, controls, or media remain. This preserves the visibility preference; normal bound/default behavior resumes when content returns.
 - `agui-nav`: app-section menu with `items: [{ value, label, icon?, disabled? }]` and a string `value`. Supply an accessible `label`; values must be unique nonempty strings, and icons are optional supported collection names. Pair `$.value` with `pub-to` for explicit user/tool selection, or use `pub-map` for reactive outputs. It exposes `section`, `sectionName`, and `sectionIcon` for the effective enabled selection; missing, unknown, or disabled values give empty outputs; `pub-to` does not publish a fallback value. Current items receive `aria-current="page"`, accent text, and a square-ended right-side marker matching tab indicator thickness. Native buttons provide keyboard activation; group `disabled`/`readonly` blocks edits. Discover `set_value` and `read_value` by owner and authored ID.
 - `agui-viewport`: independently scrolling central content. Give it an `aria-label` or `aria-labelledby`; it defaults to `role="main"` and `tabindex="0"`, preserving explicit overrides. Place existing headers, dashboards, and panels inside it. A floating header within the viewport supplies focus spacing to that scroll region; an app-level header occupies its own row and needs no `floating` flag.
 - `agui-tabs`: authored tab control with string active `value`, optional `pub-to`, caller-owned `label` for the tablist, and `orientation="horizontal"` (default) or `vertical`. Use direct `agui-tab` children with unique nonempty string `value` keys and caller-owned `label` text; labels, keys, and disabled state can use native property or `$` merge bindings. A disabled tab is unavailable for selection. Group `disabled`/`readonly` prevents switching without changing child fields' own edit policies. Panels stay mounted while hidden, preserving drafts and nested tab state. A missing, unknown, or disabled requested value displays the first enabled tab without publishing a correction; no enabled tabs means no visible panel and an effective value of `""`.
-- `agui-conditional`: `when` names a native context key; `is="true|false"` compares a boolean, other `is` values compare exact strings, and omitted `is` checks truthiness. `behavior` sets the matching state: `show` (default) or `hide` preserves mounted content; `dom-add` or `dom-remove` mounts/removes Itemize branches. A nonmatching condition applies the opposite state. Use a child `<template>` for inert contents and keep durable values in an outer provider. No expressions or scripts are needed. See the conditional example below.
-- `agui-button`: native button with `toggle="APP/flag"` for an existing boolean, or `set="APP/key" value="..."` for boolean/string assignment. `"true"`/`"false"` become booleans; other values stay literal strings. Use either action, or neither for native button behavior. Additional native attributes, styles, IDs, and authored content transfer to the inner button; framework/action attributes stay on the wrapper. Disabled/read-only guards and scoped `activate` apply to user and tool activation. Prefer this over custom handlers for these state actions.
+- `sym-conditional`: native conditional content with `when`, optional typed `is`, and `behavior="show|hide|dom-add|dom-remove"`. Use ordinary authored children or native `use-template`; use `@when`, `@is`, and `@behavior` for dynamic configuration. Show/hide retains drafts; DOM modes recreate children. Keep durable state outside the branch.
+- `agui-button`: native button with forwarded attributes and shared loading presentation. Use boolean `loading` or `$.loading` to replace icons with the preloader and block activation. Use native `<button>` elements with `[toggle]` / `[set]` event bindings for state actions; both reuse the shared button styles. See the button example below.
 - `agui-dialog`: native modal with preserved authored contents and boolean `value` for visibility. Supply `label` and `close-label`; optional `open-label` adds a built-in opener. Native property bindings use `$.label`, `$.closeLabel`, and `$.openLabel`. The `open` attribute supplies an initially open default when no value is bound. Pair the value binding with `pub-to` for shared visibility. Closing never saves or discards fields; child controls keep their own edit policies. See the dialog/popup example below.
 - `agui-filter`: reusable search and typed AND filters over provider-bound `rows` and `fields`, independent of any view. `value` is the filter dictionary; pair it with `pub-to`, and optionally publish `query` through `query-pub-to`. `results-to` publishes matching IDs into an existing provider array, including initialization and incoming updates, without user-action notifications. Supply caller-owned `texts`, `label`, optional `locale`, and `id-key` (default `id`).
 - `agui-table`: provider-bound `rows`, typed `columns`, and caller-owned `texts`, with sorting, ID selection, and local pagination. Optional `filteredIds` consumes a filter's matching IDs; `null` shows all rows and `[]` shows none. `value` is always a string ID array; `selection="none|single|multiple"` defaults to none. Pair selection with `pub-to` and sort with `sort-pub-to`. Supply `label`, optional `locale`, and `page-size` (default 20, maximum 100). Every source row needs a unique nonempty string ID. Disabled/read-only blocks changes; `loading` and `error` show caller-owned states. The table does not edit records.
@@ -54,7 +54,7 @@ Library elements accept `process-inner-html="false"` or `"true"` before initiali
 - `agui-kanban`: status editor over a provider-bound records array in `value`, with `columns: [{ value, label, disabled?, tone? }]`. Pair `pub-to` with the same provider binding; cards move between columns through native drag-and-drop or Alt+Left/Right while focused. Configure `id-key`, `status-key`, `title-key`, and optional `description-key`. Unknown statuses remain in a caller-labeled unassigned group. Provide `label` and caller-owned `texts`; disabled/read-only, loading, and errors block edits. Declare records in `persist` and use the data toolbar for Save/Cancel.
 - `agui-chart`: prepared `rows` and declarative `series` for `type="line|bar|donut"`, rendered as SVG. Supply `id-key`, `x-key`, `x-label`, `label`, optional `description`, and caller-owned `texts`. Optional `value` is a selected ID array with `selection="none|single|multiple"` and `pub-to`. A built-in data disclosure supports keyboard reading/selection. The heavy runtime loads automatically on element initialization; do not add imports or engine configuration to sessions.
 - `agui-map`: prepared location `rows`, selected IDs in `value`, and `view: { center: [latitude, longitude], zoom }`. Use `pub-to` for selection and `view-pub-to` for viewport publication. Supply caller-owned labels/texts and optional raster `tiles` with visible attribution. Leaflet and CSS load automatically on initialization; a coordinate table provides keyboard selection. Viewers receive the user's inert map viewport without Leaflet.
-- `agui-import`: loads a reviewed HTML fragment directly into its children: `<agui-import src="./_assets/fragments/details.html"></agui-import>`. Supports `.html`/`.htm`, HTTP(S), CORS and configured proxy URLs; bind `$.src` for replacement. Native bindings and nested components work; `process-inner-html="false"` disables the host's parsing. `pub-map` can publish boolean `loading` and an `error` code. Requests cancel on replacement/disconnection and are bounded to 1 MiB/15 seconds. Keep persisted providers and compiled utilities in the main definition; relative URLs resolve against the page. This imports trusted application markup without sanitization; use Markdown for untrusted documents. See the [HTML import contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/content/import/README.md).
+- `sym-import`: native trusted HTML composition: `<sym-import src="./_assets/fragments/details.html"></sym-import>`. Bind `@src` to replace sources; `pub-map` can publish `+loading`, `+loadError`, and `+loadErrorMessage`. The response must be HTML; stale loads are cancelled and failed replacements retain prior content. Relative fragment URLs resolve from the fragment URL. Keep persisted owners and compiled utilities in the main saved definition. Imports reject executable scripts, inline event attributes, and unsafe URLs; bindings and registered components still execute trusted application behavior. Use Markdown with extensions disabled for untrusted documents.
 - `agui-markdown`: Markdown string in `value` or an external `src` URL, caller-owned accessible `label`, and `texts`. JSDA-Kit renders formatting, highlighted code, native HTML/media, and custom wrappers with readable Markdown/JSON fallbacks. Registered components can enhance wrappers; task checkboxes stay disabled. Dependencies load on initialization without session imports or scripts.
 - `agui-dashboard`: responsive workspace. `layout="single"` (default), `split`, `equal`, or `grid`; `density="comfortable"` (default) or `compact`. In split mode, direct children with `slot="main"` use two columns and `slot="side"` one. Toolbars and `slot="full"` span all columns. These layout slot attributes do not require Shadow DOM.
 - `agui-panel`: content container; supply ordinary child markup and optional headings/actions. Opt into shared selectable-card appearance with `selectable`, `@data-selected`, and `ariaDisabled` bindings. This supplies hover, focus, and selected styling; selection behavior stays with the list or authored controls.
@@ -116,14 +116,14 @@ Each primitive owns its local value by default, so sibling fields remain indepen
 For dynamic data, use standard Symbiote `bind` assignments through the native `$` state proxy, for example `bind="$.label: *nameLabel"`. For an object, use `bind="$: APP/componentState"`; Symbiote natively merges the supplied fields, adds missing keys, and preserves omitted fields and the existing state proxy. Do not add a JSON parser, provider, or initialization script per primitive. One common provider may hold shared task records, option arrays, and state objects:
 
 ```html
-<context-provider id="app-data" ctx="APP">
+<sym-context id="app-data" ctx="APP">
   <script type="application/json">
     {"nameLabel":"Contact name","statusOptions":[{"value":"new","label":"New"}],"componentState":{"label":"Email","value":"alex@example.com","readonly":true}}
   </script>
   <agui-field bind="$.label: *nameLabel" value="Alex" name="name"></agui-field>
   <agui-select label="Status" value="new" name="status" bind="$.options: *statusOptions"></agui-select>
   <agui-field type="email" name="email" bind="$: APP/componentState"></agui-field>
-</context-provider>
+</sym-context>
 ```
 
 Control state properties are `value`, `label`, `hint`, `error`, `disabled`, `readonly`, `required`, and `requiredMark` (`required-mark` attribute). Selects also expose `options` and `placeholder`; state presentation exposes `status`, `message`, and `retryLabel`. Merge objects use flat native Symbiote keys, including native scope prefixes when needed. The native `$` setter also accepts assignments before connection; no component adapter or initialization handler is needed. Merges replace nested objects by reference and notify every supplied key, including unchanged primitives. Read reactive state through the existing `$` proxy. Supplied properties take precedence over attribute defaults. Native configuration such as `name`, `type`, `autocomplete`, and constraints stays on host attributes, which can also use standard bindings such as `bind="@placeholder: APP/searchHint"`.
@@ -169,7 +169,7 @@ For navigation, map `section`, `sectionName`, and `sectionIcon` to a provider, t
 ### App layout example
 
 ```html
-<context-provider ctx="WORKSPACE">
+<sym-context ctx="WORKSPACE">
   <script type="application/json">
     {
       "section": "notes",
@@ -201,16 +201,12 @@ For navigation, map `section`, `sectionName`, and `sectionIcon` to a provider, t
         <h1 class="flex items-center gap-2"><agui-icon bind="$.name: WORKSPACE/sectionIcon; hidden: !WORKSPACE/sectionIcon"></agui-icon>{{WORKSPACE/sectionName}}</h1>
       </agui-header>
       <agui-dashboard>
-        <agui-conditional when="WORKSPACE/section" is="notes">
-          <template><agui-field label="Notes" type="textarea" pub-to="WORKSPACE/notes" bind="$.value: WORKSPACE/notes"></agui-field></template>
-        </agui-conditional>
-        <agui-conditional when="WORKSPACE/section" is="appearance">
-          <template><agui-theme-toggle ctx="WORKSPACE" aria-label="Dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle></template>
-        </agui-conditional>
+        <sym-conditional when="WORKSPACE/section" is="notes"><agui-field label="Notes" type="textarea" pub-to="WORKSPACE/notes" bind="$.value: WORKSPACE/notes"></agui-field></sym-conditional>
+        <sym-conditional when="WORKSPACE/section" is="appearance"><agui-theme-toggle ctx="WORKSPACE" aria-label="Dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle></sym-conditional>
       </agui-dashboard>
     </agui-viewport>
   </agui-app>
-</context-provider>
+</sym-context>
 ```
 
 Sidebar clicks, keyboard input, and scoped `set_value` tools publish visibility changes; incoming assignments and repeated values emit no changes. Sidebar tools also include `read_value` and `toggle`; discover their exact names through CLI `tools`. Keep visibility transient by default. For record-editing workspaces, declare the record keys in `persist` and place the data toolbar directly in the app as described above.
@@ -218,42 +214,41 @@ Sidebar clicks, keyboard input, and scoped `set_value` tools publish visibility 
 ### Button example
 
 ```html
-<context-provider ctx="UI">
+<sym-context ctx="UI">
   <script type="application/json">{"showModal":false,"currentSection":"overview"}</script>
-  <agui-button toggle="UI/showModal">Toggle modal</agui-button>
-  <agui-button set="UI/showModal" value="true">Open modal</agui-button>
-  <agui-button set="UI/showModal" value="false">Close</agui-button>
-  <agui-button set="UI/currentSection" value="settings">Settings</agui-button>
+  <button type="button"  bind="onclick: [toggle]UI/showModal">Toggle modal</button>
+  <button type="button"  value="true" bind="onclick: [set]UI/showModal">Open modal</button>
+  <button type="button"  value="false" bind="onclick: [set]UI/showModal">Close</button>
+  <button type="button"  value="settings" bind="onclick: [set]UI/currentSection">Settings</button>
   <agui-dialog label="Settings" close-label="Close" pub-to="UI/showModal" bind="$.value: UI/showModal">
     <p>Application settings</p>
   </agui-dialog>
-</context-provider>
+</sym-context>
 ```
 
-Use normal native attributes for styling, accessibility, forms, or popover invokers. The default native type is `button`; supply `type="submit"` when needed. For example, `bind="@disabled: UI/busy"` forwards to the native button. Use boolean `loading` or `bind="$.loading: UI/pending"` to replace direct child icons with the shared preloader while keeping the label. Loading sets `aria-busy` and blocks activation, including handlers and form/popover actions, without changing caller-owned disabled state. The application owns when loading starts and finishes. IDs belong to the native button; discover the owning `agui-button`'s `activate` tool by that ID in its component description. Incoming bindings do not activate actions, and repeated `set` values do not republish. See the [button contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/controls/button/README.md).
+Set `type="button"` on native state-action buttons and `type="submit"` for form submission. HTML-app owns action validation, typed values, and event tools; incoming bindings do not activate actions.
+
+Use `agui-button` when loading presentation or native attribute forwarding is needed. Its type defaults to `button`; boolean `loading` or `$.loading` replaces icons with the shared preloader, retains the label, sets `aria-busy`, and blocks handlers and form/popover activation. The application owns completion. Supplied IDs identify the inner native button; discover the wrapper's `activate` tool by that ID. See the [button contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/controls/button/README.md).
+
 
 ### Conditional content example
 
 Use context values as conditions rather than adding visibility handlers. These examples assume the application provides the referenced context keys.
 
 ```html
-<agui-conditional when="APP/showHello" is="true">Hello!</agui-conditional>
-<agui-conditional when="APP/currentTab" is="settings">Settings...</agui-conditional>
-<agui-conditional when="APP/loading" is="true" behavior="hide">Ready content...</agui-conditional>
-<agui-conditional when="ROUTER/currentRoute" is="dashboard" behavior="dom-add">
-  <template><agui-panel>Dashboard...</agui-panel></template>
-</agui-conditional>
-<agui-conditional when="APP/loading" is="true" behavior="dom-remove">
-  <template><agui-panel>Mounted when ready...</agui-panel></template>
-</agui-conditional>
+<sym-conditional when="APP/showHello" is="true">Hello!</sym-conditional>
+<sym-conditional when="APP/currentTab" is="settings">Settings...</sym-conditional>
+<sym-conditional when="APP/loading" is="true" behavior="hide">Ready content...</sym-conditional>
+<sym-conditional when="ROUTER/currentRoute" is="dashboard" behavior="dom-add"><agui-panel>Dashboard...</agui-panel></sym-conditional>
+<sym-conditional when="APP/loading" is="true" behavior="dom-remove"><agui-panel>Mounted when ready...</agui-panel></sym-conditional>
 ```
 
-`show` displays matching content; `hide` conceals matching content. `dom-add` mounts matching content; `dom-remove` removes matching content. Nonmatches reverse these states. Show/hide preserve local drafts; DOM behaviors recreate descendants and their tools after removal, so bind durable values to an outside provider. Missing sources stay unmatched. Boolean comparison is strict: string `"true"` does not match boolean `true`. Content uses native named or `^` bindings. See the [conditional contract](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/layouts/conditional/README.md).
+`show` displays matching content; `hide` conceals matching content. `dom-add` mounts matching content; `dom-remove` removes matching content. Nonmatches reverse these states. Show/hide preserve local drafts; DOM behaviors recreate descendants and their tools after removal, so bind durable values to an outside provider. Missing sources stay unmatched. Boolean comparison is strict: string `"true"` does not match boolean `true`. Content uses native named or `^` bindings. See [HTML-app conditions](https://github.com/symbiotejs/symbiote.js/blob/main/html-app/README.md#conditional-content).
 
 ### Tabs example
 
 ```html
-<context-provider ctx="VIEWS">
+<sym-context ctx="VIEWS">
   <script type="application/json">{"active":"overview","notes":""}</script>
   <agui-tabs id="task-views" label="Task views" pub-to="VIEWS/active" bind="$.value: VIEWS/active">
     <agui-tab value="overview" label="Overview"><p>Task overview</p></agui-tab>
@@ -262,7 +257,7 @@ Use context values as conditions rather than adding visibility handlers. These e
     </agui-tab>
     <agui-tab value="history" label="History" disabled><p>Unavailable view</p></agui-tab>
   </agui-tabs>
-</context-provider>
+</sym-context>
 ```
 
 Arrow keys move focus without switching: Left/Right for horizontal tabs, Up/Down for vertical tabs, with horizontal direction matching RTL. Enter/Space activates the focused tab; Home/End focuses the first/last enabled tab. Leaving the tablist restores the active tab as its entry point. Incoming state changes never publish user actions. Visibility changes use native `hidden`; there is no routing, remounting, or synthetic window resize.
@@ -272,7 +267,7 @@ Discover the group's `set_value` and `read_value` tools by `ownerName="agui-tabs
 ### Dialogs and popups example
 
 ```html
-<context-provider ctx="EDITOR">
+<sym-context ctx="EDITOR">
   <script type="application/json">{"open":false,"name":"Morgan"}</script>
   <agui-dialog id="contact-editor" label="Edit contact" open-label="Open editor" close-label="Close editor"
     pub-to="EDITOR/open" bind="$.value: EDITOR/open">
@@ -284,7 +279,7 @@ Discover the group's `set_value` and `read_value` tools by `ownerName="agui-tabs
     <p>Keep contact details up to date.</p>
     <button type="button" popovertarget="contact-help" popovertargetaction="hide">Close help</button>
   </div>
-</context-provider>
+</sym-context>
 ```
 
 Dialog buttons, Escape dismissal, and `method="dialog"` forms publish the open state once. Incoming assignments and repeated actions do not publish. Native modal behavior handles focus, background inertness, and focus restoration; do not add a focus trap or block dismissal to force saving. Keep open state transient. Record edits remain drafts after closing; declare record keys in `persist` and use the common data toolbar for explicit Save/Cancel actions. `Done` above only closes the editor.
@@ -294,7 +289,7 @@ Discover scoped `open`, `close`, and `read_value` tools by `ownerName="agui-dial
 ### Filter and table example
 
 ```html
-<context-provider ctx="LEADS">
+<sym-context ctx="LEADS">
   <script type="application/json">
     {
       "rows":[{"id":"lead-1","name":"Northstar Studio","amount":0,"status":"new"},{"id":"lead-2","name":"Orbit Works","amount":2400,"status":"qualified"}],
@@ -314,7 +309,7 @@ Discover scoped `open`, `close`, and `read_value` tools by `ownerName="agui-dial
   <agui-table id="lead-table" label="Leads" selection="multiple" locale="en" page-size="20"
     pub-to="LEADS/selected" sort-pub-to="LEADS/sort"
     bind="$.rows: LEADS/rows; $.columns: LEADS/columns; $.texts: LEADS/texts; $.value: LEADS/selected; $.filteredIds: LEADS/matchingIds; $.sort: LEADS/sort"></agui-table>
-</context-provider>
+</sym-context>
 ```
 
 Fields support `text`, `number`, `date`, `boolean`, and `status`. The same descriptors can serve as filter `fields` and table `columns`; the table ignores filter settings. Text filters use `contains`; number/date filters use inclusive `range`; boolean filters use `equals` with `"true"`/`"false"`; text/status equality uses declared string options. Filter `value` maps keys to strings or `{ min?, max? }`; numeric bounds are numbers and dates are ISO strings. Search matches displayed values using the configured locale. The filter can supply matching IDs to any view; keep its full source records separate from its output.
@@ -348,7 +343,7 @@ Each native Itemize owner receives flat record fields plus reserved `_selected` 
 ### Kanban example
 
 ```html
-<context-provider ctx="WORK" persist="records">
+<sym-context ctx="WORK" persist="records">
   <script type="application/json">
     {
       "records":[{"id":"task-1","title":"Prepare proposal","description":"Review the client notes.","status":"todo"},{"id":"task-2","title":"Confirm delivery","status":"review"}],
@@ -363,7 +358,7 @@ Each native Itemize owner receives flat record fields plus reserved `_selected` 
     </agui-panel>
     <agui-data-toolbar bind="$: AGUI_TEXT/dataToolbar"></agui-data-toolbar>
   </agui-dashboard>
-</context-provider>
+</sym-context>
 ```
 
 Cards use native drag-and-drop. Keyboard users focus a card and press Alt+Left/Right to move between enabled columns; direction follows RTL layouts, and focus follows the card. Supply `texts.moveHint` for visible instructions and accessible descriptions. Native drag support on touch devices depends on the browser; keep the keyboard and scoped tool paths available. Counters precede column labels, and columns share equal height. A change publishes one new array, copies only the changed record, and preserves record order and other fields. Incoming data, column changes, and equivalent moves emit no edit actions. Unknown/missing statuses are displayed without rewriting their records; users can move them to a declared enabled column. Empty columns remain visible. Values `0` and `false` render as text. Cards use text content, never arbitrary HTML or formatters. Dragging changes status only; reordering within a column is outside this component's contract.
@@ -375,7 +370,7 @@ Discover `move_item` (`id`, `status`) and `read_view` by `ownerName="agui-kanban
 ### Chart example
 
 ```html
-<context-provider ctx="METRICS">
+<sym-context ctx="METRICS">
   <script type="application/json">
     {
       "rows":[{"id":"jan","month":"2026-01-01","amount":0},{"id":"feb","month":"2026-02-01","amount":2400},{"id":"mar","month":"2026-03-01","amount":null}],
@@ -387,7 +382,7 @@ Discover `move_item` (`id`, `status`) and `read_view` by `ownerName="agui-kanban
   <agui-chart id="revenue-chart" type="line" label="Monthly revenue" description="Prepared monthly amounts; missing values remain gaps."
     x-key="month" x-type="date" x-label="Month" locale="en-US" selection="multiple"
     pub-to="METRICS/selected" bind="$.rows: METRICS/rows; $.series: METRICS/series; $.texts: METRICS/texts; $.value: METRICS/selected"></agui-chart>
-</context-provider>
+</sym-context>
 ```
 
 Use `bar` for category comparisons and `donut` for a single nonnegative series. Donut zero values remain zero rather than becoming equal slices. Each series declares `key`, `valueKey`, and caller-owned `label`, with optional semantic `color`, `format="number|currency|percent"`, `currency`, `digits` (0-6), and `unit`. Cartesian series must share format, currency, and units. Input rows retain their order; no implicit aggregation or sorting occurs. Up to 500 records and 8 series are supported. Use the existing table/filter widgets for larger datasets or data preparation.
@@ -401,7 +396,7 @@ The packaged runtime loads once per page when the first chart initializes, with 
 Share provider records and selected IDs with a table or other views. Use finite numeric coordinates; invalid coordinates are skipped and counted without rewriting records. IDs must be unique nonempty strings. This example requires no JavaScript:
 
 ```html
-<context-provider ctx="LOCATIONS">
+<sym-context ctx="LOCATIONS">
   <script type="application/json">
     {
       "rows":[{"id":"studio","label":"Example studio","latitude":51.505,"longitude":-0.09},{"id":"office","label":"Example office","latitude":51.51,"longitude":-0.12}],
@@ -413,7 +408,7 @@ Share provider records and selected IDs with a table or other views. Use finite 
   <agui-map id="locations-map" label="Team locations" description="Prepared example locations."
     pub-to="LOCATIONS/selected" view-pub-to="LOCATIONS/view"
     bind="$.rows: LOCATIONS/rows; $.value: LOCATIONS/selected; $.view: LOCATIONS/view; $.tiles: LOCATIONS/tiles; $.texts: LOCATIONS/texts"></agui-map>
-</context-provider>
+</sym-context>
 ```
 
 Field attributes `id-key`, `latitude-key`, `longitude-key`, and `label-key` default to `id`, `latitude`, `longitude`, and `label`. `selection="none|single|multiple"` defaults to `multiple`. Limits are 500 records, latitude +/-85.05112878, longitude +/-180, and integer zoom 0-22. Keep selection and viewport transient unless saving them is explicitly required. Map clicks, coordinate-table selection, and tools use the same guarded mutations. Incoming changes and no-ops do not publish; removed/unmappable IDs are ignored locally without pruning the provider.
@@ -427,7 +422,7 @@ Discover by `ownerName="agui-map"` and authored ID. `set_selection` accepts `ids
 Use the built-in renderer for notes, instructions, or reports. Keep the source in the common provider and bind it directly:
 
 ```html
-<context-provider ctx="NOTES">
+<sym-context ctx="NOTES">
   <script type="application/json">
     {
       "document":"# Project notes\n\n## Next steps\n\n- [x] Review requirements\n- [ ] Prepare proposal\n\n[Reference](https://example.com/docs)",
@@ -435,7 +430,7 @@ Use the built-in renderer for notes, instructions, or reports. Keep the source i
     }
   </script>
   <agui-markdown label="Project notes" bind="$.value: NOTES/document; $.texts: NOTES/texts"></agui-markdown>
-</context-provider>
+</sym-context>
 ```
 
 The same fields work through `bind="$: NOTES/documentState"`. Optional `loading` and `error` attributes or property bindings show external states. When embedding source containing script-closing tags in initial provider JSON, encode `<` as `\u003c` so the text stays inside the JSON script element. GFM headings, paragraphs, lists, blockquotes, emphasis, code, links, tables, and disabled task checkboxes are supported. Task checkboxes are document content, not editable shared state; use ordinary AGUI controls for real task editing.
@@ -592,21 +587,21 @@ Pass a UTF-8 HTML fragment through `--file`, limited to 1 MiB. The CLI also supp
 
 Use standard HTML and complete Tailwind class names, including responsive and arbitrary-value utilities. Classes are compiled from markup, including nested templates; classes added later by JavaScript are not collected. Wait separately for external images or asynchronous widgets when necessary.
 
-Use `<agui-component>` for inline RAT markup. One direct child `<script type="application/json">` or `<script type="text/json">` initializes an object with plain state keys. Use `{{prop}}` for text and `bind="onclick: handler"` for events.
+Use `<sym-component>` for inline RAT markup. One direct child `<script type="application/json">` initializes an object with plain state keys. Use `{{prop}}` for text and `bind="onclick: handler"` for events.
 
-Ordinary inserted executable scripts remain inert. Opt into inline handler modules using `<script type="module" data-agui>`. Place modules outside templates. Module-scope code runs before mounting for class registration; its default export receives `(root, { emit, submitFeedback })` after mounting and may return a cleanup function for timers or global listeners. Modules execute from Blob URLs. Use fully resolved imports such as `await import(new URL('/client/index.js', location.href).href)`; root-relative imports alone cannot resolve against Blob URLs. That entry exports `AguiComponent`, `ContextProvider`, Symbiote's APIs, `emit`, and `submitFeedback`.
+Ordinary inserted executable scripts remain inert. Opt into inline handler modules using `<script type="module" data-agui>`. Place modules outside templates. Module-scope code runs before mounting for class registration; its default export receives `(root, { emit, submitFeedback })` after mounting and may return a cleanup function for timers or global listeners. Modules execute from Blob URLs. Use fully resolved imports such as `await import(new URL('/client/index.js', location.href).href)`; root-relative imports alone cannot resolve against Blob URLs. That entry exports `SymComponent`, `SymContext`, Symbiote's APIs, `emit`, and `submitFeedback`.
 
 ## Interactive example
 
 Save this fragment as `counter.html`:
 
 ```html
-<agui-component id="counter" class="block p-8">
+<sym-component id="counter">
   <script type="application/json">{"count":0,"increment":null}</script>
-  <button type="button" class="rounded bg-blue-600 p-4 text-white" bind="onclick: increment">
-    Count: {{count}}
-  </button>
-</agui-component>
+  <agui-panel process-inner-html="false">
+    <button type="button" bind="onclick: increment">Count: {{count}}</button>
+  </agui-panel>
+</sym-component>
 <script type="module" data-agui>
 export default (root, { emit }) => {
   let counter = root.querySelector('#counter');
@@ -645,17 +640,19 @@ Inside modules, use Symbiote's native `$`, `set$()`, `add$()`, and `sub()` APIs.
 
 `emit(name, data)` sends a named JSON event, limited to 16 KiB. It returns `false` while disconnected and does not buffer in the page. `events` returns and clears the worker's most recent 100 events, with IDs, names, data, and timestamps; `dropped` reports overflow. Ordinary events are independent of feedback: they do not wake the agent or prove delivery or storage. Use them for notifications and the unsupported-harness fallback. This is a temporary queue, not a durable event log.
 
-An anonymous `<context-provider>` exposes local fields to descendants through `^prop`. A provider with `ctx="map"` also mirrors fields into a named context. Consumers use `ctx="map"` with `*prop`, or explicit `map/prop` bindings. Use one provider per named context. Provider synchronization is bidirectional, including fields added through `add$()`.
+`sym-context` owns local state; with `ctx="APP"`, local fields and `APP/property` use the same native context. Declare one owner before sibling consumers. Use `^property` from descendants, `*property` with a matching `ctx`, or explicit named references. A direct `application/json` script supplies defaults. Native named owners are released when removed; do not register parallel stores.
 
-Use `src="./_assets/data.json"` or `bind="$.src: APP/dataUrl"` to load a JSON object into a provider. Bound `state` takes precedence; current inline JSON values override fetched defaults, preserving declared saved values. Source changes cancel stale requests and replace source-owned fields only after success. `sourceLoading` and `sourceError` expose loading and machine-readable errors for caller-owned feedback. HTTP(S)/CORS and configured proxy URLs use a 1 MiB/15-second bounded fetch with no credentials. Fetched JSON cannot supply component controls, scoped keys, or prototype keys. Loading performs no Save or external write; persist editable objects on the main provider. See [provider data sources](https://github.com/rnd-pro/symbiote-agui/blob/main/src/uilib/context-provider.md).
+Use `src="./_assets/data.json"` or `bind="@src: APP/dataUrl"` for JSON defaults. Incoming `$` fields, edits, and pending drafts take precedence over fetched defaults; untouched inline defaults can be replaced by a successful load. Native `+loading`, `+loadError`, and `+loadErrorMessage` report request state. Explicit `[load]APP` controls can deliberately replace data with `action-overwrite`; a normal source load protects edits. HTML-app applies bounded requests, normal CORS, same-origin credentials, and data-key validation. Loading does not commit AGUI data, deliver feedback, or write to the source.
 
-Bind a provider's `state` to an object property, for example `bind="state: APP/contact"`, to expose that object's plain keys as local provider fields. Add `pub-to="APP/contact"` to publish local edits to imported fields as fresh objects. Without `pub-to`, edits stay in the provider's local draft. Incoming object replacements add fields and clear removed fields without echoing outward; unrelated local fields remain local. Change nested data by assigning fresh arrays/objects through native state APIs. `ctx` remains the optional named context, separate from the object binding. Persist the source object on its application provider when edits should join Save/Cancel.
+Pair `bind="$: APP/contact"` with `pub-to="APP/contact"` to merge an object into a feature owner and publish edits back as fresh objects. Incoming merges do not echo; omitted fields remain under native shallow-merge semantics. The owner publishes its data fields, so keep feature-local application state in another owner if it must stay outside that object. Persist the source object on the application owner when it belongs in AGUI Save/Cancel.
+
+HTML-app actions work on native controls inside any HTML-app or AGUI owner: `[toggle]`, `[set]`, debounced `[pub-to-200]`, record actions, load/sync, and routing. `sym-collection data="APP/records"` supplies native Itemize and immutable record edits; use `agui-list` when you need AGUI selection and filter presentation. Optional HTML-app browser `[persist]`/`[restore]` storage is separate from AGUI's worker-backed Save/Cancel; use the task's documented persistence contract rather than adding a second save destination.
 
 ### Reusable features with use-template
 
-Attach `use-template="#contact-feature"` to a context provider or another Symbiote owner that enables `allowCustomTemplate`. The owner supplies state and behavior; the template supplies reusable presentation, including complete layouts and nested controls. Each instance renders its own copy. AGUI's `context-provider`, `agui-component`, and generic template-backed tags already enable this native feature. Custom classes opt in with `allowCustomTemplate = true`.
+Attach `use-template="#contact-feature"` to `sym-context` or another Symbiote owner that enables `allowCustomTemplate`. The owner supplies state and behavior; the template supplies reusable presentation, including complete layouts and nested controls. Each instance renders its own copy. `sym-context`, `sym-component`, and declared HTML-app components enable this native feature. Custom classes opt in with `allowCustomTemplate = true`.
 
-Define the template and its instances in the same insertion. Supply instance data through a direct JSON script or a provider `state` binding. Inside nested components, use pop-up `^property` bindings and `pub-to="^property"` to read and edit the nearest owning ancestor. Avoid hardcoded named contexts in a reusable template when instances should stay independent:
+Define the template and its instances in the same insertion. Supply instance data through a direct JSON script or a native `$` object binding. Inside nested components, use pop-up `^property` bindings and `pub-to="^property"` to read and edit the nearest owning ancestor. Avoid hardcoded named contexts in a reusable template when instances should stay independent:
 
 ```html
 <template id="contact-feature">
@@ -663,40 +660,40 @@ Define the template and its instances in the same insertion. Supply instance dat
     <h3>{{^featureTitle}}</h3>
     <agui-field label="Contact name" name="contact_name"
       pub-to="^contactName" bind="$.value: ^contactName"></agui-field>
-    <agui-component>Draft contact: {{^contactName}}</agui-component>
+    <sym-component>Draft contact: {{^contactName}}</sym-component>
   </agui-panel>
 </template>
 
-<context-provider ctx="CONTACTS">
+<sym-context ctx="CONTACTS">
   <script type="application/json">
     {
       "design":{"featureTitle":"Design contact","contactName":"Avery"},
       "engineering":{"featureTitle":"Engineering contact","contactName":"Morgan"}
     }
   </script>
-  <context-provider use-template="#contact-feature"
-    pub-to="CONTACTS/design" bind="state: CONTACTS/design"></context-provider>
-  <context-provider use-template="#contact-feature"
-    pub-to="CONTACTS/engineering" bind="state: CONTACTS/engineering"></context-provider>
-</context-provider>
+  <sym-context use-template="#contact-feature"
+    pub-to="CONTACTS/design" bind="$: CONTACTS/design"></sym-context>
+  <sym-context use-template="#contact-feature"
+    pub-to="CONTACTS/engineering" bind="$: CONTACTS/engineering"></sym-context>
+</sym-context>
 ```
 
 Editing either instance updates its preview and publishes the corresponding contact object to `CONTACTS`. The provider becomes a reusable feature owner without a new class, registration, event handler, or session module; the layout and controls retain their existing behavior. Keep repeated template markup free of fixed DOM IDs, or supply unique IDs through native bindings. To save these contacts, add `persist="design engineering"` to the application provider; feature instances need no persistence declarations.
 
-Unknown custom tags using `use-template` become generic components. For custom behavior, register subclasses through `YourComponent.reg('your-component')` to preserve Symbiote's WebMCP tag identity; registrations persist until page reload. Prefer the built-in foundation components when they cover the task.
+Create reusable tags with native `<sym-component reg="contact-feature" use-template="#contact-feature"></sym-component>`, then use `<contact-feature>`. A declaration can instead contain a direct `<template>`. Definitions are static for the page lifetime; conflicting declarations fail explicitly. For custom JavaScript behavior, register a native subclass through `YourComponent.reg('your-component')`.
 
 ## Local data commits
 
 For data that must survive reload and stop/start, declare JSON-backed properties on one named provider. Use space-separated plain keys in `persist`; every key must exist in its direct JSON script. Keep handlers, credentials, filters, and other transient values outside this declaration. Providers inside reusable templates cannot declare persistence.
 
 ```html
-<context-provider ctx="APP" persist="records">
+<sym-context ctx="APP" persist="records">
   <script type="application/json">{"records":[],"filter":""}</script>
   <agui-dashboard>
     <!-- Native APP/records bindings and controls. -->
     <agui-data-toolbar id="data-actions" bind="$: AGUI_TEXT/dataToolbar"></agui-data-toolbar>
   </agui-dashboard>
-</context-provider>
+</sym-context>
 ```
 
 Use the toolbar by default for data manipulation. It targets all accepted `persist` declarations; optional `provider="APP" keys="records"` selects a subset. When outside a form, set `form="FORM_ID"` to validate that form on Save. Save captures the draft, awaits local publication, then invokes feedback with the original native event and only a bounded commit reference. Do not add another Save handler or feedback call. Cancel restores the local baseline without undoing previous saves or external writes. Import validates and replaces the selected draft without merging, saving, or notifying; Export includes unsaved edits. Both remain usable while disconnected. Portable JSON is `{ "version": 1, "changes": [{ "provider": "APP", "values": { "records": [] } }] }`, up to 1 MiB. Metadata is excluded; actual file labels do not replace initial-source metadata.
@@ -719,51 +716,37 @@ Private snapshots remain outside shared source definitions and are scoped to thi
 
 ## Repeating items with Itemize
 
-Generate repeating rows from data with Symbiote's `itemize` API. Put one row template inside the list container; avoid copying rows or building them with DOM loops. Use a keyed object for task IDs: Symbiote supplies `_KEY_` to each item and includes it in automatic tool names. Array items use their current index when no item key is available.
-
-Each item has its own component state. Supply a local handler in each data descriptor, as below, or register a custom component for `item-tag` when rows need their own methods and lifecycle. A plain inline template does not inherit parent handlers: use `^handler` for a parent-owned action. For a registered item class, define its template on the class; the container's inline template supplies markup for automatically created item classes.
+Use native Itemize for repeated markup and `sym-collection` for immutable record actions. Supply a template or a declared `item-tag`; do not generate rows or per-record handler functions in a module. Collection records are JSON objects with stable nonempty string IDs. Render its `items` view and use HTML-app record actions for edits.
 
 ```html
-<task-list>
-  <div itemize="tasks" item-tag="task-row">
-    <template>
-      <label class="flex min-h-11 items-center gap-3">
-        <input type="checkbox" bind="checked: checked; onchange: toggle">
-        <span>{{title}}</span>
-      </label>
-    </template>
-  </div>
-</task-list>
-<script type="module" data-agui>
-let { AguiComponent } = await import(new URL('/client/index.js', location.href).href);
-let items = {
-  brief: { title: 'Review the brief', checked: false },
-  preview: { title: 'Share a preview', checked: false },
-};
-if (!customElements.get('task-list')) {
-  class TaskList extends AguiComponent {
-    init$ = {
-      tasks: Object.fromEntries(Object.entries(items).map(([key, item]) => [
-        key, { ...item, toggle: () => this.toggleTask(key) },
-      ])),
-    };
-    toggleTask(key) {
-      let task = this.$.tasks[key];
-      let checked = !task.checked;
-      this.$.tasks = { ...this.$.tasks, [key]: { ...task, checked } };
-      return { key, checked };
+<sym-component reg="task-row">
+  <template>
+    <label class="flex min-h-11 items-center gap-3">
+      <input type="checkbox" bind="checked: done; onchange: [item-toggle]done">
+      <span>{{title}}</span>
+    </label>
+  </template>
+</sym-component>
+<sym-context ctx="TASKS">
+  <script type="application/json">
+    {
+      "items": [
+        {"id":"brief","title":"Review the brief","done":false},
+        {"id":"preview","title":"Share a preview","done":false}
+      ]
     }
-  }
-  TaskList.reg('task-list');
-}
-</script>
+  </script>
+  <sym-collection data="TASKS/items">
+    <div class="grid gap-2" itemize="items" item-tag="task-row"></div>
+  </sym-collection>
+</sym-context>
 ```
 
-Assign a new collection to the list state to update rows. Keep complete Tailwind classes in the inserted row template so AGUI compiles them. Discover through `npx symbiote-agui tools <SESSION_ID>`; this example exposes separate `toggle_in_task-row_brief` and `toggle_in_task-row_preview` tools. Invoke an individual row tool and check its state/event result to verify targeting. Automatic handlers return Symbiote's text response and state snapshot; explicit `ToolDescriptor` actions can return structured results.
+Each row owns its event bindings and exposes its own automatic tools. Discover current names through `npx symbiote-agui tools <SESSION_ID>` and verify the targeted record after invocation; do not infer names from indices or cache them across changes. Native `[item-pub]`, `[item-toggle]`, and `[item-remove]` actions publish fresh source arrays without custom handlers. For ordinary Itemize outside a collection, use local row fields and `^handler` for parent-owned behavior. Keep complete Tailwind classes in the saved template for compilation. AGUI selection/filter widgets remain available when the task needs their visual and interaction contracts.
 
 ## Symbiote tools
 
-AGUI imports Symbiote's WebMCP extension and enables `Symbiote.mcpToolMode`. Event bindings automatically expose tools, such as `increment_in_agui-component` for the counter above. The primary control route is the CLI over the existing authenticated WebSocket; it works without native browser WebMCP.
+AGUI imports Symbiote's WebMCP extension and enables `Symbiote.mcpToolMode`. Event bindings automatically expose tools, such as `increment_in_sym-component` for the counter above. The primary control route is the CLI over the existing authenticated WebSocket; it works without native browser WebMCP.
 
 Automatic tools identify a handler and its owning component, not every DOM element. Several controls bound to the same local handler on one owner share a tool. Itemize creates separate item owners and item identities; local row handlers expose individual tools. Parent-owned `^handler` bindings retain their source item identity too. Bind interactive behavior with Symbiote `bind` syntax; raw `addEventListener` callbacks are not automatic Symbiote tools. Always use discovered names, including any collision suffixes.
 

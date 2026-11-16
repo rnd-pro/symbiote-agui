@@ -39,13 +39,13 @@ test('public links elect one user and deliver a live read-only mirror to other b
   let session = await cli('start', 'tunnel-ui', '--tunnel', '--no-open');
   proxy.setTarget(session.url);
   await insertStdin('tunnel-ui', [
-    '<agui-component id="counter" class="block w-[321px]">',
+    '<sym-component id="counter" class="block w-[321px]">',
     '<script type="application/json">{"count":0,"increment":null,"choiceOptions":[{"value":"new","label":"New"},{"value":"done","label":"Done"}]}</script>',
     '<button bind="onclick: increment">Count: {{count}}</button>',
     '<input id="notes" aria-label="Notes" value="hello">',
     '<input id="flag" aria-label="Flag" type="checkbox">',
     '<agui-select id="choice-control" ctx="choice" label="Status" value="new" bind="$.options: choiceOptions"></agui-select>',
-    '</agui-component>',
+    '</sym-component>',
     '<script type="module" data-agui>',
     'Reflect.set(window, "aguiRuns", (Reflect.get(window, "aguiRuns") || 0) + 1);',
     'export default (root, { emit }) => {',
@@ -94,7 +94,7 @@ test('public links elect one user and deliver a live read-only mirror to other b
   assert.deepEqual(pages.map((/** @type {import('../../types/tools.js').ConnectedPage} */ item) => item.role), ['viewer', 'user']);
   let viewerId = pages.find((/** @type {import('../../types/tools.js').ConnectedPage} */ item) => item.role === 'viewer').pageId;
   await assert.rejects(cli('tools', 'tunnel-ui', '--page', viewerId), (error) => hasCliError(error, 'PAGE_UNAVAILABLE'));
-  let call = { sessionId: 'tunnel-ui', pageId: discovery.pageId, discoveryId: discovery.discoveryId, name: 'increment_in_agui-component', input: {} };
+  let call = { sessionId: 'tunnel-ui', pageId: discovery.pageId, discoveryId: discovery.discoveryId, name: 'increment_in_sym-component', input: {} };
   assert.equal((await cliToolCall('call_tool', call)).isError, false);
   await waitForMirror(viewer, 1);
   await page.click('#counter button');
@@ -114,7 +114,7 @@ test('public links elect one user and deliver a live read-only mirror to other b
   assert.ok(frame);
   assert.equal(await frame.evaluate(() => document.body.inert), true);
   assert.equal(await frame.evaluate(() => Reflect.get(window, 'aguiRuns')), undefined);
-  assert.equal(await frame.evaluate(() => customElements.get('agui-component')), undefined);
+  assert.equal(await frame.evaluate(() => customElements.get('sym-component')), undefined);
   assert.equal(await frame.$eval('#counter', (element) => getComputedStyle(element).width), '321px');
   await frame.click('#counter button');
   assert.equal(await page.$eval('#counter button', (element) => element.textContent), 'Count: 2');
@@ -187,8 +187,8 @@ test('sharing existing local tabs retires viewer modules and releases the user s
   });
   let session = await cli('start', 'local-share', '--no-open');
   await insertStdin('local-share', [
-    '<agui-component id="counter"><script type="application/json">{"count":0,"increment":null}</script>',
-    '<button bind="onclick: increment">Count: {{count}}</button></agui-component>',
+    '<sym-component id="counter"><script type="application/json">{"count":0,"increment":null}</script>',
+    '<button bind="onclick: increment">Count: {{count}}</button></sym-component>',
     '<script type="module" data-agui>',
     'Reflect.set(window, "aguiRuns", true);',
     'export default (root) => { let c = root.querySelector("#counter"); c.set$({ increment: () => { c.$.count += 1; } }); };',

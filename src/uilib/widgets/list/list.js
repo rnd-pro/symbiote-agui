@@ -205,6 +205,7 @@ export class List extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.disposed = true;
     this.ref.items.removeEventListener('click', this.onClick);
   }

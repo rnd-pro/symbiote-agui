@@ -4,7 +4,11 @@ import { CONTROL_ATTRIBUTE_BINDINGS, FIELD_ATTRIBUTES, FIELD_INPUT_TYPES } from 
 import { FIELD_TEMPLATE, TEXTAREA_TEMPLATE } from './template.js';
 
 export class Field extends Control {
-  static observedAttributes = ['type', 'checked'];
+  static observedAttributes = [
+    ...Control.observedAttributes,
+    'type',
+    'checked',
+  ];
 
   constructor() {
     super();
@@ -27,7 +31,11 @@ export class Field extends Control {
       throw new Error('agui-field requires its template control.');
     }
     bindControlAttributes(this, control, FIELD_ATTRIBUTES);
-    this.sub('attribute-value', () => { control.defaultValue = this.getAttribute('value') ?? ''; });
+    this.sub('attribute-value', () => {
+      control.defaultValue = this.getAttribute('value') ?? '';
+      // Reused radios need their selected state reapplied after the native value changes.
+      if (control instanceof HTMLInputElement && control.type === 'radio') { this.showValue(this.$.value); }
+    });
     this.defineAccessor('type', (/** @type {string | null | undefined} */ value) => {
       let type = value || 'text';
       if (control instanceof HTMLTextAreaElement) {

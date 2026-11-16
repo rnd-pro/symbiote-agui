@@ -45,6 +45,6 @@ export let TABLE_CELL_TEMPLATE = html`
       <span bind="textContent: text; className: cellClass; @data-tone: tone"></span>
     </span>
     <agui-field pub-to="^selectionValue"
-      bind="@type: selectionType; @name: groupName; @value: rowId; $.value: selectionValue; hidden: !isSelection; $.disabled: unavailable; @aria-label: selectLabel"></agui-field>
+      bind="@type: selectionType; @name: groupName; @value: rowId; $.value: +selectionValue; hidden: !isSelection; $.disabled: unavailable; @aria-label: selectLabel"></agui-field>
   </td>
 `;

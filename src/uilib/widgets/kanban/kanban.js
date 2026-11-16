@@ -156,6 +156,7 @@ export class Kanban extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.disposed = true;
     this.interaction?.destroy();
   }

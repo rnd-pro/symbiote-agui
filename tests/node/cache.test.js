@@ -104,7 +104,7 @@ test('worker restart restores cache, failed insertions preserve it, and clear wo
   assert.ok(record);
   let html = '<p class="w-[321px]">Remembered</p>';
   await requestSession(record, 'insert', 5_000, html);
-  await assert.rejects(requestSession(record, 'insert', 5_000, '<agui-component><script type="text/json">{broken}</script></agui-component>'), { code: 'INSERT_FAILED' });
+  await assert.rejects(requestSession(record, 'insert', 5_000, '<sym-component><script type="application/json">{broken}</script></sym-component>'), { code: 'INSERT_FAILED' });
   assert.equal(await readCachedMarkup('saved'), html);
   await stopSession('saved');
   assert.equal(await readSession('saved'), undefined);

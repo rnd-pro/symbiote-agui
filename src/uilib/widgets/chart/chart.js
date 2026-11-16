@@ -216,6 +216,7 @@ export class Chart extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.disposed = true;
     cancelAnimationFrame(this.paintFrame);
     this.stopWatching?.();

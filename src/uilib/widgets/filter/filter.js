@@ -192,6 +192,7 @@ export class Filter extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.disposed = true;
   }
 }

@@ -28,16 +28,17 @@ test('RAT templates, context providers, and handlers survive repeated insertions
   page.on('pageerror', (error) => errors.push(String(error)));
 
   await insertStdin('components', [
-    '<context-provider id="parent">',
-    '<script type="text/json">{"count":1,"increment":null}</script>',
-    '<agui-component><output id="inherited">{{^count}}</output><button id="increment" bind="onclick: ^increment">Add</button></agui-component>',
-    '<context-provider><script type="application/json">{"count":9}</script><agui-component><output id="nearest">{{^count}}</output></agui-component></context-provider>',
-    '</context-provider>',
+    '<sym-context id="parent">',
+    '<script type="application/json">{"count":1,"increment":null}</script>',
+    '<sym-component><output id="inherited">{{^count}}</output><button id="increment" bind="onclick: ^increment">Add</button></sym-component>',
+    '<sym-context><script type="application/json">{"count":9}</script><sym-component><output id="nearest">{{^count}}</output></sym-component></sym-context>',
+    '</sym-context>',
     '<template id="card-template"><section class="p-4"><b id="name">{{userName}}</b><span id="age">{{userAge}}</span></section></template>',
+    '<sym-component reg="user-card" use-template="#card-template"></sym-component>',
     '<user-card id="card" ctx="user-ctx" use-template="template#card-template"><script type="application/json">{"userName":"Alex","userAge":42}</script></user-card>',
-    '<agui-component ctx="map"><output id="shared">{{*lat}} / {{*lon}}</output></agui-component>',
-    '<agui-component><output id="namespace">{{map/lat}}</output></agui-component>',
-    '<context-provider id="map" ctx="map"><script type="text/json">{"lat":10,"lon":20,"literal":"{{keep}}"}</script><output id="own">{{lat}}</output></context-provider>',
+    '<sym-context id="map" ctx="map"><script type="application/json">{"lat":10,"lon":20,"literal":"{{keep}}"}</script><output id="own">{{lat}}</output></sym-context>',
+    '<sym-component ctx="map"><output id="shared">{{*lat}} / {{*lon}}</output></sym-component>',
+    '<sym-component><output id="namespace">{{map/lat}}</output></sym-component>',
   ].join('\n'));
   assert.equal(await page.$eval('#inherited', (element) => element.textContent), '1');
   assert.equal(await page.$eval('#nearest', (element) => element.textContent), '9');
@@ -69,7 +70,7 @@ test('RAT templates, context providers, and handlers survive repeated insertions
   assert.equal(await page.$eval('#shared', (element) => element.textContent), '66 / 99');
   assert.equal(await page.$eval('#own', (element) => element.textContent), '66');
   assert.equal(await page.$eval('#namespace', (element) => element.textContent), '66');
-  await page.$eval('agui-component[ctx="map"]', (element) => {
+  await page.$eval('sym-component[ctx="map"]', (element) => {
     let consumer = /** @type {import('../../types/components.js').ComponentHost} */ (element);
     consumer.$['*lat'] = 77;
   });
@@ -90,23 +91,23 @@ test('RAT templates, context providers, and handlers survive repeated insertions
   }), { initialShared: 3, shared: 4, local: 6, notifications: 2 });
 
   for (let invalid of [
-    '<context-provider><script type="text/json">{broken}</script></context-provider>',
-    '<agui-component><script type="text/json">[]</script></agui-component>',
+    '<sym-context><script type="application/json">{broken}</script></sym-context>',
+    '<sym-component><script type="application/json">[]</script></sym-component>',
     '<user-card use-template="#missing"></user-card>',
-    '<context-provider ctx="same"></context-provider><context-provider ctx="same"></context-provider>',
+    '<sym-context ctx="same"></sym-context><sym-context ctx="same"></sym-context>',
   ]) {
     await assert.rejects(insertStdin('components', invalid), (error) => hasCliError(error, 'INSERT_FAILED'));
     assert.equal(await page.$eval('#shared', (element) => element.textContent), '77 / 99');
   }
 
   await insertStdin('components', [
-    '<template id="embedded-template"><context-provider ctx="embedded"><script type="text/json">{"value":42}</script></context-provider></template>',
-    '<agui-component><output id="embedded-read">{{embedded/value}}</output></agui-component>',
-    '<embedded-card use-template="#embedded-template"></embedded-card>',
+    '<template id="embedded-template"><sym-context ctx="embedded"><script type="application/json">{"value":42}</script></sym-context></template>',
+    '<sym-component use-template="#embedded-template"></sym-component>',
+    '<sym-component><output id="embedded-read">{{embedded/value}}</output></sym-component>',
     '<template id="card-template"><h2 class="p-8" id="fresh">Fresh {{userName}}</h2></template>',
-    '<user-card use-template="template#card-template"><script type="text/json">{"userName":"Replacement"}</script></user-card>',
-    '<context-provider id="map" ctx="map"><script type="application/json">{"lat":1,"lon":2}</script></context-provider>',
-    '<agui-component ctx="map"><output id="shared">{{*lat}} / {{*lon}}</output></agui-component>',
+    '<user-card use-template="template#card-template"><script type="application/json">{"userName":"Replacement"}</script></user-card>',
+    '<sym-context id="map" ctx="map"><script type="application/json">{"lat":1,"lon":2}</script></sym-context>',
+    '<sym-component ctx="map"><output id="shared">{{*lat}} / {{*lon}}</output></sym-component>',
   ].join('\n'));
   assert.equal(await page.$eval('#fresh', (element) => element.textContent), 'Fresh Replacement');
   assert.equal(await page.$eval('#fresh', (element) => getComputedStyle(element).padding), '32px');

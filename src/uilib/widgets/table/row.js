@@ -31,6 +31,7 @@ export class TableRow extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.clearSelectionListeners?.();
   }
 }

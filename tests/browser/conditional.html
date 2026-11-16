@@ -1,30 +1,26 @@
-<context-provider id="conditional-data" ctx="CONDITIONS">
+<sym-context id="conditional-data" ctx="CONDITIONS">
   <script type="application/json">
     {"enabled":false,"other":true,"tab":"home","literal":"true","name":"Initial","number":1}
   </script>
-  <agui-conditional id="default" when="CONDITIONS/enabled" is="true">
+  <sym-conditional id="default" when="CONDITIONS/enabled" is="true">
     <p>Hello <span bind="textContent: CONDITIONS/name"></span></p>
     <agui-field id="preserved" label="Preserved draft" value="Original"></agui-field>
-  </agui-conditional>
-  <agui-conditional id="inverse" when="CONDITIONS/enabled" is="false">Disabled</agui-conditional>
-  <agui-conditional id="hidden-mode" when="CONDITIONS/enabled" is="true" behavior="hide">
+  </sym-conditional>
+  <sym-conditional id="inverse" when="CONDITIONS/enabled" is="false">Disabled</sym-conditional>
+  <sym-conditional id="hidden-mode" when="CONDITIONS/enabled" is="true" behavior="hide">
     <agui-field id="hidden-draft" label="Hidden draft" value="Original"></agui-field>
-  </agui-conditional>
-  <agui-conditional id="removed-mode" when="CONDITIONS/enabled" is="true" behavior="dom-remove">
-    <template><agui-field id="inverse-reset" label="Inverse reset draft" value="Original"></agui-field></template>
-  </agui-conditional>
-  <agui-conditional id="tab" when="CONDITIONS/tab" is="settings" behavior="show">Settings</agui-conditional>
-  <agui-conditional id="mounted" when="CONDITIONS/enabled" is="true" behavior="dom-add">
-    <template>
+  </sym-conditional>
+  <sym-conditional id="removed-mode" when="CONDITIONS/enabled" is="true" behavior="dom-remove"><agui-field id="inverse-reset" label="Inverse reset draft" value="Original"></agui-field></sym-conditional>
+  <sym-conditional id="tab" when="CONDITIONS/tab" is="settings" behavior="show">Settings</sym-conditional>
+  <sym-conditional id="mounted" when="CONDITIONS/enabled" is="true" behavior="dom-add">
       <agui-field id="reset" label="Reset draft" value="Original"></agui-field>
-      <agui-conditional id="nested" when="CONDITIONS/tab" is="settings">Nested settings</agui-conditional>
-    </template>
-  </agui-conditional>
-  <agui-conditional id="direct" when="CONDITIONS/tab" is="settings" behavior="dom-add"><span>Direct content {{CONDITIONS/name}}</span></agui-conditional>
-  <agui-conditional id="truthy" when="CONDITIONS/enabled">Enabled</agui-conditional>
-  <agui-conditional id="string" when="CONDITIONS/literal" is="true">String is not boolean</agui-conditional>
-  <agui-conditional id="number" when="CONDITIONS/number" is="1">Number is not string</agui-conditional>
-  <agui-conditional id="retarget" when="CONDITIONS/enabled" is="true">Retargeted</agui-conditional>
-  <agui-conditional id="parent" when="^enabled" is="true">Parent context</agui-conditional>
-  <agui-conditional id="late" when="LATE/enabled" is="true">Deferred context</agui-conditional>
-</context-provider>
+      <sym-conditional id="nested" when="CONDITIONS/tab" is="settings">Nested settings</sym-conditional>
+    </sym-conditional>
+  <sym-conditional id="direct" when="CONDITIONS/tab" is="settings" behavior="dom-add"><span>Direct content {{CONDITIONS/name}}</span></sym-conditional>
+  <sym-conditional id="truthy" when="CONDITIONS/enabled">Enabled</sym-conditional>
+  <sym-conditional id="string" when="CONDITIONS/literal" is="true">String is not boolean</sym-conditional>
+  <sym-conditional id="number" when="CONDITIONS/number" is="1">Number is not string</sym-conditional>
+  <sym-conditional id="retarget" when="CONDITIONS/enabled" is="true">Retargeted</sym-conditional>
+  <sym-conditional id="parent" when="^enabled" is="true">Parent context</sym-conditional>
+  <sym-conditional id="late" when="LATE/enabled" is="true">Deferred context</sym-conditional>
+</sym-context>

@@ -131,6 +131,7 @@ export class Nav extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.ready = false;
   }
 }

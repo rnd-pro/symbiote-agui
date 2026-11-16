@@ -170,6 +170,7 @@ export class Sidebar extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.contentObserver?.disconnect();
     this.desktopQuery?.removeEventListener('change', this.refreshLayout);
   }

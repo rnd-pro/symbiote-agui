@@ -64,7 +64,7 @@ test('diagrams load once on initialization, use latest source, reject unsafe con
   assert.equal(runtimeRequests, 0);
   assert.doesNotMatch(await clientSource || '', /unsupported-diagram/);
   await runtime.insert(`
-    <context-provider ctx="DIAGRAMS">
+    <sym-context ctx="DIAGRAMS">
       <script type="application/json">{
         "source":"flowchart LR; Old --> Output",
         "texts":{"source":"Source","loading":"Loading diagram","empty":"No source","invalidValue":"Text required","invalidSource":"Syntax error","unsupported":"Unsupported diagram","inputTooLarge":"Source too large","outputTooLarge":"Output too large","limitExceeded":"Rendering limit","loadFailed":"Load failed","renderFailed":"Render failed"}
@@ -72,14 +72,14 @@ test('diagrams load once on initialization, use latest source, reject unsafe con
       <agui-diagram label="Workflow" bind="$.value: DIAGRAMS/source; $.texts: DIAGRAMS/texts"></agui-diagram>
       <agui-diagram label="Second workflow" bind="$.value: DIAGRAMS/source; $.texts: DIAGRAMS/texts"></agui-diagram>
       <agui-diagram label="Transient workflow" bind="$.value: DIAGRAMS/source; $.texts: DIAGRAMS/texts"></agui-diagram>
-    </context-provider>
+    </sym-context>
   `);
   let request = await waitingRequest;
   await page.$eval('agui-diagram[label="Transient workflow"]', (element) => {
     Reflect.set(window, 'removedDiagram', element);
     element.remove();
   });
-  await page.$eval('context-provider', (element) => { Reflect.get(element, '$').source = 'flowchart LR; Latest --> Result'; });
+  await page.$eval('sym-context', (element) => { Reflect.get(element, '$').source = 'flowchart LR; Latest --> Result'; });
   await request.continue();
   await page.waitForFunction(() => document.querySelectorAll('agui-diagram svg').length === 2);
   assert.equal(runtimeRequests, 1);
@@ -91,19 +91,19 @@ test('diagrams load once on initialization, use latest source, reject unsafe con
   let bundle = await response.text();
   t.diagnostic(`Lazy diagram runtime: ${Buffer.byteLength(bundle)} bytes, ${gzipSync(bundle).byteLength} bytes gzip.`);
 
-  await page.$eval('context-provider', (element) => {
+  await page.$eval('sym-context', (element) => {
     Reflect.get(element, '$').source = 'flowchart LR\n A["<img src=https://example.test/image onerror=alert(1)> {{DIAGRAMS/secret}}"] --> B[Output]\n click B "https://example.test/"';
   });
   await page.waitForFunction(() => document.querySelector('agui-diagram svg')?.textContent?.includes('DIAGRAMS/secret'));
   assert.equal(await page.$('agui-diagram svg script, agui-diagram svg image, agui-diagram svg foreignObject, agui-diagram svg a'), null);
   assert.deepEqual(external, []);
-  await page.$eval('context-provider', (element) => { Reflect.get(element, '$').source = 'flowchart LR\n A['; });
+  await page.$eval('sym-context', (element) => { Reflect.get(element, '$').source = 'flowchart LR\n A['; });
   await page.waitForFunction(() => document.querySelector('agui-diagram agui-state')?.textContent?.includes('Syntax error'));
   assert.equal(await page.$('agui-diagram svg'), null);
-  await page.$eval('context-provider', (element, limit) => { Reflect.get(element, '$').source = 'x'.repeat(limit + 1); }, DIAGRAM_LIMITS.inputBytes);
+  await page.$eval('sym-context', (element, limit) => { Reflect.get(element, '$').source = 'x'.repeat(limit + 1); }, DIAGRAM_LIMITS.inputBytes);
   await page.waitForFunction(() => document.querySelector('agui-diagram agui-state')?.textContent?.includes('Source too large'));
   assert.equal(await page.$eval('agui-diagram code', (element) => element.textContent), '');
-  await page.$eval('context-provider', (element) => { Reflect.get(element, '$').source = 'sequenceDiagram\n User->>App: Final message'; });
+  await page.$eval('sym-context', (element) => { Reflect.get(element, '$').source = 'sequenceDiagram\n User->>App: Final message'; });
   await page.waitForFunction(() => document.querySelector('agui-diagram svg')?.textContent?.includes('Final message'));
   let ids = await page.$$eval('agui-diagram svg [id]', (elements) => elements.map((element) => element.id));
   assert.equal(new Set(ids).size, ids.length);

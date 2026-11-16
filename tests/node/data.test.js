@@ -57,11 +57,11 @@ async function commit(runtime, input) {
 test('persistence declarations and JSON commits reject undeclared, ambiguous, reserved, and non-JSON inputs', () => {
   assert.deepEqual(declaredData(dataHtml), [{ provider: 'APP', keys: ['records'] }]);
   for (let html of [
-    '<context-provider persist="records"><script type="application/json">{"records":[]}</script></context-provider>',
+    '<sym-context persist="records"><script type="application/json">{"records":[]}</script></sym-context>',
     dataHtml.replace('persist="records"', 'persist="missing"'), dataHtml.replace('ctx="APP"', 'ctx="AGUI_DATA"'),
-    dataHtml + dataHtml, '<context-provider ctx="AGUI_FEEDBACK"></context-provider>',
-    '<context-provider ctx="AGUI_SESSION"></context-provider>',
-    '<context-provider ctx="AGUI_TEXT"></context-provider>',
+    dataHtml + dataHtml, '<sym-context ctx="AGUI_FEEDBACK"></sym-context>',
+    '<sym-context ctx="AGUI_SESSION"></sym-context>',
+    '<sym-context ctx="AGUI_TEXT"></sym-context>',
     `<template>${dataHtml}</template>`,
     '<div ctx="APP" persist="records"><script type="application/json">{"records":[]}</script></div>',
   ]) { assert.throws(() => analyzeMarkup(html)); }

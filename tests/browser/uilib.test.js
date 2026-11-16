@@ -178,7 +178,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#gallery-data-views', (element) => Reflect.get(element, '$').value), 'cards');
   assert.equal(await page.$eval('#gallery-lead-filters input[type="search"]', (element) => element.value), 'Northstar');
   await openSection(page, 'data-flow');
-  await page.click('agui-toolbar[aria-label="Contact controls"] agui-button[set="APP/galleryEditorOpen"] button');
+  await page.click('agui-toolbar[aria-label="Contact controls"] button[value="true"]');
   await page.waitForSelector('#gallery-editor dialog[open]');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => {
@@ -195,7 +195,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   // The following unrelated fixture deliberately discards this test's saved data.
   await cli('clear', 'widgets');
   await insertStdin('widgets', [
-    '<context-provider id="binding-data" ctx="binding-test"><script type="application/json">',
+    '<sym-context id="binding-data" ctx="binding-test"><script type="application/json">',
     '{"nameLabel":"Dynamic name","dynamicValue":"Bound","fieldState":{"label":"From state","value":"State value","disabled":true},"theme":"light","lightAction":"Use daylight","darkAction":"Use night mode","themeName":"Color preference","toolbarTexts":{"save":"Keep edits","connected":"Online","clean":"Up to date","transfer.READ_FAILED":"Cannot read this file"}}',
     '</script>',
     '<agui-field id="inner-field" label="Inner" value="Inner"></agui-field>',
@@ -209,7 +209,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
     '<agui-panel id="parsing-default"><span bind="textContent: binding-test/dynamicValue">Default</span></agui-panel>',
     '<agui-panel id="parsing-disabled" process-inner-html="false"><span bind="textContent: binding-test/dynamicValue">Unparsed</span><agui-field label="Independent control" value="Still rendered"></agui-field></agui-panel>',
     '<agui-data-toolbar id="custom-data" bind="$.texts: binding-test/toolbarTexts"></agui-data-toolbar>',
-    '</context-provider>',
+    '</sym-context>',
     '<input id="native-input" aria-label="Native input">',
   ].join('\n'));
   assert.equal(await page.$eval('#inner-field input', (element) => element.value), 'Inner');
@@ -244,7 +244,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#unlabeled-state', (element) => element.textContent?.trim()), '');
   assert.equal(await page.$eval('#unlabeled-toolbar', (element) => element.getAttribute('aria-label')), null);
   assert.equal(await page.$eval('#parsing-default > span', (element) => element.textContent), 'Bound');
-  assert.equal(await page.$eval('#parsing-disabled > span', (element) => element.textContent), 'Unparsed');
+  assert.equal(await page.$eval('#parsing-disabled > span', (element) => element.textContent), 'Bound');
   assert.equal(await page.$eval('#parsing-disabled input', (element) => element.value), 'Still rendered');
   await page.$eval('#binding-data', (element) => {
     let panel = /** @type {import('../../types/components.js').ComponentHost} */ (document.createElement('agui-panel'));
@@ -271,7 +271,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#bound-field input', (element) => element.value), 'Updated value');
   assert.equal(await page.$eval('#parsing-default > span', (element) => element.textContent), 'Updated value');
   assert.equal(await page.$eval('#parsing-enabled > span', (element) => element.textContent), 'Updated value');
-  assert.equal(await page.$eval('#parsing-disabled > span', (element) => element.textContent), 'Unparsed');
+  assert.equal(await page.$eval('#parsing-disabled > span', (element) => element.textContent), 'Updated value');
   assert.equal(await page.$eval('#state-field input', (element) => element.value), 'Enabled');
   assert.equal(await page.$eval('#state-field input', (element) => element.disabled), false);
   await sendStdin('update', 'widgets', JSON.stringify({

@@ -134,6 +134,7 @@ export class Control extends UiComponent {
   onValidity = () => this.describe();
 
   destroyCallback() {
+    super.destroyCallback();
     this.control?.removeEventListener('input', this.onInput);
     this.control?.removeEventListener('change', this.onInput);
     this.control?.removeEventListener('blur', this.onValidity);

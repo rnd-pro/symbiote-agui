@@ -1,8 +1,8 @@
-<context-provider id="editor" ctx="APP" persist="name">
+<sym-context id="editor" ctx="APP" persist="name">
   <script type="application/json">{"name":""}</script>
   <agui-field id="name" label="Name" name="name" pub-to="APP/name" bind="$.value: APP/name"></agui-field>
   <button id="save" type="button">Save</button>
-</context-provider>
+</sym-context>
 <script type="module" data-agui>
 let { commitData, getDataState, readDataCommit, PubSub } = await import(new URL('/client/index.js', location.href).href);
 export default async () => {

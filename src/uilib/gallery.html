@@ -1,16 +1,4 @@
-<agui-app class="[--agui-content-width:100%]">
-  <agui-sidebar
-    class="[--agui-sidebar-width:14rem]"
-    label="Components"
-    expand-label="Expand"
-    collapse-label="Collapse">
-    <agui-nav label="Library sections"
-      pub-map="APP/activeSection: section; APP/sectionName: sectionName; APP/sectionIcon: sectionIcon"
-      bind="$.items: APP/sectionOptions; $.value: APP/activeSection"></agui-nav>
-  </agui-sidebar>
-  <agui-viewport aria-label="UI library examples">
-    <context-provider id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications tableRows palette theme"
-      class="flex min-h-full min-w-0 flex-col">
+    <sym-context id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications tableRows palette theme">
       <script type="application/json">
         {
           "activeSection": "controls",
@@ -221,6 +209,18 @@
           ]
         }
       </script>
+<agui-app class="[--agui-content-width:100%]">
+  <agui-sidebar
+    class="[--agui-sidebar-width:14rem]"
+    label="Components"
+    expand-label="Expand"
+    collapse-label="Collapse">
+    <agui-nav label="Library sections"
+      pub-map="APP/activeSection: section; APP/sectionName: sectionName; APP/sectionIcon: sectionIcon"
+      bind="$.items: APP/sectionOptions; $.value: APP/activeSection"></agui-nav>
+  </agui-sidebar>
+  <agui-viewport aria-label="UI library examples">
+
       <agui-header floating>
         <h1 class="flex items-center gap-2"><agui-icon bind="$.name: APP/sectionIcon; hidden: !APP/sectionIcon"></agui-icon>{{APP/sectionName}}</h1>
         <agui-toolbar aria-label="Gallery controls">
@@ -233,8 +233,7 @@
         </agui-toolbar>
       </agui-header>
       <div class="min-w-0 flex-1 p-4 sm:p-6">
-        <agui-conditional when="APP/activeSection" is="layouts">
-          <template>
+        <sym-conditional when="APP/activeSection" is="layouts">
             <agui-tabs label="Layout examples" pub-to="APP/layoutView" bind="$.value: APP/layoutView">
               <agui-tab value="sidebar-blocks" label="Sidebar blocks">
                 <agui-panel>
@@ -261,10 +260,10 @@
                     </agui-panel>
                   </template>
                   <div class="grid gap-4 md:grid-cols-2">
-                    <context-provider id="feature-contact-first" use-template="#contact-feature-template"
-                      pub-to="APP/featureContactFirst" bind="state: APP/featureContactFirst"></context-provider>
-                    <context-provider id="feature-contact-second" use-template="#contact-feature-template"
-                      pub-to="APP/featureContactSecond" bind="state: APP/featureContactSecond"></context-provider>
+                    <sym-context id="feature-contact-first" use-template="#contact-feature-template"
+                      pub-to="APP/featureContactFirst" bind="$: APP/featureContactFirst"></sym-context>
+                    <sym-context id="feature-contact-second" use-template="#contact-feature-template"
+                      pub-to="APP/featureContactSecond" bind="$: APP/featureContactSecond"></sym-context>
                   </div>
                   <p class="text-sm text-agui-muted">Each feature owns a local view of its contact and publishes a fresh
                     object to APP. These contact objects are transient and are not included in the gallery's Save action.
@@ -272,10 +271,8 @@
                 </section>
               </agui-tab>
             </agui-tabs>
-          </template>
-        </agui-conditional>
-        <agui-conditional when="APP/activeSection" is="controls">
-          <template>
+          </sym-conditional>
+        <sym-conditional when="APP/activeSection" is="controls">
             <agui-tabs label="Control examples" pub-to="APP/controlView" bind="$.value: APP/controlView">
               <agui-tab value="fields" label="Fields and buttons">
                 <agui-panel class="grid gap-5">
@@ -298,20 +295,20 @@
                   <agui-field label="External validation error" value="Existing contact"
                     error="This contact already exists." name="duplicate"></agui-field>
                   <agui-toolbar aria-label="Button style samples">
-                    <agui-button class="agui-button-primary" set="APP/sharedStatus" value="new">New status</agui-button>
-                    <agui-button toggle="APP/notifications">Toggle notifications</agui-button>
-                    <agui-button class="agui-button-ghost" set="APP/notifications" value="false">Disable
-                      notifications</agui-button>
-                    <agui-button class="agui-button-danger" set="APP/sharedStatus" value="archived">Archive</agui-button>
-                    <agui-button set="APP/sharedStatus" value="new" disabled>Disabled</agui-button>
+                    <button type="button" class="agui-button-primary"  value="new" bind="onclick: [set]APP/sharedStatus">New status</button>
+                    <button type="button"  bind="onclick: [toggle]APP/notifications">Toggle notifications</button>
+                    <button type="button" class="agui-button-ghost"  value="false" bind="onclick: [set]APP/notifications">Disable
+                      notifications</button>
+                    <button type="button" class="agui-button-danger"  value="archived" bind="onclick: [set]APP/sharedStatus">Archive</button>
+                    <button type="button"  value="new" disabled bind="onclick: [set]APP/sharedStatus">Disabled</button>
                   </agui-toolbar>
                   <agui-toggle label="Show button loading state" pub-to="APP/buttonLoading"
                     bind="$.value: APP/buttonLoading"></agui-toggle>
                   <agui-toolbar aria-label="Button loading examples">
-                    <agui-button class="agui-button-primary" set="APP/sharedStatus" value="new"
-                      bind="$.loading: APP/buttonLoading"><agui-icon name="refresh"></agui-icon>Refresh status</agui-button>
-                    <agui-button class="agui-button-icon" aria-label="Refresh status" set="APP/sharedStatus" value="new"
-                      bind="$.loading: APP/buttonLoading"><agui-icon name="refresh"></agui-icon></agui-button>
+                    <button type="button" class="agui-button-primary"  value="new"
+                      bind="$.loading: APP/buttonLoading; onclick: [set]APP/sharedStatus"><agui-icon name="refresh"></agui-icon>Refresh status</button>
+                    <button type="button" class="agui-button-icon" aria-label="Refresh status"  value="new"
+                      bind="$.loading: APP/buttonLoading; onclick: [set]APP/sharedStatus"><agui-icon name="refresh"></agui-icon></button>
                   </agui-toolbar>
                   <agui-panel class="grid gap-2">
                     <h3 class="text-base">Nested panel</h3>
@@ -426,10 +423,8 @@
                 </agui-panel>
               </agui-tab>
             </agui-tabs>
-          </template>
-        </agui-conditional>
-        <agui-conditional when="APP/activeSection" is="widgets">
-          <template>
+          </sym-conditional>
+        <sym-conditional when="APP/activeSection" is="widgets">
             <agui-tabs id="gallery-data-views" label="Widget examples" pub-to="APP/widgetView" bind="$.value: APP/widgetView">
             <agui-tab value="table" label="Table">
                 <agui-panel class="grid gap-4">
@@ -537,10 +532,8 @@
                 </agui-panel>
               </agui-tab>
             </agui-tabs>
-          </template>
-        </agui-conditional>
-        <agui-conditional when="APP/activeSection" is="feedback">
-          <template>
+          </sym-conditional>
+        <sym-conditional when="APP/activeSection" is="feedback">
             <agui-tabs label="Feedback examples" pub-to="APP/feedbackView" bind="$.value: APP/feedbackView">
               <agui-tab value="stages" label="Stages">
                 <agui-panel>
@@ -565,16 +558,16 @@
                     bind="$.value: APP/preloaderVisible"></agui-toggle>
                   <div class="grid gap-4 sm:grid-cols-2">
                     <div class="grid content-start gap-2">
-                      <agui-conditional when="APP/preloaderVisible" is="false" behavior="hide">
+                      <sym-conditional when="APP/preloaderVisible" is="false" behavior="hide">
                         <p class="text-sm text-agui-muted">Default dots preloader: content hidden when disabled</p>
-                      </agui-conditional>
+                      </sym-conditional>
                       <agui-preloader class="text-agui-accent"
                         bind="$.label: APP/preloaderLabel; hidden: !APP/preloaderVisible"></agui-preloader>
                     </div>
                     <div class="grid content-start gap-2">
-                      <agui-conditional when="APP/preloaderVisible" is="false" behavior="dom-remove"><template>
+                      <sym-conditional when="APP/preloaderVisible" is="false" behavior="dom-remove">
                           <p class="text-sm text-agui-muted">Compact ring preloader: content removed when disabled</p>
-                        </template></agui-conditional>
+                        </sym-conditional>
                       <agui-preloader variant="ring" class="size-4 text-agui-accent" label="Loading compact preview"
                         bind="hidden: !APP/preloaderVisible"></agui-preloader>
                     </div>
@@ -595,7 +588,7 @@
                   <h2>Dialogs and popups</h2>
                   <p class="text-sm text-agui-muted">The editor uses native modal focus and Escape dismissal. Closing
                     keeps edits as drafts; Save and Cancel changes remain separate actions.</p>
-                  <agui-button set="APP/galleryEditorOpen" value="true"><agui-icon name="edit"></agui-icon>Open contact editor</agui-button>
+                  <button type="button"  value="true" bind="onclick: [set]APP/galleryEditorOpen"><agui-icon name="edit"></agui-icon>Open contact editor</button>
                   <div>
                     <button type="button" popovertarget="gallery-popup">Show workspace help</button>
                     <div id="gallery-popup" popover class="agui-popover" aria-label="Workspace help">
@@ -605,24 +598,20 @@
                 </agui-panel>
               </agui-tab>
             </agui-tabs>
-          </template>
-        </agui-conditional>
-        <agui-conditional when="APP/activeSection" is="data-flow">
-          <template>
+          </sym-conditional>
+        <sym-conditional when="APP/activeSection" is="data-flow">
             <agui-panel class="grid gap-4">
               <div class="grid gap-1">
                 <h2 class="break-words font-medium">{{APP/sharedName}}</h2>
                 <p class="text-sm text-agui-muted">{{APP/sharedStatus}}</p>
               </div>
               <agui-toolbar aria-label="Contact controls">
-                <agui-button class="agui-button-primary" set="APP/galleryEditorOpen" value="true"><agui-icon name="edit"></agui-icon>Edit contact</agui-button>
-                <agui-button class="agui-button-icon" set="APP/notesOpen" value="true" aria-label="Workspace notes" title="Workspace notes"><agui-icon name="notes"></agui-icon></agui-button>
+                <button type="button" class="agui-button-primary"  value="true" bind="onclick: [set]APP/galleryEditorOpen"><agui-icon name="edit"></agui-icon>Edit contact</button>
+                <button type="button" class="agui-button-icon"  value="true" aria-label="Workspace notes" title="Workspace notes" bind="onclick: [set]APP/notesOpen"><agui-icon name="notes"></agui-icon></button>
               </agui-toolbar>
             </agui-panel>
-          </template>
-        </agui-conditional>
-        <agui-conditional when="APP/activeSection" is="theme">
-          <template>
+          </sym-conditional>
+        <sym-conditional when="APP/activeSection" is="theme">
             <agui-panel class="grid gap-4">
               <h2>Theme tokens</h2>
               <p class="text-sm text-agui-muted">Choose Graphite, Ocean, Forest, or Desert with the palette button in the header. Each palette follows the day/night setting and is saved locally.</p>
@@ -653,10 +642,8 @@
                 </div>
               </dl>
             </agui-panel>
-          </template>
-        </agui-conditional>
-        <agui-conditional when="APP/activeSection" is="assets">
-          <template>
+          </sym-conditional>
+        <sym-conditional when="APP/activeSection" is="assets">
             <agui-panel id="gallery-local-assets" class="grid gap-4">
               <h2>Local assets</h2>
               <figure class="grid justify-items-start gap-2">
@@ -666,7 +653,7 @@
               </figure>
               <agui-markdown id="gallery-local-document" src="./_assets/documents/brief.md"
                 label="Local asset guide" bind="$.texts: APP/markdownTexts"></agui-markdown>
-              <agui-import src="./_assets/documents/panel.html"></agui-import>
+              <sym-import src="./_assets/documents/panel.html"></sym-import>
               <agui-panel class="grid gap-3">
                 <h3>Outside the imported fragment</h3>
                 <dl class="grid gap-3">
@@ -675,16 +662,13 @@
                 </dl>
               </agui-panel>
             </agui-panel>
-          </template>
-        </agui-conditional>
-        <agui-conditional when="APP/activeSection" is="without-icon">
-          <template>
+          </sym-conditional>
+        <sym-conditional when="APP/activeSection" is="without-icon">
             <agui-panel>
               <h2>Without icon</h2>
               <p class="text-sm text-agui-muted">This navigation item omits the optional icon.</p>
             </agui-panel>
-          </template>
-        </agui-conditional>
+          </sym-conditional>
       </div>
       <agui-footer>
         <span>Save commits shared contact values and lead records locally.</span>
@@ -716,19 +700,19 @@
         <p class="text-sm text-agui-muted">Try controls, explore data, and switch views without losing draft edits. The
           floating toolbar saves or cancels the shared contact and lead records.</p>
       </div>
-    </context-provider>
+
   </agui-viewport>
   <agui-sidebar collapse-empty class="[--agui-sidebar-width:24rem]" side="end" label="Example controls" expand-label="Expand example controls"
     collapse-label="Collapse example controls">
     <div class="grid gap-2">
-      <agui-conditional when="APP/activeSection" is="layouts"><template>
-        <agui-conditional when="APP/layoutView" is="sidebar-blocks"><template>
+      <sym-conditional when="APP/activeSection" is="layouts">
+        <sym-conditional when="APP/layoutView" is="sidebar-blocks">
           <agui-sidebar-block label="Filters">
             <agui-field label="Search" type="search" pub-to="APP/query" bind="$.value: APP/query"></agui-field>
           </agui-sidebar-block>
           <agui-sidebar-block label="Item controls" bind="$.active: APP/sidebarBlockActive">
             <agui-field label="Note" pub-to="APP/sidebarBlockNote" bind="$.value: APP/sidebarBlockNote"></agui-field>
-            <agui-button set="APP/sidebarBlockActive" value="false">Deactivate</agui-button>
+            <button type="button"  value="false" bind="onclick: [set]APP/sidebarBlockActive">Deactivate</button>
           </agui-sidebar-block>
           <agui-sidebar-block label="Preferences">
             <agui-field type="checkbox" label="Receive updates" pub-to="APP/sidebarBlockUpdates"
@@ -741,40 +725,30 @@
           <agui-sidebar-block label="Attachments" active="false">
             <agui-field type="url" label="Reference URL"></agui-field>
           </agui-sidebar-block>
-        </template></agui-conditional>
-      </template></agui-conditional>
-      <agui-conditional when="APP/activeSection" is="controls">
-        <template>
+        </sym-conditional>
+      </sym-conditional>
+      <sym-conditional when="APP/activeSection" is="controls">
           <section class="grid gap-4" aria-label="Binding inputs">
             <agui-field id="query-control" label="Search" bind="$.value: APP/query" type="search" name="query"
               placeholder="Name or role..."></agui-field>
             <agui-select id="status-control" label="Status" placeholder="All statuses" name="status"
               bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
           </section>
-        </template>
-      </agui-conditional>
-      <agui-conditional when="APP/activeSection" is="feedback">
-        <template>
-          <agui-conditional when="APP/feedbackView" is="stages">
-            <template>
+        </sym-conditional>
+      <sym-conditional when="APP/activeSection" is="feedback">
+          <sym-conditional when="APP/feedbackView" is="stages">
               <div class="grid gap-4">
                 <agui-select label="Current stage" pub-to="APP/processStage"
                   bind="$.options: APP/processStages; $.value: APP/processStage; $.disabled: APP/processComplete"></agui-select>
                 <agui-toggle label="All steps completed" pub-to="APP/processComplete"
                   bind="$.value: APP/processComplete"></agui-toggle>
               </div>
-            </template>
-          </agui-conditional>
-        </template>
-      </agui-conditional>
-      <agui-conditional when="APP/activeSection" is="widgets">
-        <template>
-          <agui-conditional when="APP/widgetView" is="diagrams" behavior="hide">
-            <template>
-          <agui-conditional when="APP/widgetView" is="map" behavior="hide">
-            <template>
-              <agui-conditional when="APP/widgetView" is="markdown" behavior="hide">
-                <template>
+            </sym-conditional>
+        </sym-conditional>
+      <sym-conditional when="APP/activeSection" is="widgets">
+          <sym-conditional when="APP/widgetView" is="diagrams" behavior="hide">
+          <sym-conditional when="APP/widgetView" is="map" behavior="hide">
+              <sym-conditional when="APP/widgetView" is="markdown" behavior="hide">
           <div class="grid gap-4">
             <section class="grid gap-3" aria-label="Data availability">
               <agui-toggle label="Simulate data loading" pub-to="APP/tableLoading"
@@ -782,52 +756,34 @@
               <agui-toggle label="Read-only data" pub-to="APP/tableReadonly"
                 bind="$.value: APP/tableReadonly"></agui-toggle>
             </section>
-            <agui-conditional when="APP/widgetView" is="kanban" behavior="hide">
-              <template>
-                <agui-conditional when="APP/widgetView" is="charts" behavior="hide">
-                  <template>
+            <sym-conditional when="APP/widgetView" is="kanban" behavior="hide">
+                <sym-conditional when="APP/widgetView" is="charts" behavior="hide">
                 <agui-filter id="gallery-lead-filters" label="Lead filters" locale="en" pub-to="APP/tableFilters"
                   query-pub-to="APP/tableQuery" results-to="APP/tableMatchingIds"
                   bind="$.rows: APP/tableRows; $.fields: APP/tableColumns; $.texts: APP/tableTexts; $.value: APP/tableFilters; $.query: APP/tableQuery; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-filter>
-                  </template>
-                </agui-conditional>
-              </template>
-            </agui-conditional>
+                  </sym-conditional>
+              </sym-conditional>
           </div>
-                </template>
-              </agui-conditional>
-            </template>
-          </agui-conditional>
-            </template>
-          </agui-conditional>
-        </template>
-      </agui-conditional>
-      <agui-conditional when="APP/activeSection" is="widgets">
-        <template>
-          <agui-conditional when="APP/widgetView" is="diagrams">
-            <template>
-              <agui-conditional when="APP/diagramView" is="flow">
-                <template>
+                </sym-conditional>
+            </sym-conditional>
+            </sym-conditional>
+        </sym-conditional>
+      <sym-conditional when="APP/activeSection" is="widgets">
+          <sym-conditional when="APP/widgetView" is="diagrams">
+              <sym-conditional when="APP/diagramView" is="flow">
                   <agui-field type="textarea" rows="10" data-code label="Flowchart source" pub-to="APP/flowSource"
                     bind="$.value: APP/flowSource"></agui-field>
-                </template>
-              </agui-conditional>
-              <agui-conditional when="APP/diagramView" is="sequence">
-                <template>
+                </sym-conditional>
+              <sym-conditional when="APP/diagramView" is="sequence">
                   <agui-field type="textarea" rows="10" data-code label="Sequence source" pub-to="APP/sequenceSource"
                     bind="$.value: APP/sequenceSource"></agui-field>
-                </template>
-              </agui-conditional>
-              <agui-conditional when="APP/diagramView" is="relationships">
-                <template>
+                </sym-conditional>
+              <sym-conditional when="APP/diagramView" is="relationships">
                   <agui-field type="textarea" rows="10" data-code label="Relationship source" pub-to="APP/relationshipSource"
                     bind="$.value: APP/relationshipSource"></agui-field>
-                </template>
-              </agui-conditional>
-            </template>
-          </agui-conditional>
-          <agui-conditional when="APP/widgetView" is="markdown">
-            <template>
+                </sym-conditional>
+            </sym-conditional>
+          <sym-conditional when="APP/widgetView" is="markdown">
           <div class="grid gap-4">
             <agui-select id="gallery-markdown-preset" label="Source examples" pub-to="APP/markdownUrl"
               bind="$.options: APP/markdownSourceOptions; $.value: APP/markdownUrl"></agui-select>
@@ -845,11 +801,11 @@ npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
             <agui-field id="gallery-markdown-source" type="textarea" rows="8" data-code label="Inline Markdown source"
               pub-to="APP/markdownSource" bind="$.value: APP/markdownSource"></agui-field>
           </div>
-            </template>
-          </agui-conditional>
-        </template>
-      </agui-conditional>
+            </sym-conditional>
+        </sym-conditional>
     </div>
   </agui-sidebar>
   <agui-data-toolbar id="gallery-data-actions" bind="$: AGUI_TEXT/dataToolbar"></agui-data-toolbar>
 </agui-app>
+
+</sym-context>

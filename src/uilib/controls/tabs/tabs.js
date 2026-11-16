@@ -199,6 +199,7 @@ export class Tabs extends UiComponent {
   };
 
   destroyCallback() {
+    super.destroyCallback();
     this.ready = false;
     this.panelObserver?.disconnect();
     this.ref.list.removeEventListener('keydown', this.onKeydown);

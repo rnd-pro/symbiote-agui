@@ -101,7 +101,7 @@ test('viewer drawing stays transient, survives snapshots, replays to late arriva
   };
   let user = await open(false);
   let viewer = await open(true);
-  let before = await user.$eval('context-provider[ctx="MARKER_DEMO"]', (element) => JSON.stringify(Reflect.get(element, '$').rows));
+  let before = await user.$eval('sym-context[ctx="MARKER_DEMO"]', (element) => JSON.stringify(Reflect.get(element, '$').rows));
   let point = await hoverMirror(viewer, '#pointer-target');
   await viewer.mouse.move(point.x - 40, point.y);
   await viewer.mouse.down();
@@ -128,7 +128,7 @@ test('viewer drawing stays transient, survives snapshots, replays to late arriva
   assert.ok(pages.shared.annotations.strokes.size > 0);
   assert.equal(Array.from(pages.shared.annotations.strokes.values()).every((stroke) => stroke.ended), true);
   assert.equal(pages.shared.latest?.html.includes('agui-viewer-trails'), false);
-  assert.equal(await user.$eval('context-provider[ctx="MARKER_DEMO"]', (element) => JSON.stringify(Reflect.get(element, '$').rows)), before);
+  assert.equal(await user.$eval('sym-context[ctx="MARKER_DEMO"]', (element) => JSON.stringify(Reflect.get(element, '$').rows)), before);
   let late = await open(true);
   await late.waitForFunction(() => Reflect.get(window, 'trailPaints') > 0);
   let originalViewer = await viewer.evaluate(() => {
@@ -243,6 +243,6 @@ test('viewer drawing stays transient, survives snapshots, replays to late arriva
   let paints = await user.evaluate(() => Number(Reflect.get(window, 'trailPaints')));
   await user.evaluate(() => new Promise((resolve) => window.setTimeout(resolve, 150)));
   assert.equal(await user.evaluate(() => Number(Reflect.get(window, 'trailPaints'))), paints, 'Expired trails no longer trigger canvas strokes.');
-  assert.equal(await user.$eval('context-provider[ctx="MARKER_DEMO"]', (element) => JSON.stringify(Reflect.get(element, '$').rows)), before);
+  assert.equal(await user.$eval('sym-context[ctx="MARKER_DEMO"]', (element) => JSON.stringify(Reflect.get(element, '$').rows)), before);
   assert.deepEqual(errors, []);
 });

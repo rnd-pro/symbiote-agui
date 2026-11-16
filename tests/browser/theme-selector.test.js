@@ -30,7 +30,7 @@ test('palette and mode clicks save only their declared properties, survive reloa
     await state.close();
   });
   let saved = await prepareCachedMarkup('palettes', `
-    <context-provider ctx="APP" persist="palette note theme">
+    <sym-context ctx="APP" persist="palette note theme">
       <script type="application/json">{"palette":"graphite","note":"Saved note","theme":"light"}</script>
       <agui-toolbar aria-label="Appearance">
         <agui-theme-selector label="App theme" pub-to="APP/palette"
@@ -38,7 +38,7 @@ test('palette and mode clicks save only their declared properties, survive reloa
         <agui-theme-toggle ctx="APP" label="Day or night" bind="$: AGUI_TEXT/themeToggle"></agui-theme-toggle>
       </agui-toolbar>
       <agui-field label="Note" name="note" pub-to="APP/note" bind="$.value: APP/note"></agui-field>
-    </context-provider>
+    </sym-context>
   `);
   try { await saved.commit(); } finally { await saved.discard(); }
   await runtime.start(new AbortController().signal);
@@ -85,7 +85,7 @@ test('palette and mode clicks save only their declared properties, survive reloa
   assert.equal(await page.$eval('body', (body) => body.dataset.theme), 'dark');
 
   // New palette assignments apply immediately, but initialization/bindings never save.
-  await page.$eval('context-provider', (provider) => {
+  await page.$eval('sym-context', (provider) => {
     Reflect.get(provider, '$').palette = 'forest';
     Reflect.get(provider, '$').theme = 'system';
   });

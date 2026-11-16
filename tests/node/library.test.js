@@ -115,7 +115,7 @@ test('folder definitions are discoverable, preserve Markdown, restore in another
   assert.match(await (await fetch(new URL('/styles.css.js', other.url))).text(), /713px/);
   assert.equal(await readFile(join(second, 'leads.html'), 'utf8'), updated);
   assert.equal((await stat(join(second, 'leads.html'))).mtimeMs, before.mtimeMs);
-  let bad = '<agui-component><script type="application/json">{broken}</script></agui-component>';
+  let bad = '<sym-component><script type="application/json">{broken}</script></sym-component>';
   await writeFile(join(second, 'leads.html'), bad);
   await assert.rejects(cli(['sync', 'leads']));
   assert.equal(await readFile(join(second, 'leads.html'), 'utf8'), bad);
@@ -164,7 +164,7 @@ test('saving imports private cache explicitly, rejects conflicting edits and cas
   await assert.rejects(readCachedMarkup('Desk'), /conflicts/);
   assert.equal(await readCachedMarkup('desk'), '<p>Team update</p>');
   let bad = join(state.directory, 'bad.html');
-  await writeFile(bad, '<agui-component><script type="application/json">null</script></agui-component>');
+  await writeFile(bad, '<sym-component><script type="application/json">null</script></sym-component>');
   await assert.rejects(cli(['save', 'invalid', '--file', bad]));
   assert.equal((await cli(['list'])).total, 1);
   await cli(['clear', 'desk']);

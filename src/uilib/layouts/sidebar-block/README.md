@@ -9,7 +9,7 @@
 </agui-sidebar-block>
 
 <agui-sidebar-block label="Selected item" bind="$.active: APP/hasSelection">
-  <agui-button set="APP/detailsOpen" value="true">Details</agui-button>
+  <button type="button"  value="true" bind="onclick: [set]APP/detailsOpen">Details</button>
 </agui-sidebar-block>
 ```
 

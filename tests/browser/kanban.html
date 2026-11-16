@@ -1,4 +1,4 @@
-<context-provider id="work-data" ctx="WORK" persist="records">
+<sym-context id="work-data" ctx="WORK" persist="records">
   <script type="application/json">
     {
       "records":[
@@ -18,9 +18,9 @@
   <agui-table id="work-table" label="Work table" id-key="key" selection="multiple" page-size="20"
     pub-to="WORK/selected" bind="$.rows: WORK/records; $.columns: WORK/tableColumns; $.texts: WORK/texts; $.value: WORK/selected"></agui-table>
   <agui-data-toolbar id="work-toolbar" bind="$: AGUI_TEXT/dataToolbar"></agui-data-toolbar>
-</context-provider>
-<context-provider ctx="OTHER">
+</sym-context>
+<sym-context ctx="OTHER">
   <script type="application/json">{"records":[{"key":"a","name":"Independent record","stage":"todo"}]}</script>
   <agui-kanban id="other-board" label="Independent board" id-key="key" status-key="stage" title-key="name"
     pub-to="OTHER/records" bind="$.value: OTHER/records; $.columns: WORK/stages; $.texts: WORK/texts"></agui-kanban>
-</context-provider>
+</sym-context>

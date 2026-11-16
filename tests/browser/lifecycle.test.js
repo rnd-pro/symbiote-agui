@@ -96,7 +96,7 @@ test('regular pages receive markup independently and remain open after stop', {
   assert.equal(await firstPage.title(), 'demo');
   await firstPage.click('summary');
   assert.equal(await firstPage.$eval('details', (element) => element.open), false);
-  await assert.rejects(insertStdin('demo', '<agui-component><script type="text/json">{broken}</script></agui-component>'), (error) => hasCliError(error, 'INSERT_FAILED'));
+  await assert.rejects(insertStdin('demo', '<sym-component><script type="application/json">{broken}</script></sym-component>'), (error) => hasCliError(error, 'INSERT_FAILED'));
   assert.equal(await firstPage.$eval('details', (element) => element.open), false);
   await firstPage.reload();
   await firstPage.waitForSelector('details');
@@ -154,8 +154,8 @@ test('inline modules, state commands, events, reload, and reconnect work in ordi
     '<template id="counter-template"><button bind="onclick: increment">Count: {{count}}</button></template>',
     '<module-counter id="counter" use-template="#counter-template"><script type="application/json">{"count":0,"increment":null}</script></module-counter>',
     '<script type="module" data-agui>',
-    'let { AguiComponent } = await import(new URL("/client/index.js", location.href).href);',
-    'if (!customElements.get("module-counter")) { class ModuleCounter extends AguiComponent { moduleRegistered = true; } ModuleCounter.reg("module-counter"); }',
+    'let { SymComponent } = await import(new URL("/client/index.js", location.href).href);',
+    'if (!customElements.get("module-counter")) { class ModuleCounter extends SymComponent { moduleRegistered = true; } ModuleCounter.reg("module-counter"); }',
     'export default (root, { emit }) => {',
     '  let counter = root.querySelector("#counter");',
     '  counter.set$({ increment: () => { counter.$.count += 1; emit("count", { count: counter.$.count }); } });',

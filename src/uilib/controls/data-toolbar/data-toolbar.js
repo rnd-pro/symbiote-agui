@@ -355,6 +355,7 @@ export class DataToolbar extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.disposed = true;
     this.messages?.dispose();
     this.transfer?.dispose();

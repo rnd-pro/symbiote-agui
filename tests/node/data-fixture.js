@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-export let dataHtml = '<context-provider id="editor" ctx="APP" persist="records"><script type="application/json">{"records":[],"theme":"system"}</script><template id="row"><p>{{name}}</p></template></context-provider><script type="module" data-agui>export default () => {};</script>';
+export let dataHtml = '<sym-context id="editor" ctx="APP" persist="records"><script type="application/json">{"records":[],"theme":"system"}</script><template id="row"><p>{{name}}</p></template></sym-context><script type="module" data-agui>export default () => {};</script>';
 
 /**
  * @param {import('../../types/data.js').DataStatus} status

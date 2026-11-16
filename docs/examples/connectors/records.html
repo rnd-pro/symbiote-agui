@@ -1,4 +1,4 @@
-<context-provider ctx="RECORDS">
+<sym-context ctx="RECORDS">
   <script type="application/json">
     {"model":{"records":[],"draft":{"id":"record-1","label":""}},"columns":[{"key":"id","type":"text","label":"ID"},{"key":"label","type":"text","label":"Label"}],"tableTexts":{"empty":"Load records to begin.","invalidColumns":"Records are unavailable."}}
   </script>
@@ -13,13 +13,13 @@
           </agui-toolbar>
           <p role="status">{{outcome}}</p><p role="alert">{{error}}</p>
           <fieldset class="grid gap-4" bind="disabled: pending">
-            <context-provider ctx="MODEL" pub-to="RECORDS/model" bind="state: RECORDS/model">
+            <sym-context ctx="MODEL" pub-to="RECORDS/model" bind="$: RECORDS/model">
               <agui-table label="Records" selection="none" bind="$.rows: MODEL/records; $.columns: RECORDS/columns; $.texts: RECORDS/tableTexts"></agui-table>
               <agui-panel class="grid gap-4">
                 <h2>Edit first record</h2>
-                <context-provider ctx="DRAFT" pub-to="MODEL/draft" bind="state: MODEL/draft">
+                <sym-context ctx="DRAFT" pub-to="MODEL/draft" bind="$: MODEL/draft">
                   <agui-field label="Label" name="recordLabel" maxlength="120" pub-to="DRAFT/label" bind="$.value: DRAFT/label"></agui-field>
-                </context-provider>
+                </sym-context>
                 <agui-connector action="save" pub-to="RECORDS/model" bind="$.input: MODEL/draft">
                   <agui-toolbar aria-label="Save record">
                     <button type="button" bind="onclick: ^run; disabled: ^unavailable">Save record</button>
@@ -27,13 +27,13 @@
                     <agui-preloader label="Saving record" bind="hidden: !^pending"></agui-preloader>
                   </agui-toolbar>
                   <p role="status">{{outcome}}</p><p role="alert">{{error}}</p>
-                  <agui-conditional when="^stale" is="true"><p>The draft changed during this request. Its result has not replaced your edits.</p></agui-conditional>
+                  <sym-conditional when="^stale" is="true"><p>The draft changed during this request. Its result has not replaced your edits.</p></sym-conditional>
                 </agui-connector>
               </agui-panel>
-            </context-provider>
+            </sym-context>
           </fieldset>
         </agui-connector>
       </agui-dashboard>
     </agui-viewport>
   </agui-app>
-</context-provider>
+</sym-context>

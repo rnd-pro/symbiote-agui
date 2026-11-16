@@ -67,8 +67,8 @@ test('declarative lists render authored templates and publish guarded ID selecti
   };
   assert.equal(await page.$eval('#cards h2', (element) => element.textContent), '<b>Alpha</b>');
   assert.equal(await page.$('#cards h2 b'), null);
-  assert.equal(await page.$('#cards slot, #cards agui-list-item, #cards agui-component, #cards agui-state'), null);
-  assert.equal(await page.$('#plain :is(input, button, slot, agui-list-item, agui-component, agui-state)'), null);
+  assert.equal(await page.$('#cards slot, #cards agui-list-item, #cards sym-component, #cards agui-state'), null);
+  assert.equal(await page.$('#plain :is(input, button, slot, agui-list-item, sym-component, agui-state)'), null);
   assert.equal(await page.$$eval('#plain section', (elements) => elements.length), 3);
   assert.equal(await page.$$eval('#plain aside', (elements) => elements.length), 3);
   assert.equal(await page.$eval('#cards [data-record-selected]', (element) => element.textContent), 'record field');
@@ -79,6 +79,7 @@ test('declarative lists render authored templates and publish guarded ID selecti
     state.query = 'missing';
     let emptyCount = count();
     state.query = '';
+    await Promise.resolve();
     let restoredCount = count();
     await new Promise((resolve) => setTimeout(resolve, 550));
     return {

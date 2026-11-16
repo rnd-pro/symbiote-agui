@@ -133,10 +133,10 @@ Metadata lives under the private, library-scoped state root in `.metadata/`, out
 Declare persistent properties on a named provider with `persist="key otherKey"` and one direct inline JSON script. Each declared key must exist in that JSON. Use one declaration per provider, outside reusable templates; `AGUI_DATA`, `AGUI_FEEDBACK`, `AGUI_SESSION`, and `AGUI_TEXT` are reserved names. Metadata bindings describe intent; they do not enable persistence.
 
 ```html
-<context-provider ctx="APP" persist="records">
+<sym-context ctx="APP" persist="records">
   <script type="application/json">{"records":[],"filter":""}</script>
   <!-- Bind controls to APP/records using native Symbiote APIs. -->
-</context-provider>
+</sym-context>
 ```
 
 Marked modules receive `commitData`; it is also exported from `/client/index.js`. Call it from an explicit Save handler after application validation:

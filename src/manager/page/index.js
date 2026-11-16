@@ -1,4 +1,4 @@
-import { ContextProvider } from '../../uilib/context-provider.js';
+import { SymContext } from '@symbiotejs/symbiote/html-app';
 import { registerUiLibComponents } from '../../uilib/index.js';
 import { CONNECTION_LOST_MESSAGE, ManagerConnection } from './connection.js';
 import './controls.js';
@@ -21,7 +21,7 @@ import { NAVIGATION_STATE, syncNavigation, syncInspector } from './navigation.js
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
-export class SessionManager extends ContextProvider {
+export class SessionManager extends SymContext {
   init$ = {
     ...NAVIGATION_STATE,
     ...PROJECT_STATE,
@@ -128,6 +128,7 @@ export class SessionManager extends ContextProvider {
   stopPaletteSync;
 
   renderCallback() {
+    super.renderCallback();
     this.liveConnections = new LiveConnections(this);
     this.feedbackSettings = new SessionFeedbackSettings(this);
     this.connectorSettings = new SessionConnectorSettings(this);
@@ -386,6 +387,7 @@ export class SessionManager extends ContextProvider {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.disposed = true;
     this.viewEpoch += 1;
     this.stopThemeSync?.();

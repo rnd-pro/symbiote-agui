@@ -1,7 +1,11 @@
 export let MARKDOWN_INERT_WRAPPERS = Object.freeze([
   'agui-markdown',
-  'agui-import',
-  'context-provider',
+  'sym-import',
+  'sym-context',
+  'sym-component',
+  'sym-conditional',
+  'sym-collection',
+  'sym-router',
 ]);
 
 export let MARKDOWN_ELEMENTS = Object.freeze([

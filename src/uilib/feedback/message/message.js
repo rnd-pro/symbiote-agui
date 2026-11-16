@@ -89,6 +89,7 @@ export class Message extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.disposed = true;
     void this.hide(true);
     this.sizeObserver?.disconnect();

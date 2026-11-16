@@ -11,9 +11,9 @@ let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 let markup = [
   '<task-desk class="block w-[321px]"><input type="checkbox"><input type="checkbox"><input type="checkbox"><output>{{checked}} / 3</output></task-desk>',
   '<script type="module" data-agui>',
-  'let { AguiComponent, ToolDescriptor, emit } = await import(new URL("/client/index.js", location.href).href);',
+  'let { SymComponent, ToolDescriptor, emit } = await import(new URL("/client/index.js", location.href).href);',
   'if (!customElements.get("task-desk")) {',
-  '  class TaskDesk extends AguiComponent {',
+  '  class TaskDesk extends SymComponent {',
   '    init$ = { checked: 0, enabled: true,',
   '      complete_all: new ToolDescriptor({',
   '        description: "Check every task on this desk. Repeating keeps all tasks checked.",',

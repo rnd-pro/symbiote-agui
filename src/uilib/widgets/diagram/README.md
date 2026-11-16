@@ -3,7 +3,7 @@
 Use `agui-diagram` to render Mermaid source as inline SVG through [Pele](https://github.com/obsidianmd/pele). Supply source with native `value` bindings; syntax selects the diagram type. Pele targets Mermaid 12.1.0 syntax with its own layouts. No session modules, CDN imports, or engine configuration are required.
 
 ```html
-<context-provider ctx="APP">
+<sym-context ctx="APP">
   <script type="application/json">
     {
       "diagram": "flowchart LR; Draft --> Review --> Publish",
@@ -24,7 +24,7 @@ Use `agui-diagram` to render Mermaid source as inline SVG through [Pele](https:/
   </script>
   <agui-diagram label="Publishing workflow"
     bind="$.value: APP/diagram; $.texts: APP/diagramTexts"></agui-diagram>
-</context-provider>
+</sym-context>
 ```
 
 ## Inputs and behavior

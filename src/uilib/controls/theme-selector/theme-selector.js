@@ -185,6 +185,7 @@ export class ThemeSelector extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.ready = false;
     if (!this.ownerDocument.querySelector('agui-theme-selector')) {
       delete this.ownerDocument.body.dataset.palette;

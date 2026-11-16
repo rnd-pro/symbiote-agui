@@ -34,8 +34,7 @@
             <a class="agui-button w-fit no-underline" target="_blank" rel="noopener noreferrer"
               bind="href: MANAGER/verifiedPublicUrl; hidden: !MANAGER/verifiedPublicUrl">Open verified link</a>
             <p id="manager-project-error" class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/projectError"></p>
-            <agui-conditional when="MANAGER/appSection" is="sessions">
-              <template>
+            <sym-conditional when="MANAGER/appSection" is="sessions">
                 <section class="grid min-w-0 gap-4" aria-label="Sessions">
                   <p class="text-sm text-agui-muted" role="status">{{MANAGER/counts}}</p>
                   <p id="transfer-recovery-notice" class="text-sm text-agui-danger empty:hidden" role="status" bind="textContent: MANAGER/transferRecoveryNotice"></p>
@@ -66,7 +65,7 @@
                           <agui-panel selectable role="listitem" class="grid gap-3" bind="@data-session: ^sessionId; @data-state: ^statusKind; @data-selected: ^_selected; ariaDisabled: ^_selectionDisabled">
                             <div class="flex flex-wrap items-start justify-between gap-3">
                               <div class="min-w-0 break-words [overflow-wrap:anywhere]">
-                                <h3><agui-button class="agui-button-ghost" bind="onclick: ^selectItem; ariaPressed: ^_selected; @disabled: ^_selectionDisabled">{{^title}}</agui-button></h3>
+                                <h3><button type="button" class="agui-button-ghost" bind="onclick: ^selectItem; ariaPressed: ^_selected; @disabled: ^_selectionDisabled">{{^title}}</button></h3>
                                 <code class="text-xs text-agui-muted">/{{^sessionId}}</code>
                               </div>
                               <span class="session-status agui-chip">{{^status}}</span>
@@ -92,10 +91,8 @@
                     </agui-tab>
                   </agui-tabs>
                 </section>
-              </template>
-            </agui-conditional>
-            <agui-conditional when="MANAGER/appSection" is="projects">
-              <template>
+              </sym-conditional>
+            <sym-conditional when="MANAGER/appSection" is="projects">
                 <section class="grid min-w-0 gap-4" aria-label="Projects">
                   <agui-tabs id="project-views" label="Project views" value="connected" pub-to="MANAGER/projectsView" bind="$.value: MANAGER/projectsView">
                     <agui-tab value="connected" label="Connected projects">
@@ -124,7 +121,7 @@
                             <template>
                               <agui-panel selectable role="listitem" class="grid min-w-0 gap-3" bind="@data-project: ^id; @data-selected: ^_selected; ariaDisabled: ^_selectionDisabled">
                                 <div class="flex flex-wrap items-center gap-2">
-                                  <h4 class="min-w-0"><agui-button class="agui-button-ghost" bind="onclick: ^selectItem; ariaPressed: ^_selected; @disabled: ^_selectionDisabled">{{^name}}</agui-button></h4>
+                                  <h4 class="min-w-0"><button type="button" class="agui-button-ghost" bind="onclick: ^selectItem; ariaPressed: ^_selected; @disabled: ^_selectionDisabled">{{^name}}</button></h4>
                                   <span class="agui-chip" bind="hidden: !^current">Current</span>
                                   <span class="text-xs text-agui-muted">{{^availability}}</span>
                                 </div>
@@ -171,16 +168,12 @@
                           <agui-panel id="explorer-preview" class="min-w-0">
                             <h4 class="mb-3 break-all text-sm font-medium" bind="textContent: MANAGER/previewPath"></h4>
                             <agui-state bind="$.status: MANAGER/previewStatus; $.message: MANAGER/previewMessage"></agui-state>
-                            <agui-conditional when="MANAGER/previewSourceHidden" is="true" behavior="hide">
-                              <template>
+                            <sym-conditional when="MANAGER/previewSourceHidden" is="true" behavior="hide">
                                 <div class="agui-markdown-content">
                                   <pre class="max-h-[36rem] overflow-auto whitespace-pre text-xs" tabindex="0" aria-label="File source"><code bind="textContent: MANAGER/previewText"></code></pre>
                                 </div>
-                              </template>
-                            </agui-conditional>
-                            <agui-conditional when="MANAGER/previewMarkdownHidden" is="true" behavior="hide">
-                              <template><agui-markdown label="File preview" bind="$.value: MANAGER/previewMarkdown; $.texts: MANAGER/previewTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown></template>
-                            </agui-conditional>
+                              </sym-conditional>
+                            <sym-conditional when="MANAGER/previewMarkdownHidden" is="true" behavior="hide"><agui-markdown label="File preview" bind="$.value: MANAGER/previewMarkdown; $.texts: MANAGER/previewTexts; $.extensions: MANAGER/descriptionExtensions"></agui-markdown></sym-conditional>
                           </agui-panel>
                         </div>
                       </div>
@@ -205,17 +198,13 @@
                     </agui-tab>
                   </agui-tabs>
                 </section>
-              </template>
-            </agui-conditional>
-            <agui-conditional when="MANAGER/appSection" is="connections">
-              <template>
+              </sym-conditional>
+            <sym-conditional when="MANAGER/appSection" is="connections">
                 <section class="grid min-w-0 gap-4" aria-label="Connections">
                   <agui-manager-connections></agui-manager-connections>
                 </section>
-              </template>
-            </agui-conditional>
-            <agui-conditional when="MANAGER/appSection" is="settings">
-              <template>
+              </sym-conditional>
+            <sym-conditional when="MANAGER/appSection" is="settings">
                 <section class="grid min-w-0 gap-4" aria-label="Settings">
                   <agui-panel class="grid gap-4">
                     <h3 class="font-medium">AGUI folder settings</h3>
@@ -229,8 +218,7 @@
                     </agui-toolbar>
                   </agui-panel>
                 </section>
-              </template>
-            </agui-conditional>
+              </sym-conditional>
           </div>
           <agui-footer>
             <span role="status">{{MANAGER/connection}}</span>
@@ -269,8 +257,7 @@
                 bind="hidden: MANAGER/transferIsRename; $.value: MANAGER/transferDestination; $.options: MANAGER/transferOptions; $.disabled: MANAGER/transferProjectDisabled"></agui-select>
               <agui-field name="transferSessionId" required required-mark="*" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" pub-to="MANAGER/transferSessionId"
                 bind="$.label: MANAGER/transferIdLabel; $.value: MANAGER/transferSessionId; $.disabled: MANAGER/transferDisabled"></agui-field>
-              <agui-conditional when="MANAGER/transferIsRename" is="true" behavior="hide">
-                <template>
+              <sym-conditional when="MANAGER/transferIsRename" is="true" behavior="hide">
                   <agui-toggle label="Include saved data" name="transferIncludeData" pub-to="MANAGER/transferIncludeData" bind="$.value: MANAGER/transferIncludeData; $.disabled: MANAGER/transferDisabled"></agui-toggle>
                   <agui-toggle label="Include private metadata" name="transferIncludeMetadata" pub-to="MANAGER/transferIncludeMetadata" bind="$.value: MANAGER/transferIncludeMetadata; $.disabled: MANAGER/transferDisabled"></agui-toggle>
                   <details>
@@ -278,8 +265,7 @@
                     <p class="text-xs text-agui-muted">Includes existing data-source and destination references. Copying them grants no external access and changes no external resource.</p>
                     <pre class="max-h-48 overflow-auto whitespace-pre-wrap break-words text-xs"><code bind="textContent: MANAGER/transferMetadata"></code></pre>
                   </details>
-                </template>
-              </agui-conditional>
+                </sym-conditional>
               <p id="transfer-error" class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/transferError"></p>
               <p id="transfer-message" class="break-all text-sm empty:hidden" role="status" bind="textContent: MANAGER/transferMessage"></p>
               <agui-toolbar aria-label="Transfer actions">
@@ -298,12 +284,9 @@
         collapse-label="Collapse item controls"
         pub-to="MANAGER/inspectorOpen"
         bind="$.label: MANAGER/inspectorLabel; $.value: MANAGER/inspectorOpen; hidden: MANAGER/inspectorHidden" hidden>
-        <agui-conditional when="MANAGER/inspectorKind" is="sessions" behavior="dom-add">
-          <template><div itemize="MANAGER/selectedRows" item-tag="agui-session-controls"></div></template>
-        </agui-conditional>
-        <agui-conditional when="MANAGER/inspectorKind" is="projects" behavior="dom-add">
-          <template>
-            <div itemize="MANAGER/selectedProjectRows" item-tag="context-provider">
+        <sym-conditional when="MANAGER/inspectorKind" is="sessions" behavior="dom-add"><div itemize="MANAGER/selectedRows" item-tag="agui-session-controls"></div></sym-conditional>
+        <sym-conditional when="MANAGER/inspectorKind" is="projects" behavior="dom-add">
+            <div itemize="MANAGER/selectedProjectRows">
               <template>
                 <section class="grid min-w-0 gap-4" aria-label="Project actions" bind="@data-project-controls: id">
                   <div class="grid min-w-0 gap-1">
@@ -322,11 +305,9 @@
                 </section>
               </template>
             </div>
-          </template>
-        </agui-conditional>
-        <agui-conditional when="MANAGER/inspectorKind" is="connections" behavior="dom-add">
-          <template>
-            <div itemize="MANAGER/selectedConnectionRows" item-tag="context-provider">
+          </sym-conditional>
+        <sym-conditional when="MANAGER/inspectorKind" is="connections" behavior="dom-add">
+            <div itemize="MANAGER/selectedConnectionRows">
               <template>
                 <section class="grid min-w-0 gap-4" aria-label="Connection actions" bind="@data-selected-connection: id">
                   <div class="grid min-w-0 gap-1">
@@ -335,8 +316,7 @@
                     <p class="text-xs text-agui-muted">{{details}}</p>
                   </div>
                   <p class="break-words text-sm text-agui-danger empty:hidden">{{error}}</p>
-                  <agui-conditional when="^isBrowser" is="true" behavior="hide">
-                    <template>
+                  <sym-conditional when="^isBrowser" is="true" behavior="hide">
                       <agui-toolbar aria-label="Open connection page" class="grid grid-cols-2">
                         <a class="agui-button no-underline" target="_blank" rel="noopener noreferrer" bind="href: ^url; hidden: ^noLocal"><agui-icon name="open_in_new"></agui-icon>Local</a>
                         <agui-button type="button" bind="onclick: ^openPublic; @disabled: ^publicDisabled"><agui-icon name="public"></agui-icon>Public</agui-button>
@@ -353,20 +333,16 @@
                           <agui-button type="button" class="agui-button-danger" bind="onclick: ^stop; @disabled: ^stopDisabled"><agui-icon name="cloud_off"></agui-icon>Stop tunnel</agui-button>
                         </agui-toolbar>
                       </section>
-                    </template>
-                  </agui-conditional>
-                  <agui-conditional when="^isBrowser" is="true">
-                    <template>
+                    </sym-conditional>
+                  <sym-conditional when="^isBrowser" is="true">
                       <agui-toolbar aria-label="Browser connection" class="grid grid-cols-1">
                         <agui-button type="button" class="agui-button-danger" bind="onclick: ^disconnect; @disabled: ^disconnectDisabled"><agui-icon name="link_off"></agui-icon>Disconnect browser</agui-button>
                       </agui-toolbar>
-                    </template>
-                  </agui-conditional>
+                    </sym-conditional>
                 </section>
               </template>
             </div>
-          </template>
-        </agui-conditional>
+          </sym-conditional>
       </agui-sidebar>
     </agui-app>
   </body>

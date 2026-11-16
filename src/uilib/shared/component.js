@@ -1,42 +1,10 @@
-import { Symbiote } from '@symbiotejs/symbiote';
+import { BaseClass } from '@symbiotejs/symbiote/html-app';
 import { emit } from './events.js';
 import { MAX_ACTION_VALUE_CHARS } from './constants.js';
-import { PubMap } from './pub-map.js';
 
-/** @extends {Symbiote<import('../../../types/components.js').ComponentState>} */
-export class UiComponent extends Symbiote {
-  static observedAttributes = [
-    'pub-map',
-  ];
-  outgoingBindings = new PubMap(this);
-
-  /** @param {string | null} _value */
-  set 'pub-map'(_value) {
-    this.outgoingBindings.refresh();
-  }
-
-  connectedCallback() {
-    if (!this.connectedOnce) {
-      let parsing = this.getAttribute('process-inner-html');
-      if (parsing !== null) { this.processInnerHtml = parsing !== 'false'; }
-    }
-    super.connectedCallback();
-    if (this.connectedOnce) { this.outgoingBindings.connect(); }
-  }
-
-  /**
-   * @param {string | DocumentFragment} [template]
-   * @param {boolean} [shadow]
-   */
-  render(template, shadow) {
-    super.render(template, shadow);
-    this.outgoingBindings.connect();
-  }
-
-  disconnectedCallback() {
-    this.outgoingBindings.disconnect();
-    super.disconnectedCallback();
-  }
+export class UiComponent extends BaseClass {
+  processInnerHtml = false;
+  allowCustomTemplate = false;
 
   get actionId() {
     return this.id || this.getAttribute('ctx')?.trim() || this.localName;

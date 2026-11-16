@@ -17,7 +17,7 @@ test('steps keep their rendered items when list and current value change togethe
   });
   let session = await cli('start', 'steps', '--no-open');
   await insertStdin('steps', `
-    <context-provider ctx="PROGRESS">
+    <sym-context ctx="PROGRESS">
       <script type="application/json">
         {
           "visible": false,
@@ -30,13 +30,13 @@ test('steps keep their rendered items when list and current value change togethe
           "texts": { "invalidValue": "Choose an existing step." }
         }
       </script>
-      <agui-conditional when="PROGRESS/visible"><template>
+      <sym-conditional when="PROGRESS/visible">
         <agui-panel>
           <agui-steps label="Progress"
             bind="$.items: PROGRESS/items; $.value: PROGRESS/value; $.texts: PROGRESS/texts"></agui-steps>
         </agui-panel>
-      </template></agui-conditional>
-    </context-provider>
+      </sym-conditional>
+    </sym-context>
   `);
   browser = await puppeteer.launch({
     executablePath: process.env.AGUI_TEST_BROWSER_PATH,
@@ -49,9 +49,9 @@ test('steps keep their rendered items when list and current value change togethe
   await page.goto(session.url);
   await page.waitForSelector('agui-steps li');
   for (let visit = 0; visit < 3; visit++) {
-    await page.$eval('context-provider', (owner, visit) => {
+    await page.$eval('sym-context', (owner, visit) => {
       let prefix = `visit-${visit}`;
-      /** @type {import('../../src/uilib/context-provider.js').ContextProvider} */ (owner).$ = {
+      /** @type {import('@symbiotejs/symbiote/html-app').SymContext} */ (owner).$ = {
         items: [
           {
             value: `${prefix}-start`,
@@ -77,7 +77,7 @@ test('steps keep their rendered items when list and current value change togethe
       'Finish',
     ]);
     assert.equal(await page.$eval('agui-steps li[aria-current="step"] .agui-step-label', (label) => label.textContent), 'Finish');
-    await page.$eval('context-provider', (owner) => { Reflect.get(owner, '$').visible = false; });
+    await page.$eval('sym-context', (owner) => { Reflect.get(owner, '$').visible = false; });
   }
   assert.deepEqual(errors, []);
 });

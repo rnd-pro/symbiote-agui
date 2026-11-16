@@ -1,6 +1,6 @@
-export let COMPONENT_TAG = 'agui-component';
-export let PROVIDER_TAG = 'context-provider';
-export let DATA_SELECTOR = ':scope > script[type="text/json"], :scope > script[type="application/json"]';
+export let COMPONENT_TAG = 'sym-component';
+export let PROVIDER_TAG = 'sym-context';
+export let DATA_SELECTOR = ':scope > script[type="application/json"]';
 
 export let MAX_ACTION_VALUE_CHARS = 2048;
 

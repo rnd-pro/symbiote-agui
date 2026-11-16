@@ -3,7 +3,10 @@ import { CONTROL_ATTRIBUTE_BINDINGS } from '../../shared/constants.js';
 import { TOGGLE_TEMPLATE } from './template.js';
 
 export class Toggle extends Control {
-  static observedAttributes = ['checked'];
+  static observedAttributes = [
+    ...Control.observedAttributes,
+    'checked',
+  ];
 
   renderCallback() {
     let control = this.ref.control;

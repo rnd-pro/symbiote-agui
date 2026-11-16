@@ -61,11 +61,11 @@ for (let publicPage of [
       },
     };
     await fixture.runtime.insert(`
-      <context-provider id="assets" ctx="ASSETS">
+      <sym-context id="assets" ctx="ASSETS">
         <script type="application/json">${JSON.stringify(state)}</script>
         <agui-markdown id="remote" label="External document" bind="$.src: ASSETS/source; $.value: ASSETS/inline; $.texts: ASSETS/texts"></agui-markdown>
         <img id="asset-image" src="${imageUrl}" alt="Proxied marker">
-      </context-provider>
+      </sym-context>
     `);
     await page.waitForFunction(() => document.querySelector('#remote h1')?.textContent === 'Proxied notes');
     assert.equal(await page.$eval('#remote a', (element) => element.getAttribute('href')), 'https://assets.test/docs/next.md');
@@ -208,7 +208,7 @@ test('the gallery proxy preset uses existing controls, stays opt-in, and disable
   t.after(() => browser.close());
   let page = await browser.newPage();
   await page.goto(fixture.localUrl);
-  await fixture.runtime.insert(`<context-provider ctx="APP"><script type="application/json">${JSON.stringify(state).replaceAll('<', '\\u003c')}</script>${controls}${panel.outerHTML}</context-provider>`);
+  await fixture.runtime.insert(`<sym-context ctx="APP"><script type="application/json">${JSON.stringify(state).replaceAll('<', '\\u003c')}</script>${controls}${panel.outerHTML}</sym-context>`);
   await page.waitForFunction(() => document.querySelector('#gallery-markdown h1')?.textContent === 'Project briefing');
   assert.equal(loads, 0);
   await fixture.runtime.changeProxy({

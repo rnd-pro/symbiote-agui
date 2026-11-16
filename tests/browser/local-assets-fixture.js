@@ -24,9 +24,7 @@ export async function localAssetsFixture(t) {
   let panel = examples.querySelector('#gallery-local-assets');
   let data = examples.querySelector('#gallery-data > script[type="application/json"]')?.textContent;
   if (!panel || !data) { throw new Error('The gallery local asset example is missing.'); }
-  let markup = `<context-provider ctx="APP"><script type="application/json">${JSON.stringify({
-    markdownTexts: JSON.parse(data).markdownTexts,
-  })}</script>${panel.outerHTML}</context-provider>
+  let markup = `<sym-context ctx="APP"><script type="application/json">${JSON.stringify(JSON.parse(data)).replaceAll('<', '\\u003c')}</script>${panel.outerHTML}</sym-context>
     <link rel="stylesheet" href="./_assets/styles/main.css">
     <link rel="preload" as="script" href="./_assets/modules/main.mjs">
     <div id="css-asset">CSS image</div>

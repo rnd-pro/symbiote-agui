@@ -8,9 +8,9 @@
   <output id="delivery-message" bind="textContent: AGUI_FEEDBACK/message"></output>
 </feedback-editor>
 <script type="module" data-agui>
-let { ContextProvider, ToolDescriptor, submitFeedback, PubSub, emit } = await import(new URL('/client/index.js', location.href).href);
+let { SymContext, ToolDescriptor, submitFeedback, PubSub, emit } = await import(new URL('/client/index.js', location.href).href);
 if (!customElements.get('feedback-editor')) {
-  class FeedbackEditor extends ContextProvider {
+  class FeedbackEditor extends SymContext {
     init$ = {
       name: '', role: '', savedName: '',
       save: (event) => this.commit(event),

@@ -26,11 +26,11 @@ test('declarative connector writes only on explicit action and never publishes a
   await f.attach();
   await f.grant('backend', 'agui');
   let started = await cli('start', 'backend', '--no-open');
-  await insertStdin('backend', `<context-provider id="form" ctx="FORM">
+  await insertStdin('backend', `<sym-context id="form" ctx="FORM">
     <script type="application/json">{"draft":{"value":"first","delay":700},"saved":null}</script>
-    <context-provider ctx="EDITOR" pub-to="FORM/draft" bind="state: FORM/draft">
+    <sym-context ctx="EDITOR" pub-to="FORM/draft" bind="$: FORM/draft">
       <agui-field label="Record" pub-to="EDITOR/value" bind="$.value: EDITOR/value"></agui-field>
-    </context-provider>
+    </sym-context>
     <agui-connector id="save" action="save" pub-to="FORM/saved" bind="$.input: FORM/draft">
       <button id="save-record" type="button" bind="onclick: run; disabled: unavailable">Save</button>
       <button id="reconcile" type="button" bind="onclick: read_receipt; disabled: receiptUnavailable">Check outcome</button>
@@ -38,7 +38,7 @@ test('declarative connector writes only on explicit action and never publishes a
     </agui-connector>
     <agui-connector id="automatic-write" action="save" load bind="$.input: FORM/draft"></agui-connector>
     <agui-connector id="missing" action="missing"></agui-connector>
-  </context-provider>`);
+  </sym-context>`);
   let page = await browser.newPage();
   page.setDefaultTimeout(8000);
   /** @type {string[]} */

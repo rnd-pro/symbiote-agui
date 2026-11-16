@@ -223,6 +223,7 @@ export class Table extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.disposed = true;
   }
 }

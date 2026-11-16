@@ -26,6 +26,7 @@ export class Header extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.sizeObserver?.disconnect();
     this.spacingTarget?.style.removeProperty('--agui-header-height');
   }

@@ -161,8 +161,6 @@ export interface EventBatch {
 
 export interface FragmentAnalysis {
   classes: string[];
-  tags: Set<string>;
-  providers: Map<string, ComponentState>;
 }
 
 export interface PageApi {

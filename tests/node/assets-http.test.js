@@ -62,7 +62,7 @@ test('local HTTP assets preserve binary bytes and MIME types, support HEAD, and 
     let fragment = await fetch(fixture.url(name));
     assert.equal(fragment.status, 200);
     assert.equal(await fragment.text(), html);
-    assert.equal(fragment.headers.get('content-type'), 'text/plain; charset=utf-8');
+    assert.equal(fragment.headers.get('content-type'), 'text/html; charset=utf-8');
     assert.equal(fragment.headers.get('x-content-type-options'), 'nosniff');
     assert.match(fragment.headers.get('content-security-policy') || '', /^sandbox;/);
   }

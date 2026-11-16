@@ -1,4 +1,4 @@
-<context-provider id="list-data" ctx="LIST">
+<sym-context id="list-data" ctx="LIST">
   <script type="application/json">
     {
       "rows": [
@@ -29,4 +29,4 @@
   <agui-list id="plain" label="Unadorned records" id-key="key" selection="multiple" pub-to="LIST/ids" bind="$.items: LIST/rows; $.value: LIST/ids">
     <template><section bind="@data-row: key; onclick: ^selectItem"><h4 bind="textContent: name"></h4></section><aside bind="textContent: notes"></aside></template>
   </agui-list>
-</context-provider>
+</sym-context>

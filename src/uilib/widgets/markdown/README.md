@@ -22,7 +22,7 @@ JSDA heading IDs and authored HTML IDs receive a component-specific prefix and d
 
 Generated HTML is sanitized in an inert document before any component upgrades, using native safe HTML parsing or dynamically loaded DOMPurify. Native document/media elements, wrapper tags, classes, and declared attributes of registered components are retained. Scripts, inline event handlers, inline styles, embedded executable documents, and source-provided RAT bindings/context attributes are excluded. Highlight.js classes stay scoped to fenced code. Links, media URLs, and task checkboxes receive additional validation.
 
-Sanitized nodes are imported before connection so registered implementations can enhance them. Symbiote wrappers do not process document text as RAT; their own component templates work normally. Recursive `agui-markdown` and context-provider wrappers are unwrapped, retaining their fallback content. This keeps document content separate from application setup and avoids recursive source fetching.
+Sanitized nodes are imported before connection so registered implementations can enhance them. Symbiote wrappers do not process document text as RAT; their own component templates work normally. Recursive `agui-markdown` and sym-context wrappers are unwrapped, retaining their fallback content. This keeps document content separate from application setup and avoids recursive source fetching.
 
 - Source: at most 64 KiB in UTF-8.
 - Generated HTML: at most 256 KiB in UTF-8, before insertion.

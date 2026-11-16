@@ -1,8 +1,6 @@
 import { Symbiote } from '@symbiotejs/symbiote';
 import '@symbiotejs/symbiote/webmcp';
-import { COMPONENT_TAG, PROVIDER_TAG } from '../../uilib/shared/constants.js';
-import { AguiComponent } from '../../uilib/component.js';
-import { ContextProvider } from '../../uilib/context-provider.js';
+import '@symbiotejs/symbiote/html-app';
 import { connectSession } from './connection.js';
 import { registerUiLibComponents } from '../../uilib/index.js';
 import './page-text.js';
@@ -10,13 +8,11 @@ import { guardNativeRegistrations } from '../../uilib/shared/native-webmcp.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 Symbiote.mcpToolMode = true;
-AguiComponent.reg(COMPONENT_TAG);
-ContextProvider.reg(PROVIDER_TAG);
 registerUiLibComponents();
 connectSession();
 
 export { Symbiote, PubSub, html, css } from '@symbiotejs/symbiote';
-export { AguiComponent, ContextProvider };
+export { BaseClass, SymComponent, SymContext, SymCollection, SymConditional, SymImport, SymRouter } from '@symbiotejs/symbiote/html-app';
 export { replaceContent } from '../../uilib/replace-content.js';
 export { emit, submitFeedback } from '../../uilib/shared/events.js';
 export { listPageTools, executePageTool } from './tools.js';

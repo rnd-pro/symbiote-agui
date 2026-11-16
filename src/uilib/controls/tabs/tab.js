@@ -48,6 +48,7 @@ export class Tab extends UiComponent {
   }
 
   destroyCallback() {
+    super.destroyCallback();
     this.ready = false;
   }
 }

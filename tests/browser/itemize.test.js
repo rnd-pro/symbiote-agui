@@ -21,7 +21,8 @@ for (let native of [false, true]) {
       await state.close();
     });
     let skill = await readFile(new URL('../../skills/agui/SKILL.md', import.meta.url), 'utf8');
-    let example = skill.match(/```html\n(<task-list>[\s\S]+?)\n```/);
+    let section = skill.split('## Repeating items with Itemize')[1]?.split('## Symbiote tools')[0];
+    let example = section?.match(/```html\n([\s\S]+?)\n```/);
     assert.ok(example, 'The public Itemize example must be runnable markup.');
     browser = await puppeteer.launch({
       executablePath,
@@ -40,7 +41,9 @@ for (let native of [false, true]) {
     await page.waitForSelector('task-row input');
     assert.equal(await page.evaluate(() => typeof Reflect.get(document, 'modelContext')?.registerTool === 'function'), native);
     let discovery = await cli('tools', sessionId);
-    let rowTools = discovery.tools.filter((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.ownerName === 'task-row' && tool.key === 'auto:toggle');
+    let action = await page.$eval('task-row input', (element) => element.getAttribute('bind')?.split(';')
+      .find((binding) => binding.trim().startsWith('onchange:'))?.split(':')[1].trim());
+    let rowTools = discovery.tools.filter((/** @type {import('../../types/tools.js').PageTool} */ tool) => tool.ownerName === 'task-row' && tool.key === `auto:${action}`);
     let rowCount = await page.$$eval('task-row', (rows) => rows.length);
     assert.ok(rowCount > 0);
     assert.equal(rowTools.length, rowCount);
@@ -63,7 +66,7 @@ for (let native of [false, true]) {
     };
     let result = await cliToolCall('call_tool', call);
     assert.equal(result.isError, false);
-    assert.match(JSON.stringify(result.data.result), /checked/);
+    assert.equal(await page.$eval('sym-context[ctx="TASKS"]', (element) => Reflect.get(element, '$').items[0].done), true);
     assert.deepEqual(await page.$$eval('input', (inputs) => inputs.map((input) => input.checked)), [true, false]);
     await page.click('task-row:last-child input');
     assert.deepEqual(await page.$$eval('input', (inputs) => inputs.map((input) => input.checked)), [true, true]);

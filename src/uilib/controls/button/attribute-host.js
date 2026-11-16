@@ -2,8 +2,6 @@ import { DICT } from '@symbiotejs/symbiote';
 import { UiComponent } from '../../shared/component.js';
 
 export let BUTTON_ATTRIBUTES = Object.freeze([
-  'toggle',
-  'set',
   'value',
   'loading',
 ]);

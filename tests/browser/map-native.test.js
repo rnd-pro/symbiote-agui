@@ -30,7 +30,7 @@ test('native map tools stay registered through zoom and expose current viewport 
   let errors = [];
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.goto(session.url);
-  await insertStdin('map-native', '<context-provider id="map-state" ctx="MAP"><script type="application/json">{"rows":[{"id":"a","label":"Example","latitude":51.5,"longitude":0}],"view":{"center":[51.5,0],"zoom":12},"texts":{"zoomIn":"Zoom in","zoomOut":"Zoom out","unavailable":"Map unavailable"}}</script><agui-map id="map" label="Map" view-pub-to="MAP/view" bind="$.rows: MAP/rows; $.view: MAP/view; $.texts: MAP/texts"></agui-map></context-provider>');
+  await insertStdin('map-native', '<sym-context id="map-state" ctx="MAP"><script type="application/json">{"rows":[{"id":"a","label":"Example","latitude":51.5,"longitude":0}],"view":{"center":[51.5,0],"zoom":12},"texts":{"zoomIn":"Zoom in","zoomOut":"Zoom out","unavailable":"Map unavailable"}}</script><agui-map id="map" label="Map" view-pub-to="MAP/view" bind="$.rows: MAP/rows; $.view: MAP/view; $.texts: MAP/texts"></agui-map></sym-context>');
   await page.waitForSelector('#map .agui-map-marker');
   let catalog = await cli('tools', 'map-native');
   let mapTools = catalog.tools.filter((/** @type {import('../../types/tools.js').PageTool} */ entry) => entry.ownerName === 'agui-map'

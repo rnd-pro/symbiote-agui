@@ -104,6 +104,7 @@ export class Dialog extends UiComponent {
   };
 
   destroyCallback() {
+    super.destroyCallback();
     this.disposed = true;
     let dialog = /** @type {HTMLDialogElement} */ (this.ref.dialog);
     dialog.removeEventListener('close', this.onClose);

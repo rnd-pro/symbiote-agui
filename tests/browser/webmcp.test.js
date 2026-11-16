@@ -11,16 +11,17 @@ let markup = [
   '<script type="application/json">{"count":0,"increment":null,"canSet":false}</script>',
   '<button bind="onclick: increment">Count: {{count}}</button>',
   '</webmcp-counter>',
-  '<context-provider id="parent">',
-  '<script type="text/json">{"count":0,"increment":null}</script>',
-  '<agui-component><button id="parent-button" bind="onclick: ^increment">Parent: {{^count}}</button></agui-component>',
-  '</context-provider>',
+  '<sym-context id="parent">',
+  '<script type="application/json">{"count":0,"increment":null}</script>',
+  '<sym-component><button id="parent-button" bind="onclick: ^increment">Parent: {{^count}}</button></sym-component>',
+  '</sym-context>',
   '<template id="action-template"><button id="choose" bind="onclick: choose">Selected: {{selected}}</button></template>',
+  '<sym-component reg="action-card" use-template="#action-template"></sym-component>',
   '<action-card id="card" use-template="#action-template"><script type="application/json">{"selected":false,"choose":null}</script></action-card>',
   '<script type="module" data-agui>',
-  'let { AguiComponent, ToolDescriptor, PubSub } = await import(new URL("/client/index.js", location.href).href);',
+  'let { SymComponent, ToolDescriptor, PubSub } = await import(new URL("/client/index.js", location.href).href);',
   'if (!customElements.get("webmcp-counter")) {',
-  '  class WebMCPCounter extends AguiComponent {',
+  '  class WebMCPCounter extends SymComponent {',
   '    componentDescription = "The visible test counter.";',
   '    init$ = { set_count: new ToolDescriptor({',
   '      name: "counter_set", description: "Set the visible counter value.",',
@@ -120,7 +121,7 @@ for (let native of [false, true]) {
     let fixtureTools = tools.filter((tool) => !baselineOwners.has(tool.ownerId));
     let fixtureOwners = new Set(fixtureTools.map((tool) => tool.ownerId));
     assert.ok(tools.some((tool) => tool.name === 'increment_in_webmcp-counter'));
-    assert.ok(tools.some((tool) => tool.name === 'increment_in_context-provider_agui-component'));
+    assert.ok(tools.some((tool) => tool.name === 'increment_in_sym-context_sym-component'));
     assert.equal(tools.filter((tool) => tool.name === 'context_read').length, 1);
     assert.ok(tools.some((tool) => tool.name === 'choose_in_action-card'));
     assert.equal(tools.some((tool) => tool.name === 'counter_set'), false);
@@ -134,11 +135,11 @@ for (let native of [false, true]) {
       });
       assert.ok(fixtureTools.every((tool) => discovered.includes(tool.name)));
       await executeTool(page, 'increment_in_webmcp-counter');
-      await executeTool(page, 'increment_in_context-provider_agui-component');
+      await executeTool(page, 'increment_in_sym-context_sym-component');
       await executeTool(page, 'choose_in_action-card');
     } else {
       await invokePageTool(page, 'increment_in_webmcp-counter');
-      await invokePageTool(page, 'increment_in_context-provider_agui-component');
+      await invokePageTool(page, 'increment_in_sym-context_sym-component');
       await invokePageTool(page, 'choose_in_action-card');
     }
     assert.equal(await page.$eval('#counter button', (element) => element.textContent), 'Count: 1');

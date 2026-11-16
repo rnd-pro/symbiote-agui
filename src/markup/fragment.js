@@ -24,9 +24,7 @@ export function analyzeFragment(fragment) {
   /** @type {Set<string>} */
   let classes = new Set();
   /** @type {Set<string>} */
-  let tags = new Set();
-  /** @type {import('../../types/transport.js').FragmentAnalysis['providers']} */
-  let providers = new Map();
+  let providers = new Set();
   for (let part of fragments) {
     if (part !== fragment && part.querySelector(`[${PERSIST_ATTRIBUTE}]`)) {
       throw new Error('Persisted providers must be declared outside reusable templates.');
@@ -49,23 +47,23 @@ export function analyzeFragment(fragment) {
         } catch {
           throw new Error(`Invalid use-template selector: ${selector}.`);
         }
-        if (template?.localName !== 'template' || !element.localName.includes('-')) {
-          throw new Error(`use-template requires a custom element and a template in the inserted markup: ${selector}.`);
+        if (template?.localName !== 'template' || !element.localName.includes('-') && !element.hasAttribute(DICT.LIST_ATTR)) {
+          throw new Error(`use-template requires a component or Itemize container and a template in the inserted markup: ${selector}.`);
         }
-        tags.add(element.localName);
       }
       if (element.localName === PROVIDER_TAG) {
-        let data = readInitialData(element);
         let name = element.getAttribute(DICT.CTX_NAME_ATTR)?.trim();
         if (name && RESERVED_PROVIDER_NAMES.includes(name)) { throw new Error('This provider name is reserved by AGUI.'); }
         if (part === fragment && name) {
           if (providers.has(name)) {
-            throw new Error(`Only one context-provider per named context is allowed: ${name}.`);
+            throw new Error(`Only one sym-context per named context is allowed: ${name}.`);
           }
-          providers.set(name, data);
+          providers.add(name);
         }
       }
     }
   }
-  return { classes: [...classes], tags, providers };
+  return {
+    classes: [...classes],
+  };
 }

@@ -17,7 +17,7 @@ test('inactive sidebar blocks preserve drafts, disable controls and move focus o
   });
   let session = await cli('start', 'sidebar-block', '--no-open');
   await insertStdin('sidebar-block', `
-    <context-provider ctx="BLOCK">
+    <sym-context ctx="BLOCK">
       <script type="application/json">
         {
           "active": true,
@@ -33,7 +33,7 @@ test('inactive sidebar blocks preserve drafts, disable controls and move focus o
           <agui-field id="locked" label="Locked" disabled value="Unchanged"></agui-field>
         </agui-sidebar-block>
       </agui-sidebar>
-    </context-provider>
+    </sym-context>
   `);
   browser = await puppeteer.launch({
     executablePath: process.env.AGUI_TEST_BROWSER_PATH,
@@ -51,8 +51,8 @@ test('inactive sidebar blocks preserve drafts, disable controls and move focus o
   await page.focus('#draft input');
   await page.keyboard.type(' edited');
   let value = await page.$eval('#draft input', (control) => control.value);
-  await page.$eval('context-provider', (owner) => {
-    /** @type {import('../../src/uilib/context-provider.js').ContextProvider} */ (owner).$ = {
+  await page.$eval('sym-context', (owner) => {
+    /** @type {import('@symbiotejs/symbiote/html-app').SymContext} */ (owner).$ = {
       active: false,
       label: 'Selected item',
     };
@@ -83,8 +83,8 @@ test('inactive sidebar blocks preserve drafts, disable controls and move focus o
       return false;
     } catch { return true; }
   }), true);
-  await page.$eval('context-provider', (owner) => {
-    /** @type {import('../../src/uilib/context-provider.js').ContextProvider} */ (owner).$.active = true;
+  await page.$eval('sym-context', (owner) => {
+    /** @type {import('@symbiotejs/symbiote/html-app').SymContext} */ (owner).$.active = true;
   });
   assert.equal(await input.evaluate((control) => control === document.querySelector('#draft input')), true);
   assert.equal(await page.$eval('#draft input', (control) => control.value), value);

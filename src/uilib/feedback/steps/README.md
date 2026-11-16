@@ -3,7 +3,7 @@
 `agui-steps` shows an ordered process with numbered markers, step labels, connecting lines, and check marks for completed stages. It is a read-only indicator; the application owns the current stage.
 
 ```html
-<context-provider ctx="APP">
+<sym-context ctx="APP">
   <script type="application/json">
     {
       "stage": "review",
@@ -25,7 +25,7 @@
   </script>
   <agui-steps label="Publishing progress"
     bind="$.items: APP/stages; $.value: APP/stage; $.complete: APP/finished; $.texts: APP/stepTexts"></agui-steps>
-</context-provider>
+</sym-context>
 ```
 
 - `items` is an ordered array of `{ value, label }` objects with unique nonempty string values. Labels render as text. An empty array renders no steps.

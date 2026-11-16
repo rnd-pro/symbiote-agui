@@ -64,13 +64,13 @@ test('Markdown src loads bounded CORS documents, cancels superseded loads, prese
   });
   await page.goto(session.url);
   await insertStdin('markdown-source', `
-    <context-provider id="source-data" ctx="SOURCE">
+    <sym-context id="source-data" ctx="SOURCE">
       <script type="application/json">
         {"inline":"# Inline","url":"","texts":{"loading":"Loading source","empty":"No document","loadFailed":"Dependency failed","renderFailed":"Render failed","invalidValue":"Invalid text","inputTooLarge":"Source too large","outputTooLarge":"Output too large","invalidSrc":"Invalid URL","fetchFailed":"Source request failed"}}
       </script>
       <agui-markdown id="remote" src="https://example.test/first.md" label="External document" bind="$.value: SOURCE/inline; $.texts: SOURCE/texts"></agui-markdown>
       <agui-markdown id="bound" label="Bound source" bind="$.src: SOURCE/url; $.value: SOURCE/inline; $.texts: SOURCE/texts"></agui-markdown>
-    </context-provider>
+    </sym-context>
   `);
   await page.waitForFunction(() => document.querySelector('#remote h1')?.textContent === '/first.md');
   assert.equal(await page.$eval('#bound h1', (element) => element.textContent), 'Inline');

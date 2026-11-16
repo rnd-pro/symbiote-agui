@@ -39,6 +39,14 @@ test('manager sections retain session selection, local tabs and settings drafts 
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.goto(manager.launchUrl);
   await page.waitForSelector('#manager-table tr[data-row-id="desk"]');
+  for (let label of [
+    'Sessions',
+    'Projects',
+    'Connections',
+    'Settings',
+  ]) {
+    assert.ok(await page.$(`#manager-navigation ::-p-aria([name="${label}"][role="button"])`));
+  }
   assert.ok(await page.$('agui-header #manager-project-switcher select'));
   assert.equal(await page.$('agui-app > agui-sidebar #manager-filter'), null);
   assert.deepEqual(await page.$$eval('#session-views [role="tab"]', (tabs) => tabs.map((tab) => tab.getAttribute('value'))), [

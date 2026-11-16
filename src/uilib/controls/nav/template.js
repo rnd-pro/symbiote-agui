@@ -5,7 +5,7 @@ export let NAV_TEMPLATE = html`
     <template>
       <agui-button class="agui-nav-item agui-button-ghost w-full justify-start aria-[current=page]:text-agui-accent"
         bind="$.value: value; @aria-current: current; @disabled: disabled; onclick: select">
-        <agui-icon bind="$.name: ^icon; hidden: !^icon"></agui-icon>{{label}}
+        <agui-icon bind="$.name: ^icon; hidden: !^icon"></agui-icon>{{^label}}
       </agui-button>
     </template>
   </nav>

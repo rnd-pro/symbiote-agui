@@ -1,5 +1,6 @@
 import { ToolDescriptor } from '@symbiotejs/symbiote/webmcp';
 import { List } from '../list/list.js';
+import { LIST_ATTRIBUTE_BINDINGS } from '../list/constants.js';
 import styles from '../list/styles.js';
 import { deriveExplorer } from './model.js';
 import { EXPLORER_TEMPLATE } from './template.js';
@@ -11,6 +12,7 @@ export class Explorer extends List {
     super();
     Object.assign(this.init$, {
       expanded: [],
+      selectBranches: undefined,
       request: null,
       toggle_node: new ToolDescriptor({
         description: 'Expand or collapse an explorer branch by ID. Returns change metadata without node contents.',
@@ -50,6 +52,12 @@ export class Explorer extends List {
   renderCallback() {
     super.renderCallback();
     this.sub('expanded', () => this.refresh());
+    this.sub('selectBranches', () => this.refresh());
+    this.sub('attribute-select-branches', () => this.refresh());
+  }
+
+  get selectsBranches() {
+    return !!(this.$.selectBranches ?? this.hasAttribute('select-branches'));
   }
 
   stateInput() {
@@ -68,14 +76,14 @@ export class Explorer extends List {
     return super.deriveModel({
       ...state,
       idKey: 'id',
-      value: state.value.filter((id) => rows.some((row) => row.id === id && !row.branch)),
+      value: state.value.filter((id) => rows.some((row) => row.id === id && (this.selectsBranches || !row.branch))),
       filteredIds: rows.filter((row) => row.visible && (!mask || mask.has(row.id))).map((row) => row.id),
       rows: rows.map((row) => ({
         ...row,
         indent: `${row.depth}rem`,
         nodeDisabled: state.disabled || state.readonly || state.loading || !!state.error || !!row.disabled || !row.branch && state.selection === 'none',
         nodeExpanded: row.branch ? String(row.open) : null,
-        nodeSelected: row.branch ? null : String(selected.has(row.id)),
+        nodeSelected: row.branch && !this.selectsBranches ? null : String(selected.has(row.id)),
         nodeIcon: row.icon || (row.branch ? row.open ? 'folder_open' : 'folder' : 'insert_drive_file'),
         actionLabel: [
           this.text(row.branch ? row.open ? 'collapse' : 'expand' : 'select'),
@@ -84,7 +92,14 @@ export class Explorer extends List {
         moreLabel: this.text(row.message ? 'retry' : 'more'),
         showMore: row.open && !row.loading && (!!row.more || !!row.message && row.loaded === false),
         showMessage: !!row.message && (!row.branch || row.open),
-        activateNode: (/** @type {MouseEvent} */ event) => row.branch ? this.toggleNode(row.id) : this.selectItem(event),
+        activateNode: (/** @type {MouseEvent} */ event) => {
+          if (row.branch) {
+            let result = this.toggleNode(row.id);
+            if (this.selectsBranches) { this.selectItem(event); }
+            return result;
+          }
+          return this.selectItem(event);
+        },
         loadMore: () => this.requestNode(row.id, row.message && row.loaded === false ? 'retry' : 'more'),
       })),
     });
@@ -94,7 +109,7 @@ export class Explorer extends List {
   edit(ids) {
     if (!Array.isArray(ids)) { throw new Error(this.text('invalidState')); }
     let model = this.requireModel();
-    if (ids.some((id) => model.state.rows.some((row) => row.id === id && (row.branch || row.disabled)))) {
+    if (ids.some((id) => model.state.rows.some((row) => row.id === id && (row.branch && !this.selectsBranches || row.disabled)))) {
       throw new Error(this.text('unavailable'));
     }
     return super.edit(ids);
@@ -138,4 +153,8 @@ export class Explorer extends List {
   }
 }
 
+Explorer.bindAttributes({
+  ...LIST_ATTRIBUTE_BINDINGS,
+  'select-branches': 'attribute-select-branches',
+});
 Explorer.rootStyles = styles;

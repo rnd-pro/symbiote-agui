@@ -109,6 +109,15 @@ test('explorer reuses list selection, publishes lazy requests and expansion, and
     'loaded',
     'brief',
   ]);
+  await page.$eval('agui-explorer', (owner) => {
+    owner.setAttribute('selection', 'single');
+    owner.setAttribute('select-branches', '');
+  });
+  await page.click('button[value="docs"]');
+  assert.deepEqual(await page.$eval('sym-context', (owner) => Reflect.get(owner, '$').selected), [
+    'docs',
+  ]);
+  assert.equal(await page.$eval('button[value="docs"]', (button) => button.getAttribute('aria-pressed')), 'true');
   await page.$eval('sym-context', (owner) => { Reflect.get(owner, '$').readonly = true; });
   assert.equal(await page.$eval('button[value="loaded"]', (button) => button.disabled), true);
   await page.$eval('sym-context', (owner) => {

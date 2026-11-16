@@ -38,7 +38,10 @@ export async function runProjectOperation(request, record, scope) {
       ok: true,
       preview: await previewProjectFile(request.projectId || '', request.path || '', request.showHidden),
     }),
-    'open folder': () => openProjectFolder(request.projectId || ''),
+    'open folder': () => openProjectFolder(request.projectId || '', undefined, {
+      path: request.path,
+      showHidden: request.showHidden,
+    }),
     'choose project': () => chooseProject(directory),
     projects: async () => ({
       ok: true,

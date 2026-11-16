@@ -152,12 +152,39 @@ test('manager lazily expands project folders and previews source or inert Markdo
     'session:zeta',
   ]);
   await openSessionAssets(page, 'draft');
+  await page.evaluate(() => {
+    let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
+    let connection = owner.connection;
+    if (!connection) { throw new Error('Connection is unavailable.'); }
+    let request = connection.request.bind(connection);
+    Reflect.set(window, 'openedFolders', []);
+    connection.request = async (operation, options) => {
+      if (operation !== 'open folder') { return request(operation, options); }
+      Reflect.get(window, 'openedFolders').push(options);
+      return {
+        ok: true,
+        folderPath: options?.path || 'Project root',
+      };
+    };
+  });
   await page.locator(`#explorer-entries ::-p-aria([name="Preview ${longName}"][role="button"])`).click();
   await page.waitForFunction(() => document.querySelector('#explorer-preview pre code')?.textContent === 'Long path preview.');
   assert.equal(await page.$('#explorer-entries button[value="draft.assets/docs/guide.md"]'), null, 'Nested entries are fetched on expansion.');
   assert.equal(await page.$('#explorer-entries button[value="draft.assets/.hidden.txt"]'), null);
   await page.click('#explorer-entries button[value="draft.assets/docs"]');
   await page.waitForSelector('#explorer-entries button[value="draft.assets/docs/guide.md"]');
+  await page.locator('agui-toolbar[aria-label="Explorer controls"] ::-p-aria([name="Open folder"][role="button"])').click();
+  await page.waitForFunction(() => !Reflect.get(/** @type {HTMLElement} */ (document.querySelector('agui-session-manager')), 'busy'));
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'openedFolders').at(-1).path), 'draft.assets/docs');
+  await page.click('agui-breadcrumbs button[value="draft.assets"]');
+  await page.waitForSelector('agui-breadcrumbs button[value="draft.assets"][aria-current="location"]');
+  assert.deepEqual(await page.evaluate(() => {
+    let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
+    return owner.$.explorerSelection;
+  }), [
+    'draft.assets',
+  ]);
+  await page.waitForFunction(() => !document.querySelector('agui-breadcrumbs button[value="draft.assets/docs"]'));
   await page.click('#explorer-entries button[value="draft.assets/docs/guide.md"]');
   await page.waitForSelector('#explorer-preview agui-markdown h1');
   assert.equal(await page.$eval('#explorer-preview agui-markdown h1', (element) => element.textContent), 'Project guide');
@@ -165,7 +192,10 @@ test('manager lazily expands project folders and previews source or inert Markdo
   assert.equal(await page.$('#explorer-preview explorer-probe'), null);
   assert.equal(await page.evaluate(() => !!Reflect.get(window, 'explorerConstructed')), false);
   assert.equal(await page.evaluate(() => !!Reflect.get(window, 'explorerExecuted')), false);
-  assert.ok(await page.$('nav[aria-label="Project breadcrumbs"] button'));
+  await page.waitForSelector('agui-breadcrumbs nav[aria-label="Project breadcrumbs"] ol li button');
+  await page.locator('agui-toolbar[aria-label="Explorer controls"] ::-p-aria([name="Open folder"][role="button"])').click();
+  await page.waitForFunction(() => !Reflect.get(/** @type {HTMLElement} */ (document.querySelector('agui-session-manager')), 'busy'));
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'openedFolders').at(-1).path), 'draft.assets/docs');
   await page.click('#explorer-entries button[value="draft.assets/source.html"]');
   await page.waitForFunction(() => document.querySelector('#explorer-preview pre code')?.textContent?.includes('<script>'));
   await page.waitForSelector('#explorer-preview pre code .hljs-tag');
@@ -196,6 +226,9 @@ test('manager lazily expands project folders and previews source or inert Markdo
   }
   await page.click('#explorer-entries button[value="draft.assets/empty"]');
   await page.waitForFunction(() => document.querySelector('#explorer-entries')?.textContent?.includes('This folder is empty.'));
+  await page.locator('agui-toolbar[aria-label="Explorer controls"] ::-p-aria([name="Open folder"][role="button"])').click();
+  await page.waitForFunction(() => !Reflect.get(/** @type {HTMLElement} */ (document.querySelector('agui-session-manager')), 'busy'));
+  assert.equal(await page.evaluate(() => Reflect.get(window, 'openedFolders').at(-1).path), 'draft.assets/empty');
   await page.click('#explorer-entries button[value="draft.assets/pages"]');
   await page.waitForSelector('#explorer-entries button[value="draft.assets/pages/entry-099.txt"]');
   assert.equal(await page.$('#explorer-entries button[value="draft.assets/pages/entry-100.txt"]'), null);

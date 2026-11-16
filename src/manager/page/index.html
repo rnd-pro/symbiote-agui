@@ -143,19 +143,17 @@
                           <p class="text-xs text-agui-muted">Expand an AGUI to inspect its HTML, description and assets. Source files are displayed as text.</p>
                           <agui-toolbar aria-label="Explorer controls">
                             <agui-button type="button" bind="onclick: MANAGER/explorerRefresh; @disabled: MANAGER/explorerDisabled"><agui-icon name="refresh"></agui-icon>Refresh files</agui-button>
+                            <agui-button type="button" bind="onclick: MANAGER/openExplorerFolder; @disabled: MANAGER/projectsDisabled; @title: MANAGER/explorerFolderPath"><agui-icon name="folder_open"></agui-icon>Open folder</agui-button>
                           </agui-toolbar>
                           <agui-toggle label="Show hidden files and dependencies" name="explorerHidden" pub-to="MANAGER/explorerHidden" bind="$.value: MANAGER/explorerHidden; $.disabled: MANAGER/explorerDisabled"></agui-toggle>
-                          <nav aria-label="Project breadcrumbs" class="flex flex-wrap gap-2" itemize="MANAGER/explorerBreadcrumbs">
-                            <template>
-                              <agui-button type="button" bind="onclick: invoke; @disabled: disabled"><span bind="textContent: ^label"></span></agui-button>
-                            </template>
-                          </nav>
+                          <agui-breadcrumbs label="Project breadcrumbs" pub-to="MANAGER/explorerNavigation"
+                            bind="$.items: MANAGER/explorerBreadcrumbs; $.value: MANAGER/explorerDirectory; $.disabled: MANAGER/explorerDisabled"></agui-breadcrumbs>
                         </div>
-                        <div class="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                        <div class="grid min-w-0 gap-4 lg:grid-cols-[fit-content(40%)_minmax(0,1fr)]">
                           <agui-panel class="min-w-0">
                             <h4 class="mb-3 text-xs uppercase tracking-widest text-agui-muted">AGUIs</h4>
                             <agui-state bind="$.status: MANAGER/explorerStatus; $.message: MANAGER/explorerMessage"></agui-state>
-                            <agui-explorer id="explorer-entries" label="Saved AGUIs" class="grid min-w-0 gap-1"
+                            <agui-explorer id="explorer-entries" label="Saved AGUIs" class="grid min-w-0 gap-1" select-branches
                               pub-to="MANAGER/explorerSelection" expanded-pub-to="MANAGER/explorerExpanded" request-pub-to="MANAGER/explorerRequest"
                               bind="$.items: MANAGER/explorerItems; $.value: MANAGER/explorerSelection; $.expanded: MANAGER/explorerExpanded; $.texts: MANAGER/explorerTexts; $.disabled: MANAGER/explorerDisabled"></agui-explorer>
                           </agui-panel>

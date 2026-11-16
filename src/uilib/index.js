@@ -13,6 +13,7 @@ import { Toolbar } from './layouts/toolbar/toolbar.js';
 import { Field } from './controls/field/field.js';
 import { Button } from './controls/button/button.js';
 import { Nav } from './controls/nav/nav.js';
+import { Breadcrumbs } from './controls/breadcrumbs/breadcrumbs.js';
 import { Connector } from './controls/connector/connector.js';
 import { Select } from './controls/select/select.js';
 import { ThemeToggle } from './controls/theme-toggle/theme-toggle.js';
@@ -62,6 +63,7 @@ export function registerUiLibComponents() {
   Toolbar.reg('agui-toolbar');
   Button.reg('agui-button');
   Nav.reg('agui-nav');
+  Breadcrumbs.reg('agui-breadcrumbs');
   Connector.reg('agui-connector');
   Field.reg('agui-field');
   Select.reg('agui-select');

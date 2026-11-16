@@ -75,6 +75,14 @@ export class Nav extends UiComponent {
       || !!(this.$.readonly ?? this.hasAttribute('readonly'));
   }
 
+  get defaultValue() {
+    return '';
+  }
+
+  get currentKind() {
+    return 'page';
+  }
+
   get items() {
     let items = this.$.items;
     if (!Array.isArray(items) || items.some((item) => !item
@@ -90,7 +98,7 @@ export class Nav extends UiComponent {
   refresh() {
     if (!this.ready || !this.isConnected) { return; }
     let items = this.items;
-    let requested = this.$.value ?? this.getAttribute('value') ?? '';
+    let requested = this.$.value ?? this.getAttribute('value') ?? this.defaultValue;
     if (typeof requested !== 'string') { throw new TypeError('Navigation value must be a string.'); }
     let active = items.find((item) => !item.disabled && item.value === requested);
     this.set$({
@@ -104,7 +112,7 @@ export class Nav extends UiComponent {
         value: item.value,
         label: item.label,
         icon: item.icon ?? '',
-        current: item === active ? 'page' : false,
+        current: item === active ? this.currentKind : false,
         disabled: this.unavailable || !!item.disabled,
         select: () => this.commit(item.value),
       })),

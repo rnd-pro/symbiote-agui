@@ -1,6 +1,7 @@
 import { FIELD_TEMPLATE, TEXTAREA_TEMPLATE } from './controls/field/template.js';
 import { BUTTON_TEMPLATE } from './controls/button/template.js';
 import { NAV_TEMPLATE } from './controls/nav/template.js';
+import { BREADCRUMBS_TEMPLATE } from './controls/breadcrumbs/template.js';
 import { SELECT_TEMPLATE } from './controls/select/template.js';
 import { TOGGLE_TEMPLATE } from './controls/toggle/template.js';
 import { THEME_TOGGLE_TEMPLATE } from './controls/theme-toggle/template.js';
@@ -31,6 +32,7 @@ export let UILIB_TEMPLATES = Object.freeze({
   field: FIELD_TEMPLATE,
   button: BUTTON_TEMPLATE,
   nav: NAV_TEMPLATE,
+  breadcrumbs: BREADCRUMBS_TEMPLATE,
   textarea: TEXTAREA_TEMPLATE,
   select: SELECT_TEMPLATE,
   toggle: TOGGLE_TEMPLATE,

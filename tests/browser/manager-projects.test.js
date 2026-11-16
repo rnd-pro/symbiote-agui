@@ -369,9 +369,17 @@ test('Open folder targets the current or listed project and recovers from a desk
   await openProjects(page);
   await connect(page, folder);
   assert.deepEqual(await page.evaluate(() => Reflect.get(window, 'folderRequests')), [], 'Discovery and connection do not open OS windows.');
+  await page.locator('#project-views [role="tab"][value="explorer"]').click();
+  await page.locator('agui-toolbar[aria-label="Explorer controls"] ::-p-aria([name="Open folder"][role="button"])').click();
+  await page.waitForFunction(() => {
+    let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
+    return !owner.busy && owner.$.notice.includes(`Requested opening ${owner.snapshot?.storage.defaultFolder}`);
+  });
+  assert.equal(await page.$eval('agui-session-manager', (owner) => Reflect.get(owner, '$').projectsView), 'explorer');
+  assert.deepEqual(await page.$eval('agui-session-manager', (owner) => Reflect.get(owner, '$').projectSelection), []);
   await openManagerSection(page, 'sessions');
   await waitForProject(page, 'default');
-  await openManagerSection(page, 'projects');
+  await openProjects(page);
   await selectManagerProject(page, 'default');
   await page.locator('#manager-inspector ::-p-aria([name="Open folder"][role="button"])').click();
   await page.waitForFunction(() => {
@@ -389,6 +397,7 @@ test('Open folder targets the current or listed project and recovers from a desk
   await page.waitForFunction((path) => document.querySelector('#manager-project-error')?.textContent?.includes(`Fixture desktop failure. Folder: ${path}`), {}, folder);
   await page.waitForFunction(() => !document.querySelector('#manager-connect-project input')?.hasAttribute('disabled'));
   assert.deepEqual(await page.evaluate(() => Reflect.get(window, 'folderRequests')), [
+    'default',
     'default',
     'default',
     projectId(folder),

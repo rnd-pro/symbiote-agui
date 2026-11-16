@@ -3,7 +3,7 @@ import { isItemSelectionClick } from '../../shared/selectable-item.js';
 import { sameData } from '../../shared/data/equal.js';
 import { validateSelection } from '../../shared/data/selection.js';
 import { emit } from '../../shared/events.js';
-import { LIST_ATTRIBUTES } from './constants.js';
+import { LIST_ATTRIBUTES, LIST_ATTRIBUTE_BINDINGS } from './constants.js';
 import { deriveList } from './model.js';
 import { listTools } from './tools.js';
 import { LIST_TEMPLATE } from './template.js';
@@ -216,9 +216,6 @@ export class List extends UiComponent {
   }
 }
 
-List.bindAttributes(Object.fromEntries(Object.values(LIST_ATTRIBUTES).map((attribute) => [
-  attribute,
-  `attribute-${attribute}`,
-])));
+List.bindAttributes(LIST_ATTRIBUTE_BINDINGS);
 List.template = LIST_TEMPLATE;
 List.rootStyles = styles;

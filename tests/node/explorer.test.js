@@ -7,6 +7,7 @@ import { cachedDefinitionPaths, getDefaultDefinitionFolder } from '../../src/lib
 import { connectProject } from '../../src/projects/registry.js';
 import { listProjectEntries } from '../../src/projects/explorer/list.js';
 import { previewProjectFile } from '../../src/projects/explorer/preview.js';
+import { openProjectFolder } from '../../src/projects/open.js';
 import { EXPLORER_DIRECTORY_LIMIT, EXPLORER_PAGE_SIZE, EXPLORER_PREVIEW_BYTES } from '../../src/projects/explorer/constants.js';
 import { ManagerOperations, validateManagerRequest } from '../../src/manager/operations.js';
 import { temporaryState } from './state-fixture.js';
@@ -140,6 +141,47 @@ test('Default exposes readable definition names only and never runtime records o
   await assert.rejects(previewProjectFile('default', 'escape.html'), /leaves the connected project/);
 });
 
+test('folder opening resolves selected directories and rejects files or inaccessible paths', async (t) => {
+  let project = await fixture(t);
+  await mkdir(join(project.folder, 'docs'));
+  await mkdir(join(project.folder, '.hidden'));
+  await writeFile(join(project.folder, 'docs', 'guide.md'), '# Guide');
+  await symlink(project.directory, join(project.folder, 'escape'), 'dir');
+  let opened = /** @type {string[]} */ ([]);
+  let open = async (/** @type {string} */ folder) => { opened.push(folder); };
+  let result = await openProjectFolder(project.id, open, {
+    path: 'docs',
+  });
+  assert.equal(result.folderPath, join(project.folder, 'docs'));
+  for (let path of [
+    'docs/guide.md',
+    '../',
+    'escape',
+    '.hidden',
+  ]) {
+    await assert.rejects(openProjectFolder(project.id, open, {
+      path,
+    }));
+  }
+  await openProjectFolder(project.id, open, {
+    path: '.hidden',
+    showHidden: true,
+  });
+  let paths = cachedDefinitionPaths('desk');
+  await mkdir(join(paths.assetsPath, 'documents'), {
+    recursive: true,
+  });
+  await writeFile(paths.htmlPath, '<h1>Desk</h1>');
+  await openProjectFolder('default', open, {
+    path: 'desk.assets/documents',
+  });
+  assert.deepEqual(opened, [
+    join(project.folder, 'docs'),
+    join(project.folder, '.hidden'),
+    join(paths.assetsPath, 'documents'),
+  ]);
+});
+
 test('previews bound reads, distinguish unsupported content and report permissions or scan limits', async (t) => {
   let project = await fixture(t);
   await Promise.all([
@@ -232,7 +274,7 @@ test('manager explorer requests validate their targets and read through the auth
     {
       operation: 'open folder',
       projectId: project.id,
-      path: 'data.json',
+      offset: 0,
     },
   ]) { assert.throws(() => validateManagerRequest({
     id: 'invalid',

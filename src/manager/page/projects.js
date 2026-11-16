@@ -123,8 +123,9 @@ export class ProjectNavigation {
    * @param {'connect project' | 'choose project' | 'switch project' | 'forget project' | 'open folder'} operation
    * @param {string} [projectId]
    * @param {string} [sourceId]
+   * @param {Pick<import('../../../types/manager.js').ManagerRequest, 'path' | 'showHidden'>} [explorer]
    */
-  async run(operation, projectId, sourceId = this.listing?.currentProjectId) {
+  async run(operation, projectId, sourceId = this.listing?.currentProjectId, explorer = {}) {
     let owner = this.owner;
     let connection = owner.connection;
     if (!connection?.ready || owner.busy || sourceId !== this.listing?.currentProjectId) { return; }
@@ -153,6 +154,7 @@ export class ProjectNavigation {
         folder,
       } : operation === 'choose project' ? {} : {
         projectId,
+        ...(operation === 'open folder' ? explorer : {}),
       });
       if (!owner.isCurrentView(epoch)) { return; }
       if (!result.ok) { throw new Error(result.error?.message || 'The project operation failed.'); }

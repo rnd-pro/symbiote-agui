@@ -71,6 +71,10 @@ export class SessionManager extends SymContext {
     descriptionTexts: DESCRIPTION_TEXTS,
     descriptionExtensions: false,
     explorerRefresh: busyAction(() => this.explorer?.reload()),
+    openExplorerFolder: busyAction(() => this.projects?.run('open folder', this.explorer?.projectId, undefined, {
+      path: this.explorer?.directoryPath || '',
+      showHidden: !!this.$.explorerHidden,
+    })),
     showTransfers: busyAction(() => this.transfers?.showHistory()),
     submitTransfer: busyAction((event) => { event.preventDefault(); return this.transfers?.submit(); }),
     openTransferDestination: busyAction(() => this.transfers?.openDestination()),

@@ -1,5 +1,4 @@
 import { highlightSourcePreview } from './source-preview.js';
-import { busyAction } from './busy-action.js';
 import { ALL_PROJECTS } from '../scope.js';
 import { sessionExplorerItems } from './explorer-items.js';
 
@@ -19,9 +18,12 @@ export let EXPLORER_STATE = {
     more: 'Load more entries',
     retry: 'Retry folder',
   },
-  explorerBreadcrumbs: {},
+  explorerBreadcrumbs: [],
+  explorerDirectory: '/',
+  explorerNavigation: '',
   explorerHidden: false,
   explorerDisabled: true,
+  explorerFolderPath: '',
   explorerStatus: 'empty',
   explorerMessage: 'Select Project explorer to browse this project.',
   previewPath: '',
@@ -70,9 +72,14 @@ export class ProjectExplorer {
   /** @param {import('./index.js').SessionManager} owner */
   constructor(owner) {
     this.owner = owner;
+    owner.sub('explorerNavigation', (path) => { void this.reveal(path === '/' ? '' : path); }, false);
     owner.sub('explorerSelection', (ids) => {
       let entry = this.items.find((item) => item.id === ids?.[0]);
-      if (entry && !entry.branch && typeof entry.path === 'string') { void this.preview(entry.path); }
+      if (entry?.branch) {
+        this.clearPreview();
+        this.directoryPath = typeof entry.path === 'string' ? entry.path : '';
+        this.render();
+      } else if (entry && typeof entry.path === 'string') { void this.preview(entry.path); }
     }, false);
     owner.sub('explorerRequest', (request) => {
       let entry = this.items.find((item) => item.id === request?.id);
@@ -202,6 +209,11 @@ export class ProjectExplorer {
   /** @param {string} path */
   async reveal(path) {
     this.directoryPath = path;
+    this.clearPreview();
+    let selected = this.items.find((item) => item.branch && item.path === path);
+    this.owner.$.explorerSelection = selected ? [
+      selected.id,
+    ] : [];
     let node = this.directories.get(path);
     let expanded = new Set(/** @type {string[]} */ (this.owner.$.explorerExpanded));
     let sessionId = /^([^/]+)\.assets(?:\/|$)/.exec(path)?.[1];
@@ -268,27 +280,22 @@ export class ProjectExplorer {
     let parts = this.directoryPath ? this.directoryPath.split('/') : [];
     this.owner.set$({
       explorerDisabled: disabled,
+      explorerFolderPath: this.directoryPath || String(this.owner.$.projectPath),
+      explorerDirectory: this.directoryPath || '/',
       explorerItems: this.items,
       explorerStatus: root?.error ? 'error' : root?.loading && !root.loaded ? 'loading' : root?.loaded && !this.items.length ? 'empty' : 'ready',
       explorerMessage: root?.error || (root?.loading ? 'Loading saved AGUIs...' : 'No saved AGUIs in this project.'),
-      explorerBreadcrumbs: Object.fromEntries([
-        [
-          'root',
-          {
-            label: String(this.owner.$.projectName),
-            disabled,
-            invoke: busyAction(() => this.reveal('')),
-          },
-        ],
-        ...parts.map((label, index) => [
-          `part:${index}`,
-          {
-            label,
-            disabled,
-            invoke: busyAction(() => this.reveal(parts.slice(0, index + 1).join('/'))),
-          },
-        ]),
-      ]),
+      explorerBreadcrumbs: [
+        {
+          value: '/',
+          label: String(this.owner.$.projectName),
+          icon: 'folder_open',
+        },
+        ...parts.map((label, index) => ({
+          value: parts.slice(0, index + 1).join('/'),
+          label,
+        })),
+      ],
     });
   }
 

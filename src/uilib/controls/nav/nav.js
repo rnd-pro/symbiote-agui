@@ -21,6 +21,7 @@ export class Nav extends UiComponent {
   });
   init$ = {
     items: [],
+    routes: undefined,
     value: undefined,
     label: undefined,
     disabled: undefined,
@@ -29,6 +30,7 @@ export class Nav extends UiComponent {
     section: '',
     sectionName: '',
     sectionIcon: '',
+    sectionSrc: '',
     entries: [],
     navigationLabel: '',
     navigationLabelledBy: false,
@@ -63,6 +65,7 @@ export class Nav extends UiComponent {
   renderCallback() {
     this.ready = true;
     this.sub('items', () => this.refresh());
+    this.sub('routes', () => this.refresh());
     for (let key of NAV_ATTRIBUTES) {
       if (!key.startsWith('aria-')) { this.sub(key, () => this.refresh()); }
       this.sub(`attribute-${key}`, () => this.refresh());
@@ -85,9 +88,25 @@ export class Nav extends UiComponent {
 
   get items() {
     let items = this.$.items;
+    let routes = this.$.routes;
+    if (routes != null) {
+      if (typeof routes !== 'object' || Array.isArray(routes)) { throw new TypeError('Navigation routes must be a route map.'); }
+      items = Object.entries(/** @type {Record<string, import('../../../../types/uilib.js').UiNavRoute>} */ (routes))
+        .filter((entry) => !entry[1].error).map(([
+          value,
+          route,
+        ]) => ({
+          value,
+          label: route.title ?? '',
+          icon: route.icon,
+          disabled: route.disabled,
+          src: route.src,
+        }));
+    }
     if (!Array.isArray(items) || items.some((item) => !item
       || typeof item.value !== 'string' || !item.value.trim() || item.value.length > MAX_ACTION_VALUE_CHARS
       || typeof item.label !== 'string' || (item.icon !== undefined && typeof item.icon !== 'string')
+      || (item.src !== undefined && typeof item.src !== 'string')
       || (item.disabled !== undefined && typeof item.disabled !== 'boolean'))
       || new Set(items.map((item) => item.value)).size !== items.length) {
       throw new TypeError('Navigation items require unique nonempty string values, string labels, and optional icon and disabled fields.');
@@ -106,6 +125,7 @@ export class Nav extends UiComponent {
       section: active?.value ?? '',
       sectionName: active?.label ?? '',
       sectionIcon: active?.icon ?? '',
+      sectionSrc: active?.src ?? '',
       navigationLabel: String(this.$.label ?? this.getAttribute('label') ?? this.getAttribute('aria-label') ?? ''),
       navigationLabelledBy: this.getAttribute('aria-labelledby') || false,
       entries: items.map((item) => ({
@@ -131,6 +151,10 @@ export class Nav extends UiComponent {
       let target = this.getAttribute('pub-to')?.trim();
       if (target && !Object.is(this.$[target], value)) { this.$[target] = value; }
       this.announce('change', value);
+      this.setAttribute('value', value);
+      this.dispatchEvent(new Event('change', {
+        bubbles: true,
+      }));
     }
     return {
       value,

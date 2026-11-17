@@ -1,31 +1,16 @@
+import { MANAGER_ROUTES } from '../sections.js';
+
 export let NAVIGATION_STATE = {
-  appSection: 'sessions',
+  appSection: '',
   projectsView: 'connected',
   workspaceView: 'table',
-  sectionTitle: 'Sessions',
-  sectionIcon: 'dashboard',
-  navigationItems: [
-    {
-      value: 'sessions',
-      label: 'Sessions',
-      icon: 'dashboard',
-    },
-    {
-      value: 'projects',
-      label: 'Projects',
-      icon: 'folder_open',
-    },
-    {
-      value: 'connections',
-      label: 'Connections',
-      icon: 'hub',
-    },
-    {
-      value: 'settings',
-      label: 'Settings',
-      icon: 'settings',
-    },
-  ],
+  sectionIcon: '',
+  sectionLoading: false,
+  sectionError: '',
+  router: {
+    routes: structuredClone(MANAGER_ROUTES),
+  },
+  routeOptions: {},
   inspectorHidden: true,
   inspectorLabel: 'Selected session',
   inspectorKind: '',

@@ -1,0 +1,30 @@
+<agui-panel class="grid gap-4">
+  <h2>Theme tokens</h2>
+  <p class="text-sm text-agui-muted">Choose Graphite, Ocean, Forest, or Desert with the palette button in the header. Each palette follows the day/night setting and is saved locally.</p>
+  <div class="flex flex-wrap gap-2">
+    <span class="agui-chip">Neutral</span>
+    <span class="agui-chip" data-tone="info">Information</span>
+    <span class="agui-chip" data-tone="success">Success</span>
+    <span class="agui-chip" data-tone="warning">Warning</span>
+    <span class="agui-chip" data-tone="danger">Error</span>
+  </div>
+  <dl class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-bg p-3">
+      <dt>Page background</dt>
+      <dd class="text-sm text-agui-muted">agui-bg</dd>
+    </div>
+    <div
+      class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-surface p-3 shadow-agui-panel">
+      <dt>Content surface</dt>
+      <dd class="text-sm text-agui-muted">agui-surface</dd>
+    </div>
+    <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-raised p-3">
+      <dt>Read-only surface</dt>
+      <dd class="text-sm text-agui-muted">agui-raised</dd>
+    </div>
+    <div class="grid gap-2 rounded-agui-inset border border-agui-accent bg-agui-accent-soft p-3">
+      <dt>Selected state</dt>
+      <dd class="text-sm text-agui-muted">agui-accent-soft</dd>
+    </div>
+  </dl>
+</agui-panel>

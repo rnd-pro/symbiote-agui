@@ -108,8 +108,16 @@ test('manager sections retain session selection, local tabs and settings drafts 
   assert.deepEqual(await page.$$eval('#manager-navigation [aria-current]', (buttons) => buttons.map((button) => button.getAttribute('value'))), [
     'settings',
   ]);
+  assert.match(new URL(page.url()).search, /^\?settings(?:&|$)/);
+  await page.goBack();
+  await page.waitForSelector('#project-views [role="tab"][value="explorer"][aria-selected="true"]');
+  assert.equal(await page.$eval('#manager-navigation [aria-current="page"]', (button) => button.getAttribute('value')), 'projects');
+  await page.goForward();
+  await page.waitForSelector('input[name="saveFolder"]');
+  assert.equal(await page.$eval('input[name="saveFolder"]', (element) => element.value), './draft-library');
   assert.deepEqual(errors, []);
-  assert.equal(new Set(fragments).size, fragments.length, 'Mounted sections load once and retain their contents across navigation.');
+  assert.equal(await page.$$eval('agui-session-manager > div > sym-import', (imports) => imports.length), 1);
+  assert.ok(fragments.some((url) => url.endsWith('/settings.html')));
   let failedPage = await browser.newPage();
   await failedPage.setRequestInterception(true);
   failedPage.on('request', (request) => {
@@ -122,10 +130,16 @@ test('manager sections retain session selection, local tabs and settings drafts 
     } else { void request.continue(); }
   });
   await failedPage.goto(manager.launchUrl);
-  await failedPage.waitForSelector('sym-import[src$="sessions.html"] agui-state[status="error"]:not([hidden]) [role="alert"]');
+  await failedPage.waitForSelector('agui-session-manager > div > agui-state[status="error"]:not([hidden]) [role="alert"]');
   assert.equal(await failedPage.$('#manager-table'), null);
   await openManagerSection(failedPage, 'settings');
   await failedPage.waitForSelector('input[name="saveFolder"]', {
     visible: true,
   });
+  await failedPage.reload();
+  await failedPage.waitForSelector('#manager-navigation button[value="settings"][aria-current="page"]');
+  await failedPage.waitForSelector('input[name="saveFolder"]');
+  await failedPage.click('#manager-navigation button[value="sessions"]');
+  await failedPage.waitForSelector('agui-session-manager > div > agui-state[status="error"]:not([hidden]) [role="alert"]');
+  assert.ok(await failedPage.$('input[name="saveFolder"]'), 'A later import failure retains the previous section and reports the error.');
 });

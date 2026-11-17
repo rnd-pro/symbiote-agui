@@ -34,10 +34,17 @@ export interface UiSelectState extends UiControlState {
 
 export interface UiNavItem extends UiOption {
   icon?: UiIconName;
+  src?: string;
+}
+
+export interface UiNavRoute extends Pick<UiNavItem, 'icon' | 'disabled' | 'src'> {
+  title?: string;
+  error?: boolean;
 }
 
 export interface UiNavState {
-  items: UiNavItem[];
+  items?: UiNavItem[];
+  routes?: Record<string, UiNavRoute>;
   value: string;
   label?: string;
   disabled?: boolean;
@@ -45,6 +52,7 @@ export interface UiNavState {
   section?: string;
   sectionName?: string;
   sectionIcon?: UiIconName | '';
+  sectionSrc?: string;
 }
 
 export interface UiSidebarState {

@@ -1,4 +1,4 @@
-<sym-context ctx="GALLERY_IMPORT" pub-map="APP/importStage: stage; APP/importNote: note">
+<sym-context ctx="GALLERY_IMPORT" pub-map="ASSETS/importStage: stage; ASSETS/importNote: note">
   <script type="application/json">
     {
       "stage": "edit",
@@ -24,7 +24,7 @@
     <sym-conditional when="GALLERY_IMPORT/stage" is="edit">
         <div class="grid gap-4 sm:grid-cols-2">
           <agui-field label="Shared name" pub-to="APP/sharedName" bind="$.value: APP/sharedName"></agui-field>
-          <agui-select label="Shared status" pub-to="APP/sharedStatus" bind="$.value: APP/sharedStatus; $.options: APP/statusOptions"></agui-select>
+          <agui-select label="Shared status" pub-to="APP/sharedStatus" bind="$.value: APP/sharedStatus; $.options: CONTACT/statusOptions"></agui-select>
         </div>
         <agui-toggle label="Notifications" pub-to="APP/notifications" bind="$.value: APP/notifications"></agui-toggle>
         <sym-conditional when="GALLERY_IMPORT/noteOpen"><agui-field label="Review note" type="textarea" rows="3" pub-to="GALLERY_IMPORT/note" bind="$.value: GALLERY_IMPORT/note"></agui-field></sym-conditional>

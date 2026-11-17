@@ -18,7 +18,7 @@ import { CONNECTIONS_STATE, LiveConnections } from './connections.js';
 import { busyAction } from './busy-action.js';
 import { CONNECTOR_SETTINGS_STATE, SessionConnectorSettings } from './connectors.js';
 import { NAVIGATION_STATE, syncNavigation, syncInspector } from './navigation.js';
-import { ALL_PROJECTS, managerSessionKey } from '../scope.js';
+import { ALL_PROJECTS, managerSessionKey, validManagerScope } from '../scope.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 
@@ -176,6 +176,14 @@ export class SessionManager extends SymContext {
       this.renderRows();
     }, () => { void this.projects?.refresh(); void this.refresh(); void this.transfers?.refreshHistory(); });
     this.connection.connect();
+    this.sub('ROUTER/options', (options) => {
+      let project = options?.project ?? 'default';
+      if (options && this.connection?.ready && validManagerScope(project) && project !== this.connection.projectId) {
+        this.selectProject(project);
+        void this.projects?.refresh();
+        void this.refresh();
+      }
+    });
     this.interval = setInterval(() => {
       if (document.visibilityState === 'visible' && this.connection?.ready && !this.busy) {
         void this.refresh();

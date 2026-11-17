@@ -1,233 +1,81 @@
     <sym-context id="gallery-data" ctx="APP" persist="sharedName sharedStatus notifications tableRows palette theme">
       <script type="application/json">
-        {
-          "activeSection": "controls",
-          "sectionName": "Controls",
-          "sectionIcon": "settings",
-          "layoutView": "templates",
-          "sidebarBlockActive": false,
-          "sidebarBlockNote": "Draft note",
-          "sidebarBlockUpdates": false,
-          "sidebarBlockFollowUp": "",
-          "controlView": "fields",
-          "breadcrumbLocation": "references",
-          "breadcrumbReadonly": false,
-          "breadcrumbItems": [
-            {"value":"workspace","label":"Workspace","icon":"folder_open"},
-            {"value":"documents","label":"Documents"},
-            {"value":"references","label":"References"}
-          ],
-          "widgetView": "table",
-          "explorerSelectBranches": false,
-          "explorerSelection": [],
-          "explorerExpanded": [],
-          "explorerItems": [
-            {"id":"documents","label":"Documents","branch":true},
-            {"id":"brief","parentId":"documents","label":"Brief.md"},
-            {"id":"references","parentId":"documents","label":"References","branch":true},
-            {"id":"links","parentId":"references","label":"Links.md"},
-            {"id":"assets","label":"Assets","branch":true},
-            {"id":"overview","parentId":"assets","label":"Overview.svg"}
-          ],
-          "explorerTexts": {"empty":"No entries.","invalidRows":"Check the hierarchy.","invalidState":"Check explorer state.","unavailable":"This entry is unavailable.","expand":"Expand","collapse":"Collapse","select":"Select","more":"Load more","retry":"Retry"},
-          "feedbackView": "states",
-          "processStage": "review",
-          "importStage": "edit",
-          "importNote": "",
-          "processComplete": false,
-          "processStages": [{"value":"prepare","label":"Prepare"},{"value":"review","label":"Review"},{"value":"approve","label":"Approve"},{"value":"publish","label":"Publish"}],
-          "stepTexts": {"current":"Current step","completed":"Completed","pending":"Not reached","invalidItems":"Steps need unique values and text labels.","invalidValue":"Choose an existing stage."},
-          "sectionOptions": [
-            {
-              "value": "layouts",
-              "icon": "dashboard",
-              "label": "Layouts"
-            },
-            {
-              "value": "controls",
-              "icon": "tune",
-              "label": "Controls"
-            },
-            {
-              "value": "widgets",
-              "icon": "widgets",
-              "label": "Widgets"
-            },
-            {
-              "value": "feedback",
-              "icon": "chat",
-              "label": "Feedback"
-            },
-            {
-              "value": "data-flow",
-              "icon": "hub",
-              "label": "Data flow"
-            },
-            {
-              "value": "theme",
-              "icon": "palette",
-              "label": "Theme"
-            },
-            {
-              "value": "assets",
-              "icon": "perm_media",
-              "label": "Assets"
-            },
-            {
-              "value": "without-icon",
-              "label": "Without icon"
-            }
-          ],
-          "nameLabel": "Name",
-          "theme": "system",
-          "palette": "graphite",
-          "density": "comfortable",
-          "preloaderVisible": true,
-          "preloaderLabel": "Loading preview",
-          "buttonLoading": false,
-          "inspectorNotes": "",
-          "galleryTab": "overview",
-          "galleryTabNotes": "",
-          "galleryTabLabel": "Notes",
-          "galleryEditorOpen": false,
-          "notesOpen": false,
-          "tableQuery": "",
-          "tableSelection": [],
-          "tableFilters": {},
-          "tableMatchingIds": [],
-          "tableSort": null,
-          "tableLoading": false,
-          "tableReadonly": false,
-          "kanbanColumns": [{"value":"new","label":"New","tone":"info"},{"value":"contacted","label":"Contacted","tone":"warning"},{"value":"qualified","label":"Qualified","tone":"success"}],
-          "kanbanTexts": {"items":"Leads","moveHint":"Drag cards into a stage, or focus a card and press Alt+Left or Alt+Right.","unassigned":"Unassigned","untitled":"Unnamed lead","empty":"No leads yet.","emptyColumn":"No leads in this stage.","loading":"Loading leads...","invalidRows":"Lead IDs must be unique nonempty strings.","invalidColumns":"Review the stage definitions.","invalidState":"Review the board configuration.","unavailable":"The board is unavailable or read-only."},
-          "chartTexts": {"data":"Explore chart data","loading":"Loading chart...","empty":"No values to plot.","loadFailed":"The chart library could not load. Reload this page to retry.","renderFailed":"The chart could not be rendered.","invalidRows":"Review chart values and record IDs.","invalidSeries":"Review series definitions and matching units.","invalidState":"Review chart settings.","unavailable":"Chart selection is unavailable.","results":"Results","selected":"Selected","selection":"Selection","selectRow":"Select point","selectAll":"Select all points","page":"Page","pagination":"Data pages","previous":"Previous page","next":"Next page"},
-          "opportunitySeries": [{"key":"amount","valueKey":"amount","label":"Opportunity","color":"success","format":"currency","currency":"USD"}],
-          "monthlyRows": [{"id":"jan","month":"2026-01-01","actual":0,"target":1200},{"id":"feb","month":"2026-02-01","actual":1800,"target":1600},{"id":"mar","month":"2026-03-01","actual":null,"target":2000},{"id":"apr","month":"2026-04-01","actual":2600,"target":2400}],
-          "monthlySeries": [{"key":"actual","valueKey":"actual","label":"Actual","color":"success","format":"currency","currency":"USD"},{"key":"target","valueKey":"target","label":"Target","color":"accent","format":"currency","currency":"USD"}],
-          "monthlySelected": [],
-          "diagramView": "flow",
-          "flowSource": "flowchart LR\n  Draft --> Review{Approved?}\n  Review -->|Yes| Publish\n  Review -->|No| Draft",
-          "sequenceSource": "sequenceDiagram\n  participant User\n  participant App\n  participant Service\n  User->>App: Submit task\n  App->>Service: Validate\n  Service-->>App: Accepted\n  App-->>User: Confirmation",
-          "relationshipSource": "erDiagram\n  PROJECT ||--o{ TASK : contains\n  MEMBER ||--o{ TASK : owns",
-          "diagramTexts": {"source":"Diagram source","loading":"Loading diagram...","empty":"No diagram yet.","loadFailed":"The diagram library could not load. Reload to retry.","invalidValue":"The diagram source must be text.","invalidSource":"Check the diagram syntax.","unsupported":"This diagram type is not supported.","inputTooLarge":"The diagram source is too large.","outputTooLarge":"The rendered diagram is too large.","limitExceeded":"The diagram exceeds rendering limits.","renderFailed":"The diagram could not be rendered."},
-          "markdownSource": "# Project briefing\n\nA document with **shared theme tokens**, *reactive data*, and [a reference link](https://example.com/docs).\n\n[Jump to checklist](#checklist)\n\n## Checklist\n\n- [x] Review requirements\n- [ ] Prepare proposal\n\n> These checkboxes describe the document. Use AGUI task controls for editable tasks.\n\n## Delivery\n\n1. Review the draft.\n2. Share the final proposal.\n\n| Milestone | Status | Owner |\n| --- | --- | --- |\n| Discovery | Complete | Example team |\n| Proposal | In progress | Example studio |\n\n## Highlighted code\n\n```js\nconst report = { status: 'ready', count: 2 };\n```\n\n```html\n<agui-field label=\"Example\"></agui-field>\n```\n\nLiteral template text stays literal: `{{APP/sharedName}}`.\n\n<details><summary>Native HTML disclosure</summary><p>HTML can extend a Markdown document directly.</p></details>\n\n<example-report>\n\n### Readable wrapper fallback\n\n```json\n{\"status\":\"ready\",\"count\":2}\n```\n\nThe structured data and this description remain visible when no component implementation is registered.\n\n</example-report>\n\n<agui-panel>\n\n### Registered panel\n\nThis native AGUI panel enhances the document without treating its text as RAT.\n\n</agui-panel>",
-          "markdownUrl": "",
-          "markdownSourceOptions": [
-            {
-              "value": "",
-              "label": "Inline example"
-            },
-            {
-              "value": "./_proxy?url=https%3A%2F%2Fraw.githubusercontent.com%2Frnd-pro%2Fsymbiote-agui%2Fmain%2FREADME.md",
-              "label": "Project README through proxy"
-            }
-          ],
-          "markdownTexts": {"loading":"Loading document...","empty":"No document yet.","loadFailed":"The document renderer could not load. Reload to retry.","renderFailed":"The document could not be rendered.","invalidValue":"The document must be text.","inputTooLarge":"The source document is too large.","outputTooLarge":"The rendered document is too large.","invalidSrc":"The document URL is invalid.","fetchFailed":"The document could not be loaded. Check its URL, CORS access, or the session proxy policy."},
-          "mapRows": [{"id":"studio","label":"Example studio","latitude":51.505,"longitude":-0.09},{"id":"office","label":"Example office","latitude":51.51,"longitude":-0.12},{"id":"warehouse","label":"Example warehouse","latitude":51.49,"longitude":-0.11},{"id":"unmapped","label":"Coordinates pending","latitude":null,"longitude":null}],
-          "mapSelection": [],
-          "mapView": {"center":[51.505,-0.09],"zoom":12},
-          "mapTiles": {"url":"https://tile.openstreetmap.org/{z}/{x}/{y}.png","attribution":"OpenStreetMap contributors","attributionUrl":"https://www.openstreetmap.org/copyright"},
-          "mapTexts": {"data":"Explore coordinates","point":"Location","latitude":"Latitude","longitude":"Longitude","skipped":"Locations without valid coordinates","fit":"Fit locations","zoomIn":"Zoom in","zoomOut":"Zoom out","loading":"Loading map...","empty":"No mapped locations.","loadFailed":"The map library could not load. Reload to retry.","renderFailed":"The map could not be rendered.","tileFailed":"Map tiles are unavailable. You can still use the locations.","invalidRows":"Review record IDs.","invalidTiles":"Review the tile provider.","invalidState":"Review map settings.","unavailable":"The map is unavailable.","results":"Locations","selected":"Selected","selection":"Selection","selectRow":"Select location","selectAll":"Select all locations","page":"Page","pagination":"Location pages","previous":"Previous page","next":"Next page"},
-          "mapColumns": [{"key":"label","label":"Location","type":"text"},{"key":"latitude","label":"Latitude","type":"number"},{"key":"longitude","label":"Longitude","type":"number"}],
-          "tableRows": [
-            {"id":"lead-01","name":"Northstar Studio","amount":0,"status":"new","active":true,"followUp":"2026-11-02","notes":"Prepare an introductory proposal."},
-            {"id":"lead-02","name":"Orbit Works","amount":2400,"status":"contacted","active":false,"followUp":"2026-11-04"},
-            {"id":"lead-03","name":"Harbor Labs","amount":1800,"status":"new","active":true,"followUp":"2026-11-03"},
-            {"id":"lead-04","name":"Meadow Apps","amount":4200,"status":"qualified","active":true,"followUp":"2026-11-08"},
-            {"id":"lead-05","name":"Atlas Supply","amount":1800,"status":"contacted","active":false,"followUp":null},
-            {"id":"lead-06","name":"Cedar Design","amount":null,"status":"review","active":true,"followUp":"2026-11-06"}
-          ],
-          "tableColumns": [
-            {"key":"name","label":"Company","type":"text","sortable":true,"filter":"contains"},
-            {"key":"amount","label":"Opportunity","type":"number","sortable":true,"filter":"range"},
-            {"key":"status","label":"Stage","type":"status","filter":"equals","options":[{"value":"new","label":"New","tone":"info"},{"value":"contacted","label":"Contacted","tone":"warning"},{"value":"qualified","label":"Qualified","tone":"success"}]},
-            {"key":"active","label":"Active","type":"boolean","filter":"equals"},
-            {"key":"followUp","label":"Follow-up","type":"date","sortable":true,"filter":"range"}
-          ],
-          "tableTexts": {"search":"Search leads","results":"Results","selected":"Selected","selection":"Selection","selectRow":"Select lead","selectAll":"Select filtered leads","page":"Page","pagination":"Lead pages","previous":"Previous page","next":"Next page","all":"All values","minimum":"Minimum","maximum":"Maximum","trueLabel":"Yes","falseLabel":"No","empty":"No matching leads.","loading":"Loading leads...","invalidRows":"Lead IDs must be unique nonempty strings.","invalidColumns":"Review the table columns.","invalidFields":"Review the filter fields.","invalidState":"Review the table state.","unavailable":"The table is unavailable or read-only."},
-          "query": "",
-          "status": "",
-          "sharedName": "Alex",
-          "sharedStatus": "new",
-          "featureContactFirst": {
-            "featureTitle": "Design contact",
-            "contactName": "Avery",
-            "contactNotes": "Prepare the design brief."
-          },
-          "featureContactSecond": {
-            "featureTitle": "Engineering contact",
-            "contactName": "Morgan",
-            "contactNotes": "Review the integration requirements."
-          },
-          "notifications": true,
-          "notificationMessage": "",
-          "statusOptions": [{"value":"new","label":"New"},{"value":"contacted","label":"Contacted"},{"value":"archived","label":"Archived","disabled":true}],
-          "componentState": {"status":"error","message":"The data source is unavailable.","retryLabel":"Retry"},
-          "iconName": "search",
-          "iconOptions": [
-            {
-              "value": "search",
-              "label": "Search"
-            },
-            {
-              "value": "settings",
-              "label": "Settings"
-            },
-            {
-              "value": "person",
-              "label": "Person"
-            },
-            {
-              "value": "folder_open",
-              "label": "Project folders"
-            },
-            {
-              "value": "public",
-              "label": "Public links"
-            },
-            {
-              "value": "table_chart",
-              "label": "Tables"
-            },
-            {
-              "value": "bar_chart",
-              "label": "Charts"
-            },
-            {
-              "value": "map",
-              "label": "Maps"
-            },
-            {
-              "value": "markdown",
-              "label": "Markdown"
-            },
-            {
-              "value": "palette",
-              "label": "Theme"
-            },
-            {
-              "value": "hub",
-              "label": "Data flow"
-            },
-            {
-              "value": "terminal",
-              "label": "Terminal"
-            }
-          ],
-          "submissionExamples": [
-            {"label":"Populated","message":"A sample profile is ready to edit."},
-            {"label":"Imported","message":"JSON imported. Changes are not saved."},
-            {"label":"Dirty","message":"Unsaved changes."},
-            {"label":"Saving","message":"Saving locally. New edits remain separate."},
-            {"label":"Saved locally","message":"The cache write is confirmed. External storage is not confirmed."},
-            {"label":"Agent pending","message":"Waiting for conversation delivery."},
-            {"label":"Externally verified","message":"The agent verified the submitted external operation."},
-            {"label":"Feedback unavailable","message":"Saved locally. Use JSON export for manual transfer."},
-            {"label":"Conflict","message":"Saved data changed. Export needed edits and reconcile."},
-            {"label":"Failure","message":"The cache write failed. The draft is still available."}
-          ]
-        }
-      </script>
+{
+  "sharedName": "Alex",
+  "sharedStatus": "new",
+  "notifications": true,
+  "tableRows": [
+    {
+      "id": "lead-01",
+      "name": "Northstar Studio",
+      "amount": 0,
+      "status": "new",
+      "active": true,
+      "followUp": "2026-11-02",
+      "notes": "Prepare an introductory proposal."
+    },
+    {
+      "id": "lead-02",
+      "name": "Orbit Works",
+      "amount": 2400,
+      "status": "contacted",
+      "active": false,
+      "followUp": "2026-11-04"
+    },
+    {
+      "id": "lead-03",
+      "name": "Harbor Labs",
+      "amount": 1800,
+      "status": "new",
+      "active": true,
+      "followUp": "2026-11-03"
+    },
+    {
+      "id": "lead-04",
+      "name": "Meadow Apps",
+      "amount": 4200,
+      "status": "qualified",
+      "active": true,
+      "followUp": "2026-11-08"
+    },
+    {
+      "id": "lead-05",
+      "name": "Atlas Supply",
+      "amount": 1800,
+      "status": "contacted",
+      "active": false,
+      "followUp": null
+    },
+    {
+      "id": "lead-06",
+      "name": "Cedar Design",
+      "amount": null,
+      "status": "review",
+      "active": true,
+      "followUp": "2026-11-06"
+    }
+  ],
+  "palette": "graphite",
+  "theme": "system"
+}
+</script>
+<sym-context ctx="GALLERY" src="./_assets/context.json">
+  <agui-state status="loading" message="Loading gallery data..." bind="hidden: !GALLERY/+loading"></agui-state>
+  <agui-state status="error" bind="$.message: GALLERY/+loadErrorMessage; hidden: !GALLERY/+loadError"></agui-state>
+  <sym-conditional when="GALLERY/ui" behavior="dom-add">
+      <sym-context ctx="UI" bind="$: GALLERY/ui"></sym-context>
+      <sym-context ctx="LAYOUT" bind="$: GALLERY/layout"></sym-context>
+      <sym-context ctx="CONTROLS" bind="$: GALLERY/controls"></sym-context>
+      <sym-context ctx="DATA" bind="$: GALLERY/data"></sym-context>
+      <sym-context ctx="CHARTS" bind="$: GALLERY/charts"></sym-context>
+      <sym-context ctx="MAP" bind="$: GALLERY/map"></sym-context>
+      <sym-context ctx="DIAGRAM" bind="$: GALLERY/diagram"></sym-context>
+      <sym-context ctx="MARKDOWN" bind="$: GALLERY/markdown"></sym-context>
+      <sym-context ctx="FEEDBACK" bind="$: GALLERY/feedback"></sym-context>
+      <sym-context ctx="CONTACT" bind="$: GALLERY/contact"></sym-context>
+      <sym-context ctx="ASSETS" bind="$: GALLERY/assets"></sym-context>
+<sym-router ctx="ROUTER" bind="$: GALLERY/router" pub-map="UI/activeSection: route"></sym-router>
+<link rel="stylesheet" href="./_assets/sections.css">
 <agui-app class="[--agui-content-width:100%]">
   <agui-sidebar
     class="[--agui-sidebar-width:14rem]"
@@ -235,13 +83,13 @@
     expand-label="Expand"
     collapse-label="Collapse">
     <agui-nav label="Library sections"
-      pub-map="APP/activeSection: section; APP/sectionName: sectionName; APP/sectionIcon: sectionIcon"
-      bind="$.items: APP/sectionOptions; $.value: APP/activeSection"></agui-nav>
+      pub-map="UI/sectionIcon: sectionIcon"
+      bind="$.routes: ROUTER/routes; $.value: ROUTER/route; onchange: [navigate]ROUTER"></agui-nav>
   </agui-sidebar>
-  <agui-viewport aria-label="UI library examples">
+  <agui-viewport class="flex flex-col" aria-label="UI library examples">
 
       <agui-header floating>
-        <h1 class="flex items-center gap-2"><agui-icon bind="$.name: APP/sectionIcon; hidden: !APP/sectionIcon"></agui-icon>{{APP/sectionName}}</h1>
+        <h1 class="flex items-center gap-2"><agui-icon bind="$.name: UI/sectionIcon; hidden: !UI/sectionIcon"></agui-icon>{{ROUTER/title}}</h1>
         <agui-toolbar aria-label="Gallery controls">
           <agui-theme-selector label="App theme" pub-to="APP/palette"
             bind="$.value: APP/palette; $: AGUI_TEXT/themeSelector"></agui-theme-selector>
@@ -252,475 +100,21 @@
         </agui-toolbar>
       </agui-header>
       <div class="min-w-0 flex-1 p-4 sm:p-6">
-        <sym-conditional when="APP/activeSection" is="layouts">
-            <agui-tabs label="Layout examples" pub-to="APP/layoutView" bind="$.value: APP/layoutView">
-              <agui-tab value="sidebar-blocks" label="Sidebar blocks">
-                <agui-panel>
-                  <agui-toggle label="Activate item controls" pub-to="APP/sidebarBlockActive"
-                    bind="$.value: APP/sidebarBlockActive"></agui-toggle>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="templates" label="Templates">
-                <section class="grid gap-4" aria-label="Reusable feature templates">
-                  <h2>Reusable features with use-template</h2>
-                  <p class="text-sm text-agui-muted">One template supplies the layout and bindings. Each provider reads a
-                    different APP contact object through state and publishes edits back with pub-to. No custom JavaScript
-                    is needed.</p>
-                  <template id="contact-feature-template">
-                    <agui-panel class="grid content-start gap-4">
-                      <h3 class="text-lg font-semibold">{{^featureTitle}}</h3>
-                      <agui-field label="Contact name" name="feature_contact_name" pub-to="^contactName"
-                        bind="$.value: ^contactName"></agui-field>
-                      <agui-field label="Notes" name="feature_contact_notes" type="textarea" rows="3"
-                        pub-to="^contactNotes" bind="$.value: ^contactNotes"></agui-field>
-                      <p class="text-sm text-agui-muted">
-                        Draft contact: <output>{{^contactName}}</output>
-                      </p>
-                    </agui-panel>
-                  </template>
-                  <div class="grid gap-4 md:grid-cols-2">
-                    <sym-context id="feature-contact-first" use-template="#contact-feature-template"
-                      pub-to="APP/featureContactFirst" bind="$: APP/featureContactFirst"></sym-context>
-                    <sym-context id="feature-contact-second" use-template="#contact-feature-template"
-                      pub-to="APP/featureContactSecond" bind="$: APP/featureContactSecond"></sym-context>
-                  </div>
-                  <p class="text-sm text-agui-muted">Each feature owns a local view of its contact and publishes a fresh
-                    object to APP. These contact objects are transient and are not included in the gallery's Save action.
-                  </p>
-                </section>
-              </agui-tab>
-            </agui-tabs>
-          </sym-conditional>
-        <sym-conditional when="APP/activeSection" is="controls">
-            <agui-tabs label="Control examples" pub-to="APP/controlView" bind="$.value: APP/controlView">
-              <agui-tab value="fields" label="Fields and buttons">
-                <agui-panel class="grid gap-5">
-                  <h2>Native controls</h2>
-                  <agui-field id="name-control" bind="$.label: APP/nameLabel" value="Alex" hint="Required field" required
-                    required-mark="*" name="name" autocomplete="name"></agui-field>
-                  <agui-field label="Email" hint="Format: name@example.com" type="email" name="email"
-                    autocomplete="email"></agui-field>
-                  <agui-field label="Follow-up date" value="2026-10-21" type="date" name="follow_up"></agui-field>
-                  <agui-field label="Connected on LinkedIn" type="checkbox" checked name="connected"></agui-field>
-                  <agui-field label="Email preferred" type="radio" value="email" name="preferred_channel"
-                    checked></agui-field>
-                  <agui-toggle id="notifications-toggle" label="Notifications" name="notifications"
-                    pub-to="APP/notifications" bind="$.value: APP/notifications"></agui-toggle>
-                  <agui-toggle label="Unavailable option" name="disabled_toggle" disabled></agui-toggle>
-                  <agui-field label="Notes" value="Prepare a proposal after the first conversation." type="textarea"
-                    name="notes" rows="3"></agui-field>
-                  <agui-field label="Read-only value" value="Saved record" readonly name="saved_value"></agui-field>
-                  <agui-field label="Disabled value" value="Unavailable" disabled name="disabled_value"></agui-field>
-                  <agui-field label="External validation error" value="Existing contact"
-                    error="This contact already exists." name="duplicate"></agui-field>
-                  <agui-toolbar aria-label="Button style samples">
-                    <button type="button" class="agui-button-primary"  value="new" bind="onclick: [set]APP/sharedStatus">New status</button>
-                    <button type="button"  bind="onclick: [toggle]APP/notifications">Toggle notifications</button>
-                    <button type="button" class="agui-button-ghost"  value="false" bind="onclick: [set]APP/notifications">Disable
-                      notifications</button>
-                    <button type="button" class="agui-button-danger"  value="archived" bind="onclick: [set]APP/sharedStatus">Archive</button>
-                    <button type="button"  value="new" disabled bind="onclick: [set]APP/sharedStatus">Disabled</button>
-                  </agui-toolbar>
-                  <agui-toggle label="Show button loading state" pub-to="APP/buttonLoading"
-                    bind="$.value: APP/buttonLoading"></agui-toggle>
-                  <agui-toolbar aria-label="Button loading examples">
-                    <button type="button" class="agui-button-primary"  value="new"
-                      bind="$.loading: APP/buttonLoading; onclick: [set]APP/sharedStatus"><agui-icon name="refresh"></agui-icon>Refresh status</button>
-                    <button type="button" class="agui-button-icon" aria-label="Refresh status"  value="new"
-                      bind="$.loading: APP/buttonLoading; onclick: [set]APP/sharedStatus"><agui-icon name="refresh"></agui-icon></button>
-                  </agui-toolbar>
-                  <agui-panel class="grid gap-2">
-                    <h3 class="text-base">Nested panel</h3>
-                    <p class="text-sm text-agui-muted">A recessed group for related fields and actions.</p>
-                    <agui-toolbar aria-label="Nested panel actions">
-                      <button type="button"><agui-icon name="edit"></agui-icon>Edit</button>
-                      <button class="agui-button-ghost" type="button">Cancel</button>
-                    </agui-toolbar>
-                  </agui-panel>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="tabs" label="Tabs">
-                <agui-panel class="grid gap-4">
-                  <h2>Tabs</h2>
-                  <agui-tabs label="Workspace views" pub-to="APP/galleryTab"
-                    bind="$.value: APP/galleryTab">
-                    <agui-tab value="overview" label="Overview">
-                      <p class="text-sm text-agui-muted">Arrow keys move focus. Enter or Space activates a tab. Switching
-                        views preserves entered notes.</p>
-                      <agui-tabs label="Nested guides" orientation="vertical" value="bindings">
-                        <agui-tab value="bindings" label="Bindings">
-                          <p class="text-sm">Bind value to common state and use pub-to to publish tab changes.</p>
-                        </agui-tab>
-                        <agui-tab value="keyboard" label="Keyboard">
-                          <p class="text-sm">Vertical tabs use Up and Down. Home and End move to the first and last
-                            enabled tabs.</p>
-                        </agui-tab>
-                      </agui-tabs>
-                    </agui-tab>
-                    <agui-tab value="notes" bind="$.label: APP/galleryTabLabel">
-                      <agui-field label="Workspace notes" type="textarea" name="tab_notes" rows="4"
-                        pub-to="APP/galleryTabNotes" bind="$.value: APP/galleryTabNotes"></agui-field>
-                    </agui-tab>
-                    <agui-tab value="future" label="Unavailable view" disabled>
-                      <p>This view is disabled.</p>
-                    </agui-tab>
-                  </agui-tabs>
-                  <p class="text-sm text-agui-muted">Shared active tab: {{APP/galleryTab}}</p>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="breadcrumbs" label="Breadcrumbs">
-                <agui-panel class="grid gap-4">
-                  <h2>Breadcrumbs</h2>
-                  <p class="text-sm text-agui-muted">Select a path segment to publish its value. The current location is highlighted; the hosting app supplies the trail and handles navigation.</p>
-                  <agui-breadcrumbs label="Document location" pub-to="APP/breadcrumbLocation"
-                    bind="$.items: APP/breadcrumbItems; $.value: APP/breadcrumbLocation; $.readonly: APP/breadcrumbReadonly"></agui-breadcrumbs>
-                  <p class="text-sm">Selected location: <output>{{APP/breadcrumbLocation}}</output></p>
-                  <agui-toggle label="Read-only navigation" pub-to="APP/breadcrumbReadonly"
-                    bind="$.value: APP/breadcrumbReadonly"></agui-toggle>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="bindings" label="Bindings">
-                <agui-panel class="grid content-start gap-5">
-                  <h2>Application bindings</h2>
-                  <agui-field label="Shared name" name="shared_name" pub-to="APP/sharedName"
-                    bind="$.value: APP/sharedName"></agui-field>
-                  <agui-select label="Shared status" name="shared_status" pub-to="APP/sharedStatus"
-                    bind="$.options: APP/statusOptions; $.value: APP/sharedStatus"></agui-select>
-                  <agui-select id="status-mirror" label="Application status" readonly placeholder="All statuses"
-                    name="status_mirror" bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
-                  <div class="grid gap-2 text-sm">
-                    <p>Search: <output>{{APP/query}}</output></p>
-                    <p>Status: <output>{{APP/status}}</output></p>
-                    <p>Shared name: <output>{{APP/sharedName}}</output></p>
-                    <p>Shared status: <output>{{APP/sharedStatus}}</output></p>
-                    <p>Notifications: <output>{{APP/notifications}}</output></p>
-                  </div>
-                  </agui-panel>
-              </agui-tab>
-              <agui-tab value="icons" label="Icons">
-                <agui-panel class="grid gap-4">
-                  <h2>Icons</h2>
-                  <agui-toolbar aria-label="Icon examples">
-                    <agui-icon name="home" aria-label="Home"></agui-icon>
-                    <agui-icon name="dashboard" aria-label="Dashboard"></agui-icon>
-                    <agui-icon name="mail" aria-label="Email"></agui-icon>
-                  <agui-icon name="folder_open" aria-label="Project folders"></agui-icon>
-                  <agui-icon name="public" aria-label="Public links"></agui-icon>
-                  <agui-icon name="play_arrow" aria-label="Start"></agui-icon>
-                  <agui-icon name="stop" aria-label="Stop"></agui-icon>
-                  <agui-icon name="table_chart" aria-label="Table"></agui-icon>
-                  <agui-icon name="bar_chart" aria-label="Chart"></agui-icon>
-                  <agui-icon name="map" aria-label="Map"></agui-icon>
-                  <agui-icon name="markdown" aria-label="Markdown"></agui-icon>
-                  <agui-icon name="palette" aria-label="Theme"></agui-icon>
-                  <agui-icon name="chat" aria-label="Feedback"></agui-icon>
-                  <agui-icon name="terminal" aria-label="Terminal"></agui-icon>
-                    <agui-icon name="check_circle" aria-label="Complete" class="text-agui-accent"></agui-icon>
-                    <agui-icon name="warning" aria-label="Warning" class="text-agui-danger"></agui-icon>
-                  </agui-toolbar>
-                  <agui-toolbar aria-label="Icon buttons">
-                    <button type="button"><agui-icon name="download"></agui-icon>Download</button>
-                    <button class="agui-button-icon" type="button" aria-label="Settings"><agui-icon
-                        name="settings"></agui-icon></button>
-                  </agui-toolbar>
-                  <agui-select label="Icon" pub-to="APP/iconName"
-                    bind="$.value: APP/iconName; $.options: APP/iconOptions"></agui-select>
-                  <agui-icon bind="$.name: APP/iconName; @aria-label: APP/iconName"></agui-icon>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="workflow" label="Data toolbar">
-                <agui-panel class="grid gap-4">
-                  <h2>Data workflow</h2>
-                  <p class="text-sm text-agui-muted">Edit Shared name, Shared status, Notifications, or lead stages, then
-                    use the floating bar. Save persists those values locally. Import replaces the draft, including the
-                    entire leads array; Cancel restores the saved values. Export includes unsaved edits.</p>
-                  <details>
-                    <summary>JSON import format</summary>
-                    <pre
-                      class="mt-3 overflow-auto rounded-md bg-agui-bg p-3 text-sm"><code>{"version":1,"changes":[{"provider":"APP","values":{"sharedName":"Morgan","sharedStatus":"new","notifications":true,"tableRows":[{"id":"lead-imported","name":"Example Company","amount":1200,"status":"new","active":true,"followUp":null}]}}]}</code></pre>
-                  </details>
-                  <p class="text-sm text-agui-muted">The examples below illustrate status meanings. The floating bar
-                    reports actual operations; this gallery does not simulate agent delivery or external writes.</p>
-                  <dl class="grid gap-3 sm:grid-cols-2" itemize="APP/submissionExamples"
-                    item-tag="agui-submission-example">
-                    <template>
-                      <div class="grid gap-1 rounded-md border border-agui-border p-3">
-                        <dt>{{label}}</dt>
-                        <dd class="text-sm text-agui-muted">{{message}}</dd>
-                      </div>
-                    </template>
-                  </dl>
-                </agui-panel>
-              </agui-tab>
-            </agui-tabs>
-          </sym-conditional>
-        <sym-conditional when="APP/activeSection" is="widgets">
-            <agui-tabs id="gallery-data-views" label="Widget examples" pub-to="APP/widgetView" bind="$.value: APP/widgetView">
-            <agui-tab value="table" label="Table">
-                <agui-panel class="grid gap-4">
-                  <h2>Leads</h2>
-                  <p class="text-sm text-agui-muted">The independent filter publishes matching IDs; the table handles
-                    sorting, selection, and paging locally. Select-all includes matching leads on other pages and
-                    keeps selections outside the filter. This table does not edit its records.</p>
-                  <agui-table id="gallery-leads" label="Example leads" selection="multiple" page-size="3" locale="en"
-                    pub-to="APP/tableSelection" sort-pub-to="APP/tableSort"
-                    bind="$.rows: APP/tableRows; $.columns: APP/tableColumns; $.texts: APP/tableTexts; $.value: APP/tableSelection; $.filteredIds: APP/tableMatchingIds; $.sort: APP/tableSort; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-table>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="cards" label="List">
-                <div class="grid gap-4">
-                  <agui-list id="gallery-lead-list" class="grid gap-4 md:grid-cols-2" label="Lead cards"
-                    selection="multiple" pub-to="APP/tableSelection"
-                    bind="$.items: APP/tableRows; $.value: APP/tableSelection; $.filteredIds: APP/tableMatchingIds; $.texts: APP/tableTexts; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly">
-                    <template>
-                      <agui-panel selectable process-inner-html="false" role="listitem" class="grid gap-2"
-                        bind="@data-selected: _selected; ariaDisabled: _selectionDisabled">
-                        <h3><button type="button"
-                            bind="onclick: ^selectItem; ariaPressed: _selected; disabled: _selectionDisabled">{{name}}</button>
-                        </h3>
-                        <p class="text-sm text-agui-muted">{{status}}</p>
-                      </agui-panel>
-                    </template>
-                  </agui-list>
-                </div>
-              </agui-tab>
-              <agui-tab value="explorer" label="Explorer">
-                <agui-panel class="grid gap-4">
-                  <h2>Explorer</h2>
-                  <p class="text-sm text-agui-muted">Expand groups and select an item. Selection and expanded IDs publish to shared state without application JavaScript.</p>
-                  <agui-toggle label="Allow folder selection" pub-to="APP/explorerSelectBranches"
-                    bind="$.value: APP/explorerSelectBranches"></agui-toggle>
-                  <agui-explorer label="Documents and assets" class="grid gap-1" pub-to="APP/explorerSelection" expanded-pub-to="APP/explorerExpanded"
-                    bind="$.items: APP/explorerItems; $.value: APP/explorerSelection; $.expanded: APP/explorerExpanded; $.texts: APP/explorerTexts; $.selectBranches: APP/explorerSelectBranches"></agui-explorer>
-                  <p class="text-sm">Selected: <output>{{APP/explorerSelection}}</output></p>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="kanban" label="Kanban">
-                <agui-panel class="grid gap-4">
-                  <h2>Kanban</h2>
-                  <p class="text-sm text-agui-muted">Drag leads between stages. Focus a card and press Alt+Left or
-                    Alt+Right to move it with the keyboard. The Table tab uses the same records and updates
-                    immediately. Unrecognized stages stay in Unassigned. Save commits record changes; Cancel restores
-                    the latest saved records. Table filters do not hide board cards.</p>
-                  <agui-kanban label="Lead stages" title-key="name" description-key="notes"
-                    pub-to="APP/tableRows"
-                    bind="$.value: APP/tableRows; $.columns: APP/kanbanColumns; $.texts: APP/kanbanTexts; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-kanban>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="charts" label="Charts">
-                <agui-panel class="grid gap-5">
-                  <h2>Charts</h2>
-                  <p class="text-sm text-agui-muted">The chart runtime loads when the first chart initializes. Select a
-                    bar or donut sector to share lead selection with the table. Each chart has a keyboard-accessible data
-                    view; the line example keeps its own selection. Missing values remain gaps and zero values stay
-                    meaningful.</p>
-                  <agui-chart type="line" label="Monthly revenue"
-                    description="Prepared monthly amounts with a missing actual value in March." x-key="month"
-                    x-type="date" x-label="Month" selection="multiple" locale="en-US" pub-to="APP/monthlySelected"
-                    bind="$.rows: APP/monthlyRows; $.series: APP/monthlySeries; $.texts: APP/chartTexts; $.value: APP/monthlySelected"></agui-chart>
-                  <agui-chart type="bar" label="Opportunity by company"
-                    description="Company amounts from the shared leads records." x-key="name" x-label="Company"
-                    selection="multiple" locale="en-US" pub-to="APP/tableSelection"
-                    bind="$.rows: APP/tableRows; $.series: APP/opportunitySeries; $.texts: APP/chartTexts; $.value: APP/tableSelection; $.readonly: APP/tableReadonly; $.loading: APP/tableLoading"></agui-chart>
-                  <agui-chart type="donut" label="Opportunity share"
-                    description="One nonnegative amount per company, without inferred aggregation." x-key="name"
-                    x-label="Company" selection="multiple" locale="en-US" pub-to="APP/tableSelection"
-                    bind="$.rows: APP/tableRows; $.series: APP/opportunitySeries; $.texts: APP/chartTexts; $.value: APP/tableSelection; $.readonly: APP/tableReadonly; $.loading: APP/tableLoading"></agui-chart>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="map" label="Map">
-                <agui-panel class="grid gap-4">
-                  <h2>Map</h2>
-                  <p class="text-sm text-agui-muted">Select a marker or table row to share selection. Drag to pan, use the
-                    zoom buttons, or fit all mapped locations. Locations without coordinates remain in the table and are
-                    counted below the map. Tile requests go directly to OpenStreetMap; shared viewers see this viewport
-                    without interactive map controls.</p>
-                  <agui-map label="Example team locations"
-                    description="Fictional locations around London, with one record awaiting coordinates."
-                    pub-to="APP/mapSelection" view-pub-to="APP/mapView"
-                    bind="$.rows: APP/mapRows; $.value: APP/mapSelection; $.view: APP/mapView; $.tiles: APP/mapTiles; $.texts: APP/mapTexts"></agui-map>
-                  <agui-table label="All locations" selection="multiple"
-                    pub-to="APP/mapSelection"
-                    bind="$.rows: APP/mapRows; $.columns: APP/mapColumns; $.value: APP/mapSelection; $.texts: APP/mapTexts"></agui-table>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="diagrams" label="Diagrams">
-                <agui-panel class="grid gap-4">
-                  <agui-tabs label="Diagram types" pub-to="APP/diagramView" bind="$.value: APP/diagramView">
-                    <agui-tab value="flow" label="Flowchart">
-                      <agui-diagram label="Publishing workflow" description="A decision with a revision loop."
-                        bind="$.value: APP/flowSource; $.texts: APP/diagramTexts"></agui-diagram>
-                    </agui-tab>
-                    <agui-tab value="sequence" label="Sequence">
-                      <agui-diagram label="Task submission" description="Messages between a user, an app, and a service."
-                        bind="$.value: APP/sequenceSource; $.texts: APP/diagramTexts"></agui-diagram>
-                    </agui-tab>
-                    <agui-tab value="relationships" label="Relationships">
-                      <agui-diagram label="Project relationships" description="Projects contain tasks; members own them."
-                        bind="$.value: APP/relationshipSource; $.texts: APP/diagramTexts"></agui-diagram>
-                    </agui-tab>
-                  </agui-tabs>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="markdown" label="Markdown">
-                <agui-panel class="grid gap-4">
-                  <h2>Markdown</h2>
-                  <p class="text-sm text-agui-muted">Use an external Markdown URL or edit the inline source. JSDA renders
-                    native HTML, highlighted code, and wrappers with readable fallbacks; registered components can enhance
-                    them. Document checkboxes remain disabled.</p>
-                  <agui-markdown id="gallery-markdown" label="Project briefing"
-                    bind="$.value: APP/markdownSource; $.src: APP/markdownUrl; $.extensions: !APP/markdownUrl; $.texts: APP/markdownTexts"></agui-markdown>
-                </agui-panel>
-              </agui-tab>
-            </agui-tabs>
-          </sym-conditional>
-        <sym-conditional when="APP/activeSection" is="feedback">
-            <agui-tabs label="Feedback examples" pub-to="APP/feedbackView" bind="$.value: APP/feedbackView">
-              <agui-tab value="stages" label="Stages">
-                <agui-panel>
-                  <agui-steps label="Publishing progress"
-                    bind="$.items: APP/processStages; $.value: APP/processStage; $.complete: APP/processComplete; $.texts: APP/stepTexts"></agui-steps>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="states" label="States">
-                <agui-panel class="grid gap-4">
-                <h2>Content states</h2>
-                <agui-state status="loading" message="Loading contacts..."></agui-state>
-                  <agui-state status="empty" message="No contacts match the current filters."></agui-state>
-                  <agui-state id="retry-state" bind="$: APP/componentState"></agui-state>
-                  <p class="text-sm text-agui-muted">Retry sends an action to the agent. This gallery does not contact an
-                    external service.</p>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="loading" label="Loading">
-                <agui-panel class="grid gap-4">
-                <h2>Preloaders</h2>
-                <agui-toggle label="Show preloader" pub-to="APP/preloaderVisible"
-                    bind="$.value: APP/preloaderVisible"></agui-toggle>
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="grid content-start gap-2">
-                      <sym-conditional when="APP/preloaderVisible" is="false" behavior="hide">
-                        <p class="text-sm text-agui-muted">Default dots preloader: content hidden when disabled</p>
-                      </sym-conditional>
-                      <agui-preloader class="text-agui-accent"
-                        bind="$.label: APP/preloaderLabel; hidden: !APP/preloaderVisible"></agui-preloader>
-                    </div>
-                    <div class="grid content-start gap-2">
-                      <sym-conditional when="APP/preloaderVisible" is="false" behavior="dom-remove">
-                          <p class="text-sm text-agui-muted">Compact ring preloader: content removed when disabled</p>
-                        </sym-conditional>
-                      <agui-preloader variant="ring" class="size-4 text-agui-accent" label="Loading compact preview"
-                        bind="hidden: !APP/preloaderVisible"></agui-preloader>
-                    </div>
-                  </div>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="messages" label="Messages">
-                <agui-panel class="grid gap-4">
-                <h2>Messages</h2>
-                <agui-field label="Notification message" name="notification_message"
-                    placeholder="Type a message to preview" pub-to="APP/notificationMessage"
-                    bind="$.value: APP/notificationMessage"></agui-field>
-                  <agui-message bind="$.message: APP/notificationMessage" close-label="Dismiss message"></agui-message>
-                </agui-panel>
-              </agui-tab>
-              <agui-tab value="overlays" label="Dialogs and popups">
-                <agui-panel class="grid gap-4">
-                  <h2>Dialogs and popups</h2>
-                  <p class="text-sm text-agui-muted">The editor uses native modal focus and Escape dismissal. Closing
-                    keeps edits as drafts; Save and Cancel changes remain separate actions.</p>
-                  <button type="button"  value="true" bind="onclick: [set]APP/galleryEditorOpen"><agui-icon name="edit"></agui-icon>Open contact editor</button>
-                  <div>
-                    <button type="button" popovertarget="gallery-popup">Show workspace help</button>
-                    <div id="gallery-popup" popover class="agui-popover" aria-label="Workspace help">
-                      <p class="text-sm">This native popup is non-modal. Click outside or press Escape to dismiss it.</p>
-                    </div>
-                  </div>
-                </agui-panel>
-              </agui-tab>
-            </agui-tabs>
-          </sym-conditional>
-        <sym-conditional when="APP/activeSection" is="data-flow">
-            <agui-panel class="grid gap-4">
-              <div class="grid gap-1">
-                <h2 class="break-words font-medium">{{APP/sharedName}}</h2>
-                <p class="text-sm text-agui-muted">{{APP/sharedStatus}}</p>
-              </div>
-              <agui-toolbar aria-label="Contact controls">
-                <button type="button" class="agui-button-primary"  value="true" bind="onclick: [set]APP/galleryEditorOpen"><agui-icon name="edit"></agui-icon>Edit contact</button>
-                <button type="button" class="agui-button-icon"  value="true" aria-label="Workspace notes" title="Workspace notes" bind="onclick: [set]APP/notesOpen"><agui-icon name="notes"></agui-icon></button>
-              </agui-toolbar>
-            </agui-panel>
-          </sym-conditional>
-        <sym-conditional when="APP/activeSection" is="theme">
-            <agui-panel class="grid gap-4">
-              <h2>Theme tokens</h2>
-              <p class="text-sm text-agui-muted">Choose Graphite, Ocean, Forest, or Desert with the palette button in the header. Each palette follows the day/night setting and is saved locally.</p>
-              <div class="flex flex-wrap gap-2">
-                <span class="agui-chip">Neutral</span>
-                <span class="agui-chip" data-tone="info">Information</span>
-                <span class="agui-chip" data-tone="success">Success</span>
-                <span class="agui-chip" data-tone="warning">Warning</span>
-                <span class="agui-chip" data-tone="danger">Error</span>
-              </div>
-              <dl class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-bg p-3">
-                  <dt>Page background</dt>
-                  <dd class="text-sm text-agui-muted">agui-bg</dd>
-                </div>
-                <div
-                  class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-surface p-3 shadow-agui-panel">
-                  <dt>Content surface</dt>
-                  <dd class="text-sm text-agui-muted">agui-surface</dd>
-                </div>
-                <div class="grid gap-2 rounded-agui-inset border border-agui-divider bg-agui-raised p-3">
-                  <dt>Read-only surface</dt>
-                  <dd class="text-sm text-agui-muted">agui-raised</dd>
-                </div>
-                <div class="grid gap-2 rounded-agui-inset border border-agui-accent bg-agui-accent-soft p-3">
-                  <dt>Selected state</dt>
-                  <dd class="text-sm text-agui-muted">agui-accent-soft</dd>
-                </div>
-              </dl>
-            </agui-panel>
-          </sym-conditional>
-        <sym-conditional when="APP/activeSection" is="assets">
-            <agui-panel id="gallery-local-assets" class="grid gap-4">
-              <h2>Local assets</h2>
-              <figure class="grid justify-items-start gap-2">
-                <img src="./_assets/agui.png" alt="Symbiote AGUI"
-                  width="1024" height="576" loading="lazy" class="h-auto w-56 object-contain">
-                <figcaption class="text-sm text-agui-muted">The original AGUI image, served by this session.</figcaption>
-              </figure>
-              <agui-markdown id="gallery-local-document" src="./_assets/documents/brief.md"
-                label="Local asset guide" bind="$.texts: APP/markdownTexts"></agui-markdown>
-              <sym-import src="./_assets/documents/panel.html"></sym-import>
-              <agui-panel class="grid gap-3">
-                <h3>Outside the imported fragment</h3>
-                <dl class="grid gap-3">
-                  <div><dt class="text-xs text-agui-muted">Published stage</dt><dd>{{APP/importStage}}</dd></div>
-                  <div><dt class="text-xs text-agui-muted">Published note</dt><dd>{{APP/importNote}}</dd></div>
-                </dl>
-              </agui-panel>
-            </agui-panel>
-          </sym-conditional>
-        <sym-conditional when="APP/activeSection" is="without-icon">
-            <agui-panel>
-              <h2>Without icon</h2>
-              <p class="text-sm text-agui-muted">This navigation item omits the optional icon.</p>
-            </agui-panel>
-          </sym-conditional>
+        <agui-state status="loading" message="Loading section..." bind="hidden: !UI/sectionLoading"></agui-state>
+        <agui-state status="error" bind="$.message: UI/sectionError; hidden: !UI/sectionError"></agui-state>
+        <sym-import pub-map="UI/sectionLoading: +loading; UI/sectionError: +loadErrorMessage"
+          bind="@src: ROUTER/+src"></sym-import>
       </div>
       <agui-footer>
         <span>Save commits shared contact values and lead records locally.</span>
       </agui-footer>
       <agui-dialog id="gallery-editor" label="Edit shared contact"
-        close-label="Close contact editor" pub-to="APP/galleryEditorOpen"
-        bind="$.value: APP/galleryEditorOpen">
+        close-label="Close contact editor" pub-to="CONTACT/galleryEditorOpen"
+        bind="$.value: CONTACT/galleryEditorOpen">
         <agui-field label="Shared name" name="dialog_shared_name" pub-to="APP/sharedName"
           bind="$.value: APP/sharedName"></agui-field>
         <agui-select label="Shared status" name="dialog_shared_status" pub-to="APP/sharedStatus"
-          bind="$.value: APP/sharedStatus; $.options: APP/statusOptions"></agui-select>
+          bind="$.value: APP/sharedStatus; $.options: CONTACT/statusOptions"></agui-select>
         <p class="text-sm text-agui-muted">Close the editor, then use the floating bar to save or cancel these
           edits.</p>
         <button type="button" popovertarget="gallery-editor-help">About drafts</button>
@@ -732,9 +126,9 @@
         </div>
         <form method="dialog"><button type="submit">Done</button></form>
       </agui-dialog>
-      <agui-dialog label="Workspace notes" close-label="Close notes" pub-to="APP/notesOpen" bind="$.value: APP/notesOpen">
-        <agui-field label="Notes" type="textarea" name="inspector_notes" rows="8" pub-to="APP/inspectorNotes"
-          bind="$.value: APP/inspectorNotes"></agui-field>
+      <agui-dialog label="Workspace notes" close-label="Close notes" pub-to="CONTACT/notesOpen" bind="$.value: CONTACT/notesOpen">
+        <agui-field label="Notes" type="textarea" name="inspector_notes" rows="8" pub-to="CONTACT/inspectorNotes"
+          bind="$.value: CONTACT/inspectorNotes"></agui-field>
       </agui-dialog>
       <div id="gallery-about" popover class="agui-popover" aria-label="About the gallery">
         <h2 class="mb-3 font-semibold">UI library</h2>
@@ -746,63 +140,63 @@
   <agui-sidebar collapse-empty class="[--agui-sidebar-width:24rem]" side="end" label="Example controls" expand-label="Expand example controls"
     collapse-label="Collapse example controls">
     <div class="grid gap-2">
-      <sym-conditional when="APP/activeSection" is="layouts">
-        <sym-conditional when="APP/layoutView" is="sidebar-blocks">
+      <sym-conditional when="UI/activeSection" is="layouts">
+        <sym-conditional when="LAYOUT/layoutView" is="sidebar-blocks">
           <agui-sidebar-block label="Filters">
-            <agui-field label="Search" type="search" pub-to="APP/query" bind="$.value: APP/query"></agui-field>
+            <agui-field label="Search" type="search" pub-to="CONTROLS/query" bind="$.value: CONTROLS/query"></agui-field>
           </agui-sidebar-block>
-          <agui-sidebar-block label="Item controls" bind="$.active: APP/sidebarBlockActive">
-            <agui-field label="Note" pub-to="APP/sidebarBlockNote" bind="$.value: APP/sidebarBlockNote"></agui-field>
-            <button type="button"  value="false" bind="onclick: [set]APP/sidebarBlockActive">Deactivate</button>
+          <agui-sidebar-block label="Item controls" bind="$.active: LAYOUT/sidebarBlockActive">
+            <agui-field label="Note" pub-to="LAYOUT/sidebarBlockNote" bind="$.value: LAYOUT/sidebarBlockNote"></agui-field>
+            <button type="button"  value="false" bind="onclick: [set]LAYOUT/sidebarBlockActive">Deactivate</button>
           </agui-sidebar-block>
           <agui-sidebar-block label="Preferences">
-            <agui-field type="checkbox" label="Receive updates" pub-to="APP/sidebarBlockUpdates"
-              bind="$.value: APP/sidebarBlockUpdates"></agui-field>
+            <agui-field type="checkbox" label="Receive updates" pub-to="LAYOUT/sidebarBlockUpdates"
+              bind="$.value: LAYOUT/sidebarBlockUpdates"></agui-field>
           </agui-sidebar-block>
           <agui-sidebar-block label="Follow-up">
-            <agui-field type="date" label="Next review" pub-to="APP/sidebarBlockFollowUp"
-              bind="$.value: APP/sidebarBlockFollowUp"></agui-field>
+            <agui-field type="date" label="Next review" pub-to="LAYOUT/sidebarBlockFollowUp"
+              bind="$.value: LAYOUT/sidebarBlockFollowUp"></agui-field>
           </agui-sidebar-block>
           <agui-sidebar-block label="Attachments" active="false">
             <agui-field type="url" label="Reference URL"></agui-field>
           </agui-sidebar-block>
         </sym-conditional>
       </sym-conditional>
-      <sym-conditional when="APP/activeSection" is="controls">
+      <sym-conditional when="UI/activeSection" is="controls">
           <section class="grid gap-4" aria-label="Binding inputs">
-            <agui-field id="query-control" label="Search" bind="$.value: APP/query" type="search" name="query"
+            <agui-field id="query-control" label="Search" bind="$.value: CONTROLS/query" type="search" name="query"
               placeholder="Name or role..."></agui-field>
             <agui-select id="status-control" label="Status" placeholder="All statuses" name="status"
-              bind="$.options: APP/statusOptions; $.value: APP/status"></agui-select>
+              bind="$.options: CONTACT/statusOptions; $.value: CONTROLS/status"></agui-select>
           </section>
         </sym-conditional>
-      <sym-conditional when="APP/activeSection" is="feedback">
-          <sym-conditional when="APP/feedbackView" is="stages">
+      <sym-conditional when="UI/activeSection" is="feedback">
+          <sym-conditional when="FEEDBACK/feedbackView" is="stages">
               <div class="grid gap-4">
-                <agui-select label="Current stage" pub-to="APP/processStage"
-                  bind="$.options: APP/processStages; $.value: APP/processStage; $.disabled: APP/processComplete"></agui-select>
-                <agui-toggle label="All steps completed" pub-to="APP/processComplete"
-                  bind="$.value: APP/processComplete"></agui-toggle>
+                <agui-select label="Current stage" pub-to="FEEDBACK/processStage"
+                  bind="$.options: FEEDBACK/processStages; $.value: FEEDBACK/processStage; $.disabled: FEEDBACK/processComplete"></agui-select>
+                <agui-toggle label="All steps completed" pub-to="FEEDBACK/processComplete"
+                  bind="$.value: FEEDBACK/processComplete"></agui-toggle>
               </div>
             </sym-conditional>
         </sym-conditional>
-      <sym-conditional when="APP/activeSection" is="widgets">
-          <sym-conditional when="APP/widgetView" is="explorer" behavior="hide">
-          <sym-conditional when="APP/widgetView" is="diagrams" behavior="hide">
-          <sym-conditional when="APP/widgetView" is="map" behavior="hide">
-              <sym-conditional when="APP/widgetView" is="markdown" behavior="hide">
+      <sym-conditional when="UI/activeSection" is="widgets">
+          <sym-conditional when="DATA/widgetView" is="explorer" behavior="hide">
+          <sym-conditional when="DATA/widgetView" is="diagrams" behavior="hide">
+          <sym-conditional when="DATA/widgetView" is="map" behavior="hide">
+              <sym-conditional when="DATA/widgetView" is="markdown" behavior="hide">
           <div class="grid gap-4">
             <section class="grid gap-3" aria-label="Data availability">
-              <agui-toggle label="Simulate data loading" pub-to="APP/tableLoading"
-                bind="$.value: APP/tableLoading"></agui-toggle>
-              <agui-toggle label="Read-only data" pub-to="APP/tableReadonly"
-                bind="$.value: APP/tableReadonly"></agui-toggle>
+              <agui-toggle label="Simulate data loading" pub-to="DATA/tableLoading"
+                bind="$.value: DATA/tableLoading"></agui-toggle>
+              <agui-toggle label="Read-only data" pub-to="DATA/tableReadonly"
+                bind="$.value: DATA/tableReadonly"></agui-toggle>
             </section>
-            <sym-conditional when="APP/widgetView" is="kanban" behavior="hide">
-                <sym-conditional when="APP/widgetView" is="charts" behavior="hide">
-                <agui-filter id="gallery-lead-filters" label="Lead filters" locale="en" pub-to="APP/tableFilters"
-                  query-pub-to="APP/tableQuery" results-to="APP/tableMatchingIds"
-                  bind="$.rows: APP/tableRows; $.fields: APP/tableColumns; $.texts: APP/tableTexts; $.value: APP/tableFilters; $.query: APP/tableQuery; $.loading: APP/tableLoading; $.readonly: APP/tableReadonly"></agui-filter>
+            <sym-conditional when="DATA/widgetView" is="kanban" behavior="hide">
+                <sym-conditional when="DATA/widgetView" is="charts" behavior="hide">
+                <agui-filter id="gallery-lead-filters" label="Lead filters" locale="en" pub-to="DATA/tableFilters"
+                  query-pub-to="DATA/tableQuery" results-to="DATA/tableMatchingIds"
+                  bind="$.rows: APP/tableRows; $.fields: DATA/tableColumns; $.texts: DATA/tableTexts; $.value: DATA/tableFilters; $.query: DATA/tableQuery; $.loading: DATA/tableLoading; $.readonly: DATA/tableReadonly"></agui-filter>
                   </sym-conditional>
               </sym-conditional>
           </div>
@@ -811,28 +205,28 @@
             </sym-conditional>
             </sym-conditional>
         </sym-conditional>
-      <sym-conditional when="APP/activeSection" is="widgets">
-          <sym-conditional when="APP/widgetView" is="diagrams">
-              <sym-conditional when="APP/diagramView" is="flow">
-                  <agui-field type="textarea" rows="10" data-code label="Flowchart source" pub-to="APP/flowSource"
-                    bind="$.value: APP/flowSource"></agui-field>
+      <sym-conditional when="UI/activeSection" is="widgets">
+          <sym-conditional when="DATA/widgetView" is="diagrams">
+              <sym-conditional when="DIAGRAM/diagramView" is="flow">
+                  <agui-field type="textarea" rows="10" data-code label="Flowchart source" pub-to="DIAGRAM/flowSource"
+                    bind="$.value: DIAGRAM/flowSource"></agui-field>
                 </sym-conditional>
-              <sym-conditional when="APP/diagramView" is="sequence">
-                  <agui-field type="textarea" rows="10" data-code label="Sequence source" pub-to="APP/sequenceSource"
-                    bind="$.value: APP/sequenceSource"></agui-field>
+              <sym-conditional when="DIAGRAM/diagramView" is="sequence">
+                  <agui-field type="textarea" rows="10" data-code label="Sequence source" pub-to="DIAGRAM/sequenceSource"
+                    bind="$.value: DIAGRAM/sequenceSource"></agui-field>
                 </sym-conditional>
-              <sym-conditional when="APP/diagramView" is="relationships">
-                  <agui-field type="textarea" rows="10" data-code label="Relationship source" pub-to="APP/relationshipSource"
-                    bind="$.value: APP/relationshipSource"></agui-field>
+              <sym-conditional when="DIAGRAM/diagramView" is="relationships">
+                  <agui-field type="textarea" rows="10" data-code label="Relationship source" pub-to="DIAGRAM/relationshipSource"
+                    bind="$.value: DIAGRAM/relationshipSource"></agui-field>
                 </sym-conditional>
             </sym-conditional>
-          <sym-conditional when="APP/widgetView" is="markdown">
+          <sym-conditional when="DATA/widgetView" is="markdown">
           <div class="grid gap-4">
-            <agui-select id="gallery-markdown-preset" label="Source examples" pub-to="APP/markdownUrl"
-              bind="$.options: APP/markdownSourceOptions; $.value: APP/markdownUrl"></agui-select>
+            <agui-select id="gallery-markdown-preset" label="Source examples" pub-to="MARKDOWN/markdownUrl"
+              bind="$.options: MARKDOWN/markdownSourceOptions; $.value: MARKDOWN/markdownUrl"></agui-select>
             <agui-field id="gallery-markdown-url" type="text" label="Markdown URL"
               hint="Leave empty for inline text. Direct external URLs need CORS; proxy URLs need a configured source."
-              pub-to="APP/markdownUrl" bind="$.value: APP/markdownUrl"></agui-field>
+              pub-to="MARKDOWN/markdownUrl" bind="$.value: MARKDOWN/markdownUrl"></agui-field>
             <details>
               <summary>Enable the proxy example</summary>
               <p class="mt-3 text-sm text-agui-muted">Allow the public source for this gallery's session ID, then
@@ -842,7 +236,7 @@
 npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
             </details>
             <agui-field id="gallery-markdown-source" type="textarea" rows="8" data-code label="Inline Markdown source"
-              pub-to="APP/markdownSource" bind="$.value: APP/markdownSource"></agui-field>
+              pub-to="MARKDOWN/markdownSource" bind="$.value: MARKDOWN/markdownSource"></agui-field>
           </div>
             </sym-conditional>
         </sym-conditional>
@@ -850,5 +244,6 @@ npx symbiote-agui proxy status &lt;SESSION_ID&gt;</code></pre>
   </agui-sidebar>
   <agui-data-toolbar id="gallery-data-actions" bind="$: AGUI_TEXT/dataToolbar"></agui-data-toolbar>
 </agui-app>
-
+  </sym-conditional>
+</sym-context>
 </sym-context>

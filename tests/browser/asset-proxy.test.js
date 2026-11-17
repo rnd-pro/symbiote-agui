@@ -165,7 +165,7 @@ test('the gallery proxy preset uses existing controls, stays opt-in, and disable
 }, async (t) => {
   let fixture = await assetProxyFixture(t);
   let examples = await galleryExamples();
-  let source = examples.querySelector('#gallery-data > script[type="application/json"]')?.textContent;
+  let source = examples.querySelector('sym-context[ctx="MARKDOWN"] > script[type="application/json"]')?.textContent;
   let panel = examples.querySelector('#gallery-markdown')?.closest('agui-panel');
   let controls = [
     'gallery-markdown-preset',
@@ -208,7 +208,7 @@ test('the gallery proxy preset uses existing controls, stays opt-in, and disable
   t.after(() => browser.close());
   let page = await browser.newPage();
   await page.goto(fixture.localUrl);
-  await fixture.runtime.insert(`<sym-context ctx="APP"><script type="application/json">${JSON.stringify(state).replaceAll('<', '\\u003c')}</script>${controls}${panel.outerHTML}</sym-context>`);
+  await fixture.runtime.insert(`<sym-context ctx="MARKDOWN"><script type="application/json">${JSON.stringify(state).replaceAll('<', '\\u003c')}</script>${controls}${panel.outerHTML}</sym-context>`);
   await page.waitForFunction(() => document.querySelector('#gallery-markdown h1')?.textContent === 'Project briefing');
   assert.equal(loads, 0);
   await fixture.runtime.changeProxy({

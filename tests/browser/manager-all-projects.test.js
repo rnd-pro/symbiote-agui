@@ -98,10 +98,17 @@ test('All projects renders duplicate IDs, preserves its scope on reload and rout
   await openManagerSection(page, 'projects');
   assert.equal(await page.$eval('#project-views [role="tab"][value="explorer"]', (tab) => tab.hasAttribute('disabled')), true);
   await openManagerSection(page, 'settings');
+  assert.equal(new URL(page.url()).search, '?settings&project=all');
   assert.equal(await page.$eval('input[name="saveFolder"]', (input) => input.disabled), true);
   await openManagerSection(page, 'sessions');
   await page.select('#manager-project-switcher select', 'default');
   await page.waitForSelector('#manager-table tr[data-row-id="desk"]');
   assert.equal(await page.$$eval('#manager-table tr[data-row-id]', (rows) => rows.length), 1);
+  await page.goBack();
+  await page.waitForSelector('#manager-navigation button[value="settings"][aria-current="page"]');
+  await page.waitForFunction(() => /** @type {HTMLSelectElement | null} */ (document.querySelector('#manager-project-switcher select'))?.value === 'all');
+  await page.goForward();
+  await page.waitForSelector('#manager-table tr[data-row-id="desk"]');
+  await page.waitForFunction(() => /** @type {HTMLSelectElement | null} */ (document.querySelector('#manager-project-switcher select'))?.value === 'default');
   assert.deepEqual(errors, []);
 });

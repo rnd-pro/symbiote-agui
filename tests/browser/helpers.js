@@ -98,7 +98,24 @@ export async function openManagerSection(page, section) {
   if (expand) { await page.locator('agui-app > agui-sidebar:not([side="end"]) button[aria-expanded="false"]').click(); }
   await page.locator(`#manager-navigation button[value="${section}"]`).click();
   await page.waitForSelector(`#manager-navigation button[value="${section}"][aria-current="page"]`);
-  await page.waitForSelector(`sym-conditional[when="MANAGER/appSection"][is="${section}"] section`, {
+  try {
+    await page.waitForFunction((source) => {
+      let imported = /** @type {import('../../types/components.js').ComponentHost | null} */ (document.querySelector('agui-session-manager > div > sym-import'));
+      return imported?.getAttribute('src') === source && !imported.$['+loading'] && !imported.$['+loadError'];
+    }, {
+      timeout: 8000,
+    }, `./page/sections/${section}.html`);
+  } catch (error) {
+    let state = await page.$eval('agui-session-manager > div > sym-import', (element) => ({
+      source: element.getAttribute('src'),
+      loading: Reflect.get(element, '$')['+loading'],
+      error: Reflect.get(element, '$')['+loadError'],
+    }));
+    throw new Error(JSON.stringify(state), {
+      cause: error,
+    });
+  }
+  await page.waitForSelector(`agui-session-manager sym-import[src$="/${section}.html"] section`, {
     visible: true,
   });
 }

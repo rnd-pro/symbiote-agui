@@ -10,7 +10,7 @@ import { MANAGER_PATH, MANAGER_SOCKET_PATH, MANAGER_PROTOCOL_VERSION } from './c
 import { createManagerStyles } from './styles.js';
 import { MANAGER_SECTIONS } from './sections.js';
 import { projectId } from '../projects/identity.js';
-import { validManagerScope } from './scope.js';
+import { validManagerQuery } from './scope.js';
 import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../uilib/widgets/markdown/constants.js';
 import { DIAGRAM_RUNTIME_PATH } from '../uilib/widgets/diagram/constants.js';
 
@@ -71,8 +71,7 @@ export async function startManagerServer(record, stop) {
     }
     let endpoint = new URL(request.url || '', origin);
     let path = endpoint.pathname;
-    if (endpoint.search && (path !== MANAGER_PATH || [...endpoint.searchParams.keys()].some((key) => key !== 'project')
-      || endpoint.searchParams.getAll('project').length !== 1 || !validManagerScope(endpoint.searchParams.get('project')))) {
+    if (endpoint.search && (path !== MANAGER_PATH || !validManagerQuery(endpoint.searchParams))) {
       response.writeHead(404).end(); return;
     }
     if ([`${MANAGER_PATH}status`, `${MANAGER_PATH}stop`].includes(path)) {

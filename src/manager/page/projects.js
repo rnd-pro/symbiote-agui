@@ -43,6 +43,9 @@ export class ProjectNavigation {
     this.discoveryError = '';
     this.owner.connection?.setProject(listing.currentProjectId);
     this.owner.$.projectChoice = listing.currentProjectId;
+    this.owner.$.routeOptions = listing.currentProjectId === 'default' ? {} : {
+      project: listing.currentProjectId,
+    };
     this.owner.$.allProjects = listing.currentProjectId === ALL_PROJECTS;
     this.owner.$.scopeActionsHint = this.owner.$.allProjects
       ? 'Applies to all connected projects and Default, including sessions hidden by filters.'

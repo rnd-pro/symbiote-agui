@@ -14,13 +14,14 @@
     <agui-app class="manager-app">
       <agui-sidebar label="AGUI Manager" expand-label="Expand" collapse-label="Collapse">
         <agui-nav id="manager-navigation" label="Main"
-          pub-map="MANAGER/appSection: section; MANAGER/sectionTitle: sectionName; MANAGER/sectionIcon: sectionIcon"
-          bind="$.items: MANAGER/navigationItems; $.value: MANAGER/appSection"></agui-nav>
+          action-data="MANAGER/routeOptions" pub-map="MANAGER/sectionIcon: sectionIcon"
+          bind="$.routes: ROUTER/routes; $.value: ROUTER/route; onchange: [navigate]ROUTER"></agui-nav>
       </agui-sidebar>
       <agui-viewport role="main" aria-label="Manager workspace" tabindex="0">
         <agui-session-manager ctx="MANAGER" class="flex min-h-full min-w-0 flex-col">
+          <sym-router ctx="ROUTER" pub-map="MANAGER/appSection: route" bind="$: MANAGER/router"></sym-router>
           <agui-header floating>
-            <h1 class="flex items-center gap-2"><agui-icon bind="$.name: MANAGER/sectionIcon; hidden: !MANAGER/sectionIcon"></agui-icon>{{MANAGER/sectionTitle}}</h1>
+            <h1 class="flex items-center gap-2"><agui-icon bind="$.name: MANAGER/sectionIcon; hidden: !MANAGER/sectionIcon"></agui-icon>{{ROUTER/title}}</h1>
             <agui-toolbar aria-label="Manager controls">
               <agui-select id="manager-project-switcher" aria-label="Current project" name="project" class="w-56 max-w-full"
                 pub-to="MANAGER/projectChoice" bind="onchange: MANAGER/switchProject; $.value: MANAGER/projectChoice; $.options: MANAGER/projectOptions; $.disabled: MANAGER/projectsDisabled; @title: MANAGER/projectPath"></agui-select>
@@ -34,30 +35,10 @@
             <a class="agui-button w-fit no-underline" target="_blank" rel="noopener noreferrer"
               bind="href: MANAGER/verifiedPublicUrl; hidden: !MANAGER/verifiedPublicUrl">Open verified link</a>
             <p id="manager-project-error" class="break-words text-sm text-agui-danger empty:hidden" role="alert" bind="textContent: MANAGER/projectError"></p>
-            <sym-conditional when="MANAGER/appSection" is="sessions">
-              <sym-import src="./page/sections/sessions.html">
-                <agui-state status="loading" message="Loading sessions..." bind="hidden: !^+loading"></agui-state>
-                <agui-state status="error" bind="$.message: ^+loadErrorMessage; hidden: !^+loadError"></agui-state>
-              </sym-import>
-            </sym-conditional>
-            <sym-conditional when="MANAGER/appSection" is="projects">
-              <sym-import src="./page/sections/projects.html">
-                <agui-state status="loading" message="Loading projects..." bind="hidden: !^+loading"></agui-state>
-                <agui-state status="error" bind="$.message: ^+loadErrorMessage; hidden: !^+loadError"></agui-state>
-              </sym-import>
-            </sym-conditional>
-            <sym-conditional when="MANAGER/appSection" is="connections">
-              <sym-import src="./page/sections/connections.html">
-                <agui-state status="loading" message="Loading connections..." bind="hidden: !^+loading"></agui-state>
-                <agui-state status="error" bind="$.message: ^+loadErrorMessage; hidden: !^+loadError"></agui-state>
-              </sym-import>
-            </sym-conditional>
-            <sym-conditional when="MANAGER/appSection" is="settings">
-              <sym-import src="./page/sections/settings.html">
-                <agui-state status="loading" message="Loading settings..." bind="hidden: !^+loading"></agui-state>
-                <agui-state status="error" bind="$.message: ^+loadErrorMessage; hidden: !^+loadError"></agui-state>
-              </sym-import>
-            </sym-conditional>
+            <agui-state status="loading" message="Loading section..." bind="hidden: !MANAGER/sectionLoading"></agui-state>
+            <agui-state status="error" bind="$.message: MANAGER/sectionError; hidden: !MANAGER/sectionError"></agui-state>
+            <sym-import pub-map="MANAGER/sectionLoading: +loading; MANAGER/sectionError: +loadErrorMessage"
+              bind="@src: ROUTER/+src"></sym-import>
           </div>
           <agui-footer>
             <span role="status">{{MANAGER/connection}}</span>

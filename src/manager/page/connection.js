@@ -2,6 +2,8 @@ import { MANAGER_SOCKET_PATH, MANAGER_CLIENT_TIMEOUT_MS } from '../constants.js'
 import { TUNNEL_OPEN_TIMEOUT_MS } from '../../tunnel/constants.js';
 import { validProjectId } from '../../projects/identifiers.js';
 import { managerSessionKey, validManagerScope } from '../scope.js';
+import { AppRouter } from '@symbiotejs/symbiote/core/AppRouter.js';
+import { MANAGER_ROUTES } from '../sections.js';
 
 export const CONNECTION_LOST_MESSAGE = 'Connection lost. The operation outcome may be unknown. Reconnecting will refresh status; actions are not replayed.';
 
@@ -37,7 +39,7 @@ export class ManagerConnection {
       let project = requestedProject || sessionStorage.getItem('agui-manager-project');
       if (validManagerScope(project)) { this.projectId = project || undefined; }
     } catch { this.token = fragment; }
-    history.replaceState(null, '', `${location.pathname}${location.search}`);
+    this.reflectProject();
   }
 
   connect() {
@@ -115,12 +117,16 @@ export class ManagerConnection {
   setProject(projectId) {
     if (!validManagerScope(projectId)) { throw new Error('Choose a connected project.'); }
     this.projectId = projectId;
-    let url = new URL(location.href);
-    if (projectId === 'default') { url.searchParams.delete('project'); }
-    else { url.searchParams.set('project', projectId); }
-    url.hash = '';
-    history.replaceState(null, '', `${url.pathname}${url.search}`);
+    this.reflectProject();
     try { sessionStorage.setItem('agui-manager-project', projectId); } catch { /* The URL retains this tab's selection. */ }
+  }
+
+  reflectProject() {
+    let selected = AppRouter.readAddressBar().route;
+    let route = selected && Object.hasOwn(MANAGER_ROUTES, selected) ? selected : 'sessions';
+    let project = this.projectId && this.projectId !== 'default' ? `&project=${encodeURIComponent(this.projectId)}` : '';
+    // AppRouter's query route must stay a bare first token, not `sessions=`.
+    history.replaceState(null, '', `${location.pathname}?${route}${project}`);
   }
 
   close() {

@@ -56,7 +56,7 @@ test('manager save-folder controls persist the project setting and open the sele
   await page.locator('::-p-aria([name="Save folder and open"][role="button"])').click();
   await page.waitForFunction((selected) => document.querySelector('#manager-project-switcher')?.getAttribute('title')?.includes(selected), {}, folder);
   assert.equal(new URL(page.url()).origin, new URL(manager.url).origin);
-  assert.equal(await page.$('[data-session="original"]'), null, 'Source definitions are not silently copied to the new scope.');
+  assert.equal(await page.$eval('agui-session-manager', (element) => Reflect.get(element, '$').records.some((/** @type {{id: string}} */ record) => record.id === 'original')), false, 'Source definitions are not silently copied to the new scope.');
   await page.reload();
   await page.waitForFunction(() => !document.querySelector('agui-field[name="saveFolder"] input')?.hasAttribute('disabled'));
   await openManagerSection(page, 'settings');
@@ -66,8 +66,9 @@ test('manager save-folder controls persist the project setting and open the sele
     'show',
   ])).settings.folder, folder);
   await page.locator('::-p-aria([name="Use default cache"][role="button"])').click();
+  await openManagerSection(page, 'sessions');
   await page.waitForSelector('[data-session="original"]');
-  assert.equal(page.url(), manager.url);
+  assert.equal(page.url(), `${manager.url}?sessions`);
   assert.equal((await project.cli([
     'config',
     'show',
@@ -135,8 +136,8 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.waitForSelector('#manager-description agui-markdown h1');
   assert.match(await page.$eval('#manager-description agui-markdown article', (element) => element.textContent || ''), /Initial source: json-file \(sample-inventory.json\)/);
   await page.click('#manager-description dialog button');
-  assert.equal(page.url(), manager.url, 'Bootstrap removes the credential from the URL.');
-  assert.equal(await page.title(), 'AGUI Manager');
+  assert.equal(page.url(), `${manager.url}?sessions`, 'Bootstrap removes the credential and retains the route.');
+  assert.equal(await page.title(), 'Sessions');
   assert.equal(await page.$eval('link[rel="icon"]', async (element) => {
     let image = new Image();
     image.src = element.getAttribute('href') || '';

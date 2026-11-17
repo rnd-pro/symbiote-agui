@@ -27,8 +27,8 @@ test('manager offers a folder picker first, preserves cancellation and falls bac
   let page = await browser.newPage();
   page.setDefaultTimeout(8000);
   await page.goto(manager.launchUrl);
-  await page.waitForSelector('#manager-choose-project:not(:disabled):not([aria-busy="true"])');
   await openManagerSection(page, 'projects');
+  await page.waitForSelector('#manager-choose-project:not(:disabled):not([aria-busy="true"])');
   await page.locator('#project-views [role="tab"][value="connected"]').click();
   assert.equal(await page.$eval('#manager-connect-project', (form) => form.closest('details')?.open), false);
   await page.evaluate((path) => {
@@ -68,7 +68,7 @@ test('manager offers a folder picker first, preserves cancellation and falls bac
   await page.evaluate(() => Reflect.set(window, 'pickerOutcome', 'selected'));
   await page.locator('#manager-choose-project').click();
   await page.waitForSelector(`#manager-project-list [data-project="${projectId(folder)}"]`);
-  assert.equal(page.url(), manager.url, 'Picking connects without switching scope.');
+  assert.equal(page.url(), `${manager.url}?projects`, 'Picking connects without switching scope.');
   await page.waitForSelector('#manager-choose-project:not(:disabled):not([aria-busy="true"])');
   await page.evaluate(() => Reflect.set(window, 'pickerOutcome', 'error'));
   await page.locator('#manager-choose-project').click();

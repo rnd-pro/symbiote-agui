@@ -20,7 +20,7 @@ import { runAllSessions } from '../../src/sessions/all.js';
 import { parseCommand } from '../../src/cli/parse.js';
 import { connectProject } from '../../src/projects/registry.js';
 import { temporaryManagerProject } from './manager-storage-fixture.js';
-import { MANAGER_SECTIONS } from '../../src/manager/sections.js';
+import { MANAGER_ROUTES, MANAGER_SECTIONS } from '../../src/manager/sections.js';
 
 /** @param {string} sessionId */
 async function save(sessionId) {
@@ -188,6 +188,16 @@ test('manager WebSocket requires its origin and credential; assets cannot serve 
   let response = await fetch(endpoint.url);
   assert.match(response.headers.get('content-security-policy') || '', /frame-ancestors 'none'/);
   assert.equal(response.headers.get('x-frame-options'), 'DENY');
+  for (let route of Object.keys(MANAGER_ROUTES)) {
+    assert.equal((await fetch(`${endpoint.url}?${route}&project=default`)).status, 200);
+  }
+  for (let query of [
+    '?unknown',
+    '?sessions=unexpected',
+    '?sessions&sessions',
+    '?sessions&project=default&project=all',
+    '?sessions&project=../outside',
+  ]) { assert.equal((await fetch(`${endpoint.url}${query}`)).status, 404); }
   for (let [
     name,
     file,

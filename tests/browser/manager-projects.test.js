@@ -131,14 +131,22 @@ test('manager connects projects, switches remembered scopes and Default, and pre
   assert.equal(await page.$eval('#manager-inspector button.agui-button-danger', (element) => element.hasAttribute('disabled')), true);
   await page.evaluate(() => Reflect.set(window, 'managerPageMarker', 'retained'));
   await selectManagerProject(page, projectId(folderA));
-  assert.equal(page.url(), manager.url, 'Selecting a project reveals its controls without switching scope.');
+  assert.equal(page.url(), `${manager.url}?projects`, 'Selecting a project reveals its controls without switching scope.');
   await page.locator('#manager-inspector ::-p-aria([name="Switch"][role="button"])').click();
   await waitForProject(page, projectId(folderA));
   let urlA = page.url();
   assert.equal(new URL(urlA).origin, new URL(manager.url).origin);
+  await openManagerSection(page, 'sessions');
+  assert.equal(new URL(page.url()).searchParams.get('project'), projectId(folderA));
+  await page.goBack();
+  await page.waitForSelector('#manager-navigation button[value="projects"][aria-current="page"]');
+  assert.equal(page.url(), urlA, 'History retains the selected project and section.');
   assert.equal(await page.evaluate(() => Reflect.get(window, 'managerPageMarker')), 'retained', 'Switching projects retains the same page instance.');
-  await page.waitForSelector('#manager-table tr[data-row-id="desk"]');
-  assert.equal(await page.$eval('#manager-table tr[data-row-id="desk"] td[data-column=""] input', (element) => Reflect.get(element, 'checked')), false);
+  await page.waitForFunction(() => {
+    let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
+    return owner.$.records.some((/** @type {{id: string}} */ record) => record.id === 'desk');
+  });
+  assert.deepEqual(await page.$eval('agui-session-manager', (element) => Reflect.get(element, '$').selection), []);
   assert.ok(await page.$(`#manager-inspector [data-project-controls="${projectId(folderA)}"]`));
   assert.equal(await page.$('#manager-inspector [data-session="desk"]'), null);
   await page.reload();
@@ -177,7 +185,7 @@ test('manager connects projects, switches remembered scopes and Default, and pre
   await second.waitForFunction(() => document.querySelector('.connection')?.textContent?.includes('Disconnected'));
   await second.waitForFunction(() => document.querySelector('.connection .agui-message-text')?.textContent === 'Connected');
   await waitForProject(second, projectId(folderB));
-  assert.equal(second.url(), urlB);
+  assert.equal(new URL(second.url()).search, `?sessions&project=${projectId(folderB)}`);
   await openProjects(second);
   let folderASelector = `#manager-project-list [data-project="${projectId(folderA)}"]`;
   await selectManagerProject(second, projectId(folderA));
@@ -193,7 +201,7 @@ test('manager connects projects, switches remembered scopes and Default, and pre
   await openManagerSection(second, 'sessions');
   await page.bringToFront();
   await switchProject(page, 'default');
-  assert.equal(page.url(), manager.url);
+  assert.equal(page.url(), `${manager.url}?projects`);
   assert.equal(await generated.$eval('input[name="draft"]', (element) => element.value), draft);
   let preserved = await project.cli([
     'status',
@@ -265,7 +273,7 @@ test('project navigation survives session discovery failures and ignores delayed
     finally { connection.request = request; }
   }, projectId(folder));
   await page.waitForFunction(() => document.querySelector('#manager-project-error')?.textContent?.includes('Fixture destination launch failure.'));
-  assert.equal(page.url(), manager.url, 'A failed switch retains the current manager.');
+  assert.equal(page.url(), `${manager.url}?sessions`, 'A failed switch retains the current manager.');
   assert.equal(await page.evaluate(() => {
     let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
     return owner.projects?.listing?.currentProjectId;
@@ -386,7 +394,7 @@ test('Open folder targets the current or listed project and recovers from a desk
     let owner = /** @type {import('../../src/manager/page/index.js').SessionManager} */ (document.querySelector('agui-session-manager'));
     return document.querySelector('.notice')?.textContent?.includes(`Requested opening ${owner.snapshot?.storage.defaultFolder}`);
   });
-  assert.equal(page.url(), manager.url, 'Opening a selected folder does not switch the manager scope.');
+  assert.equal(page.url(), `${manager.url}?projects`, 'Opening a selected folder does not switch the manager scope.');
   await openProjects(page);
   await selectManagerProject(page, 'default');
   await page.locator('#manager-inspector ::-p-aria([name="Open folder"][role="button"])').click();
@@ -402,7 +410,7 @@ test('Open folder targets the current or listed project and recovers from a desk
     'default',
     projectId(folder),
   ]);
-  assert.equal(page.url(), manager.url);
+  assert.equal(page.url(), `${manager.url}?projects`);
   await openManagerSection(page, 'sessions');
   await switchProject(page, projectId(folder));
 });

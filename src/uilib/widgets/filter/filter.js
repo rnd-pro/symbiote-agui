@@ -62,7 +62,7 @@ export class Filter extends UiComponent {
   renderCallback() {
     this.sub('queryText', (value) => {
       if (value !== this.$.query) { this.edit('query', value); }
-    });
+    }, false);
     for (let key of [
       'rows',
       'fields',

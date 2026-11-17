@@ -1,0 +1,64 @@
+<agui-tabs label="Feedback examples" pub-to="FEEDBACK/feedbackView" bind="$.value: FEEDBACK/feedbackView">
+  <agui-tab value="stages" label="Stages">
+    <agui-panel>
+      <agui-steps label="Publishing progress"
+        bind="$.items: FEEDBACK/processStages; $.value: FEEDBACK/processStage; $.complete: FEEDBACK/processComplete; $.texts: FEEDBACK/stepTexts"></agui-steps>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="states" label="States">
+    <agui-panel class="grid gap-4">
+    <h2>Content states</h2>
+    <agui-state status="loading" message="Loading contacts..."></agui-state>
+      <agui-state status="empty" message="No contacts match the current filters."></agui-state>
+      <agui-state id="retry-state" bind="$: FEEDBACK/componentState"></agui-state>
+      <p class="text-sm text-agui-muted">Retry sends an action to the agent. This gallery does not contact an
+        external service.</p>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="loading" label="Loading">
+    <agui-panel class="grid gap-4">
+    <h2>Preloaders</h2>
+    <agui-toggle label="Show preloader" pub-to="FEEDBACK/preloaderVisible"
+        bind="$.value: FEEDBACK/preloaderVisible"></agui-toggle>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="grid content-start gap-2">
+          <sym-conditional when="FEEDBACK/preloaderVisible" is="false" behavior="hide">
+            <p class="text-sm text-agui-muted">Default dots preloader: content hidden when disabled</p>
+          </sym-conditional>
+          <agui-preloader class="text-agui-accent"
+            bind="$.label: FEEDBACK/preloaderLabel; hidden: !FEEDBACK/preloaderVisible"></agui-preloader>
+        </div>
+        <div class="grid content-start gap-2">
+          <sym-conditional when="FEEDBACK/preloaderVisible" is="false" behavior="dom-remove">
+              <p class="text-sm text-agui-muted">Compact ring preloader: content removed when disabled</p>
+            </sym-conditional>
+          <agui-preloader variant="ring" class="size-4 text-agui-accent" label="Loading compact preview"
+            bind="hidden: !FEEDBACK/preloaderVisible"></agui-preloader>
+        </div>
+      </div>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="messages" label="Messages">
+    <agui-panel class="grid gap-4">
+    <h2>Messages</h2>
+    <agui-field label="Notification message" name="notification_message"
+        placeholder="Type a message to preview" pub-to="FEEDBACK/notificationMessage"
+        bind="$.value: FEEDBACK/notificationMessage"></agui-field>
+      <agui-message bind="$.message: FEEDBACK/notificationMessage" close-label="Dismiss message"></agui-message>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="overlays" label="Dialogs and popups">
+    <agui-panel class="grid gap-4">
+      <h2>Dialogs and popups</h2>
+      <p class="text-sm text-agui-muted">The editor uses native modal focus and Escape dismissal. Closing
+        keeps edits as drafts; Save and Cancel changes remain separate actions.</p>
+      <button type="button"  value="true" bind="onclick: [set]CONTACT/galleryEditorOpen"><agui-icon name="edit"></agui-icon>Open contact editor</button>
+      <div>
+        <button type="button" popovertarget="gallery-popup">Show workspace help</button>
+        <div id="gallery-popup" popover class="agui-popover" aria-label="Workspace help">
+          <p class="text-sm">This native popup is non-modal. Click outside or press Escape to dismiss it.</p>
+        </div>
+      </div>
+    </agui-panel>
+  </agui-tab>
+</agui-tabs>

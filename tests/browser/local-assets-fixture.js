@@ -1,6 +1,6 @@
 import { cp, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { galleryExamples } from './gallery-fixture.js';
+import { galleryExamples, galleryProviders } from './gallery-fixture.js';
 import { reserveSession } from '../../src/sessions/store.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { definitionPaths } from '../../src/library/paths.js';
@@ -22,9 +22,8 @@ export async function localAssetsFixture(t) {
   });
   let examples = await galleryExamples();
   let panel = examples.querySelector('#gallery-local-assets');
-  let data = examples.querySelector('#gallery-data > script[type="application/json"]')?.textContent;
-  if (!panel || !data) { throw new Error('The gallery local asset example is missing.'); }
-  let markup = `<sym-context ctx="APP"><script type="application/json">${JSON.stringify(JSON.parse(data)).replaceAll('<', '\\u003c')}</script>${panel.outerHTML}</sym-context>
+  if (!panel) { throw new Error('The gallery local asset example is missing.'); }
+  let markup = `${galleryProviders(examples)}${panel.outerHTML}
     <link rel="stylesheet" href="./_assets/styles/main.css">
     <link rel="preload" as="script" href="./_assets/modules/main.mjs">
     <div id="css-asset">CSS image</div>

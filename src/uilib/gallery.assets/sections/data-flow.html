@@ -1,0 +1,10 @@
+<agui-panel class="grid gap-4">
+  <div class="grid gap-1">
+    <h2 class="break-words font-medium">{{APP/sharedName}}</h2>
+    <p class="text-sm text-agui-muted">{{APP/sharedStatus}}</p>
+  </div>
+  <agui-toolbar aria-label="Contact controls">
+    <button type="button" class="agui-button-primary"  value="true" bind="onclick: [set]CONTACT/galleryEditorOpen"><agui-icon name="edit"></agui-icon>Edit contact</button>
+    <button type="button" class="agui-button-icon"  value="true" aria-label="Workspace notes" title="Workspace notes" bind="onclick: [set]CONTACT/notesOpen"><agui-icon name="notes"></agui-icon></button>
+  </agui-toolbar>
+</agui-panel>

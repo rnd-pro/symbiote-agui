@@ -1,0 +1,118 @@
+<agui-tabs id="gallery-data-views" label="Widget examples" pub-to="DATA/widgetView" bind="$.value: DATA/widgetView">
+<agui-tab value="table" label="Table">
+    <agui-panel class="grid gap-4">
+      <h2>Leads</h2>
+      <p class="text-sm text-agui-muted">The independent filter publishes matching IDs; the table handles
+        sorting, selection, and paging locally. Select-all includes matching leads on other pages and
+        keeps selections outside the filter. This table does not edit its records.</p>
+      <agui-table id="gallery-leads" label="Example leads" selection="multiple" page-size="3" locale="en"
+        pub-to="DATA/tableSelection" sort-pub-to="DATA/tableSort"
+        bind="$.rows: APP/tableRows; $.columns: DATA/tableColumns; $.texts: DATA/tableTexts; $.value: DATA/tableSelection; $.filteredIds: DATA/tableMatchingIds; $.sort: DATA/tableSort; $.loading: DATA/tableLoading; $.readonly: DATA/tableReadonly"></agui-table>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="cards" label="List">
+    <div class="grid gap-4">
+      <agui-list id="gallery-lead-list" class="grid gap-4 md:grid-cols-2" label="Lead cards"
+        selection="multiple" pub-to="DATA/tableSelection"
+        bind="$.items: APP/tableRows; $.value: DATA/tableSelection; $.filteredIds: DATA/tableMatchingIds; $.texts: DATA/tableTexts; $.loading: DATA/tableLoading; $.readonly: DATA/tableReadonly">
+        <template>
+          <agui-panel selectable process-inner-html="false" role="listitem" class="grid gap-2"
+            bind="@data-selected: _selected; ariaDisabled: _selectionDisabled">
+            <h3><button type="button"
+                bind="onclick: ^selectItem; ariaPressed: _selected; disabled: _selectionDisabled">{{name}}</button>
+            </h3>
+            <p class="text-sm text-agui-muted">{{status}}</p>
+          </agui-panel>
+        </template>
+      </agui-list>
+    </div>
+  </agui-tab>
+  <agui-tab value="explorer" label="Explorer">
+    <agui-panel class="grid gap-4">
+      <h2>Explorer</h2>
+      <p class="text-sm text-agui-muted">Expand groups and select an item. Selection and expanded IDs publish to shared state without application JavaScript.</p>
+      <agui-toggle label="Allow folder selection" pub-to="DATA/explorerSelectBranches"
+        bind="$.value: DATA/explorerSelectBranches"></agui-toggle>
+      <agui-explorer label="Documents and assets" class="grid gap-1" pub-to="DATA/explorerSelection" expanded-pub-to="DATA/explorerExpanded"
+        bind="$.items: DATA/explorerItems; $.value: DATA/explorerSelection; $.expanded: DATA/explorerExpanded; $.texts: DATA/explorerTexts; $.selectBranches: DATA/explorerSelectBranches"></agui-explorer>
+      <p class="text-sm">Selected: <output>{{DATA/explorerSelection}}</output></p>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="kanban" label="Kanban">
+    <agui-panel class="grid gap-4">
+      <h2>Kanban</h2>
+      <p class="text-sm text-agui-muted">Drag leads between stages. Focus a card and press Alt+Left or
+        Alt+Right to move it with the keyboard. The Table tab uses the same records and updates
+        immediately. Unrecognized stages stay in Unassigned. Save commits record changes; Cancel restores
+        the latest saved records. Table filters do not hide board cards.</p>
+      <agui-kanban label="Lead stages" title-key="name" description-key="notes"
+        pub-to="APP/tableRows"
+        bind="$.value: APP/tableRows; $.columns: DATA/kanbanColumns; $.texts: DATA/kanbanTexts; $.loading: DATA/tableLoading; $.readonly: DATA/tableReadonly"></agui-kanban>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="charts" label="Charts">
+    <agui-panel class="grid gap-5">
+      <h2>Charts</h2>
+      <p class="text-sm text-agui-muted">The chart runtime loads when the first chart initializes. Select a
+        bar or donut sector to share lead selection with the table. Each chart has a keyboard-accessible data
+        view; the line example keeps its own selection. Missing values remain gaps and zero values stay
+        meaningful.</p>
+      <agui-chart type="line" label="Monthly revenue"
+        description="Prepared monthly amounts with a missing actual value in March." x-key="month"
+        x-type="date" x-label="Month" selection="multiple" locale="en-US" pub-to="CHARTS/monthlySelected"
+        bind="$.rows: CHARTS/monthlyRows; $.series: CHARTS/monthlySeries; $.texts: CHARTS/chartTexts; $.value: CHARTS/monthlySelected"></agui-chart>
+      <agui-chart type="bar" label="Opportunity by company"
+        description="Company amounts from the shared leads records." x-key="name" x-label="Company"
+        selection="multiple" locale="en-US" pub-to="DATA/tableSelection"
+        bind="$.rows: APP/tableRows; $.series: CHARTS/opportunitySeries; $.texts: CHARTS/chartTexts; $.value: DATA/tableSelection; $.readonly: DATA/tableReadonly; $.loading: DATA/tableLoading"></agui-chart>
+      <agui-chart type="donut" label="Opportunity share"
+        description="One nonnegative amount per company, without inferred aggregation." x-key="name"
+        x-label="Company" selection="multiple" locale="en-US" pub-to="DATA/tableSelection"
+        bind="$.rows: APP/tableRows; $.series: CHARTS/opportunitySeries; $.texts: CHARTS/chartTexts; $.value: DATA/tableSelection; $.readonly: DATA/tableReadonly; $.loading: DATA/tableLoading"></agui-chart>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="map" label="Map">
+    <agui-panel class="grid gap-4">
+      <h2>Map</h2>
+      <p class="text-sm text-agui-muted">Select a marker or table row to share selection. Drag to pan, use the
+        zoom buttons, or fit all mapped locations. Locations without coordinates remain in the table and are
+        counted below the map. Tile requests go directly to OpenStreetMap; shared viewers see this viewport
+        without interactive map controls.</p>
+      <agui-map label="Example team locations"
+        description="Fictional locations around London, with one record awaiting coordinates."
+        pub-to="MAP/mapSelection" view-pub-to="MAP/mapView"
+        bind="$.rows: MAP/mapRows; $.value: MAP/mapSelection; $.view: MAP/mapView; $.tiles: MAP/mapTiles; $.texts: MAP/mapTexts"></agui-map>
+      <agui-table label="All locations" selection="multiple"
+        pub-to="MAP/mapSelection"
+        bind="$.rows: MAP/mapRows; $.columns: MAP/mapColumns; $.value: MAP/mapSelection; $.texts: MAP/mapTexts"></agui-table>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="diagrams" label="Diagrams">
+    <agui-panel class="grid gap-4">
+      <agui-tabs label="Diagram types" pub-to="DIAGRAM/diagramView" bind="$.value: DIAGRAM/diagramView">
+        <agui-tab value="flow" label="Flowchart">
+          <agui-diagram label="Publishing workflow" description="A decision with a revision loop."
+            bind="$.value: DIAGRAM/flowSource; $.texts: DIAGRAM/diagramTexts"></agui-diagram>
+        </agui-tab>
+        <agui-tab value="sequence" label="Sequence">
+          <agui-diagram label="Task submission" description="Messages between a user, an app, and a service."
+            bind="$.value: DIAGRAM/sequenceSource; $.texts: DIAGRAM/diagramTexts"></agui-diagram>
+        </agui-tab>
+        <agui-tab value="relationships" label="Relationships">
+          <agui-diagram label="Project relationships" description="Projects contain tasks; members own them."
+            bind="$.value: DIAGRAM/relationshipSource; $.texts: DIAGRAM/diagramTexts"></agui-diagram>
+        </agui-tab>
+      </agui-tabs>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="markdown" label="Markdown">
+    <agui-panel class="grid gap-4">
+      <h2>Markdown</h2>
+      <p class="text-sm text-agui-muted">Use an external Markdown URL or edit the inline source. JSDA renders
+        native HTML, highlighted code, and wrappers with readable fallbacks; registered components can enhance
+        them. Document checkboxes remain disabled.</p>
+      <agui-markdown id="gallery-markdown" label="Project briefing"
+        bind="$.value: MARKDOWN/markdownSource; $.src: MARKDOWN/markdownUrl; $.extensions: !MARKDOWN/markdownUrl; $.texts: MARKDOWN/markdownTexts"></agui-markdown>
+    </agui-panel>
+  </agui-tab>
+</agui-tabs>

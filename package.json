@@ -1,6 +1,6 @@
 {
   "name": "symbiote-agui",
-  "version": "0.19.1",
+  "version": "0.19.2",
   "description": "Local interactive interfaces for AI agents, built with Symbiote.js.",
   "homepage": "https://rnd-pro.com/agui/",
   "license": "MIT",
@@ -41,6 +41,7 @@
   "scripts": {
     "start": "node ./bin/symbiote-agui.js",
     "types": "tsc --project tsconfig.json && tsc --project tsconfig.browser.json",
+    "gallery:styles": "node scripts/build-gallery-styles.js",
     "test:node": "node --test tests/node/*.test.js",
     "test:package": "node --test tests/node/package-smoke.js",
     "pretest:browser": "puppeteer browsers install chrome",
@@ -63,12 +64,12 @@
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.3.1",
-    "@symbiotejs/symbiote": "^3.10.2",
+    "@symbiotejs/symbiote": "^3.10.3",
     "@tailwindcss/node": "^4.3.3",
     "agent-connectors": "^0.2.1",
     "dompurify": "^3.4.17",
     "echarts": "^6.1.0",
-    "jsda-kit": "1.6.6",
+    "jsda-kit": "1.6.7",
     "leaflet": "^1.9.4",
     "linkedom": "^0.18.13",
     "pele": "^1.13.0",

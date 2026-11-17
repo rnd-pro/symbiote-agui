@@ -1,0 +1,161 @@
+<agui-tabs label="Control examples" pub-to="CONTROLS/controlView" bind="$.value: CONTROLS/controlView">
+  <agui-tab value="fields" label="Fields and buttons">
+    <agui-panel class="grid gap-5">
+      <h2>Native controls</h2>
+      <agui-field id="name-control" bind="$.label: CONTROLS/nameLabel" value="Alex" hint="Required field" required
+        required-mark="*" name="name" autocomplete="name"></agui-field>
+      <agui-field label="Email" hint="Format: name@example.com" type="email" name="email"
+        autocomplete="email"></agui-field>
+      <agui-field label="Follow-up date" value="2026-10-21" type="date" name="follow_up"></agui-field>
+      <agui-field label="Connected on LinkedIn" type="checkbox" checked name="connected"></agui-field>
+      <agui-field label="Email preferred" type="radio" value="email" name="preferred_channel"
+        checked></agui-field>
+      <agui-toggle id="notifications-toggle" label="Notifications" name="notifications"
+        pub-to="APP/notifications" bind="$.value: APP/notifications"></agui-toggle>
+      <agui-toggle label="Unavailable option" name="disabled_toggle" disabled></agui-toggle>
+      <agui-field label="Notes" value="Prepare a proposal after the first conversation." type="textarea"
+        name="notes" rows="3"></agui-field>
+      <agui-field label="Read-only value" value="Saved record" readonly name="saved_value"></agui-field>
+      <agui-field label="Disabled value" value="Unavailable" disabled name="disabled_value"></agui-field>
+      <agui-field label="External validation error" value="Existing contact"
+        error="This contact already exists." name="duplicate"></agui-field>
+      <agui-toolbar aria-label="Button style samples">
+        <button type="button" class="agui-button-primary"  value="new" bind="onclick: [set]APP/sharedStatus">New status</button>
+        <button type="button"  bind="onclick: [toggle]APP/notifications">Toggle notifications</button>
+        <button type="button" class="agui-button-ghost"  value="false" bind="onclick: [set]APP/notifications">Disable
+          notifications</button>
+        <button type="button" class="agui-button-danger"  value="archived" bind="onclick: [set]APP/sharedStatus">Archive</button>
+        <button type="button"  value="new" disabled bind="onclick: [set]APP/sharedStatus">Disabled</button>
+      </agui-toolbar>
+      <agui-toggle label="Show button loading state" pub-to="CONTROLS/buttonLoading"
+        bind="$.value: CONTROLS/buttonLoading"></agui-toggle>
+      <agui-toolbar aria-label="Button loading examples">
+        <button type="button" class="agui-button-primary"  value="new"
+          bind="$.loading: CONTROLS/buttonLoading; onclick: [set]APP/sharedStatus"><agui-icon name="refresh"></agui-icon>Refresh status</button>
+        <button type="button" class="agui-button-icon" aria-label="Refresh status"  value="new"
+          bind="$.loading: CONTROLS/buttonLoading; onclick: [set]APP/sharedStatus"><agui-icon name="refresh"></agui-icon></button>
+      </agui-toolbar>
+      <agui-panel class="grid gap-2">
+        <h3 class="text-base">Nested panel</h3>
+        <p class="text-sm text-agui-muted">A recessed group for related fields and actions.</p>
+        <agui-toolbar aria-label="Nested panel actions">
+          <button type="button"><agui-icon name="edit"></agui-icon>Edit</button>
+          <button class="agui-button-ghost" type="button">Cancel</button>
+        </agui-toolbar>
+      </agui-panel>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="tabs" label="Tabs">
+    <agui-panel class="grid gap-4">
+      <h2>Tabs</h2>
+      <agui-tabs label="Workspace views" pub-to="CONTROLS/galleryTab"
+        bind="$.value: CONTROLS/galleryTab">
+        <agui-tab value="overview" label="Overview">
+          <p class="text-sm text-agui-muted">Arrow keys move focus. Enter or Space activates a tab. Switching
+            views preserves entered notes.</p>
+          <agui-tabs label="Nested guides" orientation="vertical" value="bindings">
+            <agui-tab value="bindings" label="Bindings">
+              <p class="text-sm">Bind value to common state and use pub-to to publish tab changes.</p>
+            </agui-tab>
+            <agui-tab value="keyboard" label="Keyboard">
+              <p class="text-sm">Vertical tabs use Up and Down. Home and End move to the first and last
+                enabled tabs.</p>
+            </agui-tab>
+          </agui-tabs>
+        </agui-tab>
+        <agui-tab value="notes" bind="$.label: CONTROLS/galleryTabLabel">
+          <agui-field label="Workspace notes" type="textarea" name="tab_notes" rows="4"
+            pub-to="CONTROLS/galleryTabNotes" bind="$.value: CONTROLS/galleryTabNotes"></agui-field>
+        </agui-tab>
+        <agui-tab value="future" label="Unavailable view" disabled>
+          <p>This view is disabled.</p>
+        </agui-tab>
+      </agui-tabs>
+      <p class="text-sm text-agui-muted">Shared active tab: {{CONTROLS/galleryTab}}</p>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="breadcrumbs" label="Breadcrumbs">
+    <agui-panel class="grid gap-4">
+      <h2>Breadcrumbs</h2>
+      <p class="text-sm text-agui-muted">Select a path segment to publish its value. The current location is highlighted; the hosting app supplies the trail and handles navigation.</p>
+      <agui-breadcrumbs label="Document location" pub-to="CONTROLS/breadcrumbLocation"
+        bind="$.items: CONTROLS/breadcrumbItems; $.value: CONTROLS/breadcrumbLocation; $.readonly: CONTROLS/breadcrumbReadonly"></agui-breadcrumbs>
+      <p class="text-sm">Selected location: <output>{{CONTROLS/breadcrumbLocation}}</output></p>
+      <agui-toggle label="Read-only navigation" pub-to="CONTROLS/breadcrumbReadonly"
+        bind="$.value: CONTROLS/breadcrumbReadonly"></agui-toggle>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="bindings" label="Bindings">
+    <agui-panel class="grid content-start gap-5">
+      <h2>Application bindings</h2>
+      <agui-field label="Shared name" name="shared_name" pub-to="APP/sharedName"
+        bind="$.value: APP/sharedName"></agui-field>
+      <agui-select label="Shared status" name="shared_status" pub-to="APP/sharedStatus"
+        bind="$.options: CONTACT/statusOptions; $.value: APP/sharedStatus"></agui-select>
+      <agui-select id="status-mirror" label="Application status" readonly placeholder="All statuses"
+        name="status_mirror" bind="$.options: CONTACT/statusOptions; $.value: CONTROLS/status"></agui-select>
+      <div class="grid gap-2 text-sm">
+        <p>Search: <output>{{CONTROLS/query}}</output></p>
+        <p>Status: <output>{{CONTROLS/status}}</output></p>
+        <p>Shared name: <output>{{APP/sharedName}}</output></p>
+        <p>Shared status: <output>{{APP/sharedStatus}}</output></p>
+        <p>Notifications: <output>{{APP/notifications}}</output></p>
+      </div>
+      </agui-panel>
+  </agui-tab>
+  <agui-tab value="icons" label="Icons">
+    <agui-panel class="grid gap-4">
+      <h2>Icons</h2>
+      <agui-toolbar aria-label="Icon examples">
+        <agui-icon name="home" aria-label="Home"></agui-icon>
+        <agui-icon name="dashboard" aria-label="Dashboard"></agui-icon>
+        <agui-icon name="mail" aria-label="Email"></agui-icon>
+      <agui-icon name="folder_open" aria-label="Project folders"></agui-icon>
+      <agui-icon name="public" aria-label="Public links"></agui-icon>
+      <agui-icon name="play_arrow" aria-label="Start"></agui-icon>
+      <agui-icon name="stop" aria-label="Stop"></agui-icon>
+      <agui-icon name="table_chart" aria-label="Table"></agui-icon>
+      <agui-icon name="bar_chart" aria-label="Chart"></agui-icon>
+      <agui-icon name="map" aria-label="Map"></agui-icon>
+      <agui-icon name="markdown" aria-label="Markdown"></agui-icon>
+      <agui-icon name="palette" aria-label="Theme"></agui-icon>
+      <agui-icon name="chat" aria-label="Feedback"></agui-icon>
+      <agui-icon name="terminal" aria-label="Terminal"></agui-icon>
+        <agui-icon name="check_circle" aria-label="Complete" class="text-agui-accent"></agui-icon>
+        <agui-icon name="warning" aria-label="Warning" class="text-agui-danger"></agui-icon>
+      </agui-toolbar>
+      <agui-toolbar aria-label="Icon buttons">
+        <button type="button"><agui-icon name="download"></agui-icon>Download</button>
+        <button class="agui-button-icon" type="button" aria-label="Settings"><agui-icon
+            name="settings"></agui-icon></button>
+      </agui-toolbar>
+      <agui-select label="Icon" pub-to="CONTROLS/iconName"
+        bind="$.value: CONTROLS/iconName; $.options: CONTROLS/iconOptions"></agui-select>
+      <agui-icon bind="$.name: CONTROLS/iconName; @aria-label: CONTROLS/iconName"></agui-icon>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="workflow" label="Data toolbar">
+    <agui-panel class="grid gap-4">
+      <h2>Data workflow</h2>
+      <p class="text-sm text-agui-muted">Edit Shared name, Shared status, Notifications, or lead stages, then
+        use the floating bar. Save persists those values locally. Import replaces the draft, including the
+        entire leads array; Cancel restores the saved values. Export includes unsaved edits.</p>
+      <details>
+        <summary>JSON import format</summary>
+        <pre
+          class="mt-3 overflow-auto rounded-md bg-agui-bg p-3 text-sm"><code>{"version":1,"changes":[{"provider":"APP","values":{"sharedName":"Morgan","sharedStatus":"new","notifications":true,"tableRows":[{"id":"lead-imported","name":"Example Company","amount":1200,"status":"new","active":true,"followUp":null}]}}]}</code></pre>
+      </details>
+      <p class="text-sm text-agui-muted">The examples below illustrate status meanings. The floating bar
+        reports actual operations; this gallery does not simulate agent delivery or external writes.</p>
+      <dl class="grid gap-3 sm:grid-cols-2" itemize="FEEDBACK/submissionExamples"
+        item-tag="agui-submission-example">
+        <template>
+          <div class="grid gap-1 rounded-md border border-agui-border p-3">
+            <dt>{{label}}</dt>
+            <dd class="text-sm text-agui-muted">{{message}}</dd>
+          </div>
+        </template>
+      </dl>
+    </agui-panel>
+  </agui-tab>
+</agui-tabs>

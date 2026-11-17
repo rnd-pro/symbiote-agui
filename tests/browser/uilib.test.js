@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { cp, readFile } from 'node:fs/promises';
 import test from 'node:test';
 import puppeteer from 'puppeteer';
 import { temporaryState } from '../node/state-fixture.js';
 import { cli, insertStdin, sendStdin } from './helpers.js';
+import { definitionPaths } from '../../src/library/paths.js';
 
 let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
 
@@ -13,7 +14,19 @@ let executablePath = process.env.AGUI_TEST_BROWSER_PATH;
  */
 async function openSection(page, section) {
   await page.locator(`agui-nav button[value="${section}"]`).click();
+  await waitForSection(page, section);
+}
+
+/**
+ * @param {import('puppeteer').Page} page
+ * @param {string} section
+ */
+async function waitForSection(page, section) {
   await page.waitForSelector(`agui-nav button[value="${section}"][aria-current="page"]`);
+  await page.waitForFunction((source) => {
+    let imported = /** @type {import('../../types/components.js').ComponentHost | null} */ (document.querySelector('agui-viewport sym-import'));
+    return imported?.getAttribute('src') === source && !imported.$['+loading'] && !imported.$['+loadError'];
+  }, {}, `./_assets/sections/${section}.html`);
 }
 
 test('default library bundle composes an HTML-only workspace with isolated contexts and native controls', {
@@ -31,6 +44,9 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.doesNotMatch(html, /<script[^>]*type="module"/);
   let session = await cli('start', 'widgets', '--no-open');
   await insertStdin('widgets', html);
+  await cp(new URL('../../src/uilib/gallery.assets/', import.meta.url), definitionPaths('widgets').assetsPath, {
+    recursive: true,
+  });
   browser = await puppeteer.launch({ executablePath, headless: true, args: ['--disable-blink-features=WebMCP,WebMCPTesting'] });
   let page = await browser.newPage();
   await page.setViewport({
@@ -43,6 +59,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
   await page.goto(session.url);
   await page.waitForSelector('#name-control input');
+  assert.equal(new URL(page.url()).search, '?controls');
   await page.waitForFunction(() => document.querySelector('agui-tab[value="workflow"] dt')?.textContent === 'Populated');
   assert.match(await page.$eval('agui-tab[value="workflow"] dl', (element) => element.textContent || ''), /The cache write failed/);
   assert.equal(await page.$eval('#gallery-data-actions', (element) => Reflect.get(element, '$').roleLabel), 'User');
@@ -106,7 +123,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { theme: 'dark' } }));
   assert.equal(await page.$eval('#theme-toggle button', (element) => element.getAttribute('aria-pressed') === 'true'), true);
-  await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { density: 'compact' } }));
+  await sendStdin('update', 'widgets', JSON.stringify({ selector: 'sym-context[ctx="UI"]', values: { density: 'compact' } }));
   await openSection(page, 'controls');
   await page.select('#status-control select', 'new');
   assert.equal(await page.$eval('#status-mirror select', (element) => element.value), '');
@@ -114,9 +131,9 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await page.type('#query-control input', 'Ada');
   assert.equal(await page.$eval('#query-control', (element) => Reflect.get(element, '$').value), 'Ada');
   assert.equal(await page.$eval('#name-control', (element) => Reflect.get(element, '$').value), 'Alex');
-  assert.equal(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').query), '');
-  await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: {
-    status: 'contacted', statusOptions: [{ value: 'contacted', label: 'Contacted' }, { value: 'new', label: 'New' }],
+  assert.equal(await page.$eval('sym-context[ctx="CONTROLS"]', (element) => Reflect.get(element, '$').query), '');
+  await sendStdin('update', 'widgets', JSON.stringify({ selector: 'sym-context[ctx="CONTROLS"]', values: {
+    status: 'contacted',
   } }));
   assert.equal(await page.$eval('#status-control select', (element) => element.value), 'contacted');
   assert.equal(await page.$eval('#status-mirror select', (element) => element.value), 'contacted');
@@ -126,6 +143,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   let events = (await cli('events', 'widgets')).events;
   assert.equal(events.length, 1);
   assert.deepEqual(events[0].data, { widgetId: 'retry-state', context: null, action: 'retry' });
+  await openSection(page, 'controls');
   await page.$eval('#notifications-toggle', (element) => {
     let control = /** @type {import('../../types/components.js').ComponentHost} */ (element);
     control.componentDescription = 'Gallery notifications fixture';
@@ -153,7 +171,8 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await sendStdin('update', 'widgets', JSON.stringify({ selector: '#query-control', method: 'add$', values: { readonly: true }, rewrite: true }));
   await assert.rejects(sendStdin('call', 'widgets', JSON.stringify({ ...call, input: { value: 'Blocked' } })));
   assert.equal(await page.$eval('#query-control input', (element) => element.value), 'Grace');
-  await sendStdin('update', 'widgets', JSON.stringify({ selector: '#gallery-data', values: { componentState: { status: 'ready' } } }));
+  await sendStdin('update', 'widgets', JSON.stringify({ selector: 'sym-context[ctx="FEEDBACK"]', values: { componentState: { status: 'ready' } } }));
+  await openSection(page, 'feedback');
   assert.equal(await page.$eval('#retry-state > div', (element) => element.hidden), true);
   await openSection(page, 'layouts');
   assert.equal(await page.$eval('#feature-contact-first input', (element) => element.value), 'Avery');
@@ -163,33 +182,40 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await page.type('#feature-contact-first input', ' Lee');
   assert.equal(await page.$eval('#feature-contact-first output', (element) => element.textContent), 'Avery Lee');
   assert.equal(await page.$eval('#feature-contact-second output', (element) => element.textContent), 'Morgan');
-  assert.equal(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').featureContactFirst.contactName), 'Avery Lee');
+  assert.equal(await page.$eval('sym-context[ctx="CONTACT"]', (element) => Reflect.get(element, '$').featureContactFirst.contactName), 'Avery Lee');
   await openSection(page, 'widgets');
   await page.type('#gallery-lead-filters input[type="search"]', 'Northstar');
   await page.waitForFunction(() => document.querySelectorAll('#gallery-leads tbody tr').length === 1);
   await page.click('#gallery-data-views [role="tab"][value="cards"]');
   await page.waitForSelector('#gallery-lead-list [role="listitem"] button');
   await page.click('#gallery-lead-list [role="listitem"] button');
-  assert.deepEqual(await page.$eval('#gallery-data', (element) => Reflect.get(element, '$').tableSelection), [
+  assert.deepEqual(await page.$eval('sym-context[ctx="DATA"]', (element) => Reflect.get(element, '$').tableSelection), [
     'lead-01',
   ]);
   await openSection(page, 'layouts');
   await openSection(page, 'widgets');
   assert.equal(await page.$eval('#gallery-data-views', (element) => Reflect.get(element, '$').value), 'cards');
   assert.equal(await page.$eval('#gallery-lead-filters input[type="search"]', (element) => element.value), 'Northstar');
+  await page.goBack();
+  await waitForSection(page, 'layouts');
+  await page.goForward();
+  await waitForSection(page, 'widgets');
+  assert.equal(await page.$eval('#gallery-lead-filters input[type="search"]', (element) => element.value), 'Northstar');
   await openSection(page, 'data-flow');
   await page.click('agui-toolbar[aria-label="Contact controls"] button[value="true"]');
   await page.waitForSelector('#gallery-editor dialog[open]');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => {
-    let provider = document.querySelector('#gallery-data');
+    let provider = document.querySelector('sym-context[ctx="CONTACT"]');
     return provider && Reflect.get(provider, '$').galleryEditorOpen === false;
   });
   await page.setViewport({ width: 390, height: 844 });
   await page.setViewport({ width: 1280, height: 900 });
+  styleCount = await page.evaluate(() => document.adoptedStyleSheets.length);
   await page.$eval('#query-control', (element) => { Reflect.set(window, 'oldField', element); });
   await insertStdin('widgets', html);
   await page.waitForFunction(() => Reflect.get(window, 'oldField').allSubs.size === 0);
+  await page.waitForSelector('#query-control input');
   assert.equal(await page.evaluate(() => document.adoptedStyleSheets.length), styleCount);
   assert.equal(await page.$eval('#query-control input', (element) => element.value), '');
   // The following unrelated fixture deliberately discards this test's saved data.

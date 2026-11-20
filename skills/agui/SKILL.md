@@ -171,6 +171,8 @@ For navigation, map `section`, `sectionName`, and `sectionIcon` to a provider, t
 
 ### App layout example
 
+Provide both `agui-theme-toggle` and `agui-theme-selector` together in app appearance controls by default. Keep them in one toolbar and bind the selector to the app's declared palette state.
+
 ```html
 <sym-context ctx="WORKSPACE">
   <script type="application/json">
@@ -179,6 +181,7 @@ For navigation, map `section`, `sectionName`, and `sectionIcon` to a provider, t
       "sectionName": "Notes",
       "sectionIcon": "notes",
       "notes": "",
+      "palette": "graphite",
       "sections": [
         {
           "value": "notes",
@@ -205,7 +208,13 @@ For navigation, map `section`, `sectionName`, and `sectionIcon` to a provider, t
       </agui-header>
       <agui-dashboard>
         <sym-conditional when="WORKSPACE/section" is="notes"><agui-field label="Notes" type="textarea" pub-to="WORKSPACE/notes" bind="$.value: WORKSPACE/notes"></agui-field></sym-conditional>
-        <sym-conditional when="WORKSPACE/section" is="appearance"><agui-theme-toggle ctx="WORKSPACE" aria-label="Dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle></sym-conditional>
+        <sym-conditional when="WORKSPACE/section" is="appearance">
+          <agui-toolbar aria-label="Appearance">
+            <agui-theme-toggle ctx="WORKSPACE" aria-label="Dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
+            <agui-theme-selector label="App theme" pub-to="WORKSPACE/palette"
+              bind="$.value: WORKSPACE/palette; $: AGUI_TEXT/themeSelector"></agui-theme-selector>
+          </agui-toolbar>
+        </sym-conditional>
       </agui-dashboard>
     </agui-viewport>
   </agui-app>

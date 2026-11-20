@@ -19,7 +19,6 @@ let presentationState = {
 
 /** @param {import('../../types/templates.js').TemplateConfiguration} config */
 function collection(config) {
-  if (!THEME_PALETTES.includes(String(config.APP.palette))) { throw new Error('invalidPalette'); }
   let model = deriveTable(/** @type {import('../../uilib/types/uilib-table.js').UiTableState} */ (/** @type {unknown} */ ({
     ...presentationState,
     rows: config.DATA.records,
@@ -87,7 +86,12 @@ let validators = {
  */
 export function validateTemplateWidgets(id, config) {
   let validate = Object.hasOwn(validators, id) ? validators[/** @type {keyof typeof validators} */ (id)] : undefined;
-  try { validate?.(config); }
+  try {
+    if (config.APP.palette !== undefined && !THEME_PALETTES.includes(String(config.APP.palette))) {
+      throw new Error('invalidPalette');
+    }
+    validate?.(config);
+  }
   catch (error) {
     throw new CommandError(`Invalid ${id} widget configuration: ${/** @type {Error} */ (error).message}.`);
   }

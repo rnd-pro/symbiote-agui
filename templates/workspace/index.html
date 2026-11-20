@@ -24,6 +24,8 @@
         </h1>
         <agui-toolbar aria-label="Workspace controls">
           <agui-theme-toggle ctx="APP" aria-label="Toggle dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
+          <agui-theme-selector label="App theme" pub-to="APP/palette"
+            bind="$.value: APP/palette; $.texts: APP/paletteTexts"></agui-theme-selector>
           <agui-button class="agui-button-icon"
             bind="@aria-label: APP/inspectorLabel; @title: APP/inspectorLabel; onclick: [toggle]UI/inspectorOpen">
             <agui-icon name="tune"></agui-icon>

@@ -1,6 +1,8 @@
 {
   "APP": {
     "title": "My dashboard", "footer": "", "theme": "system",
+    "palette": "graphite",
+    "paletteTexts": { "graphite": "Graphite", "ocean": "Ocean", "forest": "Forest", "desert": "Desert" },
     "chartLabel": "Trend", "chartXLabel": "Period", "chartType": "bar", "mapLabel": "Locations",
     "emptyMetrics": "No metrics available.",
     "chartTexts": {

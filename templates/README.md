@@ -19,13 +19,15 @@ Available starters are `workspace`, `collection`, and `dashboard`. Configuration
 
 Each starter includes its imported chunks' compiled layout utilities in the owned `styles.css` asset. Keep that file with the chunks when copying or moving the app; component appearance continues to use the shared library styles and tokens.
 
+All starters pair the day/night toggle with the palette selector. `APP/theme`, `APP/palette`, and `APP/paletteTexts` configure their initial appearance and palette labels; choices remain transient until the app supplies saving behavior.
+
 Complete the generated session description with its purpose, actual data sources, and saving rules before presenting it as ready. Configure feedback or the accepted fallback using the existing AGUI workflow. Starter creation does not establish external access or synchronization.
 
 ## Workspace configuration
 
 The `workspace` starter uses these native contexts:
 
-- `APP`: `title`, optional `footer`, `noteLabel`, `inspectorLabel`, and initial `theme` (`system`, `light`, or `dark`).
+- `APP`: `title`, optional `footer`, `noteLabel`, `inspectorLabel`, initial `theme` (`system`, `light`, or `dark`), `palette`, and `paletteTexts`.
 - `UI`: initial `inspectorOpen`. Section loading, error, and icon signals are maintained by `sym-import` and navigation.
 - `DATA`: initial `note`, shared between the content editor and sidebar controls.
 - `ROUTER`: `routes`, the single native map driving navigation, header title, and imported section URL.
@@ -69,7 +71,7 @@ Replace `records.html` to change the item template, details presentation, or con
 
 The `dashboard` starter renders prepared metric cards and optional chart/map regions. Its sidebar controls those regions, which are removed from the DOM while disabled. Enabling a region initializes its existing lazy widget; no chart or map dependencies load for disabled regions.
 
-- `APP`: app title, footer, theme, chart label/type/X label, map label, empty-metrics copy, and native `chartTexts`/`mapTexts` dictionaries.
+- `APP`: app title, footer, theme, palette and palette labels, chart label/type/X label, map label, empty-metrics copy, and native `chartTexts`/`mapTexts` dictionaries.
 - `DATA/metrics`: unique `id`, `label`, and a prepared string or number `value`. Metrics use native Itemize; the starter does not calculate aggregates.
 - `DATA/chartRows` and `DATA/chartSeries`: native [chart inputs](../uilib/widgets/chart/README.md), using record fields `id` and `label` plus series value fields.
 - `DATA/mapRows` and `DATA/mapTiles`: native [map inputs](../uilib/widgets/map/README.md). Locations use `id`, `label`, `latitude`, and `longitude`. Tiles default to `null`; an explicitly configured public provider is contacted only when the map is enabled.

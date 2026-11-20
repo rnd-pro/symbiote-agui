@@ -18,7 +18,11 @@
     <agui-viewport class="flex flex-col" aria-label="Dashboard">
       <agui-header floating>
         <h1 class="flex items-center gap-2"><agui-icon bind="$.name: UI/sectionIcon; hidden: !UI/sectionIcon"></agui-icon>{{ROUTER/title}}</h1>
-        <agui-theme-toggle ctx="APP" aria-label="Toggle dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
+        <agui-toolbar aria-label="Appearance">
+          <agui-theme-toggle ctx="APP" aria-label="Toggle dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
+          <agui-theme-selector label="App theme" pub-to="APP/palette"
+            bind="$.value: APP/palette; $.texts: APP/paletteTexts"></agui-theme-selector>
+        </agui-toolbar>
       </agui-header>
       <div class="min-w-0 flex-1 p-4 sm:p-6">
         <agui-state status="loading" message="Loading section..." bind="hidden: !UI/sectionLoading"></agui-state>

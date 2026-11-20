@@ -13,6 +13,8 @@
           "title": { "$ref": "#/$defs/label" },
           "footer": { "type": "string", "maxLength": 4096 },
           "theme": { "enum": ["system", "light", "dark"] },
+          "palette": { "type": "string" },
+          "paletteTexts": { "$ref": "#/$defs/texts" },
           "chartLabel": { "$ref": "#/$defs/label" },
           "chartXLabel": { "$ref": "#/$defs/label" },
           "chartType": { "enum": ["line", "bar", "donut"] },

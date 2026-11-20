@@ -15,7 +15,9 @@
           "footer": { "type": "string", "maxLength": 4096 },
           "noteLabel": { "type": "string", "minLength": 1, "maxLength": 256 },
           "inspectorLabel": { "type": "string", "minLength": 1, "maxLength": 256 },
-          "theme": { "enum": ["system", "light", "dark"] }
+          "theme": { "enum": ["system", "light", "dark"] },
+          "palette": { "type": "string" },
+          "paletteTexts": { "$ref": "#/$defs/texts" }
         }
       },
       "UI": {

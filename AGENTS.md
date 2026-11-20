@@ -30,6 +30,7 @@ Read [README.md](./README.md) for the project purpose and main workflows.
 
 - Before implementing component behavior, consult `node_modules/@symbiotejs/symbiote/llms.txt` and the relevant documentation in that package. Prefer native Symbiote APIs. Before adding a helper or wrapper, verify that Symbiote does not already provide that capability. If the contract is unclear, inspect its implementation before proceeding.
 - Never hardcode user-facing text in uilib components, including labels, accessible names, hints, statuses, errors, and fallback messages. Supply text through host attributes or native Symbiote bindings. Keep application copy outside uilib and preserve caller-provided text bindings.
+- Pair the theme toggle and palette selector in application appearance toolbars by default.
 
 ## Validation
 

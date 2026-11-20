@@ -1,18 +1,10 @@
-import { parseHTML } from 'linkedom';
+import { parseMarkup, serializeMarkup } from '../markup/parse.js';
 import { MAX_HTML_BYTES } from '../markup/constants.js';
 import { dataTargets, writeDataScript } from './targets.js';
 
 /** @param {string} html */
-function parse(html) {
-  let { document } = parseHTML('<!doctype html><html><body></body></html>');
-  let template = document.createElement('template');
-  template.innerHTML = html;
-  return template;
-}
-
-/** @param {string} html */
 export function declaredData(html) {
-  return [...dataTargets(parse(html).content)].map(([provider, { keys }]) => ({ provider, keys }));
+  return [...dataTargets(parseMarkup(html).content)].map(([provider, { keys }]) => ({ provider, keys }));
 }
 
 /**
@@ -20,14 +12,14 @@ export function declaredData(html) {
  * @param {import('../../types/data.js').DataChange[]} changes
  */
 export function patchData(html, changes) {
-  let template = parse(html);
+  let template = parseMarkup(html);
   let targets = dataTargets(template.content);
   for (let change of changes) {
     let target = targets.get(change.provider);
     if (!target || Object.keys(change.values).some((key) => !target.keys.includes(key))) { throw new Error('Undeclared persisted data.'); }
     writeDataScript(target.script, { ...target.values, ...change.values });
   }
-  let result = [...template.content.childNodes].map((node) => node.toString()).join('');
+  let result = serializeMarkup(template);
   if (Buffer.byteLength(result) > MAX_HTML_BYTES) { throw new Error('Saved markup exceeds 1 MiB.'); }
   return result;
 }
@@ -37,8 +29,8 @@ export function patchData(html, changes) {
  * @param {string} saved
  */
 export function mergeSavedData(source, saved) {
-  let targets = dataTargets(parse(source).content);
-  let previous = dataTargets(parse(saved).content);
+  let targets = dataTargets(parseMarkup(source).content);
+  let previous = dataTargets(parseMarkup(saved).content);
   /** @type {import('../../types/data.js').DataChange[]} */
   let changes = [];
   for (let [provider, before] of previous) {

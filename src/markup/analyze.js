@@ -1,10 +1,7 @@
-import { parseHTML } from 'linkedom';
+import { parseMarkup } from './parse.js';
 import { analyzeFragment } from './fragment.js';
 
 /** @param {string} html */
 export function analyzeMarkup(html) {
-  let { document } = parseHTML('<!doctype html><html><body></body></html>');
-  let template = document.createElement('template');
-  template.innerHTML = html;
-  return analyzeFragment(template.content);
+  return analyzeFragment(parseMarkup(html).content);
 }

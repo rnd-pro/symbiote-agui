@@ -1,0 +1,25 @@
+{
+  "APP": {
+    "title": "My app",
+    "footer": "",
+    "noteLabel": "Note",
+    "inspectorLabel": "Note actions",
+    "theme": "system"
+  },
+  "UI": {
+    "inspectorOpen": false
+  },
+  "DATA": {
+    "note": ""
+  },
+  "ROUTER": {
+    "routes": {
+      "workspace": {
+        "title": "Workspace",
+        "icon": "dashboard",
+        "src": "./_assets/content.html",
+        "default": true
+      }
+    }
+  }
+}

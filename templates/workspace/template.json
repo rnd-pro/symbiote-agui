@@ -1,0 +1,63 @@
+{
+  "id": "workspace",
+  "title": "Workspace",
+  "summary": "Navigation and imported content with a sticky header, footer, and optional controls sidebar.",
+  "configuration": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "APP": {
+        "description": "App labels and initial appearance. Supplied fields replace their defaults.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "footer": { "type": "string", "maxLength": 4096 },
+          "noteLabel": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "inspectorLabel": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "theme": { "enum": ["system", "light", "dark"] }
+        }
+      },
+      "UI": {
+        "description": "Transient UI preferences; section status and icon are published by the native components.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "inspectorOpen": { "type": "boolean" }
+        }
+      },
+      "DATA": {
+        "description": "Initial task data, shared by content and sidebar controls. Edits remain local until reload.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "note": { "type": "string", "maxLength": 65536 }
+        }
+      },
+      "ROUTER": {
+        "description": "One route map drives navigation, the header title, and sym-import. Exactly one section must be default.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "routes": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 32,
+            "propertyNames": { "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["title", "src"],
+              "properties": {
+                "title": { "type": "string", "minLength": 1, "maxLength": 256 },
+                "src": { "type": "string", "maxLength": 1024, "pattern": "^\\./_assets/.+\\.html?$" },
+                "icon": { "type": "string", "maxLength": 64 },
+                "default": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

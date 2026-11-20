@@ -45,6 +45,7 @@
     "docs/",
     "src/",
     "uilib/",
+    "templates/",
     "types/",
     "skills/"
   ],

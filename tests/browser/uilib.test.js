@@ -201,6 +201,22 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   await page.goForward();
   await waitForSection(page, 'widgets');
   assert.equal(await page.$eval('#gallery-lead-filters input[type="search"]', (element) => element.value), 'Northstar');
+  await openSection(page, 'templates');
+  for (let id of [
+    'workspace',
+    'collection',
+    'dashboard',
+  ]) {
+    await page.locator(`agui-tabs[label="App templates"] [role="tab"][value="${id}"]`).click();
+    await page.$eval(`agui-tabs[label="App templates"] agui-tab[value="${id}"] img`, (image) => image.decode());
+    await page.locator(`agui-tabs[label="App templates"] agui-tab[value="${id}"] summary`).click();
+    await page.waitForSelector(`agui-tabs[label="App templates"] agui-tab[value="${id}"] agui-markdown pre code`);
+    let configuration = await page.$eval(`agui-tabs[label="App templates"] agui-tab[value="${id}"] a[download]`, async (link) => {
+      let response = await fetch(link.getAttribute('href') || '');
+      return response.json();
+    });
+    assert.ok(configuration.APP.title);
+  }
   await openSection(page, 'data-flow');
   await page.click('agui-toolbar[aria-label="Contact controls"] button[value="true"]');
   await page.waitForSelector('#gallery-editor dialog[open]');

@@ -6,6 +6,9 @@
     "sectionIcon": "",
     "density": "comfortable"
   },
+  "templates": {
+    "view": "workspace"
+  },
   "layout": {
     "layoutView": "templates",
     "sidebarBlockActive": false,
@@ -100,6 +103,6 @@
     "importNote": ""
   },
   "router": {
-    "routes": {"layouts":{"title":"Layouts","src":"./_assets/sections/layouts.html","icon":"dashboard"},"controls":{"title":"Controls","src":"./_assets/sections/controls.html","icon":"tune","default":true},"widgets":{"title":"Widgets","src":"./_assets/sections/widgets.html","icon":"widgets"},"feedback":{"title":"Feedback","src":"./_assets/sections/feedback.html","icon":"chat"},"data-flow":{"title":"Data flow","src":"./_assets/sections/data-flow.html","icon":"hub"},"theme":{"title":"Theme","src":"./_assets/sections/theme.html","icon":"palette"},"assets":{"title":"Assets","src":"./_assets/sections/assets.html","icon":"perm_media"},"without-icon":{"title":"Without icon","src":"./_assets/sections/without-icon.html"}}
+    "routes": {"layouts":{"title":"Layouts","src":"./_assets/sections/layouts.html","icon":"dashboard"},"controls":{"title":"Controls","src":"./_assets/sections/controls.html","icon":"tune","default":true},"widgets":{"title":"Widgets","src":"./_assets/sections/widgets.html","icon":"widgets"},"feedback":{"title":"Feedback","src":"./_assets/sections/feedback.html","icon":"chat"},"data-flow":{"title":"Data flow","src":"./_assets/sections/data-flow.html","icon":"hub"},"theme":{"title":"Theme","src":"./_assets/sections/theme.html","icon":"palette"},"assets":{"title":"Assets","src":"./_assets/sections/assets.html","icon":"perm_media"},"templates":{"title":"Templates","src":"./_assets/sections/templates.html","icon":"apps"},"without-icon":{"title":"Without icon","src":"./_assets/sections/without-icon.html"}}
   }
 }

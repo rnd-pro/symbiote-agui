@@ -65,6 +65,8 @@ AGUI combines the [Symbiote HTML-app foundation](https://github.com/symbiotejs/s
 
 Use the [UI library independently](./uilib/README.md) in your own website through a CDN or project bundle.
 
+[App templates](./templates/README.md) give your agent a ready-made layout to customize with your task's data. Starting from an existing shell reduces repeated markup, while the saved app stays editable and shareable through Git.
+
 ## Manage sessions in your browser
 
 Open the built-in session manager:

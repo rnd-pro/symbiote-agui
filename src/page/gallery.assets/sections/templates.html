@@ -1,0 +1,45 @@
+<agui-tabs label="App templates" pub-to="TEMPLATES/view" bind="$.value: TEMPLATES/view">
+  <agui-tab value="workspace" label="Workspace">
+    <agui-panel class="grid gap-4">
+      <p>A navigation shell with imported content and optional sidebar controls.</p>
+      <img src="../template-previews/workspace.png" alt="Workspace starter with a note editor and controls sidebar" loading="lazy"
+        class="w-full rounded-agui-inset border border-agui-divider">
+      <details>
+        <summary>Configuration</summary>
+        <p class="my-3 text-sm text-agui-muted">Save this JSON as app-config.json, then create the starter.</p>
+        <pre class="my-3 overflow-x-auto text-sm"><code>npx symbiote-agui templates create workspace my-workspace --config ./app-config.json</code></pre>
+        <agui-markdown src="../template-previews/workspace.md" label="Workspace configuration" bind="$.texts: MARKDOWN/markdownTexts"></agui-markdown>
+        <a href="../template-previews/workspace.json" download="app-config.json">Download configuration</a>
+      </details>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="collection" label="Collection">
+    <agui-panel class="grid gap-4">
+      <p>Filters, table/card views, shared selection, and selected-item controls.</p>
+      <img src="../template-previews/collection.png" alt="Collection starter with sidebar filters, a records table, and selected-item controls" loading="lazy"
+        class="w-full rounded-agui-inset border border-agui-divider">
+      <details>
+        <summary>Configuration</summary>
+        <p class="my-3 text-sm text-agui-muted">Save this JSON as app-config.json, then create the starter.</p>
+        <pre class="my-3 overflow-x-auto text-sm"><code>npx symbiote-agui templates create collection my-collection --config ./app-config.json</code></pre>
+        <agui-markdown src="../template-previews/collection.md" label="Collection configuration" bind="$.texts: MARKDOWN/markdownTexts"></agui-markdown>
+        <a href="../template-previews/collection.json" download="app-config.json">Download configuration</a>
+      </details>
+    </agui-panel>
+  </agui-tab>
+  <agui-tab value="dashboard" label="Dashboard">
+    <agui-panel class="grid gap-4">
+      <p>Prepared metrics with chart and map regions that mount only when enabled.</p>
+      <img src="../template-previews/dashboard.png" alt="Dashboard starter with metric cards, a bar chart, and location markers" loading="lazy"
+        class="w-full rounded-agui-inset border border-agui-divider">
+      <details>
+        <summary>Configuration</summary>
+        <p class="my-3 text-sm text-agui-muted">Save this JSON as app-config.json, then create the starter.</p>
+        <pre class="my-3 overflow-x-auto text-sm"><code>npx symbiote-agui templates create dashboard my-dashboard --config ./app-config.json</code></pre>
+        <agui-markdown src="../template-previews/dashboard.md" label="Dashboard configuration" bind="$.texts: MARKDOWN/markdownTexts"></agui-markdown>
+        <a href="../template-previews/dashboard.json" download="app-config.json">Download configuration</a>
+      </details>
+    </agui-panel>
+  </agui-tab>
+</agui-tabs>
+<p class="mt-4 text-sm text-agui-muted">Screenshots use illustrative data. Creating a starter without configuration keeps its datasets empty.</p>

@@ -1,0 +1,27 @@
+{
+  "APP": {
+    "title": "Dashboard",
+    "theme": "light"
+  },
+  "UI": {
+    "chartVisible": true,
+    "mapVisible": true,
+    "mapView": { "center": [10, 10], "zoom": 3 }
+  },
+  "DATA": {
+    "metrics": [
+      { "id": "total", "label": "Items", "value": 128 },
+      { "id": "active", "label": "Active", "value": 24 },
+      { "id": "complete", "label": "Complete", "value": 104 }
+    ],
+    "chartRows": [
+      { "id": "first", "label": "First period", "value": 18 },
+      { "id": "second", "label": "Second period", "value": 24 },
+      { "id": "third", "label": "Third period", "value": 28 }
+    ],
+    "mapRows": [
+      { "id": "site-a", "label": "Site A", "latitude": 0, "longitude": 0 },
+      { "id": "site-b", "label": "Site B", "latitude": 10, "longitude": 20 }
+    ]
+  }
+}

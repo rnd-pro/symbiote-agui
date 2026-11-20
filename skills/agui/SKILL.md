@@ -11,7 +11,7 @@ Use AGUI to show an interface in the user's normal browser, operate its Symbiote
 
 Use a shell with Node.js 24 or newer. Run `npx symbiote-agui --help` once and accept npm's installation prompt if shown. The CLI operates tools through the existing WebSocket in ordinary browsers. Native WebMCP, remote debugging, and MCP server configuration are optional. Avoid ad hoc browser scripts or browser API emulation.
 
-For routine use, prepare HTML and JSON files with workspace file tools, then run one simple command beginning with `npx symbiote-agui`, passing input with `--file`. Avoid heredocs, pipes, shell wrappers, and inline environment assignments in these invocations: they can prevent approval reuse. Follow the command approval rules below.
+For routine use, prepare HTML and JSON files with workspace file tools, then run one simple command beginning with `npx symbiote-agui`, using the command's `--file` or `--config` option. Avoid heredocs, pipes, shell wrappers, and inline environment assignments in these invocations: they can prevent approval reuse. Follow the command approval rules below.
 
 If any setup step fails or a requested capability remains unavailable, report the affected capability and concrete error. Do not silently skip it, declare setup complete, or replace the intended workflow with local-only behavior. Investigate a supported workaround within the authorized scope: check existing tools, installed harness capabilities, configuration, and previously verified routes before concluding that the capability is unsupported. One failed CLI route does not rule out the harness's other native interfaces. Reuse established solutions and permissions; request missing access or configuration only when needed. Verify the workaround in the current environment. If still blocked, explain what works, what remains incomplete, and the next action needed; preserve usable UI and saved data.
 
@@ -35,6 +35,8 @@ If any setup step fails or a requested capability remains unavailable, report th
 - Prefix approval permits execution, not arbitrary effects. Ask only for a concrete action whose authority is missing: a new public audience or data destination, unapproved external writes or credentials, a new host command or feedback route, discarding drafts/saved data, or operations on unrelated/bulk sessions. An explicit request already covering that action is sufficient; do not ask again. Check the discovered action and payload even when its CLI prefix is approved.
 
 ## Built-in UI foundation
+
+Before generating a new app shell, follow the [starter template workflow](#starter-templates) after checking for a reusable task interface.
 
 AGUI already loads the UI library and Symbiote HTML-app; do not add a second bootstrap or foundation runtime to generated markup. For an external project, use the [standalone library guide](https://github.com/rnd-pro/symbiote-agui/blob/main/uilib/README.md) to choose source imports or prepared browser/CDN modules and optional page styling. Prepared components need no Tailwind script. AGUI's data toolbar, connectors, feedback, and session persistence remain host features; standalone theme changes are transient unless the consumer supplies storage.
 
@@ -515,11 +517,30 @@ Field, select, and toggle descriptors expose `set_value` with `{ "value": "..." 
 
 Meaningful interactions emit `agui:action` with `{ "widgetId": "...", "context": "...", "action": "change", "value": "..." }` or action `retry`. Give interactive components IDs. Values longer than 2048 characters are represented by `valueLength` in the event; use `read_value` or provider state for the actual value. Events are notifications, not storage. State resets on sync/replacement/restart follow ordinary AGUI semantics; components do not save to a database automatically.
 
-For manual review, save or insert the packaged `src/page/gallery.html` into one gallery session. Publish `agui.png` and `documents/brief.md` from `src/page/gallery.assets/` with `assets add`, preserving relative paths, or copy that directory to the project's `<ID>.assets/`. The Assets section loads these local files. The gallery uses declarative navigation, viewport subsection tabs, a `pub-map` header, contextual sidebar controls, and data-flow examples without executable scripts. Save commits only its `persist`-declared provider fields; presentation state remains transient. Review scrolling, keyboard focus, overlays, table/filter controls, narrow screens, file pickers, and viewer surfaces manually.
+For manual review, save or insert the packaged `src/page/gallery.html` into one gallery session. Publish the complete `src/page/gallery.assets/` directory under the project's `<ID>.assets/`, preserving relative paths, or add its files through `assets add`. The gallery's imported sections, local-file examples, and template previews depend on these assets. It uses declarative navigation, viewport subsection tabs, a `pub-map` header, contextual sidebar controls, and data-flow examples without executable scripts. Save commits only its `persist`-declared provider fields; presentation state remains transient. Review scrolling, keyboard focus, overlays, table/filter controls, narrow screens, file pickers, and viewer surfaces manually.
 
 ## Reusable task interfaces
 
 Before creating an interface for a recurring task, use `npx symbiote-agui list --query "task terms"` and `npx symbiote-agui describe <SESSION_ID>` to find an existing definition. Reuse and improve a matching AGUI instead of regenerating it.
+
+### Starter templates
+
+When no saved task interface fits, discover a starter before authoring shell HTML:
+
+```sh
+npx symbiote-agui templates list
+npx symbiote-agui templates describe <TEMPLATE_ID>
+npx symbiote-agui templates create <TEMPLATE_ID> <SESSION_ID> --config ./app-config.json
+npx symbiote-agui start <SESSION_ID>
+```
+
+Use the concise catalog to choose a layout, then read only that template's contract, defaults, and asset names. Prepare JSON for the supported context fields using the established task's labels and data. Omit `--config` to keep the defaults. Do not copy preview records into a real task or read the full template catalog source to recreate an existing shell. See the [template guide](https://github.com/rnd-pro/symbiote-agui/blob/main/templates/README.md) for configuration and customization details.
+
+Creation leaves the saved session stopped and returns its paths and next command. Read and complete its Markdown description with the actual purpose, data sources, source of truth, access method, and saving/synchronization rules. Retain template provenance in metadata. A starter grants no connector access, configures no feedback destination, and establishes no external saving behavior.
+
+After starting, verify feedback for the current conversation or obtain acceptance of the existing fallback before further edits. Keep the materialized shell; use state updates and change only the needed owned HTML chunks through existing asset/sync workflows, preserving drafts and the session description. Generate a custom shell when the user requests it or no available starter fits the required behavior.
+
+### Project scope
 
 For a team library requested by the user, run `npx symbiote-agui config folder ./aguis` inside their Git checkout. This also registers the folder in the manager's project history. `.agui.json` stores the relative folder setting; `config show` reports effective settings, and `config reset` removes that setting. The nearest configuration applies in child directories. An absolute `AGUI_LIBRARY_DIR` overrides it; an empty value selects private caching. Without a folder, retain the default private-cache workflow. Do not change storage scope merely to resolve an ID collision.
 
@@ -543,12 +564,14 @@ Keep Git commits, pulls, and conflict resolution in the user's normal workflow. 
 
 ## Routine workflow
 
+### Session workflow
+
 Choose a session ID matching `[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}`. Reuse it for the same interface. Private-cache IDs are case-sensitive and shared across working directories for the current OS user; team-library IDs are scoped to their folder and must differ beyond letter case for portability.
 
 To change an existing ID, use `npx symbiote-agui rename <SESSION_ID> <NEW_SESSION_ID>` in its verified storage scope, or Rename in the manager. The session must be stopped; preserve/export drafts and agree on any stop before renaming a live AGUI. Rename retains the definition, description, committed data, and private metadata and leaves the new ID stopped. It rejects collisions and case-only changes, does not rewrite embedded references or the Markdown display title, and grants no new external access. Inspect partial results through Transfers before retrying. Starting the new ID creates a fresh worker and URL; reestablish feedback with this conversation using the new instance.
 
 1. Run `npx symbiote-agui start demo`. Check `ok` and `restored`. If `SESSION_EXISTS` is returned, use `npx symbiote-agui status demo` once and reuse a session belonging to this task, or choose another ID.
-2. Complete the [feedback preflight](#check-before-editing) before changing the interface or application state. Reuse an owned running session or a `restored: true` interface without regenerating or reinserting it. For a new or deliberately changed definition, use `npx symbiote-agui insert demo --file /absolute/path/view.html` using a prepared file. Use `update` for small state changes.
+2. Complete the [feedback preflight](#check-before-editing) before changing the interface or application state. Reuse an owned running session, a materialized starter, or a `restored: true` interface without regenerating or reinserting it. When a new custom shell is necessary, use `npx symbiote-agui insert demo --file /absolute/path/view.html` using a prepared file. Use `update` for small state changes and the existing asset/sync workflow for reviewed feature chunks.
 3. Run `npx symbiote-agui tools demo`. It selects a single interactive page automatically, ignoring viewers. With several interactive local-only pages, run `npx symbiote-agui pages demo`, then `npx symbiote-agui tools demo --page <PAGE_ID>`. Keep the returned `pageId`, `discoveryId`, tool names, and schemas.
 4. Prepare a JSON file containing `{ "pageId": "...", "discoveryId": "...", "name": "...", "input": {} }`, then run `npx symbiote-agui call demo --file /absolute/path/call.json`. Use the exact discovered name and schema-compatible arguments. Check `ok` and use `result` as confirmation. Native tool errors preserve `result` and return `ok: false` with exit code 1. Reuse the selected page and discovery IDs for further calls while they remain current.
 5. Verified feedback delivers explicit submissions to this conversation without another chat prompt. If the user explicitly accepts working without automatic delivery, use `npx symbiote-agui events demo` when interaction is expected; it returns immediately and clears the queue. An empty batch means no new input, not completion. Avoid tight polling. Keep the session available while the user interacts; stop it when the user is finished or requests cleanup.

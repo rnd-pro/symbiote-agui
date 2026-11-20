@@ -17,6 +17,8 @@ Creation uses the current project folder or Default cache, remembers that projec
 
 Available starters are `workspace`, `collection`, and `dashboard`. Configuration contracts returned by `describe` include only their referenced shared JSON Schema definitions. Widget inputs are also checked by the library's native models before any files are created.
 
+Choose Workspace for custom imported content, Collection for filtering and reviewing records, or Dashboard for prepared metrics and visualizations. The UI library gallery's Templates section compares screenshots of the actual starters and provides downloadable JSON examples. Preview records are illustrative, separate from the empty creation defaults; use the established task's actual data when configuring an app.
+
 Each starter includes its imported chunks' compiled layout utilities in the owned `styles.css` asset. Keep that file with the chunks when copying or moving the app; component appearance continues to use the shared library styles and tokens.
 
 All starters pair the day/night toggle with the palette selector. `APP/theme`, `APP/palette`, and `APP/paletteTexts` configure their initial appearance and palette labels; choices remain transient until the app supplies saving behavior.

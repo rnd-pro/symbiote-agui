@@ -39,7 +39,9 @@ test('JSDA serves the page on loopback without exposing source files', async (t)
   let client = await fetch(new URL('/client/index.js', page.url));
   assert.equal(client.status, 200);
   assert.match(client.headers.get('content-type') || '', /javascript/);
-  assert.match(await client.text(), /replaceContent/);
+  let script = await client.text();
+  assert.match(script, /replaceContent/);
+  assert.doesNotMatch(script, /data:font\/woff2;base64/);
   assert.equal((await fetch(new URL('/client/component.js', page.url))).status, 404);
   let health = await fetch(new URL('tunnel-health?nonce=unique-check', page.url));
   assert.equal(health.headers.get('cache-control'), 'no-store');

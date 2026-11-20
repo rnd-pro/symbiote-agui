@@ -8,6 +8,7 @@ import { captureSnapshot } from './mirror-snapshot.js';
 import { SnapshotAnchors, mirroredAnchors } from './markers/anchors.js';
 import { PageMarkers } from './markers/client.js';
 import { watchScrollbarActivity } from '../../../uilib/shared/scrollbars.js';
+import { loadIconFont } from '../../../uilib/content/icon/loader.js';
 
 export class SharedView {
   /** @type {import('../../../types/transport.js').PageRole | undefined} */
@@ -30,6 +31,7 @@ export class SharedView {
   stopFrameScrollbars;
   /** @type {import('../../../types/transport.js').MirrorSnapshot | undefined} */
   snapshot;
+  iconsReady = false;
 
   /**
    * @param {(message: string) => boolean} send
@@ -129,7 +131,16 @@ export class SharedView {
       frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\' http: https:; img-src http: https: data: blob:; font-src http: https: data:; media-src http: https: blob:; base-uri \'none\'; form-action \'none\'"><link id="mirror-styles" rel="stylesheet"><style id="mirror-root-styles"></style></head><body inert style="margin:0"><main id="mirror-content"></main></body></html>';
       frame.onload = () => {
         this.stopFrameScrollbars?.();
-        if (frame.contentDocument) { this.stopFrameScrollbars = watchScrollbarActivity(frame.contentDocument); }
+        if (frame.contentDocument) {
+          let document = frame.contentDocument;
+          this.iconsReady = false;
+          this.stopFrameScrollbars = watchScrollbarActivity(document);
+          void loadIconFont(document).then((ready) => {
+            if (frame.contentDocument !== document) { return; }
+            this.iconsReady = ready;
+            this.applySnapshot();
+          });
+        }
         this.applySnapshot();
       };
       let toolbar = this.createToolbar();
@@ -153,6 +164,9 @@ export class SharedView {
     frame.ownerDocument.body.dataset.palette = document.body.dataset.palette;
     let fragment = document.createElement('template');
     fragment.innerHTML = html;
+    fragment.content.querySelectorAll('agui-icon > span').forEach((element) => {
+      element.toggleAttribute('hidden', !this.iconsReady);
+    });
     fragment.content.querySelectorAll('agui-data-toolbar').forEach((element) => element.remove());
     let x = frame.contentWindow?.scrollX || 0;
     let y = frame.contentWindow?.scrollY || 0;

@@ -3,6 +3,8 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import puppeteer from 'puppeteer';
 import { localAssetsFixture } from './local-assets-fixture.js';
+import { mockIconFont } from './icon-font-fixture.js';
+import { ICON_FONT_FAMILY, ICON_FONT_STYLESHEET } from '../../uilib/content/icon/font.js';
 
 for (let publicPage of [
   false,
@@ -24,10 +26,12 @@ for (let publicPage of [
     });
     t.after(() => browser.close());
     let page = await browser.newPage();
+    await mockIconFont(page);
     /** @type {string[]} */
     let errors = [];
     page.on('pageerror', (error) => errors.push(String(error)));
     await page.goto(publicPage ? f.publicUrl : f.localUrl);
+    await page.waitForFunction(() => document.getElementById('font-icon')?.querySelector('span')?.hidden === false);
     await page.waitForFunction(() => document.getElementById('module-result')?.textContent === 'Loaded local module: 3');
     await page.waitForFunction(() => document.querySelector('#gallery-local-document h1')?.textContent === 'Published with this interface');
     let assets = await page.evaluate(async () => {
@@ -68,6 +72,7 @@ for (let publicPage of [
     assert.deepEqual(await response.buffer(), await readFile(new URL('../../src/page/gallery.assets/agui.png', import.meta.url)));
     await imagePage.close();
     let viewer = await (await browser.createBrowserContext()).newPage();
+    await mockIconFont(viewer);
     /** @type {string[]} */
     let requested = [];
     viewer.on('request', (request) => requested.push(new URL(request.url()).pathname));
@@ -82,6 +87,15 @@ for (let publicPage of [
       let image = /** @type {HTMLImageElement | null} */ (doc?.querySelector('#gallery-local-document img'));
       return image?.complete && image.naturalWidth > 0 && doc?.getElementById('module-result')?.textContent === 'Loaded local module: 3';
     });
+    await viewer.waitForFunction((family) => {
+      let doc = /** @type {HTMLIFrameElement | null} */ (document.getElementById('agui-viewer'))?.contentDocument;
+      return doc?.getElementById('font-icon')?.querySelector('span')?.hidden === false
+        && Array.from(doc.fonts).some((font) => font.family === family && font.status === 'loaded');
+    }, {}, ICON_FONT_FAMILY);
+    assert.equal(await viewer.evaluate((url) => {
+      let doc = /** @type {HTMLIFrameElement | null} */ (document.getElementById('agui-viewer'))?.contentDocument;
+      return Array.from(doc?.querySelectorAll('link') || []).filter((link) => link.href === url).length;
+    }, ICON_FONT_STYLESHEET), 1);
     let frame = await (await viewer.$('#agui-viewer'))?.contentFrame();
     assert.ok(frame);
     // Poll from the active parent; the mirrored document intentionally forbids scripts.

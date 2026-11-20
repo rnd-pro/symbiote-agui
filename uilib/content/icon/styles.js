@@ -1,14 +1,7 @@
 import { css } from '@symbiotejs/symbiote';
-import font from './font-data.js';
+import { ICON_FONT_FAMILY } from './font.js';
 
 export default css`
-  @font-face {
-    font-family: 'AGUI Material Symbols';
-    src: url('${font}') format('woff2');
-    font-style: normal;
-    font-weight: 100 700;
-    font-display: block;
-  }
   @layer components {
     agui-icon {
       display: inline-flex;
@@ -17,7 +10,7 @@ export default css`
       flex: none;
       vertical-align: middle;
       overflow: hidden;
-      font-family: 'AGUI Material Symbols';
+      font-family: '${ICON_FONT_FAMILY}';
       width: 1em;
       height: 1em;
       font-size: var(--agui-icon-size, 1.4em);

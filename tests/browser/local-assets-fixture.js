@@ -1,11 +1,10 @@
-import { cp, mkdir, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { galleryExamples, galleryProviders } from './gallery-fixture.js';
 import { reserveSession } from '../../src/sessions/store.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { definitionPaths } from '../../src/library/paths.js';
 import { SessionRuntime } from '../../src/sessions/runtime.js';
-import fontData from '../../uilib/content/icon/font-data.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelProxy } from './tunnel-proxy.js';
 
@@ -28,6 +27,7 @@ export async function localAssetsFixture(t) {
     <link rel="preload" as="script" href="./_assets/modules/main.mjs">
     <div id="css-asset">CSS image</div>
     <span id="font-asset">home</span>
+    <agui-icon id="font-icon" name="home" aria-label="Home"></agui-icon>
     <img id="svg-asset" src="./_assets/marker.svg" alt="SVG test marker" width="8" height="8">
     <picture><source srcset="./_assets/agui.png 1x"><img id="picture-asset" src="./_assets/agui.png" alt="Responsive image" width="96" height="54"></picture>
     <output id="module-result"></output>
@@ -57,7 +57,7 @@ export async function localAssetsFixture(t) {
   </svg>`;
   let files = {
     'marker.svg': svg,
-    'fonts/icons.woff2': Buffer.from(fontData.split(',')[1], 'base64'),
+    'fonts/icons.woff2': await readFile(new URL('./fixtures/material-symbols-home.woff2', import.meta.url)),
     'styles/main.css': '@import url("./base.css");',
     'styles/base.css': `@font-face {
       font-family: AssetFixture;

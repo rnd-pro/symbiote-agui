@@ -186,7 +186,12 @@ test('manager WebSocket requires its origin and credential; assets cannot serve 
   assert.equal((await fetch(`${endpoint.url}status`)).status, 403);
   assert.equal((await fetch(`${endpoint.url}vendor/../../package.json`)).status, 404);
   let response = await fetch(endpoint.url);
-  assert.match(response.headers.get('content-security-policy') || '', /frame-ancestors 'none'/);
+  let policy = response.headers.get('content-security-policy') || '';
+  assert.match(policy, /frame-ancestors 'none'/);
+  assert.match(policy, /style-src 'self' https:\/\/fonts\.googleapis\.com;/);
+  assert.match(policy, /font-src data: https:\/\/fonts\.gstatic\.com;/);
+  assert.match(policy, /script-src 'self';/);
+  assert.match(policy, /connect-src 'self';/);
   assert.equal(response.headers.get('x-frame-options'), 'DENY');
   for (let route of Object.keys(MANAGER_ROUTES)) {
     assert.equal((await fetch(`${endpoint.url}?${route}&project=default`)).status, 200);
@@ -213,6 +218,7 @@ test('manager WebSocket requires its origin and credential; assets cannot serve 
   assert.match(bundle, /agui-dashboard/);
   assert.match(bundle, /agui-toggle/);
   assert.doesNotMatch(bundle, /from ['"]@symbiotejs/);
+  assert.doesNotMatch(bundle, /data:font\/woff2;base64/);
   let badOrigin = new WebSocket(socketUrl, { origin: 'http://127.0.0.1:1111' });
   badOrigin.on('error', () => {});
   await new Promise((resolve) => badOrigin.on('unexpected-response', (_request, reply) => {

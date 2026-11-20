@@ -13,6 +13,7 @@ import { projectId } from '../projects/identity.js';
 import { validManagerQuery } from './scope.js';
 import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../../uilib/widgets/markdown/constants.js';
 import { DIAGRAM_RUNTIME_PATH } from '../../uilib/widgets/diagram/constants.js';
+import { ICON_STYLESHEET_ORIGIN, ICON_FONT_ORIGIN } from '../../uilib/content/icon/font.js';
 
 /**
  * @param {unknown} value
@@ -65,7 +66,7 @@ export async function startManagerServer(record, stop) {
     response.setHeader('Referrer-Policy', 'no-referrer');
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('X-Frame-Options', 'DENY');
-    response.setHeader('Content-Security-Policy', "default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; font-src data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+    response.setHeader('Content-Security-Policy', `default-src 'none'; script-src 'self'; style-src 'self' ${ICON_STYLESHEET_ORIGIN}; img-src data:; font-src data: ${ICON_FONT_ORIGIN}; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'`);
     if (request.headers.host !== host || (request.headers.origin && request.headers.origin !== origin)) {
       response.writeHead(403).end(); return;
     }

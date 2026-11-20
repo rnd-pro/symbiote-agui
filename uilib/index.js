@@ -41,12 +41,16 @@ import { FilterField } from './widgets/filter/field.js';
 import { List } from './widgets/list/list.js';
 import { Explorer } from './widgets/explorer/explorer.js';
 import { watchScrollbarActivity } from './shared/scrollbars.js';
+import { loadIconFont } from './content/icon/loader.js';
+export { loadIconFont };
+export { ICON_FONT_STYLESHEET } from './content/icon/font.js';
 import {
   Message,
 } from './feedback/message/message.js';
 
 /** @param {{ themeToggle?: typeof ThemeToggle; themeSelector?: typeof ThemeSelector }} [components] */
 export function registerUiLibComponents(components = {}) {
+  void loadIconFont(document);
   watchScrollbarActivity(document);
   App.reg('agui-app');
   Sidebar.reg('agui-sidebar');

@@ -6,6 +6,8 @@ Group components by purpose: `layouts/` for dashboard, panel, header, and toolba
 
 Call `registerUiLibComponents()` from `index.js` to register reusable components without starting an AGUI connection. Component actions bubble as `agui:action` DOM events with bounded metadata. The AGUI page client uses `registerPageComponents()` to add its data toolbar, connector, and worker-backed theme subclasses; it forwards action events through the existing transport. The manager uses the generic library and its own preference storage. All consumers share one Symbiote instance.
 
+Registration also connects the Material Symbols stylesheet from Google Fonts. Icons stay hidden until their font loads; controls and accessible names remain available if loading fails. See [icon loading and CSP requirements](./content/icon/README.md).
+
 For standalone use, load `uilib/dist/styles.css` alongside your library bundle:
 
 ```html

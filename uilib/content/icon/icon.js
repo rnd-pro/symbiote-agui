@@ -2,9 +2,14 @@ import { UiComponent } from '../../shared/component.js';
 import { ICON_NAMES } from './collection.js';
 import { ICON_TEMPLATE } from './template.js';
 import styles from './styles.js';
+import { loadIconFont } from './loader.js';
 
 export class Icon extends UiComponent {
-  init$ = { name: undefined, glyph: '' };
+  init$ = {
+    name: undefined,
+    glyph: '',
+    fontReady: false,
+  };
 
   renderCallback() {
     let semantics = this.attachInternals();
@@ -14,6 +19,9 @@ export class Icon extends UiComponent {
     this.sub('attribute-aria-labelledby', describe);
     this.sub('name', this.refreshGlyph);
     this.sub('attribute-name', this.refreshGlyph);
+    void loadIconFont(this.ownerDocument).then((ready) => {
+      if (this.isConnected) { this.$.fontReady = ready; }
+    });
   }
 
   refreshGlyph = () => {

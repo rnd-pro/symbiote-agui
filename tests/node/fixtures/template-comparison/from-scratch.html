@@ -1,0 +1,42 @@
+<sym-context ctx="APP">
+  <script type="application/json">
+    {
+      "title": "Notes", "theme": "system", "palette": "graphite",
+      "navigation": [{ "value": "workspace", "label": "Workspace", "icon": "dashboard" }]
+    }
+  </script>
+  <sym-context ctx="UI"><script type="application/json">{"section":"workspace","inspectorOpen":false}</script></sym-context>
+  <sym-context ctx="DATA"><script type="application/json">{"note":""}</script></sym-context>
+  <agui-app>
+    <agui-sidebar label="Notes" expand-label="Expand navigation" collapse-label="Collapse navigation">
+      <agui-nav label="Sections" pub-to="UI/section" bind="$.items: APP/navigation; $.value: UI/section"></agui-nav>
+    </agui-sidebar>
+    <agui-viewport class="flex flex-col" aria-label="Workspace">
+      <agui-header floating>
+        <h1 class="flex items-center gap-2"><agui-icon name="dashboard"></agui-icon>Workspace</h1>
+        <agui-toolbar aria-label="Workspace controls">
+          <agui-theme-toggle ctx="APP" aria-label="Toggle dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
+          <agui-theme-selector label="App theme" pub-to="APP/palette"
+            bind="$.value: APP/palette; $: AGUI_TEXT/themeSelector"></agui-theme-selector>
+          <agui-button class="agui-button-icon" aria-label="Note actions" title="Note actions"
+            bind="onclick: [toggle]UI/inspectorOpen"><agui-icon name="tune"></agui-icon></agui-button>
+        </agui-toolbar>
+      </agui-header>
+      <div class="min-w-0 flex-1 p-4 sm:p-6">
+        <agui-panel>
+          <agui-field label="Note" type="textarea" rows="8" pub-to="DATA/note" bind="$.value: DATA/note"></agui-field>
+        </agui-panel>
+      </div>
+      <agui-footer>Local notes.</agui-footer>
+    </agui-viewport>
+    <agui-sidebar side="end" label="Note actions" expand-label="Expand controls" collapse-label="Collapse controls"
+      bind="hidden: !UI/inspectorOpen">
+      <agui-sidebar-block label="Note actions">
+        <agui-toolbar aria-label="Note controls">
+          <agui-button value="" bind="onclick: [set]DATA/note">Clear note</agui-button>
+          <agui-button value="false" bind="onclick: [set]UI/inspectorOpen">Close</agui-button>
+        </agui-toolbar>
+      </agui-sidebar-block>
+    </agui-sidebar>
+  </agui-app>
+</sym-context>

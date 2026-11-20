@@ -52,11 +52,13 @@ Run `npm run templates:styles` after changing utility classes in app template ch
 
 Use `npm run templates:previews` to refresh gallery screenshots and configuration snippets from each starter's `preview.json`. It uses the existing test browser and isolated temporary storage, leaving user sessions untouched. Preview fixtures must be task-neutral and separate from creation defaults. Review the generated screenshots manually; packaging does not launch a browser to regenerate them.
 
+Use `npm run templates:compare` to compare a fixed notes workspace authored as HTML with the workspace starter configured through JSON. It verifies both versions in the test browser and writes authored bytes, LOC, setup commands, and CLI timings to `TMP/benchmarks/templates/comparison.json`. Discovery costs are separate; these reference fixtures do not measure model tokens or authoring time.
+
 Run `npm run uilib:build` after changing library JavaScript or public types. It regenerates the split browser graph, stylesheets, Leaflet assets, and declarations using the installed JSDA toolchain and TypeScript. `npm pack` runs this build automatically. Keep registration tags in the source entry and model declarations in `uilib/types/`; generated exports follow those sources.
 
 Run `npm test` for both suites without additional setup. Downloads require network access on the first run; subsequent runs reuse the cached browser.
 
-Before release, run `npm run test:package`. It installs the production tarball in a temporary npm cache outside the checkout and verifies CLI, MCP, manager assets, and project operations without development dependencies in that installation. It also checks library consumption, declarations, and deferred widgets from a separate static origin using the checkout's test browser. It requires npm registry access. Run packaging and library builds separately from server/browser tests: rebuilding replaces the distribution those tests serve.
+Before release, run `npm run test:package`. It installs the production tarball in a temporary npm cache outside the checkout and verifies CLI, MCP, manager assets, and project operations without development dependencies in that installation. It creates each starter in Default and project storage and checks its assets, bindings, and widgets in the checkout's test browser. It also checks library consumption, declarations, and deferred widgets from a separate static origin. It requires npm registry access. Run packaging and library builds separately from server/browser tests: rebuilding replaces the distribution those tests serve.
 
 Add tests for concrete bugs and critical behavior. Review appearance, animation, and narrow layouts manually; do not add automated style assertions. Check whitespace with `git diff --check`.
 

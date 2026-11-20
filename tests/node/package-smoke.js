@@ -13,6 +13,7 @@ import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { MCP_TOOLS } from '../../src/mcp/catalog.js';
 import { verifyStandaloneLibrary } from '../browser/standalone-fixture.js';
+import { verifyPackagedTemplates } from './template-package-fixture.js';
 
 let execute = promisify(execFile);
 let root = fileURLToPath(new URL('../../', import.meta.url));
@@ -51,11 +52,15 @@ test('the production tarball runs through npm exec outside the checkout', { time
   /**
    * @param {string[]} args
    * @param {string} cwd
+   * @param {NodeJS.ProcessEnv} [overrides]
    */
-  async function runNpm(args, cwd) {
+  async function runNpm(args, cwd, overrides = {}) {
     let { stdout } = await execute(process.execPath, [npm, ...args], {
       cwd,
-      env: environment,
+      env: {
+        ...environment,
+        ...overrides,
+      },
       timeout: 120_000,
       maxBuffer: 2 * 1024 * 1024,
     });
@@ -108,9 +113,12 @@ test('the production tarball runs through npm exec outside the checkout', { time
   /**
    * @param {string[]} args
    * @param {boolean} [offline]
+   * @param {string} [folder]
    */
-  function npx(args, offline = true) {
-    return runNpm(['exec', '--yes', ...(offline ? ['--offline'] : []), '--package', archive, '--', 'symbiote-agui', ...args], caller);
+  function npx(args, offline = true, folder = '') {
+    return runNpm(['exec', '--yes', ...(offline ? ['--offline'] : []), '--package', archive, '--', 'symbiote-agui', ...args], caller, {
+      AGUI_LIBRARY_DIR: folder,
+    });
   }
 
   /** @param {string[]} args */
@@ -127,6 +135,8 @@ test('the production tarball runs through npm exec outside the checkout', { time
   let manifest = JSON.parse(await readFile(join(modules, 'symbiote-agui', 'package.json'), 'utf8'));
   assert.equal(manifest.private, undefined);
   let consumerRoot = join(cache, '_npx', installs[0]);
+  await verifyPackagedTemplates(t, join(modules, 'symbiote-agui'), caller, files, async (args, folder) =>
+    JSON.parse(await npx(args, true, folder)));
   await verifyStandaloneLibrary(t, join(modules, 'symbiote-agui'), consumerRoot);
   await writeFile(join(consumerRoot, 'uilib-consumer.mts'), `
     import { Symbiote, html, BaseClass, SymContext, PubSub, Field, type UiTableState } from 'symbiote-agui/uilib';

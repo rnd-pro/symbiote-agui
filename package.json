@@ -67,6 +67,7 @@
     "gallery:styles": "node scripts/build-gallery-styles.js",
     "templates:styles": "node scripts/build-template-styles.js",
     "templates:previews": "node scripts/build-template-previews.js",
+    "templates:compare": "node scripts/compare-template-output.js",
     "test:node": "node --test tests/node/*.test.js",
     "test:package": "node --test tests/node/package-smoke.js",
     "pretest:package": "npm run pretest:browser",

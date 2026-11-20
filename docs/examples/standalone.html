@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Standalone UI library</title>
+  <link rel="stylesheet" href="../../uilib/dist/page.css">
+  <script type="module" src="../../uilib/dist/index.js"></script>
+</head>
+<body>
+  <sym-context ctx="APP">
+    <script type="application/json">
+      {
+        "name": "My workspace",
+        "theme": "light",
+        "palette": "graphite",
+        "selected": [],
+        "rows": [
+          { "id": "draft", "name": "Draft the proposal", "status": "In progress" },
+          { "id": "review", "name": "Review the budget", "status": "Ready" },
+          { "id": "share", "name": "Share the results", "status": "Planned" }
+        ],
+        "columns": [
+          { "key": "name", "label": "Task", "type": "text", "sortable": true },
+          { "key": "status", "label": "Status", "type": "text", "sortable": true }
+        ],
+        "tableTexts": {
+          "results": "Tasks", "selected": "Selected", "selection": "Selection",
+          "selectRow": "Select task", "selectAll": "Select all tasks", "empty": "No tasks"
+        },
+        "paletteTexts": {
+          "graphite": "Graphite", "ocean": "Ocean", "forest": "Forest", "desert": "Desert"
+        }
+      }
+    </script>
+    <agui-app>
+      <agui-viewport aria-label="Workspace">
+        <agui-header floating>
+          <h1>{{APP/name}}</h1>
+          <agui-toolbar aria-label="Appearance">
+            <agui-theme-toggle ctx="APP" aria-label="Toggle dark theme"
+              light-label="Switch to light theme" dark-label="Switch to dark theme"></agui-theme-toggle>
+            <agui-theme-selector label="Choose palette" pub-to="APP/palette"
+              bind="$.value: APP/palette; $.texts: APP/paletteTexts"></agui-theme-selector>
+          </agui-toolbar>
+        </agui-header>
+        <agui-panel>
+          <agui-field label="Workspace name" pub-to="APP/name" bind="$.value: APP/name"></agui-field>
+          <agui-table label="Tasks" selection="multiple" pub-to="APP/selected"
+            bind="$.rows: APP/rows; $.columns: APP/columns; $.texts: APP/tableTexts; $.value: APP/selected"></agui-table>
+        </agui-panel>
+        <agui-footer>Changes stay in this page until reload.</agui-footer>
+      </agui-viewport>
+    </agui-app>
+  </sym-context>
+</body>
+</html>

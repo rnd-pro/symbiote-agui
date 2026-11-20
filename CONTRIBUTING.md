@@ -52,7 +52,7 @@ Run `npm run uilib:build` after changing library JavaScript or public types. It 
 
 Run `npm test` for both suites without additional setup. Downloads require network access on the first run; subsequent runs reuse the cached browser.
 
-Before release, run `npm run test:package`. It installs the production tarball in a temporary npm cache outside the checkout and verifies CLI, MCP, manager assets, and project operations without development dependencies in that installation. It also checks library consumption, declarations, and deferred widgets from a separate static origin using the checkout's test browser. It requires npm registry access.
+Before release, run `npm run test:package`. It installs the production tarball in a temporary npm cache outside the checkout and verifies CLI, MCP, manager assets, and project operations without development dependencies in that installation. It also checks library consumption, declarations, and deferred widgets from a separate static origin using the checkout's test browser. It requires npm registry access. Run packaging and library builds separately from server/browser tests: rebuilding replaces the distribution those tests serve.
 
 Add tests for concrete bugs and critical behavior. Review appearance, animation, and narrow layouts manually; do not add automated style assertions. Check whitespace with `git diff --check`.
 

@@ -51,7 +51,7 @@ test('All projects renders duplicate IDs, preserves its scope on reload and rout
   await page.select('#manager-project-switcher select', 'all');
   await page.waitForFunction(() => document.querySelectorAll('#manager-table tr[data-row-id]').length === 3);
   assert.equal(new URL(page.url()).searchParams.get('project'), 'all');
-  assert.deepEqual(await page.$$eval('#manager-table td[data-column="project"]', (cells) => cells.map((cell) => cell.textContent)), [
+  assert.deepEqual(await page.$$eval('#manager-table td[data-column="project"]', (cells) => cells.map((cell) => cell.textContent?.trim())), [
     'Default',
     'a',
     'b',

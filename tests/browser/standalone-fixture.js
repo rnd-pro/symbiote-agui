@@ -38,14 +38,21 @@ export async function verifyStandaloneLibrary(t, installedRoot, consumerRoot) {
   let base = `${assetOrigin}${prefix}`;
   let source = join(consumerRoot, 'uilib-consumer.mjs');
   await writeFile(source, `
+    import * as core from '@symbiotejs/symbiote';
     import * as native from '@symbiotejs/symbiote/html-app';
+    import * as webmcp from '@symbiotejs/symbiote/webmcp';
     import * as library from 'symbiote-agui/uilib';
     library.registerUiLibComponents({assetBaseUrl: ${JSON.stringify(base)}});
-    window.nativeExports = native;
+    window.nativeExports = {
+      ...webmcp,
+      ...core,
+      ...native,
+    };
     window.library = library;
   `);
   let consumer = await jsBuild(source);
   let siteRequests = /** @type {string[]} */ ([]);
+  let example = await readFile(join(installedRoot, 'docs', 'examples', 'standalone.html'), 'utf8');
   let site = createServer((request, response) => {
     let pathname = new URL(request.url || '', 'http://localhost').pathname;
     siteRequests.push(pathname);
@@ -53,6 +60,10 @@ export async function verifyStandaloneLibrary(t, installedRoot, consumerRoot) {
       response.writeHead(200, {
         'Content-Type': 'text/javascript',
       }).end(consumer);
+    } else if (pathname === '/example') {
+      response.writeHead(200, {
+        'Content-Type': 'text/html',
+      }).end(example.replaceAll('../../uilib/dist/', base));
     } else {
       response.writeHead(200, {
         'Content-Type': 'text/html',
@@ -196,11 +207,37 @@ export async function verifyStandaloneLibrary(t, installedRoot, consumerRoot) {
     'widgets/markdown/runtime/index.js',
     'widgets/markdown/sanitizer/index.js',
   ]) { assert.ok(requested.includes(`${prefix}${asset}`), `Loaded relocated asset: ${asset}`); }
+  await page.goto(`${origin}/example`);
+  await page.waitForSelector('agui-table tbody tr[data-row-id="draft"]');
+  await page.locator('agui-field input').fill('Shared workspace');
+  await page.waitForFunction(() => document.querySelector('h1')?.textContent === 'Shared workspace');
+  await page.locator('agui-table tr[data-row-id="draft"] td[data-column="name"]').click();
+  assert.deepEqual(await page.$eval('sym-context', (provider) => Reflect.get(provider, '$').selected), [
+    'draft',
+  ]);
+  await page.locator('agui-table tr[data-row-id="review"] td[data-column="name"]').click();
+  assert.deepEqual(await page.$eval('sym-context', (provider) => Reflect.get(provider, '$').selected), [
+    'draft',
+    'review',
+  ]);
+  await page.locator('agui-theme-toggle button').click();
+  await page.waitForFunction(() => document.body.dataset.theme === 'dark');
+  assert.equal(await page.$eval('sym-context', (provider) => Reflect.get(provider, '$').theme), 'dark');
+  await page.locator('agui-theme-selector > button:not(:disabled)').click();
+  await page.locator('.agui-theme-option[value="ocean"]').click();
+  await page.waitForFunction(() => document.body.dataset.palette === 'ocean');
+  assert.equal(await page.$eval('sym-context', (provider) => Reflect.get(provider, '$').palette), 'ocean');
+  await page.keyboard.press('Escape');
+  await page.reload();
+  await page.waitForSelector('agui-table tbody tr[data-row-id="draft"]');
+  assert.deepEqual(await page.$eval('sym-context', (provider) => Reflect.get(provider, '$').selected), []);
+  assert.equal(await page.$eval('sym-context', (provider) => Reflect.get(provider, '$').name), 'My workspace');
   assert.equal(await page.evaluate(() => Reflect.get(window, 'sockets')), 0);
   assert.deepEqual(siteRequests.filter((path) => ![
     '/source',
     '/source.js',
     '/prepared',
+    '/example',
     '/favicon.ico',
   ].includes(path)), []);
   assert.deepEqual(errors, []);

@@ -202,7 +202,9 @@ test('built-in manager populates new tabs and directly manages sessions, descrip
   await page.locator('#manager-inspector ::-p-aria([name="Start"][role="button"])').click();
   assert.equal(await page.$eval('#manager-inspector button.agui-button-primary', (button) => button.getAttribute('aria-busy')), 'true');
   assert.ok(await page.$('#manager-inspector button[aria-busy="true"] > agui-preloader[aria-hidden="true"]'));
-  assert.equal(await page.$eval('#manager-inspector button[aria-busy="true"]', (button) => button.lastChild?.textContent?.trim()), 'Start');
+  assert.equal(await page.$eval('#manager-inspector button[aria-busy="true"]', (button) => Array.from(button.childNodes)
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.textContent).join('').trim()), 'Start');
   assert.equal(await page.$$eval('#manager-inspector button[aria-busy="true"]', (buttons) => buttons.length), 1);
   await page.evaluate(() => Reflect.get(window, 'releaseManagerStart')());
   await notice(page, 'start completed');

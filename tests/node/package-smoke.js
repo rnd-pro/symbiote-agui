@@ -97,6 +97,7 @@ test('the production tarball runs through npm exec outside the checkout', { time
     'src/page/gallery.assets/documents/brief.md',
     'types/assets.d.ts',
     'docs/assets.md',
+    'docs/examples/standalone.html',
     'skills/agui/SKILL.md',
   ]) {
     assert.ok(files.includes(path), `${path} must be included in the tarball.`);

@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { deriveFilter } from '../../src/uilib/widgets/filter/model.js';
+import { deriveFilter } from '../../uilib/widgets/filter/model.js';
 import { tableState } from './table-fixture.js';
 
-/** @returns {import('../../types/uilib-filter.js').UiFilterState} */
+/** @returns {import('../../uilib/types/uilib-filter.js').UiFilterState} */
 function state() {
   let input = tableState();
   return {

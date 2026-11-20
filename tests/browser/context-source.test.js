@@ -102,7 +102,7 @@ test('native JSON contexts integrate with AGUI edits, protected defaults, explic
   await page.waitForFunction(() => Reflect.get(window, 'removedProvider').allSubs.size === 0);
   assert.equal(await page.$eval('#preserved output', (element) => element.textContent), 'Worker value');
   let saved = await page.evaluate(async () => {
-    let owner = /** @type {import('../../types/components.js').ComponentHost} */ (document.querySelector('#preserved'));
+    let owner = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (document.querySelector('#preserved'));
     owner.$.note = 'Committed note';
     let {
       commitData,

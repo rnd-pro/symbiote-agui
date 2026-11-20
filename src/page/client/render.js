@@ -47,7 +47,7 @@ export function updateState(input) {
   let elements = [...(document.getElementById(CONTENT_ROOT_ID)?.querySelectorAll(update.selector) || [])];
   if (!elements.length) { throw new Error(`No component matches ${update.selector}.`); }
   let method = update.method || 'set$';
-  let components = elements.map((element) => /** @type {import('../../../types/components.js').ComponentHost} */ (element));
+  let components = elements.map((element) => /** @type {import('../../../uilib/types/components.js').ComponentHost} */ (element));
   if (components.some((element) => typeof element[method] !== 'function')) {
     throw new Error('State updates require Symbiote components.');
   }

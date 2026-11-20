@@ -48,7 +48,7 @@ test('providers bind object fields and publish fresh drafts without echoing inco
   await page.goto(session.url);
   await page.waitForFunction(() => document.querySelector('#peer output')?.textContent === 'Avery');
   await page.$eval('#source', (element) => {
-    let source = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    let source = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (element);
     Reflect.set(window, 'originalContact', source.$.contact);
     Reflect.set(window, 'contactWrites', 0);
     source.sub('contact', () => Reflect.set(window, 'contactWrites', Reflect.get(window, 'contactWrites') + 1), false);
@@ -79,7 +79,7 @@ test('providers bind object fields and publish fresh drafts without echoing inco
     writes: 1,
   });
   await page.$eval('#first', (element) => {
-    let provider = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    let provider = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (element);
     provider.$.name = 'Casey';
   });
   assert.equal(await page.evaluate(() => Reflect.get(window, 'contactWrites')), 1);

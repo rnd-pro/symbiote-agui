@@ -1,4 +1,4 @@
-/** @returns {import('../../types/uilib-table.js').UiTableState} */
+/** @returns {import('../../uilib/types/uilib-table.js').UiTableState} */
 export function tableState() {
   return {
     rows: [

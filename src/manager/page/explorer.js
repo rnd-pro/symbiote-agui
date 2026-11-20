@@ -64,7 +64,7 @@ export class ProjectExplorer {
   previewVersion = 0;
   directoryPath = '';
   selectedPath = '';
-  /** @type {import('../../../types/uilib-explorer.js').UiExplorerNode[]} */
+  /** @type {import('../../../uilib/types/uilib-explorer.js').UiExplorerNode[]} */
   items = [];
   /** @type {Map<string, string>} */
   nodeIds = new Map();

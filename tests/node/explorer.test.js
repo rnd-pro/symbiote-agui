@@ -11,7 +11,7 @@ import { openProjectFolder } from '../../src/projects/open.js';
 import { EXPLORER_DIRECTORY_LIMIT, EXPLORER_PAGE_SIZE, EXPLORER_PREVIEW_BYTES } from '../../src/projects/explorer/constants.js';
 import { ManagerOperations, validateManagerRequest } from '../../src/manager/operations.js';
 import { temporaryState } from './state-fixture.js';
-import { MARKDOWN_LIMITS } from '../../src/uilib/widgets/markdown/constants.js';
+import { MARKDOWN_LIMITS } from '../../uilib/widgets/markdown/constants.js';
 
 /** @param {import('node:test').TestContext} t */
 async function fixture(t) {

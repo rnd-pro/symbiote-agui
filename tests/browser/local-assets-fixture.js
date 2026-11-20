@@ -5,7 +5,7 @@ import { reserveSession } from '../../src/sessions/store.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
 import { definitionPaths } from '../../src/library/paths.js';
 import { SessionRuntime } from '../../src/sessions/runtime.js';
-import fontData from '../../src/uilib/content/icon/font-data.js';
+import fontData from '../../uilib/content/icon/font-data.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelProxy } from './tunnel-proxy.js';
 
@@ -41,7 +41,7 @@ export async function localAssetsFixture(t) {
   try { await pending.commit(); }
   finally { await pending.discard(); }
   let root = definitionPaths(record.sessionId).assetsPath;
-  await cp(new URL('../../src/uilib/gallery.assets/', import.meta.url), root, {
+  await cp(new URL('../../src/page/gallery.assets', import.meta.url), root, {
     recursive: true,
     errorOnExist: true,
     force: false,

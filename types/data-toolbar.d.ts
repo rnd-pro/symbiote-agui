@@ -30,7 +30,7 @@ export interface ToolbarIndicatorInput {
 
 export interface ToolbarNotice {
   message: string;
-  tone: import('./uilib.js').UiMessageTone;
+  tone: import('../uilib/types/uilib.js').UiMessageTone;
 }
 
 export interface ToolbarNoticesInput {

@@ -24,7 +24,7 @@ async function openSection(page, section) {
 async function waitForSection(page, section) {
   await page.waitForSelector(`agui-nav button[value="${section}"][aria-current="page"]`);
   await page.waitForFunction((source) => {
-    let imported = /** @type {import('../../types/components.js').ComponentHost | null} */ (document.querySelector('agui-viewport sym-import'));
+    let imported = /** @type {import('../../uilib/types/components.js').ComponentHost | null} */ (document.querySelector('agui-viewport sym-import'));
     return imported?.getAttribute('src') === source && !imported.$['+loading'] && !imported.$['+loadError'];
   }, {}, `./_assets/sections/${section}.html`);
 }
@@ -40,11 +40,11 @@ test('default library bundle composes an HTML-only workspace with isolated conte
     await browser?.close();
     await state.close();
   });
-  let html = await readFile(new URL('../../src/uilib/gallery.html', import.meta.url), 'utf8');
+  let html = await readFile(new URL('../../src/page/gallery.html', import.meta.url), 'utf8');
   assert.doesNotMatch(html, /<script[^>]*type="module"/);
   let session = await cli('start', 'widgets', '--no-open');
   await insertStdin('widgets', html);
-  await cp(new URL('../../src/uilib/gallery.assets/', import.meta.url), definitionPaths('widgets').assetsPath, {
+  await cp(new URL('../../src/page/gallery.assets', import.meta.url), definitionPaths('widgets').assetsPath, {
     recursive: true,
   });
   browser = await puppeteer.launch({ executablePath, headless: true, args: ['--disable-blink-features=WebMCP,WebMCPTesting'] });
@@ -145,12 +145,12 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.deepEqual(events[0].data, { widgetId: 'retry-state', context: null, action: 'retry' });
   await openSection(page, 'controls');
   await page.$eval('#notifications-toggle', (element) => {
-    let control = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    let control = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (element);
     control.componentDescription = 'Gallery notifications fixture';
     control.syncWebMCPTools();
   });
   await page.$eval('#query-control', (element) => {
-    let control = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    let control = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (element);
     control.componentDescription = 'Gallery query fixture';
     control.syncWebMCPTools();
   });
@@ -253,7 +253,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
     Reflect.set(window, 'mergedFieldProxy', Reflect.get(element, '$'));
   });
   await page.$eval('#binding-data', (element) => {
-    let field = /** @type {import('../../types/components.js').ComponentHost} */ (document.createElement('agui-field'));
+    let field = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (document.createElement('agui-field'));
     field.id = 'prebound-field';
     field.$ = {
       label: 'Before connection',
@@ -273,7 +273,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#parsing-disabled > span', (element) => element.textContent), 'Bound');
   assert.equal(await page.$eval('#parsing-disabled input', (element) => element.value), 'Still rendered');
   await page.$eval('#binding-data', (element) => {
-    let panel = /** @type {import('../../types/components.js').ComponentHost} */ (document.createElement('agui-panel'));
+    let panel = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (document.createElement('agui-panel'));
     panel.processInnerHtml = false;
     panel.id = 'parsing-enabled';
     panel.setAttribute('process-inner-html', 'true');
@@ -314,7 +314,7 @@ test('default library bundle composes an HTML-only workspace with isolated conte
   assert.equal(await page.$eval('#state-field input', (element) => element.disabled), false);
   assert.equal(await page.$eval('#state-field', (element) => Reflect.get(element, '$') === Reflect.get(window, 'mergedFieldProxy')), true);
   await page.$eval('#state-field', (element) => {
-    let field = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    let field = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (element);
     Reflect.set(window, 'mergedValueNotifications', 0);
     field.sub('value', () => Reflect.set(window, 'mergedValueNotifications', Reflect.get(window, 'mergedValueNotifications') + 1), false);
     field.sub('extraBindingValue', (value) => Reflect.set(window, 'mergedExtraValue', value));

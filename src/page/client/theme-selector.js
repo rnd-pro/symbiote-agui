@@ -1,4 +1,4 @@
-import { ThemeSelector, THEME_SELECTOR_ATTRIBUTE_BINDINGS } from '../../uilib/controls/theme-selector/theme-selector.js';
+import { ThemeSelector, THEME_SELECTOR_ATTRIBUTE_BINDINGS } from '../../../uilib/controls/theme-selector/theme-selector.js';
 import { declaredPreferenceTarget } from './preferences.js';
 import { feedbackSuppressed } from './feedback-guard.js';
 import { commitData, getDataState } from './data.js';

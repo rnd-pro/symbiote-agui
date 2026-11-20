@@ -65,7 +65,7 @@ for (let publicPage of [
     let imagePage = await browser.newPage();
     let response = await imagePage.goto(new URL('_assets/agui.png', page.url()).href);
     assert.ok(response);
-    assert.deepEqual(await response.buffer(), await readFile(new URL('../../src/uilib/gallery.assets/agui.png', import.meta.url)));
+    assert.deepEqual(await response.buffer(), await readFile(new URL('../../src/page/gallery.assets/agui.png', import.meta.url)));
     await imagePage.close();
     let viewer = await (await browser.createBrowserContext()).newPage();
     /** @type {string[]} */

@@ -4,14 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
 
 export async function galleryExamples() {
-  let html = await readFile(new URL('../../src/uilib/gallery.html', import.meta.url), 'utf8');
+  let html = await readFile(new URL('../../src/page/gallery.html', import.meta.url), 'utf8');
   let {
     document,
   } = parseHTML('');
   let template = document.createElement('template');
   template.innerHTML = html;
   let content = template.content;
-  let assets = new URL('../../src/uilib/gallery.assets/', import.meta.url);
+  let assets = new URL('../../src/page/gallery.assets/', import.meta.url);
   let groups = JSON.parse(await readFile(new URL('context.json', assets), 'utf8'));
   for (let nested = content.querySelector('template'); nested; nested = content.querySelector('template')) {
     nested.replaceWith(nested.content);

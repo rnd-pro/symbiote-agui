@@ -100,7 +100,7 @@ export async function openManagerSection(page, section) {
   await page.waitForSelector(`#manager-navigation button[value="${section}"][aria-current="page"]`);
   try {
     await page.waitForFunction((source) => {
-      let imported = /** @type {import('../../types/components.js').ComponentHost | null} */ (document.querySelector('agui-session-manager > div > sym-import'));
+      let imported = /** @type {import('../../uilib/types/components.js').ComponentHost | null} */ (document.querySelector('agui-session-manager > div > sym-import'));
       return imported?.getAttribute('src') === source && !imported.$['+loading'] && !imported.$['+loadError'];
     }, {
       timeout: 8000,

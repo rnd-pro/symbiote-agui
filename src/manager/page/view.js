@@ -1,6 +1,6 @@
 import { managerSessionKey } from '../scope.js';
 
-/** @type {import('../../../types/uilib-table.js').UiTableColumn[]} */
+/** @type {import('../../../uilib/types/uilib-table.js').UiTableColumn[]} */
 export let SESSION_COLUMNS = [
   {
     key: 'id',
@@ -51,7 +51,7 @@ export let SESSION_COLUMNS = [
   },
 ];
 
-/** @type {import('../../../types/uilib-table.js').UiTableColumn[]} */
+/** @type {import('../../../uilib/types/uilib-table.js').UiTableColumn[]} */
 export let ALL_PROJECT_SESSION_COLUMNS = [
   {
     ...SESSION_COLUMNS[0],
@@ -66,7 +66,7 @@ export let ALL_PROJECT_SESSION_COLUMNS = [
   ...SESSION_COLUMNS.slice(1),
 ];
 
-/** @type {import('../../../types/uilib-data.js').UiDataField[]} */
+/** @type {import('../../../uilib/types/uilib-data.js').UiDataField[]} */
 export let SESSION_FILTER_FIELDS = [
   ...SESSION_COLUMNS,
   {

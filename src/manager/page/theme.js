@@ -1,4 +1,4 @@
-import { THEME_PALETTES } from '../../uilib/controls/theme-selector/palettes.js';
+import { THEME_PALETTES } from '../../../uilib/controls/theme-selector/palettes.js';
 
 /**
  * @template {string} T

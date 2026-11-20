@@ -1,12 +1,12 @@
 import { RESERVED_PROVIDER_NAMES } from '../markup/constants.js';
-import { DATA_SELECTOR } from '../uilib/shared/constants.js';
-import { readInitialData, isPlainStateKey } from '../uilib/shared/initial-data.js';
+import { DATA_SELECTOR } from '../../uilib/shared/constants.js';
+import { readInitialData, isPlainStateKey } from '../../uilib/shared/initial-data.js';
 import { PERSIST_ATTRIBUTE, DATA_LIMITS } from './constants.js';
 import { jsonData } from './validate.js';
 
 /**
  * @param {ParentNode} fragment
- * @returns {Map<string, { element: Element; script: Element; keys: string[]; values: import('../../types/components.js').ComponentState }>}
+ * @returns {Map<string, { element: Element; script: Element; keys: string[]; values: import('../../uilib/types/components.js').ComponentState }>}
  */
 export function dataTargets(fragment) {
   let targets = new Map();
@@ -32,7 +32,7 @@ export function dataTargets(fragment) {
 
 /**
  * @param {Element} script
- * @param {import('../../types/components.js').ComponentState} values
+ * @param {import('../../uilib/types/components.js').ComponentState} values
  */
 export function writeDataScript(script, values) {
   script.textContent = JSON.stringify(values).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');

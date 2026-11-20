@@ -1,4 +1,4 @@
-/** @returns {import('../../types/uilib-chart.js').UiChartState} */
+/** @returns {import('../../uilib/types/uilib-chart.js').UiChartState} */
 export function chartState() {
   return {
     rows: [

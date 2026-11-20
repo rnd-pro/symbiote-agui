@@ -30,12 +30,13 @@
     "scripts/**/*.js",
     "src/**/*.js",
     "types/**/*.d.ts",
+    "uilib/types/**/*.d.ts",
     "tests/node/**/*.js",
     "tests/browser/**/*.js"
   ],
   "exclude": [
     "src/manager/page/**/*.js",
     "src/page/client/**/*.js",
-    "src/uilib/**/*.js"
+    "uilib/**/*.js"
   ]
 }

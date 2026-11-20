@@ -1,6 +1,6 @@
 import {
   UiComponent,
-} from '../../../../uilib/shared/component.js';
+} from '../../../../../uilib/shared/component.js';
 import {
   dataTargets,
 } from '../../../../data/targets.js';
@@ -44,7 +44,7 @@ import {
 } from './messages.js';
 import {
   MESSAGE_TIMEOUT_MS,
-} from '../../../../uilib/feedback/message/constants.js';
+} from '../../../../../uilib/feedback/message/constants.js';
 import styles from './styles.js';
 import { requestSessionInformation } from '../../session-information.js';
 
@@ -215,7 +215,7 @@ export class DataToolbar extends UiComponent {
 
   /** @param {string} key */
   text(key) {
-    return String((/** @type {import('../../../../../types/uilib.js').UiTexts | undefined} */ (this.$.texts))?.[key] ?? '');
+    return String((/** @type {import('../../../../../uilib/types/uilib.js').UiTexts | undefined} */ (this.$.texts))?.[key] ?? '');
   }
 
   /** @param {'description' | 'metadata'} kind */

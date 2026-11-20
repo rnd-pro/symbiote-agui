@@ -6,7 +6,7 @@
 export function busyAction(action) {
   return async (/** @type {Event} */ event) => {
     let target = event instanceof SubmitEvent ? event.submitter : event.currentTarget;
-    let button = /** @type {import('../../uilib/controls/button/button.js').Button | null} */ (
+    let button = /** @type {import('../../../uilib/controls/button/button.js').Button | null} */ (
       target instanceof Element ? target.closest('agui-button') : null
     );
     if (!button) { return action(event); }

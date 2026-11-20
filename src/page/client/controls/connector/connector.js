@@ -1,5 +1,5 @@
 import { ToolDescriptor } from '@symbiotejs/symbiote/webmcp';
-import { UiComponent } from '../../../../uilib/shared/component.js';
+import { UiComponent } from '../../../../../uilib/shared/component.js';
 import { callConnector, readConnectorReceipt, CONNECTOR_CONTEXT } from '../../connectors.js';
 import { feedbackSuppressed } from '../../feedback-guard.js';
 

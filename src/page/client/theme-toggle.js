@@ -1,4 +1,4 @@
-import { ThemeToggle } from '../../uilib/controls/theme-toggle/theme-toggle.js';
+import { ThemeToggle } from '../../../uilib/controls/theme-toggle/theme-toggle.js';
 import { declaredPreferenceTarget } from './preferences.js';
 import { feedbackSuppressed } from './feedback-guard.js';
 import { commitData } from './data.js';

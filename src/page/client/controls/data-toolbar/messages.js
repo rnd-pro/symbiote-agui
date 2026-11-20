@@ -21,7 +21,7 @@ export class ToolbarMessages {
       toolbar.$.notifications = {};
       return;
     }
-    let elements = /** @type {import('../../../../uilib/feedback/message/message.js').Message[]} */ ([
+    let elements = /** @type {import('../../../../../uilib/feedback/message/message.js').Message[]} */ ([
       ...toolbar.ref.messages.querySelectorAll('agui-message'),
     ]);
     for (let element of elements) {
@@ -71,7 +71,7 @@ export class ToolbarMessages {
 
   dispose() {
     this.toolbar.ref.panel.removeEventListener('toggle', this.toggled);
-    for (let element of /** @type {import('../../../../uilib/feedback/message/message.js').Message[]} */ ([
+    for (let element of /** @type {import('../../../../../uilib/feedback/message/message.js').Message[]} */ ([
       ...this.toolbar.ref.messages.querySelectorAll('agui-message'),
     ])) { void element.hide(true); }
   }

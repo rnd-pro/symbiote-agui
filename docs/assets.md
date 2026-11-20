@@ -62,7 +62,7 @@ The complete directory is published, not just files referenced by the current ma
 
 `status` includes `assets.configured` for directory presence, `assets.available` for the running worker's route capability, and `assets.path` for its URL prefix. Stopped and older workers report unavailable; capability does not certify every file or mean a public tunnel is healthy.
 
-The packaged gallery's Assets section uses the files in `src/uilib/gallery.assets/`, including its original image, Markdown guide, and HTML fragment. Publish them with `assets add`, preserving their relative paths, or copy that directory to the gallery session's `<ID>.assets/` folder.
+The packaged gallery's Assets section uses the files in `src/page/gallery.assets/`, including its original image, Markdown guide, and HTML fragment. Publish them with `assets add`, preserving their relative paths, or copy that directory to the gallery session's `<ID>.assets/` folder.
 
 ## Supported files and limits
 

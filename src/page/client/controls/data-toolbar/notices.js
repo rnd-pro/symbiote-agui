@@ -8,7 +8,7 @@ export function toolbarNotices(input, text) {
   let notices = {};
   /**
    * @param {string} key
-   * @param {import('../../../../../types/uilib.js').UiMessageTone} tone
+   * @param {import('../../../../../uilib/types/uilib.js').UiMessageTone} tone
    * @param {...(string | undefined)} parts
    */
   function add(key, tone, ...parts) {
@@ -27,7 +27,7 @@ export function toolbarNotices(input, text) {
   add('edit', !input.viewer && input.dirty ? 'warning' : 'info', text(input.viewer ? 'readonly' : input.dirty ? 'dirty' : 'clean'));
   if (input.submission) {
     let saving = !local || local.state === 'queued';
-    /** @type {import('../../../../../types/uilib.js').UiMessageTone} */
+    /** @type {import('../../../../../uilib/types/uilib.js').UiMessageTone} */
     let tone = saving ? 'info' : local?.state === 'committed' ? 'success' : local?.state === 'unknown' ? 'warning' : 'error';
     let key = saving ? 'saving' : local?.state === 'committed' ? 'saved' : local?.state === 'unknown' ? 'status.uncertain' : 'status.failed';
     add('local', tone, text(key), local?.failure ? text(`local.${local.failure.code}`) : '');
@@ -40,7 +40,7 @@ export function toolbarNotices(input, text) {
       'AGENT_UPDATE',
       'USER_ACTION_REQUIRED',
     ].includes(delivery.failure.code);
-    /** @type {import('../../../../../types/uilib.js').UiMessageTone} */
+    /** @type {import('../../../../../uilib/types/uilib.js').UiMessageTone} */
     let tone = delivery.state === 'accepted' ? 'success' : delivery.state === 'queued' ? 'info'
       : delivery.state === 'rejected' && !unavailable ? 'error' : 'warning';
     add('delivery', tone,

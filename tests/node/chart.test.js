@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { deriveChart, selectedIds } from '../../src/uilib/widgets/chart/model.js';
-import { readChart } from '../../src/uilib/widgets/chart/reads.js';
-import { chartOption } from '../../src/uilib/widgets/chart/runtime/option.js';
+import { deriveChart, selectedIds } from '../../uilib/widgets/chart/model.js';
+import { readChart } from '../../uilib/widgets/chart/reads.js';
+import { chartOption } from '../../uilib/widgets/chart/runtime/option.js';
 import { chartState } from './chart-fixture.js';
 
 test('donut categories use distinct palette colors and retain them when rows reorder', () => {
@@ -18,7 +18,7 @@ test('donut categories use distinct palette colors and retain them when rows reo
     name: key,
     revenue: 10,
   }));
-  /** @type {import('../../types/uilib-chart.js').UiChartTheme} */
+  /** @type {import('../../uilib/types/uilib-chart.js').UiChartTheme} */
   let theme = {
     text: '#fff',
     muted: '#888',
@@ -102,7 +102,7 @@ test('chart validation rejects ambiguous IDs, executable configuration, incompat
   state.rows.push(state.rows[0]);
   assert.throws(() => deriveChart(state), /invalidRows/);
   state = chartState();
-  state.series[0].color = /** @type {import('../../types/uilib-chart.js').UiChartColor} */ ('url(https://example.invalid/image)');
+  state.series[0].color = /** @type {import('../../uilib/types/uilib-chart.js').UiChartColor} */ ('url(https://example.invalid/image)');
   assert.throws(() => deriveChart(state), /invalidSeries/);
   state = chartState();
   state.series[0].unit = 'kg';
@@ -121,7 +121,7 @@ test('chart validation rejects ambiguous IDs, executable configuration, incompat
 test('chart reads omit unrelated fields, paginate IDs, and bound oversized formatted points to 8 KiB', () => {
   let state = chartState();
   let derived = deriveChart(state);
-  let chart = /** @type {import('../../src/uilib/widgets/chart/chart.js').Chart} */ (/** @type {unknown} */ ({
+  let chart = /** @type {import('../../uilib/widgets/chart/chart.js').Chart} */ (/** @type {unknown} */ ({
     requireModel: () => derived,
     text: () => 'Invalid state',
   }));

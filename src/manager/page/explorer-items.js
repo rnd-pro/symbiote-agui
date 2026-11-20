@@ -3,7 +3,7 @@ import { SESSION_ID_PATTERN } from '../../sessions/constants.js';
 /**
  * @param {Map<string, import('./explorer.js').DirectoryNode>} directories
  * @param {(path: string) => string} idForPath
- * @returns {import('../../../types/uilib-explorer.js').UiExplorerNode[]}
+ * @returns {import('../../../uilib/types/uilib-explorer.js').UiExplorerNode[]}
  */
 export function sessionExplorerItems(directories, idForPath) {
   let root = directories.get('');
@@ -18,7 +18,7 @@ export function sessionExplorerItems(directories, idForPath) {
     owned.push(entry);
     sessions.set(sessionId, owned);
   }
-  /** @type {import('../../../types/uilib-explorer.js').UiExplorerNode[]} */
+  /** @type {import('../../../uilib/types/uilib-explorer.js').UiExplorerNode[]} */
   let items = [];
   /**
    * @param {import('../../../types/explorer.js').ProjectEntry} entry

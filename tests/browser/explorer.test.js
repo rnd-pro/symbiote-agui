@@ -77,7 +77,7 @@ test('explorer reuses list selection, publishes lazy requests and expansion, and
   });
   await page.$eval('sym-context', (owner) => {
     let state = Reflect.get(owner, '$');
-    state.items = state.items.map((/** @type {import('../../types/uilib-explorer.js').UiExplorerNode} */ node) => node.id === 'lazy' ? {
+    state.items = state.items.map((/** @type {import('../../uilib/types/uilib-explorer.js').UiExplorerNode} */ node) => node.id === 'lazy' ? {
       ...node,
       loaded: true,
     } : node).concat({

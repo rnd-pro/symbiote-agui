@@ -25,6 +25,7 @@
     "bin/",
     "docs/",
     "src/",
+    "uilib/",
     "types/",
     "skills/"
   ],

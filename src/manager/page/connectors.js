@@ -1,4 +1,4 @@
-import { UiComponent } from '../../uilib/shared/component.js';
+import { UiComponent } from '../../../uilib/shared/component.js';
 import { CONNECTOR_SETTINGS_TEMPLATE } from './connectors-template.js';
 import { highlightSourcePreview } from './source-preview.js';
 

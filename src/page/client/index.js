@@ -4,7 +4,7 @@ import '@symbiotejs/symbiote/html-app';
 import { connectSession } from './connection.js';
 import { registerPageComponents } from './ui.js';
 import './page-text.js';
-import { guardNativeRegistrations } from '../../uilib/shared/native-webmcp.js';
+import { guardNativeRegistrations } from '../../../uilib/shared/native-webmcp.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 Symbiote.mcpToolMode = true;

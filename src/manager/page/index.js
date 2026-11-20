@@ -1,5 +1,5 @@
 import { SymContext } from '@symbiotejs/symbiote/html-app';
-import { registerUiLibComponents } from '../../uilib/index.js';
+import { registerUiLibComponents } from '../../../uilib/index.js';
 import { CONNECTION_LOST_MESSAGE, ManagerConnection } from './connection.js';
 import './controls.js';
 import { rowState } from './session-state.js';
@@ -9,7 +9,7 @@ import { themeSelectorTexts } from '../../page/client/page-text.js';
 import { BULK_OPTIONS } from './options.js';
 import { SESSION_COLUMNS, ALL_PROJECT_SESSION_COLUMNS, SESSION_FILTER_FIELDS, FILTER_TEXTS, TABLE_TEXTS, CARD_TEXTS, DESCRIPTION_TEXTS, sessionRecords } from './view.js';
 import { formatDataFlow } from '../../metadata/format.js';
-import { guardNativeRegistrations } from '../../uilib/shared/native-webmcp.js';
+import { guardNativeRegistrations } from '../../../uilib/shared/native-webmcp.js';
 import { PROJECT_STATE, ProjectNavigation } from './projects.js';
 import { EXPLORER_STATE, ProjectExplorer } from './explorer.js';
 import { TRANSFER_STATE, SessionTransfers } from './transfers.js';

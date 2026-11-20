@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { deriveExplorer } from '../../src/uilib/widgets/explorer/model.js';
+import { deriveExplorer } from '../../uilib/widgets/explorer/model.js';
 import { sessionExplorerItems } from '../../src/manager/page/explorer-items.js';
 
 test('explorer hierarchy preserves sibling order and hidden selections while rejecting broken parents and cycles', () => {

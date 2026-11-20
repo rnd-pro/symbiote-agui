@@ -1,4 +1,4 @@
-/** @type {import('../../../types/uilib.js').UiOption[]} */
+/** @type {import('../../../uilib/types/uilib.js').UiOption[]} */
 export let BULK_OPTIONS = [
   { value: 'start', label: 'Start saved sessions' },
   { value: 'stop', label: 'Stop running sessions' },

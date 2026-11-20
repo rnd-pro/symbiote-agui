@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { deriveKanban, moveRecord, recordText } from '../../src/uilib/widgets/kanban/model.js';
-import { readKanban } from '../../src/uilib/widgets/kanban/reads.js';
+import { deriveKanban, moveRecord, recordText } from '../../uilib/widgets/kanban/model.js';
+import { readKanban } from '../../uilib/widgets/kanban/reads.js';
 
-/** @returns {import('../../types/uilib-kanban.js').UiKanbanState} */
+/** @returns {import('../../uilib/types/uilib-kanban.js').UiKanbanState} */
 function state() {
   return {
     value: [
@@ -122,7 +122,7 @@ test('kanban rejects duplicate IDs, identity-field edits, invalid destinations, 
 test('kanban reads stay within 8 KiB, omit unrelated fields, and paginate unassigned cards', () => {
   let input = state();
   let model = deriveKanban(input);
-  let board = /** @type {import('../../src/uilib/widgets/kanban/kanban.js').Kanban} */ (/** @type {unknown} */ ({
+  let board = /** @type {import('../../uilib/widgets/kanban/kanban.js').Kanban} */ (/** @type {unknown} */ ({
     requireModel: () => model,
     text: (/** @type {string} */ key) => key === 'untitled' ? 'Untitled card' : 'Invalid state',
   }));

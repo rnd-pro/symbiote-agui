@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { deriveList } from '../../src/uilib/widgets/list/model.js';
-import { validateSelection } from '../../src/uilib/shared/data/selection.js';
+import { deriveList } from '../../uilib/widgets/list/model.js';
+import { validateSelection } from '../../uilib/shared/data/selection.js';
 import { tableState } from './table-fixture.js';
 
 test('list masks preserve source order and selected IDs outside the result without rewriting inputs', () => {

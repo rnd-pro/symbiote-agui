@@ -1,6 +1,6 @@
-@import '../../uilib/fonts.css';
+@import '../../../uilib/fonts.css';
 @import 'tailwindcss' source(none);
-@import '../../uilib/styles.css';
+@import '../../../uilib/styles.css';
 
 @layer base {
   body {

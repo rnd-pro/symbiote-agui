@@ -3,7 +3,7 @@ import { ANNOTATION_LIMITS, PAGE_ROLE } from '../transport/constants.js';
 import { isAnnotationAnchor } from '../transport/annotations.js';
 import { STYLESHEET_PATH } from '../markup/constants.js';
 import { PageAnnotations } from './page-annotations.js';
-import { THEME_PALETTES } from '../uilib/controls/theme-selector/palettes.js';
+import { THEME_PALETTES } from '../../uilib/controls/theme-selector/palettes.js';
 
 export class SharedPages {
   enabled = false;

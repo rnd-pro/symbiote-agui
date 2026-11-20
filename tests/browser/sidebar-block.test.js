@@ -79,7 +79,7 @@ test('inactive sidebar blocks preserve drafts, disable controls and move focus o
   assert.equal(await page.$eval('#draft input', (control) => control.matches(':disabled')), true);
   assert.equal(await page.$eval('#draft', (field) => {
     try {
-      /** @type {import('../../src/uilib/controls/field/field.js').Field} */ (field).commit('Blocked');
+      /** @type {import('../../uilib/controls/field/field.js').Field} */ (field).commit('Blocked');
       return false;
     } catch { return true; }
   }), true);
@@ -95,7 +95,7 @@ test('inactive sidebar blocks preserve drafts, disable controls and move focus o
   });
   assert.equal(await page.$eval('agui-sidebar-block fieldset', (group) => group.disabled), false);
   await page.$eval('agui-sidebar-block', (block) => {
-    /** @type {import('../../src/uilib/layouts/sidebar-block/sidebar-block.js').SidebarBlock} */ (block).$.active = undefined;
+    /** @type {import('../../uilib/layouts/sidebar-block/sidebar-block.js').SidebarBlock} */ (block).$.active = undefined;
   });
   assert.equal(await page.$eval('agui-sidebar-block fieldset', (group) => group.disabled), true);
   await page.$eval('agui-sidebar-block', (block) => block.removeAttribute('active'));

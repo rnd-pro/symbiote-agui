@@ -1,4 +1,4 @@
-import type { ComponentState } from './components.js';
+import type { ComponentState } from '../uilib/types/components.js';
 import type { FeedbackDelivery, FeedbackStatus, FeedbackSubmission, FeedbackReference, FeedbackEvent, FeedbackSubmitOptions } from './feedback.js';
 import type { DataCommit, DataReference, DataResult, DataStatus, DataTarget } from './data.js';
 

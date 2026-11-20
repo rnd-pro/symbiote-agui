@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { diagramSvg } from '../../src/uilib/widgets/diagram/runtime/render.js';
-import { diagramSourceIssue } from '../../src/uilib/widgets/diagram/source.js';
-import { DIAGRAM_LIMITS } from '../../src/uilib/widgets/diagram/constants.js';
+import { diagramSvg } from '../../uilib/widgets/diagram/runtime/render.js';
+import { diagramSourceIssue } from '../../uilib/widgets/diagram/source.js';
+import { DIAGRAM_LIMITS } from '../../uilib/widgets/diagram/constants.js';
 
 test('diagram rendering accepts flowcharts, sequences, and relationships without executable links or HTML', () => {
   for (let source of [

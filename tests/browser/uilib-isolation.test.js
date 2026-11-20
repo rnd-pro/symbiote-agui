@@ -9,7 +9,7 @@ import { closeServer, waitForServer } from '../../src/shared/server.js';
 test('the library works without AGUI services and bubbles component actions to its host', {
   timeout: 30_000,
 }, async (t) => {
-  let script = await jsBuild(fileURLToPath(new URL('../../src/uilib/index.js', import.meta.url)));
+  let script = await jsBuild(fileURLToPath(new URL('../../uilib/index.js', import.meta.url)));
   let requests = /** @type {string[]} */ ([]);
   let server = createServer((request, response) => {
     requests.push(request.url || '');

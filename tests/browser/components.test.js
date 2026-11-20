@@ -48,21 +48,21 @@ test('RAT templates, context providers, and handlers survive repeated insertions
   assert.match(await page.$eval('#map > script', (element) => element.textContent || ''), /\{\{keep\}\}/);
 
   await page.$eval('#parent', (element) => {
-    let parent = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    let parent = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (element);
     parent.set$({ increment: () => { parent.$.count = Number(parent.$.count) + 1; } });
   });
   await page.click('#increment');
   assert.equal(await page.$eval('#inherited', (element) => element.textContent), '2');
   assert.equal(await page.$eval('#nearest', (element) => element.textContent), '9');
   await page.$eval('#card', (element) => {
-    let card = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    let card = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (element);
     card.$.userName = 'Changed';
     card.set$({ userName: 'Updated', userAge: 43 });
   });
   assert.equal(await page.$eval('#name', (element) => element.textContent), 'Updated');
   assert.equal(await page.$eval('#age', (element) => element.textContent), '43');
   await page.$eval('#map', (element) => {
-    let provider = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    let provider = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (element);
     provider.$.lat = 55;
     provider.set$({ lat: 66, lon: 99 });
     Reflect.set(window, 'oldProvider', provider);
@@ -71,14 +71,14 @@ test('RAT templates, context providers, and handlers survive repeated insertions
   assert.equal(await page.$eval('#own', (element) => element.textContent), '66');
   assert.equal(await page.$eval('#namespace', (element) => element.textContent), '66');
   await page.$eval('sym-component[ctx="map"]', (element) => {
-    let consumer = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    let consumer = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (element);
     consumer.$['*lat'] = 77;
   });
   assert.equal(await page.$eval('#own', (element) => element.textContent), '77');
   assert.equal(await page.$eval('#shared', (element) => element.textContent), '77 / 99');
 
   assert.deepEqual(await page.$eval('#map', (element) => {
-    let provider = /** @type {import('../../types/components.js').ComponentHost} */ (element);
+    let provider = /** @type {import('../../uilib/types/components.js').ComponentHost} */ (element);
     provider.add$({ zoom: 3 });
     let initialShared = provider.$['map/zoom'];
     let notifications = 0;

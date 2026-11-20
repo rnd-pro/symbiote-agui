@@ -11,8 +11,8 @@ import { createManagerStyles } from './styles.js';
 import { MANAGER_SECTIONS } from './sections.js';
 import { projectId } from '../projects/identity.js';
 import { validManagerQuery } from './scope.js';
-import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../uilib/widgets/markdown/constants.js';
-import { DIAGRAM_RUNTIME_PATH } from '../uilib/widgets/diagram/constants.js';
+import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../../uilib/widgets/markdown/constants.js';
+import { DIAGRAM_RUNTIME_PATH } from '../../uilib/widgets/diagram/constants.js';
 
 /**
  * @param {unknown} value
@@ -47,15 +47,15 @@ export async function startManagerServer(record, stop) {
   let runtimeAssets = new Map([
     [
       DIAGRAM_RUNTIME_PATH,
-      new URL('../uilib/widgets/diagram/runtime/index.js', import.meta.url),
+      new URL('../../uilib/widgets/diagram/runtime/index.js', import.meta.url),
     ],
     [
       MARKDOWN_RUNTIME_PATH,
-      new URL('../uilib/widgets/markdown/runtime/index.js', import.meta.url),
+      new URL('../../uilib/widgets/markdown/runtime/index.js', import.meta.url),
     ],
     [
       MARKDOWN_SANITIZER_PATH,
-      new URL('../uilib/widgets/markdown/sanitizer/index.js', import.meta.url),
+      new URL('../../uilib/widgets/markdown/sanitizer/index.js', import.meta.url),
     ],
   ]);
   /** @type {Map<string, Promise<string>>} */

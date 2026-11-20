@@ -33,7 +33,7 @@ export interface FeedbackUiState {
   availability: FeedbackStatus['state'];
   pending: number;
   delivery: FeedbackDelivery | null;
-  status: import('./uilib.js').UiStatus;
+  status: import('../uilib/types/uilib.js').UiStatus;
   message: string;
 }
 

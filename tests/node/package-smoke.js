@@ -67,7 +67,9 @@ test('the production tarball runs through npm exec outside the checkout', { time
   for (let path of [
     'bin/symbiote-agui.js',
     'src/page/shell.html',
-    'src/uilib/theme.css',
+    'uilib/index.js',
+    'uilib/theme.css',
+    'uilib/types/uilib.d.ts',
     'src/page/client/index.js',
     'src/page/client/tool-bridge.js',
     'src/mcp/server.js',
@@ -82,15 +84,15 @@ test('the production tarball runs through npm exec outside the checkout', { time
     'src/assets/http-server.js',
     'src/cli/assets.js',
     'src/page/client/mirror-assets.js',
-    'src/uilib/gallery.assets/agui.png',
-    'src/uilib/gallery.assets/documents/brief.md',
+    'src/page/gallery.assets/agui.png',
+    'src/page/gallery.assets/documents/brief.md',
     'types/assets.d.ts',
     'docs/assets.md',
     'skills/agui/SKILL.md',
   ]) {
     assert.ok(files.includes(path), `${path} must be included in the tarball.`);
   }
-  assert.equal(files.some((/** @type {string} */ path) => /^(tests|planning|node_modules)\//.test(path) || path === 'AGENTS.md'), false);
+  assert.equal(files.some((/** @type {string} */ path) => /^(tests|planning|node_modules|src\/uilib)\//.test(path) || path === 'AGENTS.md'), false);
   let archive = join(directory, packed.filename);
 
   /**
@@ -122,7 +124,7 @@ test('the production tarball runs through npm exec outside the checkout', { time
   let managerSource = '<h1>Packaged project workflow</h1><img src="./_assets/images/logo.png" alt="AGUI">';
   await writeFile(join(caller, 'manager-source.html'), managerSource);
   await cli('insert', 'package-smoke', '--file', 'manager-source.html');
-  let logo = await readFile(join(modules, 'symbiote-agui', 'src/uilib/gallery.assets/agui.png'));
+  let logo = await readFile(join(modules, 'symbiote-agui', 'src/page/gallery.assets/agui.png'));
   let logoSource = join(caller, 'original logo.png');
   await writeFile(logoSource, logo);
   let published = await cli('assets', 'add', 'package-smoke', '--file', logoSource, '--as', 'images/logo.png');

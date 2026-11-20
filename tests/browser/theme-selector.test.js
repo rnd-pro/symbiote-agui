@@ -5,7 +5,7 @@ import puppeteer from 'puppeteer';
 import { temporaryState } from '../node/state-fixture.js';
 import { SessionRuntime } from '../../src/sessions/runtime.js';
 import { prepareCachedMarkup } from '../../src/sessions/cache.js';
-import { THEME_PALETTES } from '../../src/uilib/controls/theme-selector/palettes.js';
+import { THEME_PALETTES } from '../../uilib/controls/theme-selector/palettes.js';
 
 function makeRuntime() {
   return new SessionRuntime({

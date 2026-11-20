@@ -49,7 +49,7 @@ Calls return `connectorResult` with request/action/worker identity, resolved rev
 
 ## Declarative interfaces and manager
 
-Use the headless [`agui-connector`](../src/uilib/controls/connector/README.md) to bind input, explicitly run an action, and publish matching results through `pub-to`. Compose existing buttons, fields, preloaders, messages, and state components. Optional initial loading is read-only; typing and reconnection never submit writes. See the [runnable example](./examples/connectors/README.md).
+Use the headless [`agui-connector`](../src/page/client/controls/connector/README.md) to bind input, explicitly run an action, and publish matching results through `pub-to`. Compose existing buttons, fields, preloaders, messages, and state components. Optional initial loading is read-only; typing and reconnection never submit writes. See the [runnable example](./examples/connectors/README.md).
 
 Select a saved session in the manager and open Connectors. Attach local sources, inspect source/contract/bundle hashes, grant an exact prepared revision for a chosen invocation source and private credential profile, or update/revoke/detach it. Controls work while running or stopped. Lifecycle identity guards reject stale edits; changing projects clears the review. Granting requires explicit confirmation and executes no code. Create profiles privately with Agent Connectors; their values never enter the page.
 

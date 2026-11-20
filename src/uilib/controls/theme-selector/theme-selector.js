@@ -1,8 +1,5 @@
 import { ToolDescriptor } from '@symbiotejs/symbiote/webmcp';
 import { UiComponent } from '../../shared/component.js';
-import { feedbackSuppressed } from '../../shared/feedback-guard.js';
-import { declaredPreferenceTarget } from '../../shared/data/preferences.js';
-import { commitData, getDataState } from '../../../page/client/data.js';
 import { THEME_PALETTES } from './palettes.js';
 import { THEME_SELECTOR_TEMPLATE } from './template.js';
 import styles from './styles.js';
@@ -15,8 +12,12 @@ let ATTRIBUTES = Object.freeze([
   'disabled',
   'readonly',
   'pub-to',
-  'auto-save',
 ]);
+
+export let THEME_SELECTOR_ATTRIBUTE_BINDINGS = Object.freeze(Object.fromEntries(ATTRIBUTES.map((key) => [
+  key,
+  `attribute-${key}`,
+])));
 
 export class ThemeSelector extends UiComponent {
   ready = false;
@@ -30,7 +31,6 @@ export class ThemeSelector extends UiComponent {
     texts: undefined,
     disabled: undefined,
     readonly: undefined,
-    autoSave: undefined,
     popupId: `agui-theme-palettes-${++nextSelectorId}`,
     selectorLabel: '',
     activeValue: 'graphite',
@@ -41,7 +41,7 @@ export class ThemeSelector extends UiComponent {
     statusMessage: '',
     statusClass: '',
     set_value: new ToolDescriptor({
-      description: 'Apply a palette and publish its value as a draft, without saving data. Trusted user palette clicks save only the declared palette property.',
+      description: 'Apply a palette and publish its value without saving data.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -76,11 +76,8 @@ export class ThemeSelector extends UiComponent {
     }
     for (let key of [
       'texts',
-      'autoSave',
       'saving',
       'saveState',
-      'AGUI_DATA/connected',
-      'AGUI_DATA/current',
     ]) { this.sub(key, () => this.refresh()); }
   }
 
@@ -90,12 +87,10 @@ export class ThemeSelector extends UiComponent {
     return String(texts?.[key] ?? '');
   }
 
-  get saveTarget() {
-    return declaredPreferenceTarget(this.getAttribute('pub-to'));
-  }
-
-  get savesAutomatically() {
-    return !!(this.$.autoSave ?? this.getAttribute('auto-save') !== 'false');
+  get unavailable() {
+    return !!(this.$.disabled ?? this.hasAttribute('disabled'))
+      || !!(this.$.readonly ?? this.hasAttribute('readonly')) || !!this.$.saving
+      || this.$.saveState === 'unknown';
   }
 
   refresh() {
@@ -107,9 +102,7 @@ export class ThemeSelector extends UiComponent {
     this.ownerDocument.body.dataset.palette = value;
     let saveState = String(this.$.saveState);
     if (value !== this.$.activeValue && !this.$.saving && saveState !== 'unknown') { saveState = 'idle'; }
-    let unavailable = !!(this.$.disabled ?? this.hasAttribute('disabled'))
-      || !!(this.$.readonly ?? this.hasAttribute('readonly')) || !!this.$.saving
-      || this.$.saveState === 'unknown' || (this.savesAutomatically && !getDataState().connected);
+    let unavailable = this.unavailable;
     this.set$({
       activeValue: value,
       saveState,
@@ -159,29 +152,7 @@ export class ThemeSelector extends UiComponent {
    * @param {Event} event
    */
   async choose(value, event) {
-    if (!event.isTrusted || feedbackSuppressed() || Reflect.get(event, 'agentInvoked') === true) { return; }
     this.commit(value);
-    if (!this.savesAutomatically) { return; }
-    let target = this.saveTarget;
-    if (!target) {
-      this.$.saveState = 'invalidTarget';
-      return;
-    }
-    this.set$({
-      saving: true,
-      saveState: 'saving',
-    });
-    try {
-      let result = await commitData([
-        target,
-      ]);
-      if (!this.ready || !this.isConnected) { return; }
-      this.$.saveState = result.state === 'committed' && this.$.activeValue !== value ? 'idle' : result.state;
-    } catch {
-      if (this.ready && this.isConnected) { this.$.saveState = 'rejected'; }
-    } finally {
-      this.$.saving = false;
-    }
   }
 
   destroyCallback() {
@@ -193,9 +164,6 @@ export class ThemeSelector extends UiComponent {
   }
 }
 
-ThemeSelector.bindAttributes(Object.fromEntries(ATTRIBUTES.map((key) => [
-  key,
-  `attribute-${key}`,
-])));
+ThemeSelector.bindAttributes(THEME_SELECTOR_ATTRIBUTE_BINDINGS);
 ThemeSelector.template = THEME_SELECTOR_TEMPLATE;
 ThemeSelector.rootStyles = styles;

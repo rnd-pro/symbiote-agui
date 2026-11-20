@@ -1,6 +1,6 @@
 import { itemizeProcessor } from '@symbiotejs/symbiote/core/itemizeProcessor-keyed.js';
 import { UiComponent } from '../../shared/component.js';
-import { emit } from '../../shared/events.js';
+import { emitAction } from '../../shared/events.js';
 import { sameData } from '../../shared/data/equal.js';
 import { TABLE_ATTRIBUTES } from './constants.js';
 import { deriveTable, selectedIds, toggleFiltered } from './model.js';
@@ -182,7 +182,7 @@ export class Table extends UiComponent {
         selectedCount: current.selected.length,
         filteredCount: current.filtered.length,
       };
-      emit('agui:action', action);
+      emitAction(this, action);
     }
     let current = this.requireModel();
     return {

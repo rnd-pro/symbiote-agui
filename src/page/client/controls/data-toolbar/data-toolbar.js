@@ -1,25 +1,25 @@
 import {
   UiComponent,
-} from '../../shared/component.js';
+} from '../../../../uilib/shared/component.js';
 import {
   dataTargets,
-} from '../../../data/targets.js';
+} from '../../../../data/targets.js';
 import {
   CONTENT_ROOT_ID,
-} from '../../../markup/constants.js';
+} from '../../../../markup/constants.js';
 import {
   commitData,
   readDataCommit,
-} from '../../../page/client/data.js';
+} from '../../data.js';
 import {
   getDataState,
-} from '../../../page/client/data-context.js';
+} from '../../data-context.js';
 import {
   submitFeedback,
-} from '../../../page/client/feedback.js';
+} from '../../feedback.js';
 import {
   feedbackSuppressed,
-} from '../../shared/feedback-guard.js';
+} from '../../feedback-guard.js';
 import {
   JsonTransfer,
 } from './transfer.js';
@@ -44,22 +44,22 @@ import {
 } from './messages.js';
 import {
   MESSAGE_TIMEOUT_MS,
-} from '../../feedback/message/constants.js';
+} from '../../../../uilib/feedback/message/constants.js';
 import styles from './styles.js';
-import { requestSessionInformation } from '../../../page/client/session-information.js';
+import { requestSessionInformation } from '../../session-information.js';
 
 let nextToolbarId = 0;
 
 export class DataToolbar extends UiComponent {
-  /** @type {import('../../../../types/data.js').DataTarget[]} */
+  /** @type {import('../../../../../types/data.js').DataTarget[]} */
   targets = [];
-  /** @type {import('../../../../types/data.js').DataChange[]} */
+  /** @type {import('../../../../../types/data.js').DataChange[]} */
   baseline = [];
   /** @type {string | undefined} */
   baselineRevision;
-  /** @type {import('../../../../types/data-toolbar.js').ToolbarSubmission | undefined} */
+  /** @type {import('../../../../../types/data-toolbar.js').ToolbarSubmission | undefined} */
   submission;
-  /** @type {import('../../../../types/data.js').DataTransferState | undefined} */
+  /** @type {import('../../../../../types/data.js').DataTransferState | undefined} */
   transferState;
   /** @type {JsonTransfer | undefined} */
   transfer;
@@ -147,7 +147,7 @@ export class DataToolbar extends UiComponent {
         });
         this.baseline.push({
           provider: name,
-          values: /** @type {import('../../../../types/data.js').DataChange['values']} */ (
+          values: /** @type {import('../../../../../types/data.js').DataChange['values']} */ (
             structuredClone(Object.fromEntries(selected.map((key) => [
               key,
               target.values[key],
@@ -183,11 +183,11 @@ export class DataToolbar extends UiComponent {
       this.sub(property, () => this.refresh());
     }
     this.sub('AGUI_DATA/result', (value) => {
-      let result = /** @type {import('../../../../types/data.js').DataResult | null} */ (value);
+      let result = /** @type {import('../../../../../types/data.js').DataResult | null} */ (value);
       if (this.submission?.result?.state === 'unknown') { this.acceptLocalResult(result); }
     });
     this.sub('AGUI_FEEDBACK/delivery', (value) => {
-      let delivery = /** @type {import('../../../../types/feedback.js').FeedbackDelivery | null} */ (value);
+      let delivery = /** @type {import('../../../../../types/feedback.js').FeedbackDelivery | null} */ (value);
       let submitted = this.submission;
       if (submitted && delivery?.submissionId === submitted.reference.commitId
         && delivery.instanceId === submitted.reference.instanceId && delivery.revision === submitted.result?.revision) {
@@ -197,7 +197,7 @@ export class DataToolbar extends UiComponent {
     });
     this.sub('externalResult', (value) => {
       if (!value) { return; }
-      try { this.acknowledge(/** @type {import('../../../../types/data-toolbar.js').ExternalAcknowledgement} */ (value)); }
+      try { this.acknowledge(/** @type {import('../../../../../types/data-toolbar.js').ExternalAcknowledgement} */ (value)); }
       catch { this.issue = 'ackMismatch'; this.refresh(true); }
     });
     this.refresh();
@@ -215,7 +215,7 @@ export class DataToolbar extends UiComponent {
 
   /** @param {string} key */
   text(key) {
-    return String((/** @type {import('../../../../types/uilib.js').UiTexts | undefined} */ (this.$.texts))?.[key] ?? '');
+    return String((/** @type {import('../../../../../types/uilib.js').UiTexts | undefined} */ (this.$.texts))?.[key] ?? '');
   }
 
   /** @param {'description' | 'metadata'} kind */
@@ -239,7 +239,7 @@ export class DataToolbar extends UiComponent {
     if (form instanceof HTMLFormElement && !form.reportValidity()) { this.issue = 'formInvalid'; this.refresh(true); return; }
     let data = getDataState().current;
     if (!data) { return; }
-    /** @type {import('../../../../types/data-toolbar.js').ToolbarSubmission} */
+    /** @type {import('../../../../../types/data-toolbar.js').ToolbarSubmission} */
     let submitted;
     try {
       submitted = {
@@ -267,7 +267,7 @@ export class DataToolbar extends UiComponent {
       provider,
       keys,
     }));
-    /** @type {Record<string, import('../../../../types/json.js').JsonValue>} */
+    /** @type {Record<string, import('../../../../../types/json.js').JsonValue>} */
     let details = {
       targetCount: bindings.length,
     };
@@ -294,7 +294,7 @@ export class DataToolbar extends UiComponent {
     if (!this.disposed && this.isConnected && this.submission === submitted) { submitted.delivery = delivery; this.refresh(true); }
   }
 
-  /** @param {import('../../../../types/data.js').DataResult | null} result */
+  /** @param {import('../../../../../types/data.js').DataResult | null} result */
   acceptLocalResult(result) {
     let submitted = this.submission;
     if (!result || !submitted || !sameSubmission({
@@ -331,7 +331,7 @@ export class DataToolbar extends UiComponent {
     if (!this.disposed) { this.acceptLocalResult(result); }
   }
 
-  /** @param {import('../../../../types/data-toolbar.js').ExternalAcknowledgement} input */
+  /** @param {import('../../../../../types/data-toolbar.js').ExternalAcknowledgement} input */
   acknowledge(input) {
     let submitted = this.submission;
     if (!input || ![

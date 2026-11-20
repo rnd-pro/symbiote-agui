@@ -3,7 +3,7 @@ import { CONTENT_ROOT_ID, PAGE_TEXT_CONTEXT } from '../../markup/constants.js';
 import { COMPONENT_TAG } from '../../uilib/shared/constants.js';
 import { MAX_PAGE_MESSAGE_BYTES, MIRROR_INTERVAL_MS, MIRROR_REFRESH_MS, PAGE_ROLE } from '../../transport/constants.js';
 import { disposeModules } from './modules.js';
-import { replaceContent } from '../../uilib/replace-content.js';
+import { replaceContent } from './replace-content.js';
 import { captureSnapshot } from './mirror-snapshot.js';
 import { SnapshotAnchors, mirroredAnchors } from './markers/anchors.js';
 import { PageMarkers } from './markers/client.js';

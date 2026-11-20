@@ -1,9 +1,9 @@
 import { PubSub } from '@symbiotejs/symbiote';
-import { withoutFeedback } from '../../shared/feedback-guard.js';
+import { withoutFeedback } from '../../feedback-guard.js';
 import { transferDocument } from './json.js';
 import { TRANSFER_VERSION, transferError } from './constants.js';
 
-/** @param {import('../../../../types/data.js').DataTarget[]} targets */
+/** @param {import('../../../../../types/data.js').DataTarget[]} targets */
 export function draftContexts(targets) {
   return targets.map(({ provider, keys }) => {
     let context = PubSub.getCtx(provider, false);
@@ -12,7 +12,7 @@ export function draftContexts(targets) {
   });
 }
 
-/** @param {import('../../../../types/data.js').DataTarget[]} targets */
+/** @param {import('../../../../../types/data.js').DataTarget[]} targets */
 export function captureDraft(targets) {
   let contexts = draftContexts(targets);
   let changes = targets.map(({ provider, keys }, index) => ({ provider,
@@ -21,8 +21,8 @@ export function captureDraft(targets) {
 }
 
 /**
- * @param {import('../../../../types/data.js').DataTransferDocument} document
- * @param {import('../../../../types/data.js').DataTarget[]} targets
+ * @param {import('../../../../../types/data.js').DataTransferDocument} document
+ * @param {import('../../../../../types/data.js').DataTarget[]} targets
  */
 export function replaceDraft(document, targets) {
   let { changes } = transferDocument(document, targets);

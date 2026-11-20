@@ -1,5 +1,5 @@
 /**
- * @param {import('../../../../types/data-toolbar.js').ToolbarIndicatorInput} input
+ * @param {import('../../../../../types/data-toolbar.js').ToolbarIndicatorInput} input
  */
 export function toolbarIndicator(input) {
   let local = input.submission?.result;

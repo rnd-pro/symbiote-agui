@@ -1,6 +1,6 @@
 import { ToolDescriptor } from '@symbiotejs/symbiote/webmcp';
-import { readDataCommit } from '../../../page/client/data.js';
-import { getDataState } from '../../../page/client/data-context.js';
+import { readDataCommit } from '../../data.js';
+import { getDataState } from '../../data-context.js';
 import { sameSubmission, selectSavedData } from './saved-data.js';
 
 export let REFERENCE_SCHEMA = {

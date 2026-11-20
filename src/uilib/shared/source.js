@@ -1,4 +1,12 @@
-import { PROXY_PATH, PROXY_SOURCE_HEADER } from '../../proxy/constants.js';
+/** @type {(requestedUrl: string, response: Response, pageUrl?: string) => string} */
+let resolveTextSource = (requestedUrl, response) => response.url || requestedUrl;
+
+/** @param {typeof resolveTextSource} resolver */
+export function setTextSourceResolver(resolver) {
+  let previous = resolveTextSource;
+  resolveTextSource = resolver;
+  return () => { resolveTextSource = previous; };
+}
 
 /**
  * @param {string} source
@@ -14,34 +22,6 @@ export function sourceUrl(source, base) {
     url.hash = '';
     return url.href;
   } catch { throw new Error('invalidSrc'); }
-}
-
-/**
- * @param {string} requestedUrl
- * @param {Response} response
- * @param {string | undefined} pageUrl
- */
-function responseSourceUrl(requestedUrl, response, pageUrl) {
-  let actual = response.url || requestedUrl;
-  if (!pageUrl) { return actual; }
-  let page = new URL(pageUrl);
-  let requested = new URL(requestedUrl);
-  let endpoint = new URL(PROXY_PATH, page);
-  if (requested.origin !== page.origin || requested.pathname !== endpoint.pathname) { return actual; }
-  try {
-    if (response.redirected || new URL(actual).href !== requested.href
-      || requested.searchParams.getAll('url').length !== 1 || [
-        ...requested.searchParams.keys(),
-      ].some((key) => key !== 'url')) { throw new Error(); }
-    let source = response.headers.get(PROXY_SOURCE_HEADER) || '';
-    if (/[\x00-\x20\x7f\\]/.test(source)) { throw new Error(); }
-    let url = new URL(source);
-    if (![
-      'http:',
-      'https:',
-    ].includes(url.protocol) || url.username || url.password || url.hash) { throw new Error(); }
-    return url.href;
-  } catch { throw new Error('fetchFailed'); }
 }
 
 /**
@@ -66,7 +46,7 @@ export async function fetchTextSource(url, signal, limits, pageUrl) {
     throw new Error('inputTooLarge');
   }
   let sourceUrl;
-  try { sourceUrl = responseSourceUrl(url, response, pageUrl); }
+  try { sourceUrl = resolveTextSource(url, response, pageUrl); }
   catch (error) { await response.body?.cancel(); throw error; }
   if (!response.body) {
     return {

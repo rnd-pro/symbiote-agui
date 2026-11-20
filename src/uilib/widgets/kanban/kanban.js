@@ -1,6 +1,6 @@
 import { itemizeProcessor } from '@symbiotejs/symbiote/core/itemizeProcessor-keyed.js';
 import { UiComponent } from '../../shared/component.js';
-import { emit } from '../../shared/events.js';
+import { emitAction } from '../../shared/events.js';
 import { KANBAN_ATTRIBUTES } from './constants.js';
 import { deriveKanban, moveRecord } from './model.js';
 import { presentKanban } from './presentation.js';
@@ -131,7 +131,7 @@ export class Kanban extends UiComponent {
         status,
         totalCount: moved.value.length,
       };
-      emit('agui:action', action);
+      emitAction(this, action);
     }
     return {
       changed: moved.changed,

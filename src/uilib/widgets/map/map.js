@@ -1,5 +1,5 @@
 import { UiComponent } from '../../shared/component.js';
-import { emit } from '../../shared/events.js';
+import { emitAction } from '../../shared/events.js';
 import { sameData } from '../../shared/data/equal.js';
 import { MAP_ATTRIBUTES } from './constants.js';
 import { deriveMap, selectedMapIds, validateView } from './model.js';
@@ -220,7 +220,7 @@ export class AguiMap extends UiComponent {
     this.$[property] = structuredClone(value);
     let target = this.getAttribute(property === 'value' ? 'pub-to' : 'view-pub-to')?.trim();
     if (target) { this.$[target] = structuredClone(value); }
-    emit('agui:action', {
+    emitAction(this, {
       widgetId: this.id || this.localName,
       context: this.getAttribute('ctx')?.trim() || null,
       action: property === 'value' ? 'map-selection-change' : 'map-view-change',

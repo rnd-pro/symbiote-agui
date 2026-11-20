@@ -40,4 +40,4 @@ Destruction releases native subscriptions and ignores late results. It does not 
 
 This component does not commit the local cache or send chat feedback. Choose the saving flow in the session description. Add the data toolbar only when its separate workflow is needed, avoiding duplicate external writes.
 
-See [backend setup](../../../../docs/connectors.md) and the [runnable example](../../../../docs/examples/connectors/README.md).
+See [backend setup](../../../../../docs/connectors.md) and the [runnable example](../../../../../docs/examples/connectors/README.md).

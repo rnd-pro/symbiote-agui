@@ -32,10 +32,6 @@ export default css`
       grid-column: 1;
       grid-row: 5;
     }
-    agui-app > agui-data-toolbar {
-      grid-column: 1;
-      grid-row: 6;
-    }
     @media (width >= 64rem) {
       agui-app {
         grid-template-columns: auto minmax(0, 1fr) auto;
@@ -57,10 +53,6 @@ export default css`
       agui-app > [slot='footer'] {
         grid-column: 1 / -1;
         grid-row: 3;
-      }
-      agui-app > agui-data-toolbar {
-        grid-column: 1 / -1;
-        grid-row: 4;
       }
     }
   }

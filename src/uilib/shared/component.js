@@ -1,5 +1,5 @@
 import { BaseClass } from '@symbiotejs/symbiote/html-app';
-import { emit } from './events.js';
+import { emitAction } from './events.js';
 import { MAX_ACTION_VALUE_CHARS } from './constants.js';
 
 export class UiComponent extends BaseClass {
@@ -20,6 +20,6 @@ export class UiComponent extends BaseClass {
     let data = { widgetId: this.actionId, context, action };
     if (typeof value === 'string' && value.length > MAX_ACTION_VALUE_CHARS) { data.valueLength = value.length; }
     else if (value !== undefined) { data.value = value; }
-    return emit('agui:action', data);
+    return emitAction(this, data);
   }
 }

@@ -1,6 +1,6 @@
 import { itemizeProcessor } from '@symbiotejs/symbiote/core/itemizeProcessor-keyed.js';
 import { UiComponent } from '../../shared/component.js';
-import { emit } from '../../shared/events.js';
+import { emitAction } from '../../shared/events.js';
 import { sameData } from '../../shared/data/equal.js';
 import { DATA_LIMITS } from '../../shared/data/constants.js';
 import { deriveFilter } from './model.js';
@@ -151,7 +151,7 @@ export class Filter extends UiComponent {
         property,
         resultCount: this.requireModel().ids.length,
       };
-      emit('agui:action', action);
+      emitAction(this, action);
     }
     return {
       changed,

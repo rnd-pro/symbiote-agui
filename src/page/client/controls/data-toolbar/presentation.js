@@ -1,6 +1,6 @@
 import {
   getDataState,
-} from '../../../page/client/data-context.js';
+} from '../../data-context.js';
 import { toolbarIndicator } from './indicator.js';
 import { toolbarNotices } from './notices.js';
 
@@ -9,7 +9,7 @@ export function presentToolbar(toolbar) {
   let data = getDataState();
   let viewer = toolbar.$['AGUI_SESSION/role'] === 'viewer';
   let connected = toolbar.$['AGUI_SESSION/connected'] === true;
-  let information = /** @type {import('../../../../types/transport.js').SessionInformation | null} */ (toolbar.$['AGUI_SESSION/information']);
+  let information = /** @type {import('../../../../../types/transport.js').SessionInformation | null} */ (toolbar.$['AGUI_SESSION/information']);
   let informationState = toolbar.$['AGUI_SESSION/informationState'];
   let submission = toolbar.submission;
   let local = submission?.result;
@@ -52,7 +52,7 @@ export function presentToolbar(toolbar) {
     informationDisabled: viewer || !connected || informationState === 'loading',
     description: information?.description || (informationState === 'ready' ? text('description.empty') : ''),
     metadata: information ? JSON.stringify(information.metadata, null, 2) : '',
-    descriptionTexts: Object.fromEntries(Object.entries(/** @type {import('../../../../types/uilib.js').UiTexts} */ (toolbar.$.texts) || {}).filter(([
+    descriptionTexts: Object.fromEntries(Object.entries(/** @type {import('../../../../../types/uilib.js').UiTexts} */ (toolbar.$.texts) || {}).filter(([
       key,
     ]) => key.startsWith('description.')).map(([
       key,
@@ -92,7 +92,7 @@ export function presentToolbar(toolbar) {
     saveHint: data.current?.dataFlow?.description || text('saveHint'),
   });
   if (toolbar.transfer) {
-    toolbar.transfer.options.texts = /** @type {import('../../../../types/uilib.js').UiTexts | undefined} */ (toolbar.$.texts);
+    toolbar.transfer.options.texts = /** @type {import('../../../../../types/uilib.js').UiTexts | undefined} */ (toolbar.$.texts);
     toolbar.transfer.options.exportTarget = data.current?.dataFlow?.targets.find((target) => [
       'json-file',
       'manual',

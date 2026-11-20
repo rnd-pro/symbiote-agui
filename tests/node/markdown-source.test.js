@@ -3,6 +3,8 @@ import test from 'node:test';
 import { fetchMarkdownSource, markdownSourceUrl } from '../../src/uilib/widgets/markdown/source.js';
 import { MARKDOWN_LIMITS } from '../../src/uilib/widgets/markdown/constants.js';
 import { PROXY_SOURCE_HEADER } from '../../src/proxy/constants.js';
+import { proxySourceUrl } from '../../src/page/client/proxy-source.js';
+import { setTextSourceResolver } from '../../src/uilib/shared/source.js';
 
 test('Markdown source URLs resolve HTTP(S) while rejecting credentials and executable/local-file schemes', () => {
   assert.equal(markdownSourceUrl('../notes.md#section', 'https://example.test/app/'), 'https://example.test/notes.md');
@@ -36,7 +38,21 @@ function sourceResponse(url, source, redirected = false) {
   return response;
 }
 
+test('standalone Markdown ignores AGUI proxy headers until the page integration is installed', async (t) => {
+  let requested = 'http://ui.test/desk/_proxy?url=https%3A%2F%2Fsource.test%2Fnotes.md';
+  let upstream = 'https://source.test/notes.md';
+  t.mock.method(globalThis, 'fetch', async () => sourceResponse(requested, upstream));
+  let signal = new AbortController().signal;
+  assert.equal((await fetchMarkdownSource(requested, signal, 'http://ui.test/desk/')).url, requested);
+  let restore = setTextSourceResolver(proxySourceUrl);
+  try {
+    assert.equal((await fetchMarkdownSource(requested, signal, 'http://ui.test/desk/')).url, upstream);
+  } finally { restore(); }
+  assert.equal((await fetchMarkdownSource(requested, signal, 'http://ui.test/desk/')).url, requested);
+});
+
 test('Markdown uses proxy source metadata only from the exact same-origin session endpoint', async (t) => {
+  t.after(setTextSourceResolver(proxySourceUrl));
   let requested = 'http://ui.test/desk/_proxy?url=https%3A%2F%2Fsource.test%2Fnotes.md';
   let upstream = 'https://cdn.test/docs/redirected.md';
   let response = sourceResponse(requested, upstream);
@@ -57,6 +73,7 @@ test('Markdown uses proxy source metadata only from the exact same-origin sessio
 });
 
 test('Markdown rejects malformed or redirected proxy metadata and cancels unread bodies', async (t) => {
+  t.after(setTextSourceResolver(proxySourceUrl));
   let requested = 'http://ui.test/desk/_proxy?url=https%3A%2F%2Fsource.test%2Fnotes.md';
   let response = sourceResponse(requested, undefined);
   t.mock.method(globalThis, 'fetch', async () => response);

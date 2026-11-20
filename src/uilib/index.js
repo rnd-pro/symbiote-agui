@@ -14,7 +14,6 @@ import { Field } from './controls/field/field.js';
 import { Button } from './controls/button/button.js';
 import { Nav } from './controls/nav/nav.js';
 import { Breadcrumbs } from './controls/breadcrumbs/breadcrumbs.js';
-import { Connector } from './controls/connector/connector.js';
 import { Select } from './controls/select/select.js';
 import { ThemeToggle } from './controls/theme-toggle/theme-toggle.js';
 import { ThemeSelector } from './controls/theme-selector/theme-selector.js';
@@ -22,7 +21,6 @@ import { Toggle } from './controls/toggle/toggle.js';
 import { State } from './feedback/state/state.js';
 import { Preloader } from './feedback/preloader/preloader.js';
 import { Steps } from './feedback/steps/steps.js';
-import { DataToolbar } from './controls/data-toolbar/data-toolbar.js';
 import { Icon } from './content/icon/icon.js';
 import { Dialog } from './feedback/dialog/dialog.js';
 import { Chart } from './widgets/chart/chart.js';
@@ -47,7 +45,8 @@ import {
   Message,
 } from './feedback/message/message.js';
 
-export function registerUiLibComponents() {
+/** @param {{ themeToggle?: typeof ThemeToggle; themeSelector?: typeof ThemeSelector }} [components] */
+export function registerUiLibComponents(components = {}) {
   watchScrollbarActivity(document);
   App.reg('agui-app');
   Sidebar.reg('agui-sidebar');
@@ -64,18 +63,16 @@ export function registerUiLibComponents() {
   Button.reg('agui-button');
   Nav.reg('agui-nav');
   Breadcrumbs.reg('agui-breadcrumbs');
-  Connector.reg('agui-connector');
   Field.reg('agui-field');
   Select.reg('agui-select');
   Toggle.reg('agui-toggle');
-  ThemeToggle.reg('agui-theme-toggle');
-  ThemeSelector.reg('agui-theme-selector');
+  (components.themeToggle ?? ThemeToggle).reg('agui-theme-toggle');
+  (components.themeSelector ?? ThemeSelector).reg('agui-theme-selector');
   Preloader.reg('agui-preloader');
   Steps.reg('agui-steps');
   State.reg('agui-state');
   Dialog.reg('agui-dialog');
   Message.reg('agui-message');
-  DataToolbar.reg('agui-data-toolbar');
   Icon.reg('agui-icon');
   TableCell.reg('agui-table-cell');
   TableRow.reg('agui-table-row');

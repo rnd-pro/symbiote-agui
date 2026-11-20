@@ -1,4 +1,4 @@
-import { DATA_ENDPOINT_KIND } from '../../../metadata/constants.js';
+import { DATA_ENDPOINT_KIND } from '../../../../metadata/constants.js';
 import { parseTransfer, serializeTransfer } from './json.js';
 import { captureDraft, draftContexts, replaceDraft } from './draft.js';
 import { fileLabel, readJsonFile, downloadJson } from './files.js';
@@ -9,7 +9,7 @@ export class JsonTransfer {
   reading = false;
   disposed = false;
 
-  /** @param {import('../../../../types/data.js').DataTransferOptions} options */
+  /** @param {import('../../../../../types/data.js').DataTransferOptions} options */
   constructor(options) {
     this.options = options;
     let { input } = options;
@@ -20,7 +20,7 @@ export class JsonTransfer {
     input.addEventListener('cancel', this.cancelled);
   }
 
-  /** @param {import('../../../../types/data.js').DataTransferState} state */
+  /** @param {import('../../../../../types/data.js').DataTransferState} state */
   report(state) { if (!this.disposed) { this.options.report(state); } return state; }
 
   /** @param {string} key */

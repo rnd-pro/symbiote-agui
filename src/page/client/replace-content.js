@@ -1,7 +1,7 @@
 import { Symbiote } from '@symbiotejs/symbiote';
 import { SymContext } from '@symbiotejs/symbiote/html-app';
-import { analyzeFragment } from '../markup/fragment.js';
-import { dataTargets } from '../data/targets.js';
+import { analyzeFragment } from '../../markup/fragment.js';
+import { dataTargets } from '../../data/targets.js';
 
 /**
  * @param {HTMLElement} root

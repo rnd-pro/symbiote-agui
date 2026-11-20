@@ -1,9 +1,6 @@
 import { Control } from '../../shared/control.js';
 import { CONTROL_ATTRIBUTE_BINDINGS } from '../../shared/constants.js';
 import { THEME_TOGGLE_TEMPLATE } from './template.js';
-import { declaredPreferenceTarget } from '../../shared/data/preferences.js';
-import { feedbackSuppressed } from '../../shared/feedback-guard.js';
-import { commitData } from '../../../page/client/data.js';
 
 export class ThemeToggle extends Control {
   /** @type {MediaQueryList | undefined} */
@@ -58,9 +55,6 @@ export class ThemeToggle extends Control {
     });
     this.sub('texts', this.refreshSaveMessage);
     this.sub('saveState', this.refreshSaveMessage);
-    // The inherited listener applies the choice first; persistence follows only
-    // trusted clicks, including native keyboard activation.
-    this.control?.addEventListener('click', this.saveTheme);
   }
 
   setAvailability() {
@@ -79,28 +73,6 @@ export class ThemeToggle extends Control {
       saveCloseLabel: String(texts?.closeMessage ?? ''),
     });
     this.setAvailability();
-  };
-
-  /** @param {Event} event */
-  saveTheme = async (event) => {
-    if (!event.isTrusted || feedbackSuppressed() || Reflect.get(event, 'agentInvoked') === true) { return; }
-    let provider = this.getAttribute('ctx')?.trim();
-    let target = provider ? declaredPreferenceTarget(`${provider}/theme`) : undefined;
-    if (!target) { return; }
-    this.set$({
-      saving: true,
-      saveState: 'saving',
-    });
-    try {
-      let result = await commitData([
-        target,
-      ]);
-      if (this.isConnected) { this.$.saveState = result.state; }
-    } catch {
-      if (this.isConnected) { this.$.saveState = 'rejected'; }
-    } finally {
-      this.$.saving = false;
-    }
   };
 
   refreshChecked = () => {
@@ -132,7 +104,6 @@ export class ThemeToggle extends Control {
 
   destroyCallback() {
     super.destroyCallback();
-    this.control?.removeEventListener('click', this.saveTheme);
     this.schemeQuery?.removeEventListener('change', this.refreshChecked);
   }
 }

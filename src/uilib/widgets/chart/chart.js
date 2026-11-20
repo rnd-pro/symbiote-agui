@@ -1,5 +1,5 @@
 import { UiComponent } from '../../shared/component.js';
-import { emit } from '../../shared/events.js';
+import { emitAction } from '../../shared/events.js';
 import { sameData } from '../../shared/data/equal.js';
 import { CHART_ATTRIBUTES } from './constants.js';
 import { deriveChart, selectedIds } from './model.js';
@@ -198,7 +198,7 @@ export class Chart extends UiComponent {
         selectedCount: ids.length,
         totalCount: model.points.length,
       };
-      emit('agui:action', action);
+      emitAction(this, action);
     }
     return {
       changed,

@@ -1,6 +1,6 @@
 import { receiveAuthorization, setAuthorizationSender, setAuthorizationConnected } from './connector-authorization.js';
 import { PubSub } from '@symbiotejs/symbiote';
-import { withoutFeedback, feedbackSuppressed } from '../../uilib/shared/feedback-guard.js';
+import { withoutFeedback, feedbackSuppressed } from './feedback-guard.js';
 import { CONNECTOR_LIMITS } from '../../connectors/constants.js';
 
 export const CONNECTOR_CONTEXT = 'AGUI_CONNECTORS';

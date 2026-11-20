@@ -2,7 +2,7 @@ import { UiComponent } from '../../shared/component.js';
 import { isItemSelectionClick } from '../../shared/selectable-item.js';
 import { sameData } from '../../shared/data/equal.js';
 import { validateSelection } from '../../shared/data/selection.js';
-import { emit } from '../../shared/events.js';
+import { emitAction } from '../../shared/events.js';
 import { LIST_ATTRIBUTES, LIST_ATTRIBUTE_BINDINGS } from './constants.js';
 import { deriveList } from './model.js';
 import { listTools } from './tools.js';
@@ -158,7 +158,7 @@ export class List extends UiComponent {
       this.$.value = [...ids];
       let target = this.getAttribute('pub-to')?.trim();
       if (target) { this.$[target] = [...ids]; }
-      emit('agui:action', {
+      emitAction(this, {
         widgetId: this.id || this.localName,
         context: this.getAttribute('ctx')?.trim() || null,
         action: 'list-change',

@@ -1,8 +1,8 @@
-import { getDataState } from '../../../page/client/data.js';
+import { getDataState } from './data.js';
 
 /**
  * @param {string | null | undefined} path
- * @returns {import('../../../../types/data.js').DataTarget | undefined}
+ * @returns {import('../../../types/data.js').DataTarget | undefined}
  */
 export function declaredPreferenceTarget(path) {
   let parts = path?.trim().split('/');

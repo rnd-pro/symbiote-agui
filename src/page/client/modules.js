@@ -1,5 +1,5 @@
 import { MODULE_SELECTOR } from '../../transport/constants.js';
-import { emit, submitFeedback } from '../../uilib/shared/events.js';
+import { emit, submitFeedback } from './events.js';
 import { commitData } from './data.js';
 import { authorizeConnector } from './connector-authorization.js';
 import { callConnector, readConnectorReceipt } from './connectors.js';

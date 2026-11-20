@@ -1,12 +1,12 @@
-import { DATA_LIMITS } from '../../../data/constants.js';
-import { dataObject, jsonData, validateDataChanges } from '../../../data/validate.js';
-import { RESERVED_PROVIDER_NAMES } from '../../../markup/constants.js';
+import { DATA_LIMITS } from '../../../../data/constants.js';
+import { dataObject, jsonData, validateDataChanges } from '../../../../data/validate.js';
+import { RESERVED_PROVIDER_NAMES } from '../../../../markup/constants.js';
 import { TRANSFER_VERSION, transferError } from './constants.js';
 
 /**
  * @param {unknown} input
- * @param {import('../../../../types/data.js').DataTarget[]} targets
- * @returns {import('../../../../types/data.js').DataTransferDocument}
+ * @param {import('../../../../../types/data.js').DataTarget[]} targets
+ * @returns {import('../../../../../types/data.js').DataTransferDocument}
  */
 export function transferDocument(input, targets) {
   try {
@@ -30,7 +30,7 @@ export function transferDocument(input, targets) {
 
 /**
  * @param {string} text
- * @param {import('../../../../types/data.js').DataTarget[]} targets
+ * @param {import('../../../../../types/data.js').DataTarget[]} targets
  */
 export function parseTransfer(text, targets) {
   if (new TextEncoder().encode(text).byteLength > DATA_LIMITS.bytes) { throw transferError('TOO_LARGE'); }
@@ -41,8 +41,8 @@ export function parseTransfer(text, targets) {
 }
 
 /**
- * @param {import('../../../../types/data.js').DataChange[]} changes
- * @param {import('../../../../types/data.js').DataTarget[]} targets
+ * @param {import('../../../../../types/data.js').DataChange[]} changes
+ * @param {import('../../../../../types/data.js').DataTarget[]} targets
  */
 export function serializeTransfer(changes, targets) {
   let text = JSON.stringify(transferDocument({ version: TRANSFER_VERSION, changes }, targets)) + '\n';

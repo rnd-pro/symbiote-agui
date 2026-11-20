@@ -1,4 +1,4 @@
-import { DATA_LIMITS } from '../../../data/constants.js';
+import { DATA_LIMITS } from '../../../../data/constants.js';
 import { DOWNLOAD_RELEASE_MS, transferError } from './constants.js';
 
 /** @param {string} [value] */

@@ -1,14 +1,14 @@
 /**
- * @param {import('../../../../types/data-toolbar.js').SavedReference} expected
- * @param {import('../../../../types/data-toolbar.js').SavedReference} actual
+ * @param {import('../../../../../types/data-toolbar.js').SavedReference} expected
+ * @param {import('../../../../../types/data-toolbar.js').SavedReference} actual
  */
 export function sameSubmission(expected, actual) {
   return ['commitId', 'instanceId', 'markupRevision', 'revision'].every((key) => Reflect.get(expected, key) === Reflect.get(actual, key));
 }
 
 /**
- * @param {import('../../../../types/data.js').DataChange[]} baseline
- * @param {import('../../../../types/data-toolbar.js').SavedDataSelection} input
+ * @param {import('../../../../../types/data.js').DataChange[]} baseline
+ * @param {import('../../../../../types/data-toolbar.js').SavedDataSelection} input
  */
 export function selectSavedData(baseline, input) {
   let change = baseline.find((change) => change.provider === input.provider);

@@ -1,7 +1,7 @@
 import { ToolDescriptor } from '@symbiotejs/symbiote/webmcp';
-import { UiComponent } from '../../shared/component.js';
-import { callConnector, readConnectorReceipt, CONNECTOR_CONTEXT } from '../../../page/client/connectors.js';
-import { feedbackSuppressed } from '../../shared/feedback-guard.js';
+import { UiComponent } from '../../../../uilib/shared/component.js';
+import { callConnector, readConnectorReceipt, CONNECTOR_CONTEXT } from '../../connectors.js';
+import { feedbackSuppressed } from '../../feedback-guard.js';
 
 export class Connector extends UiComponent {
   processInnerHtml = true;
@@ -51,7 +51,7 @@ export class Connector extends UiComponent {
   get action() { return String(this.$.action ?? this.getAttribute('action') ?? ''); }
 
   get requirement() {
-    let status = /** @type {import('../../../../types/connectors.js').ConnectorStatus | null} */ (this.$[`${CONNECTOR_CONTEXT}/current`]);
+    let status = /** @type {import('../../../../../types/connectors.js').ConnectorStatus | null} */ (this.$[`${CONNECTOR_CONTEXT}/current`]);
     return status?.actions.find((entry) => entry.name === this.action);
   }
 
@@ -82,7 +82,7 @@ export class Connector extends UiComponent {
       `${CONNECTOR_CONTEXT}/current`,
     ]) { this.sub(key, () => this.refresh()); }
     this.sub(`${CONNECTOR_CONTEXT}/result`, (result) => {
-      let receipt = /** @type {import('../../../../types/connectors.js').ConnectorResult | null} */ (result);
+      let receipt = /** @type {import('../../../../../types/connectors.js').ConnectorResult | null} */ (result);
       if (receipt && this.operation?.requestId === receipt.requestId && this.operation.action === receipt.action) { this.accept(receipt); }
     });
   }
@@ -167,7 +167,7 @@ export class Connector extends UiComponent {
     };
   }
 
-  /** @param {import('../../../../types/connectors.js').ConnectorResult} receipt */
+  /** @param {import('../../../../../types/connectors.js').ConnectorResult} receipt */
   accept(receipt) {
     let operation = this.operation;
     if (this.disposed || !this.isConnected || !operation || receipt.requestId !== operation.requestId || receipt.action !== operation.action) { return; }
@@ -175,7 +175,7 @@ export class Connector extends UiComponent {
       || this.requirement?.revision !== operation.revision || receipt.revision && receipt.revision !== operation.revision;
     try { stale ||= JSON.stringify(this.$.input) !== operation.input; }
     catch { stale = true; }
-    let duplicate = /** @type {import('../../../../types/connectors.js').ConnectorResult | null} */ (this.$.result);
+    let duplicate = /** @type {import('../../../../../types/connectors.js').ConnectorResult | null} */ (this.$.result);
     this.set$({
       outcome: receipt.state,
       result: {

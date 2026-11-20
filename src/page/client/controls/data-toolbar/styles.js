@@ -4,6 +4,16 @@ import {
 
 export default css`
   @layer components {
+    agui-app > agui-data-toolbar {
+      grid-column: 1;
+      grid-row: 6;
+    }
+    @media (width >= 64rem) {
+      agui-app > agui-data-toolbar {
+        grid-column: 1 / -1;
+        grid-row: 4;
+      }
+    }
     agui-data-toolbar {
       --agui-icon-optical-size: 20;
       display: block;

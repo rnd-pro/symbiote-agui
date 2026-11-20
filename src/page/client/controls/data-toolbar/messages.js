@@ -1,7 +1,7 @@
-/** @typedef {import('../../../../types/data-toolbar.js').ToolbarNotice & { closeLabel: string; timeout: number }} Notification */
+/** @typedef {import('../../../../../types/data-toolbar.js').ToolbarNotice & { closeLabel: string; timeout: number }} Notification */
 
 export class ToolbarMessages {
-  /** @type {Record<string, import('../../../../types/data-toolbar.js').ToolbarNotice> | undefined} */
+  /** @type {Record<string, import('../../../../../types/data-toolbar.js').ToolbarNotice> | undefined} */
   previous;
 
   /** @param {import('./data-toolbar.js').DataToolbar} toolbar */
@@ -13,7 +13,7 @@ export class ToolbarMessages {
   /** @param {boolean} [force] */
   update(force = false) {
     let toolbar = this.toolbar;
-    let current = /** @type {Record<string, import('../../../../types/data-toolbar.js').ToolbarNotice>} */ (toolbar.$.statusMessages);
+    let current = /** @type {Record<string, import('../../../../../types/data-toolbar.js').ToolbarNotice>} */ (toolbar.$.statusMessages);
     let previous = this.previous;
     this.previous = current;
     let panelOpen = 'showPopover' in HTMLElement.prototype && toolbar.ref.panel.matches(':popover-open');
@@ -21,7 +21,7 @@ export class ToolbarMessages {
       toolbar.$.notifications = {};
       return;
     }
-    let elements = /** @type {import('../../feedback/message/message.js').Message[]} */ ([
+    let elements = /** @type {import('../../../../uilib/feedback/message/message.js').Message[]} */ ([
       ...toolbar.ref.messages.querySelectorAll('agui-message'),
     ]);
     for (let element of elements) {
@@ -71,7 +71,7 @@ export class ToolbarMessages {
 
   dispose() {
     this.toolbar.ref.panel.removeEventListener('toggle', this.toggled);
-    for (let element of /** @type {import('../../feedback/message/message.js').Message[]} */ ([
+    for (let element of /** @type {import('../../../../uilib/feedback/message/message.js').Message[]} */ ([
       ...this.toolbar.ref.messages.querySelectorAll('agui-message'),
     ])) { void element.hide(true); }
   }

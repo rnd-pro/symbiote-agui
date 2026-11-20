@@ -2,19 +2,19 @@ import { Symbiote } from '@symbiotejs/symbiote';
 import '@symbiotejs/symbiote/webmcp';
 import '@symbiotejs/symbiote/html-app';
 import { connectSession } from './connection.js';
-import { registerUiLibComponents } from '../../uilib/index.js';
+import { registerPageComponents } from './ui.js';
 import './page-text.js';
 import { guardNativeRegistrations } from '../../uilib/shared/native-webmcp.js';
 
 guardNativeRegistrations(Reflect.get(document, 'modelContext') || Reflect.get(navigator, 'modelContext'));
 Symbiote.mcpToolMode = true;
-registerUiLibComponents();
+registerPageComponents();
 connectSession();
 
 export { Symbiote, PubSub, html, css } from '@symbiotejs/symbiote';
 export { BaseClass, SymComponent, SymContext, SymCollection, SymConditional, SymImport, SymRouter } from '@symbiotejs/symbiote/html-app';
-export { replaceContent } from '../../uilib/replace-content.js';
-export { emit, submitFeedback } from '../../uilib/shared/events.js';
+export { replaceContent } from './replace-content.js';
+export { emit, submitFeedback } from './events.js';
 export { listPageTools, executePageTool } from './tools.js';
 export { ToolDescriptor, getActiveWebMCPTools, webMCPRegistry } from '@symbiotejs/symbiote/webmcp';
 export { executeWebMCPTool } from './tools.js';

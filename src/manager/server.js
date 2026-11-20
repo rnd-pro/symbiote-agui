@@ -11,8 +11,7 @@ import { createManagerStyles } from './styles.js';
 import { MANAGER_SECTIONS } from './sections.js';
 import { projectId } from '../projects/identity.js';
 import { validManagerQuery } from './scope.js';
-import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH } from '../../uilib/widgets/markdown/constants.js';
-import { DIAGRAM_RUNTIME_PATH } from '../../uilib/widgets/diagram/constants.js';
+import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH, DIAGRAM_RUNTIME_PATH } from '../server/widget-assets.js';
 import { ICON_STYLESHEET_ORIGIN, ICON_FONT_ORIGIN } from '../../uilib/content/icon/font.js';
 
 /**

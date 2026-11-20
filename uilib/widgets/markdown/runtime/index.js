@@ -1,6 +1,7 @@
 import { md2html } from 'jsda-kit/iso/md2html.js';
 import { MARKDOWN_LIMITS } from '../constants.js';
 import { markdownFragment } from './sanitize.js';
+export { setLibraryAssetBase } from '../../../shared/assets.js';
 
 /** @param {string} source */
 export async function markdownHtml(source) {

@@ -11,10 +11,6 @@ declare module 'jsda-kit/node/cssMin.js' {
   export function cssMin(css: string): string;
 }
 
-declare module 'jsda-kit/iso/md2html.js' {
-  export function md2html(source: string): Promise<string>;
-}
-
 declare module 'jsda-kit/cfg' {
   let config: {
     dynamic: {

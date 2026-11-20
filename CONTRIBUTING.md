@@ -48,9 +48,11 @@ Run all Node tests with `npm run test:node`.
 
 After changing shared uilib CSS, templates, or state-dependent utility classes, run `npm run uilib:styles` to regenerate the browser stylesheets in `uilib/dist/`. Packaging also runs this generator. Keep shared rules and tokens in their source files; do not edit generated CSS. Use `npm run gallery:styles` when changing utility classes in gallery sections.
 
+Run `npm run uilib:build` after changing library JavaScript or public types. It regenerates the split browser graph, stylesheets, Leaflet assets, and declarations using the installed JSDA toolchain and TypeScript. `npm pack` runs this build automatically. Keep registration tags in the source entry and model declarations in `uilib/types/`; generated exports follow those sources.
+
 Run `npm test` for both suites without additional setup. Downloads require network access on the first run; subsequent runs reuse the cached browser.
 
-Before release, run `npm run test:package`. It installs the production tarball in a temporary npm cache outside the checkout and verifies CLI, MCP, manager assets, and project operations without development dependencies. It requires npm registry access.
+Before release, run `npm run test:package`. It installs the production tarball in a temporary npm cache outside the checkout and verifies CLI, MCP, manager assets, and project operations without development dependencies in that installation. It also checks library consumption, declarations, and deferred widgets from a separate static origin using the checkout's test browser. It requires npm registry access.
 
 Add tests for concrete bugs and critical behavior. Review appearance, animation, and narrow layouts manually; do not add automated style assertions. Check whitespace with `git diff --check`.
 

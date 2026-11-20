@@ -40,59 +40,130 @@ import { Filter } from './widgets/filter/filter.js';
 import { FilterField } from './widgets/filter/field.js';
 import { List } from './widgets/list/list.js';
 import { Explorer } from './widgets/explorer/explorer.js';
+import { Message } from './feedback/message/message.js';
 import { watchScrollbarActivity } from './shared/scrollbars.js';
 import { loadIconFont } from './content/icon/loader.js';
+import { setLibraryAssetBase } from './shared/assets.js';
+import * as Foundation from './foundation.js';
+export * from './foundation.js';
+export { default } from './foundation.js';
 export { loadIconFont };
 export { ICON_FONT_STYLESHEET } from './content/icon/font.js';
-import {
-  Message,
-} from './feedback/message/message.js';
 
-/** @param {{ themeToggle?: typeof ThemeToggle; themeSelector?: typeof ThemeSelector }} [components] */
+export {
+  Dashboard,
+  App,
+  Sidebar,
+  SidebarBlock,
+  Viewport,
+  Tabs,
+  Tab,
+  TabButton,
+  Panel,
+  Header,
+  Footer,
+  Toolbar,
+  Field,
+  Button,
+  Nav,
+  Breadcrumbs,
+  Select,
+  ThemeToggle,
+  ThemeSelector,
+  Toggle,
+  State,
+  Preloader,
+  Steps,
+  Icon,
+  Dialog,
+  Chart,
+  ChartDataTable,
+  AguiMap,
+  MapDataTable,
+  Markdown,
+  Diagram,
+  Kanban,
+  KanbanColumn,
+  KanbanCard,
+  Table,
+  TableRow,
+  TableCell,
+  TableHeading,
+  Filter,
+  FilterField,
+  List,
+  Explorer,
+  Message,
+};
+
+/** @param {{ themeToggle?: typeof ThemeToggle; themeSelector?: typeof ThemeSelector; assetBaseUrl?: URL | string }} [components] */
 export function registerUiLibComponents(components = {}) {
+  /** @type {Record<string, CustomElementConstructor & { reg(tagName: string): unknown }>} */
+  let registrations = {
+    'agui-app': App,
+    'agui-sidebar': Sidebar,
+    'agui-viewport': Viewport,
+    'agui-tab-button': TabButton,
+    'agui-tab': Tab,
+    'agui-tabs': Tabs,
+    'agui-dashboard': Dashboard,
+    'agui-panel': Panel,
+    'agui-sidebar-block': SidebarBlock,
+    'agui-header': Header,
+    'agui-footer': Footer,
+    'agui-toolbar': Toolbar,
+    'agui-button': Button,
+    'agui-nav': Nav,
+    'agui-breadcrumbs': Breadcrumbs,
+    'agui-field': Field,
+    'agui-select': Select,
+    'agui-toggle': Toggle,
+    'agui-theme-toggle': components.themeToggle ?? ThemeToggle,
+    'agui-theme-selector': components.themeSelector ?? ThemeSelector,
+    'agui-preloader': Preloader,
+    'agui-steps': Steps,
+    'agui-state': State,
+    'agui-dialog': Dialog,
+    'agui-message': Message,
+    'agui-icon': Icon,
+    'agui-table-cell': TableCell,
+    'agui-table-row': TableRow,
+    'agui-table-heading': TableHeading,
+    'agui-filter-field': FilterField,
+    'agui-filter': Filter,
+    'agui-table': Table,
+    'agui-list': List,
+    'agui-explorer': Explorer,
+    'agui-chart-data': ChartDataTable,
+    'agui-chart': Chart,
+    'agui-map-data': MapDataTable,
+    'agui-map': AguiMap,
+    'agui-markdown': Markdown,
+    'agui-diagram': Diagram,
+    'agui-kanban-card': KanbanCard,
+    'agui-kanban-column': KanbanColumn,
+    'agui-kanban': Kanban,
+  };
+  // Native registration reports constructor conflicts before any library tags mount.
+  for (let component of Object.values(Foundation)) {
+    if (typeof component !== 'function' || !(component.prototype instanceof Foundation.BaseClass)) { continue; }
+    let constructor = /** @type {typeof Foundation.BaseClass} */ (component);
+    if (customElements.get(constructor.is) !== constructor) {
+      customElements.define(constructor.is, constructor);
+    }
+  }
+  for (let [
+    tag,
+    component,
+  ] of Object.entries(registrations)) {
+    let existing = customElements.get(tag);
+    if (existing && existing !== component) { customElements.define(tag, component); }
+  }
+  if (components.assetBaseUrl) { setLibraryAssetBase(components.assetBaseUrl); }
   void loadIconFont(document);
   watchScrollbarActivity(document);
-  App.reg('agui-app');
-  Sidebar.reg('agui-sidebar');
-  Viewport.reg('agui-viewport');
-  TabButton.reg('agui-tab-button');
-  Tab.reg('agui-tab');
-  Tabs.reg('agui-tabs');
-  Dashboard.reg('agui-dashboard');
-  Panel.reg('agui-panel');
-  SidebarBlock.reg('agui-sidebar-block');
-  Header.reg('agui-header');
-  Footer.reg('agui-footer');
-  Toolbar.reg('agui-toolbar');
-  Button.reg('agui-button');
-  Nav.reg('agui-nav');
-  Breadcrumbs.reg('agui-breadcrumbs');
-  Field.reg('agui-field');
-  Select.reg('agui-select');
-  Toggle.reg('agui-toggle');
-  (components.themeToggle ?? ThemeToggle).reg('agui-theme-toggle');
-  (components.themeSelector ?? ThemeSelector).reg('agui-theme-selector');
-  Preloader.reg('agui-preloader');
-  Steps.reg('agui-steps');
-  State.reg('agui-state');
-  Dialog.reg('agui-dialog');
-  Message.reg('agui-message');
-  Icon.reg('agui-icon');
-  TableCell.reg('agui-table-cell');
-  TableRow.reg('agui-table-row');
-  TableHeading.reg('agui-table-heading');
-  FilterField.reg('agui-filter-field');
-  Filter.reg('agui-filter');
-  Table.reg('agui-table');
-  List.reg('agui-list');
-  Explorer.reg('agui-explorer');
-  ChartDataTable.reg('agui-chart-data');
-  Chart.reg('agui-chart');
-  MapDataTable.reg('agui-map-data');
-  AguiMap.reg('agui-map');
-  Markdown.reg('agui-markdown');
-  Diagram.reg('agui-diagram');
-  KanbanCard.reg('agui-kanban-card');
-  KanbanColumn.reg('agui-kanban-column');
-  Kanban.reg('agui-kanban');
+  for (let [
+    tag,
+    component,
+  ] of Object.entries(registrations)) { component.reg(tag); }
 }

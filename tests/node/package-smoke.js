@@ -12,6 +12,7 @@ import { WebSocket } from 'ws';
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
 import { MCP_TOOLS } from '../../src/mcp/catalog.js';
+import { verifyStandaloneLibrary } from '../browser/standalone-fixture.js';
 
 let execute = promisify(execFile);
 let root = fileURLToPath(new URL('../../', import.meta.url));
@@ -71,6 +72,12 @@ test('the production tarball runs through npm exec outside the checkout', { time
     'uilib/theme.css',
     'uilib/dist/styles.css',
     'uilib/dist/page.css',
+    'uilib/dist/index.js',
+    'uilib/dist/library.js',
+    'uilib/dist/foundation.js',
+    'uilib/dist/types/index.d.ts',
+    'uilib/dist/widgets/map/leaflet.css',
+    'uilib/dist/widgets/map/images/marker-icon.png',
     'uilib/types/uilib.d.ts',
     'src/page/client/index.js',
     'src/page/client/tool-bridge.js',
@@ -118,6 +125,46 @@ test('the production tarball runs through npm exec outside the checkout', { time
   await assert.rejects(access(join(modules, 'puppeteer-core')));
   let manifest = JSON.parse(await readFile(join(modules, 'symbiote-agui', 'package.json'), 'utf8'));
   assert.equal(manifest.private, undefined);
+  let consumerRoot = join(cache, '_npx', installs[0]);
+  await verifyStandaloneLibrary(t, join(modules, 'symbiote-agui'), consumerRoot);
+  await writeFile(join(consumerRoot, 'uilib-consumer.mts'), `
+    import { Symbiote, html, BaseClass, SymContext, PubSub, Field, type UiTableState } from 'symbiote-agui/uilib';
+    import { Symbiote as BrowserSymbiote } from 'symbiote-agui/uilib/browser';
+    import { Symbiote as ModuleSymbiote } from 'symbiote-agui/uilib/module';
+    let prepared: typeof Symbiote = BrowserSymbiote;
+    let module: typeof Symbiote = ModuleSymbiote;
+    let state: Partial<UiTableState> = { selection: 'multiple' };
+    class Example extends Symbiote<Record<string, unknown>> {
+      init$ = { name: 'Example' };
+      static template = html\`<p bind="textContent: name"></p>\`;
+    }
+    new Field().setAttribute('label', 'Name');
+    let context: BaseClass = new SymContext();
+    PubSub.getCtx('APP');
+  `);
+  await writeFile(join(consumerRoot, 'uilib-consumer.tsconfig.json'), JSON.stringify({
+    compilerOptions: {
+      noEmit: true,
+      strict: true,
+      module: 'NodeNext',
+      moduleResolution: 'NodeNext',
+      target: 'ES2024',
+      lib: [
+        'ES2024',
+        'DOM',
+        'DOM.Iterable',
+      ],
+      types: [],
+    },
+    files: [
+      'uilib-consumer.mts',
+    ],
+  }));
+  await execute(process.execPath, [
+    fileURLToPath(new URL('../../node_modules/typescript/bin/tsc', import.meta.url)),
+    '--project',
+    join(consumerRoot, 'uilib-consumer.tsconfig.json'),
+  ]);
 
   let session = await cli('start', 'package-smoke', '--no-open');
   started = true;

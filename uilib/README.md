@@ -1,14 +1,52 @@
 # UI library
 
-The library provides reusable presentation components on Symbiote HTML-app. Generated pages and the manager share these components; server-side markup validation reuses the initial-data reader and component constants. AGUI data/feedback transport and its components live in the page client; application copy stays with the page.
+The library provides reusable presentation components and Symbiote HTML-app through one entry. Use it in an external project or in AGUI. Its browser graph includes no AGUI server, session connection, persistence, or feedback startup. Application copy stays with the page.
 
 Group components by purpose: `layouts/` for dashboard, panel, header, and toolbar; `controls/` for field, select, toggle, and theme toggle; `feedback/` for state presentation; `content/` for icons and other display primitives; `widgets/` for data-driven views. Keep each component's logic and optional template in its own folder inside its category. Shared base classes, control markup fragments, and common constants belong in `shared/`.
 
-Call `registerUiLibComponents()` from `index.js` to register reusable components without starting an AGUI connection. Component actions bubble as `agui:action` DOM events with bounded metadata. The AGUI page client uses `registerPageComponents()` to add its data toolbar, connector, and worker-backed theme subclasses; it forwards action events through the existing transport. The manager uses the generic library and its own preference storage. All consumers share one Symbiote instance.
+## Browser and CDN
+
+Load the prepared module directly. Replace `VERSION` with your selected package version:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/symbiote-agui@VERSION/uilib/dist/index.js"></script>
+
+<sym-context ctx="APP">
+  <script type="application/json">{"name":"Example"}</script>
+  <agui-field label="Name" pub-to="APP/name" bind="$.value: APP/name"></agui-field>
+</sym-context>
+```
+
+The bootstrap registers components and connects `styles.css` relative to its own URL, reusing an existing matching link. Hosting the complete `uilib/dist/` folder yourself works the same way. Keep its directory structure: shared modules, widget runtimes, Leaflet CSS/images, and the Markdown sanitizer resolve against that location. Chart, map, diagram, Markdown/highlighting, and fallback sanitizer code load when needed.
+
+Import from the same prepared entry when adding JavaScript components. It exports `Symbiote`, `html`, `css`, `PubSub`, HTML-app's foundation classes, WebMCP APIs, and uilib classes from the same runtime. Global automatic WebMCP remains disabled unless you enable it explicitly. Repeated imports preserve constructor and context identity; a conflicting registered component raises a native registration error.
+
+For explicit registration, `uilib/dist/library.js` provides the same exports without bootstrapping. Connect the component stylesheet and call `registerUiLibComponents()`. `uilib/dist/foundation.js` exposes the shared foundation for explicit module mappings within that distribution.
+
+## Source integration
+
+Use `symbiote-agui/uilib` with your project's bundler and deduplicate `@symbiotejs/symbiote`. Serve a copy of the complete prepared distribution for deferred runtimes, or configure its CDN location before mounting widgets:
+
+```js
+import { registerUiLibComponents, Symbiote, html, PubSub } from 'symbiote-agui/uilib';
+import 'symbiote-agui/uilib/styles.css';
+
+registerUiLibComponents({
+  assetBaseUrl: new URL('./vendor/uilib/', document.baseURI),
+});
+```
+
+Use one Symbiote runtime per page. An existing Symbiote application should use the source entry with its deduplicated dependency, or map its imports to the same prepared foundation. Loading a separately bundled foundation creates incompatible component classes and contexts.
+
+Package exports include `symbiote-agui/uilib/browser` for the prepared bootstrap, `symbiote-agui/uilib/module` for explicit prepared registration, and `symbiote-agui/uilib/styles.css`, `/page.css`, and `/theme.css` for their respective stylesheets. Component declarations, public data models, and the dependency's foundation types are included. Installing the npm package installs its declared dependencies; the browser loads only the UI graph.
+
+Component actions bubble as `agui:action` DOM events with bounded metadata. The AGUI page client uses `registerPageComponents()` to add its data toolbar, connector, and worker-backed theme subclasses; it forwards action events through the existing transport. The manager uses the generic library and its own preference storage.
 
 Registration also connects the Material Symbols stylesheet from Google Fonts. Icons stay hidden until their font loads; controls and accessible names remain available if loading fails. See [icon loading and CSP requirements](./content/icon/README.md).
 
-For standalone use, load `uilib/dist/styles.css` alongside your library bundle:
+## Styles
+
+When using explicit registration, load `uilib/dist/styles.css` alongside your library bundle:
 
 ```html
 <link rel="stylesheet" href="./vendor/symbiote-agui/uilib/dist/styles.css">
@@ -18,7 +56,9 @@ This is browser-ready CSS with tokens, palettes, shared control styles, and the 
 
 Optionally load `uilib/dist/page.css` for a full AGUI page: it applies the global reset, Roboto font, page background, and light/dark body defaults. AGUI and the manager opt into these same defaults through `uilib/theme.css`, the Tailwind authoring entry. Do not link the uncompiled authoring CSS directly in a browser. Additional application utility classes remain the host's responsibility. See [contributing](../CONTRIBUTING.md#validate-your-changes) for regenerating the packaged styles.
 
-Application behavior comes from [Symbiote HTML-app](https://github.com/symbiotejs/symbiote.js/blob/main/html-app/README.md), included by the default page bundle. Use `sym-component`, `sym-context`, `sym-collection`, `sym-conditional`, `sym-import`, and `sym-router` directly. AGUI components inherit its base class for JSON defaults, actions, `pub-map`, native Itemize, and lifecycle cleanup; this library adds presentation, widget interactions, and AGUI integration.
+## Components and data flow
+
+Application behavior comes from [Symbiote HTML-app](https://github.com/symbiotejs/symbiote.js/blob/main/html-app/README.md), included by the library entry. Use `sym-component`, `sym-context`, `sym-collection`, `sym-conditional`, `sym-import`, and `sym-router` directly. AGUI components inherit its base class for JSON defaults, actions, `pub-map`, native Itemize, and lifecycle cleanup; this library adds presentation and widget interactions.
 
 A named `sym-context` owns one native PubSub context. Use `$` object bindings and optional `pub-to` for feature writeback; incoming objects merge shallowly and omitted fields remain. Bind URL attributes with `@src`; loading/error outputs are native computed signals. See HTML-app's contracts rather than implementing separate loaders or state adapters.
 

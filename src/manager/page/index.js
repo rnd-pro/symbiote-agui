@@ -1,5 +1,6 @@
 import { SymContext } from '@symbiotejs/symbiote/html-app';
 import { registerUiLibComponents } from '../../../uilib/index.js';
+import { UILIB_ASSET_PATH } from '../../markup/constants.js';
 import { CONNECTION_LOST_MESSAGE, ManagerConnection } from './connection.js';
 import './controls.js';
 import { rowState } from './session-state.js';
@@ -427,4 +428,6 @@ export class SessionManager extends SymContext {
   }
 }
 SessionManager.reg('agui-session-manager');
-registerUiLibComponents();
+registerUiLibComponents({
+  assetBaseUrl: new URL(UILIB_ASSET_PATH, document.baseURI),
+});

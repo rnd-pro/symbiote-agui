@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.browser.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "uilib",
+    "outDir": "uilib/dist/types"
+  },
+  "include": [
+    "uilib/index.js",
+    "uilib/browser.js",
+    "uilib/types/**/*.d.ts"
+  ]
+}

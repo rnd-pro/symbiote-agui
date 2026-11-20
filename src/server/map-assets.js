@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { MAP_CSS_PATH, MAP_ASSET_PREFIX } from '../../uilib/widgets/map/constants.js';
+import { MAP_CSS_PATH, MAP_ASSET_PREFIX } from './widget-assets.js';
 
 let assets = Object.fromEntries([
   'layers.png',

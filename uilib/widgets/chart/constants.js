@@ -1,4 +1,4 @@
-export let CHART_RUNTIME_PATH = '/client/uilib/widgets/chart/runtime/index.js';
+export let CHART_RUNTIME_PATH = 'widgets/chart/runtime/index.js';
 export let CHART_LIMITS = Object.freeze({
   rows: 500,
   series: 8,

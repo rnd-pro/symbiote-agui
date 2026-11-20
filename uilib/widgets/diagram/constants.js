@@ -1,4 +1,4 @@
-export let DIAGRAM_RUNTIME_PATH = '/client/uilib/widgets/diagram/runtime/index.js';
+export let DIAGRAM_RUNTIME_PATH = 'widgets/diagram/runtime/index.js';
 export let DIAGRAM_LIMITS = Object.freeze({
   inputBytes: 32 * 1024,
   outputBytes: 256 * 1024,

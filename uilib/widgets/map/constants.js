@@ -1,6 +1,6 @@
-export let MAP_RUNTIME_PATH = '/client/uilib/widgets/map/runtime/index.js';
-export let MAP_CSS_PATH = '/client/uilib/widgets/map/leaflet.css';
-export let MAP_ASSET_PREFIX = '/client/uilib/widgets/map/images/';
+export let MAP_RUNTIME_PATH = 'widgets/map/runtime/index.js';
+export let MAP_CSS_PATH = 'widgets/map/leaflet.css';
+export let MAP_ASSET_PREFIX = 'widgets/map/images/';
 export let MAP_LIMITS = Object.freeze({
   rows: 500,
   latitude: 85.05112878,

@@ -1,4 +1,5 @@
-import { MARKDOWN_SANITIZER_PATH, MARKDOWN_LIMITS } from '../constants.js';
+import { MARKDOWN_LIMITS, MARKDOWN_SANITIZER_PATH } from '../constants.js';
+import { libraryAssetUrl } from '../../../shared/assets.js';
 import { MARKDOWN_INERT_WRAPPERS, markdownPolicy, linkDestination, resourceDestination, resourceSourceSet } from './policy.js';
 
 /** @type {Promise<typeof import('../sanitizer/index.js')> | undefined} */
@@ -29,7 +30,7 @@ export async function markdownFragment(html, headingPrefix, baseUrl, extensions 
       },
     });
   } else {
-    let url = MARKDOWN_SANITIZER_PATH;
+    let url = libraryAssetUrl(MARKDOWN_SANITIZER_PATH);
     pending ??= /** @type {Promise<typeof import('../sanitizer/index.js')>} */ (import(url));
     let fallback;
     try { fallback = await pending; } catch { throw new Error('loadFailed'); }

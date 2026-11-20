@@ -5,7 +5,8 @@ import { gzipSync } from 'node:zlib';
 import puppeteer from 'puppeteer';
 import { SessionRuntime } from '../../src/sessions/runtime.js';
 import { temporaryState } from '../node/state-fixture.js';
-import { DIAGRAM_RUNTIME_PATH, DIAGRAM_LIMITS } from '../../uilib/widgets/diagram/constants.js';
+import { DIAGRAM_LIMITS } from '../../uilib/widgets/diagram/constants.js';
+import { DIAGRAM_RUNTIME_PATH } from '../../src/server/widget-assets.js';
 import { CLIENT_SCRIPT_PATH } from '../../src/markup/constants.js';
 
 test('diagrams load once on initialization, use latest source, reject unsafe content, and mirror without an engine', {

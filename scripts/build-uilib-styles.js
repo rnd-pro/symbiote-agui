@@ -10,7 +10,7 @@ let output = new URL('dist/', library);
 let registry = await readFile(new URL('index.js', library), 'utf8');
 // Registration is the authoritative tag list; no second component inventory.
 let registrations = [
-  ...registry.matchAll(/\.reg\('(agui-[\w-]+)'\)/g),
+  ...registry.matchAll(/'(agui-[\w-]+)'/g),
 ];
 let tags = [
   ...new Set(registrations.map((match) => match[1])),

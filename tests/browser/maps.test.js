@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import puppeteer from 'puppeteer';
-import { MAP_RUNTIME_PATH, MAP_CSS_PATH, MAP_ASSET_PREFIX } from '../../uilib/widgets/map/constants.js';
+import { MAP_RUNTIME_PATH, MAP_CSS_PATH, MAP_ASSET_PREFIX } from '../../src/server/widget-assets.js';
 import { CLIENT_SCRIPT_PATH } from '../../src/markup/constants.js';
 import { temporaryState } from '../node/state-fixture.js';
 import { tunnelFixture } from '../node/tunnel-fixture.js';

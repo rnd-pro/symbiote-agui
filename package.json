@@ -21,6 +21,25 @@
   "bin": {
     "symbiote-agui": "./bin/symbiote-agui.js"
   },
+  "exports": {
+    "./uilib": {
+      "types": "./uilib/dist/types/index.d.ts",
+      "default": "./uilib/index.js"
+    },
+    "./uilib/browser": {
+      "types": "./uilib/dist/types/browser.d.ts",
+      "default": "./uilib/dist/index.js"
+    },
+    "./uilib/module": {
+      "types": "./uilib/dist/types/index.d.ts",
+      "default": "./uilib/dist/library.js"
+    },
+    "./uilib/styles.css": "./uilib/dist/styles.css",
+    "./uilib/page.css": "./uilib/dist/page.css",
+    "./uilib/theme.css": "./uilib/theme.css",
+    "./uilib/dist/*": "./uilib/dist/*",
+    "./package.json": "./package.json"
+  },
   "files": [
     "bin/",
     "docs/",
@@ -43,14 +62,16 @@
     "start": "node ./bin/symbiote-agui.js",
     "types": "tsc --project tsconfig.json && tsc --project tsconfig.browser.json",
     "uilib:styles": "node scripts/build-uilib-styles.js",
+    "uilib:build": "node scripts/build-uilib.js",
     "gallery:styles": "node scripts/build-gallery-styles.js",
     "test:node": "node --test tests/node/*.test.js",
     "test:package": "node --test tests/node/package-smoke.js",
+    "pretest:package": "npm run pretest:browser",
     "pretest:browser": "puppeteer browsers install chrome",
     "test:browser": "node --test --test-concurrency=1 tests/browser/*.test.js",
     "test": "npm run test:node && npm run test:browser",
     "prepublishOnly": "npm run types && npm run test:node",
-    "prepack": "npm run uilib:styles"
+    "prepack": "npm run uilib:build"
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.3.1",

@@ -63,6 +63,8 @@ For repeatable operations, interfaces can also call approved [local connector ba
 
 AGUI combines the [Symbiote HTML-app foundation](https://github.com/symbiotejs/symbiote.js/tree/main/html-app) with a themed UI library. Agents can build dynamic applications declaratively with RAT, using HTML tags and attributes without needing access to the JavaScript runtime. It speeds up UI generation and significantly reduces token consumption. See the [AGUI skill](./skills/agui/SKILL.md#built-in-ui-foundation) for usage guidance.
 
+Use the [UI library independently](./uilib/README.md) in your own website through a CDN or project bundle.
+
 ## Manage sessions in your browser
 
 Open the built-in session manager:

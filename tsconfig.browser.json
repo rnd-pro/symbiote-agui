@@ -10,5 +10,7 @@
     "uilib/types/**/*.d.ts",
     "types/jsda-kit.d.ts"
   ],
-  "exclude": []
+  "exclude": [
+    "uilib/dist/"
+  ]
 }

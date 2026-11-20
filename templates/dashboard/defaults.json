@@ -1,0 +1,42 @@
+{
+  "APP": {
+    "title": "My dashboard", "footer": "", "theme": "system",
+    "chartLabel": "Trend", "chartXLabel": "Period", "chartType": "bar", "mapLabel": "Locations",
+    "emptyMetrics": "No metrics available.",
+    "chartTexts": {
+      "data": "Explore chart data", "loading": "Loading chart...", "empty": "No values to plot.",
+      "loadFailed": "Reload to retry loading the chart.", "renderFailed": "The chart could not render.",
+      "invalidRows": "Check chart records.", "invalidSeries": "Check chart series.", "invalidState": "Check chart settings.",
+      "unavailable": "The chart is unavailable.", "results": "Points", "selected": "Selected", "selection": "Selection",
+      "selectRow": "Select point", "selectAll": "Select all points", "page": "Page", "pagination": "Chart data pages",
+      "previous": "Previous page", "next": "Next page"
+    },
+    "mapTexts": {
+      "data": "Explore locations", "point": "Location", "latitude": "Latitude", "longitude": "Longitude",
+      "skipped": "Skipped coordinates", "fit": "Fit locations", "zoomIn": "Zoom in", "zoomOut": "Zoom out",
+      "loading": "Loading map...", "empty": "No locations.", "loadFailed": "Reload to retry loading the map.",
+      "renderFailed": "The map could not render.", "tileFailed": "Map tiles could not load.",
+      "invalidRows": "Check location records.", "invalidTiles": "Check tile provider settings.", "invalidState": "Check map settings.",
+      "unavailable": "The map is unavailable.", "results": "Locations", "selected": "Selected", "selection": "Selection",
+      "selectRow": "Select location", "selectAll": "Select all locations", "page": "Page", "pagination": "Location pages",
+      "previous": "Previous page", "next": "Next page"
+    }
+  },
+  "UI": {
+    "chartVisible": false,
+    "mapVisible": false,
+    "mapView": { "center": [0, 0], "zoom": 2 }
+  },
+  "DATA": {
+    "metrics": [],
+    "chartRows": [],
+    "chartSeries": [{ "key": "value", "valueKey": "value", "label": "Value" }],
+    "mapRows": [],
+    "mapTiles": null
+  },
+  "ROUTER": {
+    "routes": {
+      "overview": { "title": "Overview", "icon": "dashboard", "src": "./_assets/overview.html", "default": true }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+<sym-context ctx="APP">
+  <script type="application/json">{}</script>
+  <sym-context ctx="UI">
+    <script type="application/json">{"sectionIcon":"","sectionLoading":false,"sectionError":"","metricCount":0}</script>
+  </sym-context>
+  <sym-context ctx="DATA"><script type="application/json">{}</script></sym-context>
+  <sym-router ctx="ROUTER"><script type="application/json">{}</script></sym-router>
+  <link rel="stylesheet" href="./_assets/styles.css">
+  <agui-app>
+    <agui-sidebar expand-label="Expand navigation" collapse-label="Collapse navigation" bind="$.label: APP/title">
+      <agui-nav label="Sections" pub-map="UI/sectionIcon: sectionIcon"
+        bind="$.routes: ROUTER/routes; $.value: ROUTER/route; onchange: [navigate]ROUTER"></agui-nav>
+      <agui-sidebar-block label="Widgets">
+        <agui-toggle label="Show chart" pub-to="UI/chartVisible" bind="$.value: UI/chartVisible"></agui-toggle>
+        <agui-toggle label="Show map" pub-to="UI/mapVisible" bind="$.value: UI/mapVisible"></agui-toggle>
+      </agui-sidebar-block>
+    </agui-sidebar>
+    <agui-viewport class="flex flex-col" aria-label="Dashboard">
+      <agui-header floating>
+        <h1 class="flex items-center gap-2"><agui-icon bind="$.name: UI/sectionIcon; hidden: !UI/sectionIcon"></agui-icon>{{ROUTER/title}}</h1>
+        <agui-theme-toggle ctx="APP" aria-label="Toggle dark theme" light-label="Day" dark-label="Night"></agui-theme-toggle>
+      </agui-header>
+      <div class="min-w-0 flex-1 p-4 sm:p-6">
+        <agui-state status="loading" message="Loading section..." bind="hidden: !UI/sectionLoading"></agui-state>
+        <agui-state status="error" bind="$.message: UI/sectionError; hidden: !UI/sectionError"></agui-state>
+        <sym-import pub-map="UI/sectionLoading: +loading; UI/sectionError: +loadErrorMessage" bind="@src: ROUTER/+src"></sym-import>
+      </div>
+      <agui-footer bind="hidden: !APP/footer">{{APP/footer}}</agui-footer>
+    </agui-viewport>
+  </agui-app>
+</sym-context>

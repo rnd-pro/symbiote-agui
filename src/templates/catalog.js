@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { CommandError } from '../shared/command-error.js';
 import { hasErrorCode } from '../shared/system-error.js';
 import { TEMPLATE_ID_PATTERN } from './constants.js';
+import { templateSchema } from './schema.js';
 
 let root = new URL('../../templates/', import.meta.url);
 
@@ -28,6 +29,7 @@ async function descriptor(id) {
     || !data.configuration || typeof data.configuration !== 'object' || Array.isArray(data.configuration)) {
     throw new CommandError(`Invalid packaged template descriptor: ${id}.`);
   }
+  data.configuration = await templateSchema(data.configuration);
   return {
     folder,
     descriptor: /** @type {import('../../types/templates.js').TemplateDescriptor} */ (data),

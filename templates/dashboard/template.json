@@ -1,0 +1,92 @@
+{
+  "id": "dashboard",
+  "title": "Dashboard",
+  "summary": "Metric cards with optional chart and map regions that mount only when enabled.",
+  "configuration": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "APP": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": { "$ref": "#/$defs/label" },
+          "footer": { "type": "string", "maxLength": 4096 },
+          "theme": { "enum": ["system", "light", "dark"] },
+          "chartLabel": { "$ref": "#/$defs/label" },
+          "chartXLabel": { "$ref": "#/$defs/label" },
+          "chartType": { "enum": ["line", "bar", "donut"] },
+          "mapLabel": { "$ref": "#/$defs/label" },
+          "chartTexts": { "$ref": "#/$defs/texts" },
+          "mapTexts": { "$ref": "#/$defs/texts" },
+          "emptyMetrics": { "$ref": "#/$defs/label" }
+        }
+      },
+      "UI": {
+        "description": "Optional regions are unmounted while disabled. Map movement publishes the transient mapView.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "chartVisible": { "type": "boolean" },
+          "mapVisible": { "type": "boolean" },
+          "mapView": { "type": "object", "additionalProperties": false, "required": ["center", "zoom"], "properties": {
+            "center": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
+            "zoom": { "type": "integer" }
+          } }
+        }
+      },
+      "DATA": {
+        "description": "Prepared values only; the starter does not aggregate data or access external systems. Map tiles are off unless explicitly configured.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "metrics": {
+            "type": "array",
+            "maxItems": 24,
+            "items": {
+              "type": "object", "additionalProperties": false, "required": ["id", "label", "value"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+                "label": { "$ref": "#/$defs/label" },
+                "value": { "type": ["string", "number"], "maxLength": 2048 }
+              }
+            }
+          },
+          "chartRows": { "type": "array", "items": { "type": "object" } },
+          "chartSeries": {
+            "description": "Native chart series; library validation checks supported formats, colors, scales, and field values.",
+            "type": "array",
+            "items": {
+              "type": "object", "additionalProperties": false, "required": ["key", "valueKey", "label"],
+              "properties": {
+                "key": { "type": "string" }, "valueKey": { "type": "string" }, "label": { "type": "string" },
+                "color": { "type": "string" }, "format": { "type": "string" }, "currency": { "type": "string" },
+                "digits": { "type": "integer" }, "unit": { "type": "string" }
+              }
+            }
+          },
+          "mapRows": { "type": "array", "items": { "type": "object" } },
+          "mapTiles": {
+            "anyOf": [
+              { "type": "null" },
+              {
+                "type": "object", "additionalProperties": false, "required": ["url", "attribution"],
+                "properties": {
+                  "url": { "type": "string" }, "attribution": { "type": "string" }, "attributionUrl": { "type": "string" },
+                  "minZoom": { "type": "integer" }, "maxZoom": { "type": "integer" }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "ROUTER": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "routes": { "$ref": "#/$defs/routes" }
+        }
+      }
+    }
+  }
+}

@@ -65,6 +65,7 @@
     "uilib:styles": "node scripts/build-uilib-styles.js",
     "uilib:build": "node scripts/build-uilib.js",
     "gallery:styles": "node scripts/build-gallery-styles.js",
+    "templates:styles": "node scripts/build-template-styles.js",
     "test:node": "node --test tests/node/*.test.js",
     "test:package": "node --test tests/node/package-smoke.js",
     "pretest:package": "npm run pretest:browser",
@@ -72,7 +73,7 @@
     "test:browser": "node --test --test-concurrency=1 tests/browser/*.test.js",
     "test": "npm run test:node && npm run test:browser",
     "prepublishOnly": "npm run types && npm run test:node",
-    "prepack": "npm run uilib:build"
+    "prepack": "npm run uilib:build && npm run templates:styles"
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.3.1",

@@ -1,0 +1,27 @@
+<div class="grid gap-4">
+  <sym-collection data="DATA/metrics" pub-map="UI/metricCount: count">
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" itemize="items">
+      <template>
+        <agui-panel process-inner-html="false">
+          <dl>
+            <dt class="text-sm text-agui-muted">{{label}}</dt>
+            <dd class="mt-2 text-3xl font-medium">{{value}}</dd>
+          </dl>
+        </agui-panel>
+      </template>
+    </div>
+  </sym-collection>
+  <agui-state status="empty" bind="$.message: APP/emptyMetrics; hidden: UI/metricCount"></agui-state>
+  <sym-conditional when="UI/chartVisible" behavior="dom-add">
+    <agui-panel>
+      <agui-chart selection="none"
+        bind="$.label: APP/chartLabel; $.type: APP/chartType; $.xLabel: APP/chartXLabel; $.rows: DATA/chartRows; $.series: DATA/chartSeries; $.texts: APP/chartTexts"></agui-chart>
+    </agui-panel>
+  </sym-conditional>
+  <sym-conditional when="UI/mapVisible" behavior="dom-add">
+    <agui-panel>
+      <agui-map selection="none" view-pub-to="UI/mapView"
+        bind="$.label: APP/mapLabel; $.rows: DATA/mapRows; $.tiles: DATA/mapTiles; $.view: UI/mapView; $.texts: APP/mapTexts"></agui-map>
+    </agui-panel>
+  </sym-conditional>
+</div>

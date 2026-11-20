@@ -1,0 +1,68 @@
+{
+  "id": "collection",
+  "title": "Collection",
+  "summary": "Filter records, switch between tables and cards, and use shared selection with a details dialog.",
+  "configuration": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "APP": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": { "$ref": "#/$defs/label" },
+          "footer": { "type": "string", "maxLength": 4096 },
+          "theme": { "enum": ["system", "light", "dark"] },
+          "palette": { "type": "string" },
+          "paletteTexts": { "$ref": "#/$defs/texts" },
+          "recordsLabel": { "$ref": "#/$defs/label" },
+          "filterLabel": { "$ref": "#/$defs/label" },
+          "detailsLabel": { "$ref": "#/$defs/label" },
+          "texts": { "$ref": "#/$defs/texts" }
+        }
+      },
+      "UI": {
+        "description": "Shared selection mode and initial table/cards tab. Filter results and selection counts are component outputs.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "view": { "enum": ["table", "cards"] },
+          "selectionMode": { "enum": ["single", "multiple"] },
+          "selectedIds": { "type": "array", "maxItems": 5000, "items": { "type": "string" } },
+          "query": { "type": "string", "maxLength": 2048 },
+          "filters": { "type": "object" }
+        }
+      },
+      "DATA": {
+        "description": "Records need unique id and title; status and description are optional text. Other fields can supply table columns and filters.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "records": {
+            "type": "array",
+            "maxItems": 5000,
+            "items": {
+              "type": "object",
+              "required": ["id", "title"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+                "title": { "type": "string", "maxLength": 2048 },
+                "status": { "type": "string", "maxLength": 2048 },
+                "description": { "type": "string", "maxLength": 65536 }
+              }
+            }
+          },
+          "columns": { "description": "Native table/filter field definitions; the library validates their types, options, sorting, and filtering rules.", "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "ROUTER": {
+        "description": "One route map drives the navigation, heading, and imported content.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "routes": { "$ref": "#/$defs/routes" }
+        }
+      }
+    }
+  }
+}

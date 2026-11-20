@@ -1,0 +1,39 @@
+{
+  "APP": {
+    "title": "My collection",
+    "footer": "",
+    "theme": "system",
+    "palette": "graphite",
+    "paletteTexts": { "graphite": "Graphite", "ocean": "Ocean", "forest": "Forest", "desert": "Desert" },
+    "recordsLabel": "Records",
+    "filterLabel": "Find records",
+    "detailsLabel": "Selected records",
+    "texts": {
+      "search": "Search records", "results": "Records", "selected": "Selected", "selection": "Selection",
+      "selectRow": "Select record", "selectAll": "Select filtered records", "page": "Page", "pagination": "Record pages",
+      "previous": "Previous page", "next": "Next page", "all": "All values", "minimum": "Minimum", "maximum": "Maximum",
+      "trueLabel": "Yes", "falseLabel": "No", "empty": "No matching records.", "loading": "Loading records...",
+      "invalidRows": "Check record identities.", "invalidColumns": "Check table columns.", "invalidFields": "Check filter fields.",
+      "invalidState": "Check collection settings.", "unavailable": "Records are unavailable."
+    }
+  },
+  "UI": {
+    "view": "table",
+    "selectionMode": "single",
+    "selectedIds": [],
+    "query": "",
+    "filters": {}
+  },
+  "DATA": {
+    "records": [],
+    "columns": [
+      { "key": "title", "label": "Title", "type": "text", "sortable": true, "filter": "contains" },
+      { "key": "status", "label": "Status", "type": "text", "sortable": true, "filter": "contains" }
+    ]
+  },
+  "ROUTER": {
+    "routes": {
+      "records": { "title": "Records", "icon": "table_chart", "src": "./_assets/records.html", "default": true }
+    }
+  }
+}

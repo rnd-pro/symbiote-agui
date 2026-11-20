@@ -4,6 +4,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
 import { analyzeFragment } from './fragment.js';
+import { analyzeMarkup } from './analyze.js';
 import { UILIB_TEMPLATES, UILIB_STATE_CLASSES } from '../../uilib/templates.js';
 import { PAGE_TEMPLATES } from '../page/client/templates.js';
 
@@ -24,6 +25,21 @@ export async function compileStyles(source) {
     base: dirname(fileURLToPath(source)),
     onDependency() {},
   });
+}
+
+/**
+ * Compile utilities used by owned HTML chunks, without global page styles.
+ * @param {string[]} fragments
+ */
+export async function compileUtilities(fragments) {
+  let compiler = await compile('@reference "./theme.css";\n@layer utilities { @tailwind utilities; }', {
+    base: fileURLToPath(new URL('../../uilib/', import.meta.url)),
+    onDependency() {},
+  });
+  let classes = new Set(fragments.flatMap((html) => analyzeMarkup(html).classes));
+  return compiler.build([
+    ...classes,
+  ]);
 }
 
 /** @returns {Promise<import('../../types/markup.js').StyleCompiler>} */

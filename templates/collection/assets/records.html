@@ -1,0 +1,33 @@
+<agui-tabs label="Record views" pub-to="UI/view" bind="$.value: UI/view">
+  <agui-tab value="table" label="Table">
+    <agui-table page-size="20" pub-to="UI/selectedIds" sort-pub-to="UI/sort" pub-map="UI/selectedCount: selectedCount"
+      bind="$.label: APP/recordsLabel; $.rows: DATA/records; $.columns: DATA/columns; $.texts: APP/texts; $.value: UI/selectedIds; $.filteredIds: UI/matchingIds; $.sort: UI/sort; $.selection: UI/selectionMode"></agui-table>
+  </agui-tab>
+  <agui-tab value="cards" label="Cards">
+    <agui-list class="grid gap-4 md:grid-cols-2" pub-to="UI/selectedIds"
+      bind="$.label: APP/recordsLabel; $.items: DATA/records; $.texts: APP/texts; $.value: UI/selectedIds; $.filteredIds: UI/matchingIds; $.selection: UI/selectionMode">
+      <template>
+        <agui-panel selectable process-inner-html="false" class="grid gap-2" role="listitem"
+          bind="@data-selected: _selected; ariaDisabled: _selectionDisabled">
+          <h2 class="font-medium">{{title}}</h2>
+          <p class="text-sm text-agui-muted">{{status}}</p>
+          <agui-toolbar aria-label="Record selection">
+            <button type="button" bind="onclick: ^selectItem; ariaPressed: _selected; disabled: _selectionDisabled">Select</button>
+          </agui-toolbar>
+        </agui-panel>
+      </template>
+    </agui-list>
+  </agui-tab>
+</agui-tabs>
+<agui-dialog close-label="Close details" pub-to="UI/detailsOpen" bind="$.label: APP/detailsLabel; $.value: UI/detailsOpen">
+  <agui-list selection="none" class="grid gap-4"
+    bind="$.label: APP/detailsLabel; $.items: DATA/records; $.texts: APP/texts; $.filteredIds: UI/selectedIds">
+    <template>
+      <agui-panel process-inner-html="false" class="grid gap-2">
+        <h2 class="font-medium">{{title}}</h2>
+        <p class="text-sm text-agui-muted">{{status}}</p>
+        <p class="whitespace-pre-wrap">{{description}}</p>
+      </agui-panel>
+    </template>
+  </agui-list>
+</agui-dialog>

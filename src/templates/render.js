@@ -11,6 +11,7 @@ import { MAX_HTML_BYTES } from '../markup/constants.js';
 import { CommandError } from '../shared/command-error.js';
 import { validateSchema } from '../shared/schema.js';
 import { loadTemplate } from './catalog.js';
+import { validateTemplateWidgets } from './widgets.js';
 
 /**
  * @param {import('../../types/templates.js').TemplateDescriptor} descriptor
@@ -78,6 +79,7 @@ export async function renderTemplate(id, input = {}) {
       ...values,
     });
   }
+  validateTemplateWidgets(id, configuration);
   let html = serializeMarkup(fragment);
   if (Buffer.byteLength(html) > MAX_HTML_BYTES) { throw new CommandError('Template markup exceeds the HTML size limit.'); }
   analyzeMarkup(html);

@@ -36,5 +36,10 @@ export async function definitionInfo(sessionId) {
   let summary = description.split(/\r?\n/).find((line) => line.trim() && !line.startsWith('#'))?.trim() || '';
   let metadata = await readMetadata(sessionId);
   return { sessionId, ...paths, title, summary, description,
-    ...(metadata.dataFlow ? { metadata, dataFlowSummary: dataFlowSummary(metadata.dataFlow) } : {}) };
+    ...(Object.keys(metadata).length ? {
+      metadata,
+      ...(metadata.dataFlow ? {
+        dataFlowSummary: dataFlowSummary(metadata.dataFlow),
+      } : {}),
+    } : {}) };
 }

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { link, mkdir, rename, unlink, writeFile } from 'node:fs/promises';
+import { link, lstat, mkdir, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { readUtf8Markup } from '../markup/read-input.js';
 import { CommandError } from '../shared/command-error.js';
@@ -69,7 +69,7 @@ export async function prepareTextFile(path, text, expected) {
  * @param {string} path
  * @param {string} text
  * @param {string} [id]
- * @returns {Promise<import('../../types/session.js').PreparedCache>}
+ * @returns {Promise<import('../../types/library.js').PreparedNewFile>}
  */
 export async function prepareNewTextFile(path, text, id = randomUUID()) {
   return prepareFile(path, text, {
@@ -81,11 +81,12 @@ export async function prepareNewTextFile(path, text, id = randomUUID()) {
  * @param {string} path
  * @param {string | Uint8Array} data
  * @param {{ id?: string; replace?: boolean }} [options]
- * @returns {Promise<import('../../types/session.js').PreparedCache>}
+ * @returns {Promise<import('../../types/library.js').PreparedNewFile>}
  */
 export async function prepareFile(path, data, options = {}) {
   let id = options.id ?? randomUUID();
   let temporary = options.id ? `${path}.${id}.tmp` : join(dirname(path), `.agui-${id}.tmp`);
+  let identity;
   await mkdir(dirname(path), {
     recursive: true,
     mode: 0o700,
@@ -96,11 +97,13 @@ export async function prepareFile(path, data, options = {}) {
       mode: 0o600,
       flush: true,
     });
+    identity = await lstat(temporary);
   } catch (error) {
     if (!hasErrorCode(error, 'EEXIST')) { await removeFile(temporary).catch(() => {}); }
     throw error;
   }
   return {
+    identity,
     // A link publishes a complete file atomically and fails if the target exists.
     commit: () => options.replace ? rename(temporary, path) : link(temporary, path),
     discard: () => removeFile(temporary),

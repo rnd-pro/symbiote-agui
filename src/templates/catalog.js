@@ -2,14 +2,20 @@ import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { CommandError } from '../shared/command-error.js';
 import { hasErrorCode } from '../shared/system-error.js';
+import { TEMPLATE_ID_PATTERN } from './constants.js';
 
 let root = new URL('../../templates/', import.meta.url);
 
 /** @param {string} id */
-async function descriptor(id) {
-  if (!/^[a-z][a-z0-9-]{0,63}$/.test(id)) {
+export function assertTemplateId(id) {
+  if (!TEMPLATE_ID_PATTERN.test(id)) {
     throw new CommandError('Choose a packaged template ID.');
   }
+}
+
+/** @param {string} id */
+async function descriptor(id) {
+  assertTemplateId(id);
   let folder = new URL(`${id}/`, root);
   let data;
   try {
@@ -61,14 +67,17 @@ export async function loadTemplate(id) {
   let [
     html,
     defaults,
+    description,
   ] = await Promise.all([
     readFile(new URL('index.html', item.folder), 'utf8'),
     readFile(new URL('defaults.json', item.folder), 'utf8'),
+    readFile(new URL('description.md', item.folder), 'utf8'),
   ]);
   return {
     descriptor: item.descriptor,
     defaults: JSON.parse(defaults),
     html,
-    assetsPath: fileURLToPath(new URL('assets/', item.folder)),
+    description,
+    assetsPath: fileURLToPath(new URL('assets', item.folder)),
   };
 }

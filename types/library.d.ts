@@ -1,3 +1,9 @@
+import type { PreparedCache } from './session.js';
+
+export interface PreparedNewFile extends PreparedCache {
+  identity: Pick<import('node:fs').Stats, 'dev' | 'ino'>;
+}
+
 export interface StorageSettings {
   mode: 'folder' | 'cache';
   source: 'environment' | 'project' | 'manager';

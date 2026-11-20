@@ -1,5 +1,6 @@
 import { CONNECTOR_COMMANDS } from './connectors.js';
 import { ASSET_COMMANDS } from './assets.js';
+import { TEMPLATE_COMMANDS } from '../templates/constants.js';
 
 export let COMMANDS = Object.freeze({
   save: { usage: 'save <SESSION_ID> [--file <HTML_PATH>]', options: ['file'] },
@@ -87,7 +88,7 @@ export let FEEDBACK_COMMANDS = Object.freeze({
 export let METADATA_COMMANDS = Object.freeze({
   get: { usage: 'metadata get <SESSION_ID>', options: [] },
   set: { usage: 'metadata set <SESSION_ID> [--file <PATH>]', options: ['file'] },
-  clear: { usage: 'metadata clear <SESSION_ID> --key dataFlow', options: ['key'] },
+  clear: { usage: 'metadata clear <SESSION_ID> --key <dataFlow|template>', options: ['key'] },
 });
 
 export const PROXY_COMMANDS = Object.freeze({
@@ -113,6 +114,7 @@ export let HELP = [
   ...Object.values(PROXY_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(ASSET_COMMANDS).map(({ usage }) => `  ${usage}`),
   ...Object.values(CONNECTOR_COMMANDS).map(({ usage }) => `  ${usage}`),
+  ...Object.values(TEMPLATE_COMMANDS).map(({ usage }) => `  ${usage}`),
   '  manager [--no-open]          Open the built-in local session manager',
   '  manager status              Show the manager URL and storage scope',
   '  manager stop                Stop the manager without stopping sessions',
@@ -128,10 +130,11 @@ export let HELP = [
   '',
   'insert reads UTF-8 HTML from stdin when --file is absent.',
   'save stores a definition without starting it; without --file it saves existing content or imports the private cache.',
+  'templates create saves configured starter HTML, description, assets, and provenance without starting a worker or replacing an existing session.',
   'describe reads or replaces the Markdown description; accepted inserts preserve existing descriptions.',
-  'metadata get/set/clear read or edit private session data-flow descriptions without starting a worker.',
+  'metadata get/set/clear read or edit private data-flow descriptions and template provenance without starting a worker.',
   'metadata set reads JSON from file or stdin; supplied fields replace those fields, leaving others unchanged.',
-  'metadata clear --key dataFlow removes only data-flow metadata, not application data or the description.',
+  'metadata clear removes only the named metadata field, not application data or the description.',
   'proxy allow/remove configures saved public source origins; status reports policy, limits, and forwarding availability.',
   'assets add/list/remove manages published session files without restarting workers; add requires --replace to overwrite.',
   'Running sessions serve published files at /<SESSION_ID>/_assets/<RELATIVE_PATH>; status reports route availability.',

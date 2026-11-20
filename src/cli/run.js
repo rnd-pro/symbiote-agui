@@ -22,6 +22,7 @@ import { renameSession } from '../sessions/rename.js';
 import { runProxyCommand } from '../proxy/service.js';
 import { runConnectorCommand } from '../connectors/service.js';
 import { runAssetCommand } from '../assets/service.js';
+import { runTemplateCommand } from './templates.js';
 
 /** @param {import('../../types/cli.js').CommandResult} result */
 function printResult(result) {
@@ -35,6 +36,13 @@ function printResult(result) {
 export async function run(args) {
   try {
     let request = parseCommand(args);
+    if (request.kind === 'template') {
+      printResult({
+        ok: true,
+        ...await runTemplateCommand(request),
+      });
+      return EXIT_CODE.SUCCESS;
+    }
     if (request.kind === 'assets') {
       printResult({
         ok: true,

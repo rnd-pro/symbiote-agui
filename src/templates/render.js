@@ -85,6 +85,7 @@ export async function renderTemplate(id, input = {}) {
     descriptor: template.descriptor,
     configuration,
     html,
+    description: template.description,
     assetsPath: template.assetsPath,
   };
 }

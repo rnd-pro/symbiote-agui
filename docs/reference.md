@@ -102,6 +102,8 @@ npx symbiote-agui metadata clear my-workspace --key dataFlow
 
 `get` returns `{ sessionId, metadata }` inside the normal CLI result. `set` accepts JSON from a file or stdin, replacing each supplied top-level metadata field and retaining omitted fields. A supplied `dataFlow` must be complete; nested objects are not merged. `clear --key dataFlow` removes only that field, preserving HTML, Markdown, and application data. Commands work with stopped and running saved sessions without restarting workers.
 
+The optional `template` field records the starter ID as `id` and the originating AGUI package version as `packageVersion`. [Template creation](../templates/README.md) writes this automatically; it grants no runtime permissions and does not apply future template updates. Use `metadata clear <SESSION_ID> --key template` to remove only provenance.
+
 Example `metadata.json` using fictional data:
 
 ```json

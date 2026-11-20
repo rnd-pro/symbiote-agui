@@ -1,6 +1,7 @@
 import { CommandError } from '../shared/command-error.js';
 import { isPlainStateKey } from '../../uilib/shared/initial-data.js';
 import { DATA_ENDPOINT_KIND, METADATA_KEYS, METADATA_LIMITS } from './constants.js';
+import { TEMPLATE_ID_PATTERN } from '../templates/constants.js';
 
 /**
  * @param {unknown} input
@@ -71,8 +72,35 @@ function binding(input) {
  */
 export function validateMetadata(input) {
   object(input, [], [...METADATA_KEYS]);
-  if (!Object.hasOwn(input, 'dataFlow')) { return {}; }
-  let flow = input.dataFlow;
+  /** @type {import('../../types/metadata.js').SessionMetadata} */
+  let metadata = {};
+  if (Object.hasOwn(input, 'template')) {
+    object(input.template, [
+      'id',
+      'packageVersion',
+    ]);
+    let id = text(input.template.id, 64);
+    let packageVersion = text(input.template.packageVersion, 128);
+    if (!TEMPLATE_ID_PATTERN.test(id) || !/^\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?$/.test(packageVersion)) {
+      throw new CommandError('Template provenance requires a template ID and package version.');
+    }
+    metadata.template = {
+      id,
+      packageVersion,
+    };
+  }
+  if (Object.hasOwn(input, 'dataFlow')) { metadata.dataFlow = dataFlow(input.dataFlow); }
+  if (Buffer.byteLength(JSON.stringify(metadata)) + 1 > METADATA_LIMITS.bytes) {
+    throw new CommandError('Metadata exceeds 16 KiB.');
+  }
+  return metadata;
+}
+
+/**
+ * @param {unknown} flow
+ * @returns {import('../../types/metadata.js').DataFlow}
+ */
+function dataFlow(flow) {
   object(flow, ['description', 'initialSource', 'bindings', 'targets']);
   if (!Array.isArray(flow.targets) || !flow.targets.length || flow.targets.length > METADATA_LIMITS.endpoints
     || !Array.isArray(flow.bindings) || !flow.bindings.length || flow.bindings.length > METADATA_LIMITS.bindings) {
@@ -82,10 +110,10 @@ export function validateMetadata(input) {
   if (new Set(bindings.map((item) => item.provider)).size !== bindings.length) {
     throw new CommandError('Use one binding per provider, with its property keys.');
   }
-  let metadata = { dataFlow: { description: text(flow.description), initialSource: endpoint(flow.initialSource),
-    bindings, targets: flow.targets.map(endpoint) } };
-  if (Buffer.byteLength(JSON.stringify(metadata)) + 1 > METADATA_LIMITS.bytes) {
-    throw new CommandError('Metadata exceeds 16 KiB.');
-  }
-  return metadata;
+  return {
+    description: text(flow.description),
+    initialSource: endpoint(flow.initialSource),
+    bindings,
+    targets: flow.targets.map(endpoint),
+  };
 }

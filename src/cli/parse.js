@@ -8,6 +8,7 @@ import { parseMetadataCommand } from './metadata.js';
 import { parseProxyCommand } from './proxy.js';
 import { parseConnectorCommand } from './connectors.js';
 import { parseAssetCommand } from './assets.js';
+import { parseTemplateCommand } from './templates.js';
 
 /**
  * @param {string[]} args
@@ -26,6 +27,9 @@ export function parseCommand(args) {
         version: { type: 'boolean', short: 'v' },
         'no-open': { type: 'boolean' },
         file: { type: 'string' },
+        config: {
+          type: 'string',
+        },
         page: { type: 'string' },
         tunnel: { type: 'boolean' },
         query: { type: 'string' },
@@ -89,6 +93,8 @@ export function parseCommand(args) {
       open: !values['no-open'],
     };
   }
+  let template = parseTemplateCommand(positionals, values);
+  if (template) { return template; }
   let library = parseLibraryCommand(positionals, values);
   if (library) { return library; }
   let assets = parseAssetCommand(positionals, values);

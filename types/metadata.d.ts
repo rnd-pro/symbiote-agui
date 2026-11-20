@@ -21,6 +21,7 @@ export interface DataFlow {
 
 export interface SessionMetadata {
   dataFlow?: DataFlow;
+  template?: import('./templates.js').TemplateProvenance;
 }
 
 export interface SessionMetadataResult {

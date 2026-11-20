@@ -15,7 +15,7 @@ export function parseMetadataCommand(positionals, values) {
   let command = positionals[1];
   let sessionId = positionals[2];
   if (!command || !Object.hasOwn(METADATA_COMMANDS, command) || !sessionId || positionals.length !== 3) {
-    throw new CommandError('Usage: symbiote-agui metadata get <SESSION_ID> | metadata set <SESSION_ID> [--file <PATH>] | metadata clear <SESSION_ID> --key dataFlow');
+    throw new CommandError('Usage: symbiote-agui metadata get <SESSION_ID> | metadata set <SESSION_ID> [--file <PATH>] | metadata clear <SESSION_ID> --key <dataFlow|template>');
   }
   assertSessionId(sessionId);
   let allowed = /** @type {string[]} */ (METADATA_COMMANDS[/** @type {keyof typeof METADATA_COMMANDS} */ (command)].options);

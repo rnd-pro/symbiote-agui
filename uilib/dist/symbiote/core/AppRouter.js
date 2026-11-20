@@ -1,0 +1,1 @@
+import{a,b}from"../../shared/chunk-BVHT4FYF.js";import"../../shared/chunk-EAU6O3UP.js";import"../../shared/chunk-KDOW3GQI.js";import"../../shared/chunk-DB7X7MVE.js";import"../../shared/chunk-6BN42W2R.js";export{a as AppRouter,b as default};

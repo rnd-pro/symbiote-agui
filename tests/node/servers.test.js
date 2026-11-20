@@ -29,7 +29,7 @@ test('JSDA serves the page on loopback without exposing source files', async (t)
   assert.equal((await fetch(new URL('authorize', page.url))).status, 404);
   assert.equal((await fetch(new URL('/shell.html', page.url))).status, 404);
   assert.equal((await fetch(new URL('/src/page/shell.html', page.url))).status, 404);
-  assert.equal((await fetch(new URL('/uilib/index.js', page.url))).status, 404);
+  assert.equal((await fetch(new URL('/uilib/index.js', page.url))).status, 200);
   assert.equal((await fetch(new URL('/../../package.json', page.url))).status, 404);
   let stylesheet = await fetch(new URL('/styles.css.js', page.url));
   assert.equal(stylesheet.status, 200);

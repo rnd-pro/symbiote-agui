@@ -1,9 +1,10 @@
 import { fileURLToPath } from 'node:url';
+import { libraryAssets, libraryEntry } from './library.js';
+import { buildClient } from './client-build.js';
+import { readFile } from 'node:fs/promises';
 import { closeServer, waitForServer } from '../shared/server.js';
 import { createStyles } from '../markup/styles.js';
 import { STYLESHEET_PATH, CLIENT_SCRIPT_PATH } from '../markup/constants.js';
-import { CHART_RUNTIME_PATH, MAP_RUNTIME_PATH, MAP_CSS_PATH, MAP_ASSET_PREFIX, MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH, DIAGRAM_RUNTIME_PATH } from './widget-assets.js';
-import { serveMapAsset } from './map-assets.js';
 import { TUNNEL_HEALTH_PATH } from '../tunnel/constants.js';
 import { AssetProxy } from '../proxy/asset-proxy.js';
 import { emptyProxyPolicy } from '../proxy/policy.js';
@@ -18,6 +19,9 @@ import { definitionPaths } from '../library/paths.js';
  */
 export async function startPageServer(access, getProxyPolicy = emptyProxyPolicy, proxyDependencies) {
   let styles = await createStyles();
+  let serveLibrary = await libraryAssets();
+  let client = await buildClient(fileURLToPath(new URL('../page/client/index.js', import.meta.url)));
+  let shell = (await readFile(new URL('../page/shell.html', import.meta.url), 'utf8')).replace('</head>', `<link rel="stylesheet" href="${libraryEntry().replace(/library\.js$/, 'styles.css')}"></head>`);
   let { default: config } = await import('jsda-kit/cfg');
   let { createServer } = await import('jsda-kit/server/JSDAServer.js');
   config.dynamic.baseDir = fileURLToPath(new URL('../../', import.meta.url));
@@ -39,7 +43,8 @@ export async function startPageServer(access, getProxyPolicy = emptyProxyPolicy,
   let origin = '';
   let [handler] = server.listeners('request');
   server.removeAllListeners('request');
-  server.on('request', (request, response) => {
+  server.on('request', async (request, response) => {
+    if (await serveLibrary(request, response)) { return; }
     let pathname = request.url?.split('?')[0];
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
@@ -67,30 +72,31 @@ export async function startPageServer(access, getProxyPolicy = emptyProxyPolicy,
       response.writeHead(308, { location: access.path }).end();
       return;
     }
-    if (request.method === 'GET' && (pathname === MAP_CSS_PATH || pathname?.startsWith(MAP_ASSET_PREFIX))) {
-      serveMapAsset(pathname, response).then((served) => {
-        if (!served) { response.writeHead(404).end(); }
-      }).catch(() => response.writeHead(500).end());
-      return;
-    }
     if (request.method !== 'GET' || ![
       access.path,
       STYLESHEET_PATH,
       CLIENT_SCRIPT_PATH,
-      CHART_RUNTIME_PATH,
-      MAP_RUNTIME_PATH,
-      MARKDOWN_RUNTIME_PATH,
-      MARKDOWN_SANITIZER_PATH,
-      DIAGRAM_RUNTIME_PATH,
     ].includes(pathname || '')) {
       response.writeHead(404).end();
       return;
     }
 
+    if (pathname === CLIENT_SCRIPT_PATH) {
+      response.writeHead(200, {
+        'Content-Type': 'text/javascript',
+      }).end(client);
+      return;
+    }
+    if (pathname === access.path) {
+      response.writeHead(200, {
+        'Content-Type': 'text/html',
+      }).end(shell);
+      return;
+    }
     // Browser asset URLs stay independent of the packaged source folders.
     if (pathname === access.path) { request.url = '/'; }
     else if (pathname === CLIENT_SCRIPT_PATH || pathname === STYLESHEET_PATH) { request.url = `/src/page${pathname}`; }
-    else { request.url = pathname?.replace('/client/uilib/', '/uilib/'); }
+
 
     Promise.resolve(handler?.call(server, request, response)).catch((error) => {
       console.error(error);

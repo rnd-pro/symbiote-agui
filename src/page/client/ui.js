@@ -5,12 +5,12 @@ import { SessionThemeToggle } from './theme-toggle.js';
 import { SessionThemeSelector } from './theme-selector.js';
 import { setTextSourceResolver } from '../../../uilib/shared/source.js';
 import { proxySourceUrl } from './proxy-source.js';
-import { UILIB_ASSET_PATH } from '../../markup/constants.js';
+import { libraryBase } from './library-base.js';
 
 export function registerPageComponents() {
   setTextSourceResolver(proxySourceUrl);
   registerUiLibComponents({
-    assetBaseUrl: new URL(UILIB_ASSET_PATH, document.baseURI),
+    assetBaseUrl: new URL(libraryBase, document.baseURI),
     themeToggle: SessionThemeToggle,
     themeSelector: SessionThemeSelector,
   });

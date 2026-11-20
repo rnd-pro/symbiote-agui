@@ -1,0 +1,1 @@
+import{b as e}from"./chunk-XIWZWQEI.js";function r(t){return typeof t!="string"?"invalidValue":t.length>e.inputBytes||new TextEncoder().encode(t).byteLength>e.inputBytes?"inputTooLarge":t.trim()?"":"empty"}export{r as a};

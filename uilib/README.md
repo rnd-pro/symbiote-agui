@@ -42,6 +42,14 @@ Package exports include `symbiote-agui/uilib/browser` for the prepared bootstrap
 
 Component actions bubble as `agui:action` DOM events with bounded metadata. The AGUI page client uses `registerPageComponents()` to add its data toolbar, connector, and worker-backed theme subclasses; it forwards action events through the existing transport. The manager uses the generic library and its own preference storage.
 
+AGUI pages and the manager load the prepared graph through the local `/uilib/` endpoint. Only packaged JavaScript, CSS, and image assets are public there; session data and manager controls keep their own access rules. For a host-configured CDN, set `AGUI_UILIB_URL` to an HTTPS URL ending in `/uilib/dist/library.js`, using a package version compatible with your AGUI installation. For example:
+
+```sh
+AGUI_UILIB_URL=https://cdn.jsdelivr.net/npm/symbiote-agui@VERSION/uilib/dist/library.js npx symbiote-agui manager
+```
+
+The value is selected when the worker starts. Restart existing workers to change it. AGUI uses the explicit-registration entry so its saving and feedback adapters share the selected runtime. The manager permits that CDN origin for its library scripts, styles, and asset fetches; control requests still require the manager's own origin and credential. Omit the setting to use the local graph without CDN JavaScript access.
+
 Registration also connects the Material Symbols stylesheet from Google Fonts. Icons stay hidden until their font loads; controls and accessible names remain available if loading fails. See [icon loading and CSP requirements](./content/icon/README.md).
 
 ## Styles

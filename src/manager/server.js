@@ -2,7 +2,8 @@ import { timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { jsBuild } from 'jsda-kit/server/build-asset.js';
+import { buildClient } from '../server/client-build.js';
+import { libraryAssets, libraryEntry } from '../server/library.js';
 import { WebSocketServer, WebSocket } from 'ws';
 import { closeServer, waitForServer } from '../shared/server.js';
 import { ManagerOperations } from './operations.js';
@@ -11,7 +12,6 @@ import { createManagerStyles } from './styles.js';
 import { MANAGER_SECTIONS } from './sections.js';
 import { projectId } from '../projects/identity.js';
 import { validManagerQuery } from './scope.js';
-import { MARKDOWN_RUNTIME_PATH, MARKDOWN_SANITIZER_PATH, DIAGRAM_RUNTIME_PATH } from '../server/widget-assets.js';
 import { ICON_STYLESHEET_ORIGIN, ICON_FONT_ORIGIN } from '../../uilib/content/icon/font.js';
 
 /**
@@ -30,8 +30,11 @@ function authorized(value, expected) {
 export async function startManagerServer(record, stop) {
   let [stylesheet, client] = await Promise.all([
     createManagerStyles(),
-    jsBuild(fileURLToPath(new URL('./page/index.js', import.meta.url))),
+    buildClient(fileURLToPath(new URL('./page/index.js', import.meta.url))),
   ]);
+  let serveLibrary = await libraryAssets();
+  let selectedLibrary = libraryEntry();
+  let remote = selectedLibrary.startsWith('https:') ? ` ${new URL(selectedLibrary).origin}` : '';
   let operations = new ManagerOperations(record);
   let origin = '';
   let host = '';
@@ -44,28 +47,13 @@ export async function startManagerServer(record, stop) {
   ] of Object.entries(MANAGER_SECTIONS)) {
     files.set(`${MANAGER_PATH}page/sections/${name}.html`, file);
   }
-  let runtimeAssets = new Map([
-    [
-      DIAGRAM_RUNTIME_PATH,
-      new URL('../../uilib/widgets/diagram/runtime/index.js', import.meta.url),
-    ],
-    [
-      MARKDOWN_RUNTIME_PATH,
-      new URL('../../uilib/widgets/markdown/runtime/index.js', import.meta.url),
-    ],
-    [
-      MARKDOWN_SANITIZER_PATH,
-      new URL('../../uilib/widgets/markdown/sanitizer/index.js', import.meta.url),
-    ],
-  ]);
-  /** @type {Map<string, Promise<string>>} */
-  let runtimeBundles = new Map();
   let server = createServer(async (request, response) => {
+    if (await serveLibrary(request, response)) { return; }
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('X-Frame-Options', 'DENY');
-    response.setHeader('Content-Security-Policy', `default-src 'none'; script-src 'self'; style-src 'self' ${ICON_STYLESHEET_ORIGIN}; img-src data:; font-src data: ${ICON_FONT_ORIGIN}; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'`);
+    response.setHeader('Content-Security-Policy', `default-src 'none'; script-src 'self'${remote}; style-src 'self'${remote} ${ICON_STYLESHEET_ORIGIN}; img-src data:; font-src data: ${ICON_FONT_ORIGIN}; connect-src 'self'${remote}; base-uri 'none'; frame-ancestors 'none'; form-action 'none'`);
     if (request.headers.host !== host || (request.headers.origin && request.headers.origin !== origin)) {
       response.writeHead(403).end(); return;
     }
@@ -92,23 +80,11 @@ export async function startManagerServer(record, stop) {
       response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }).end(client);
       return;
     }
-    let runtimeAsset = runtimeAssets.get(path);
-    if (runtimeAsset) {
-      try {
-        let bundle = runtimeBundles.get(path) || jsBuild(fileURLToPath(runtimeAsset));
-        runtimeBundles.set(path, bundle);
-        let script = await bundle;
-        response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }).end(script);
-      } catch {
-        runtimeBundles.delete(path);
-        response.writeHead(500).end();
-      }
-      return;
-    }
     let file = files.get(path);
     if (!file) { response.writeHead(404).end(); return; }
     try {
       let content = await readFile(file);
+      if (path === MANAGER_PATH) { content = Buffer.from(content.toString().replace('</head>', `<link rel="stylesheet" href="${selectedLibrary.replace(/library\.js$/, 'styles.css')}"></head>`)); }
       let type = file.pathname.endsWith('.html') ? 'text/html' : file.pathname.endsWith('.css') ? 'text/css' : 'text/javascript';
       response.writeHead(200, { 'Content-Type': `${type}; charset=utf-8` }).end(content);
     } catch { response.writeHead(404).end(); }

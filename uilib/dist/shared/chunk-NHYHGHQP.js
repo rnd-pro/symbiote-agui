@@ -1,0 +1,1 @@
+function e(t){return JSON.stringify(t,(n,r)=>r&&typeof r=="object"&&!Array.isArray(r)?Object.fromEntries(Object.entries(r).sort(([o],[i])=>o.localeCompare(i))):r)}function c(t,n){return e(t)===e(n)}export{c as a};

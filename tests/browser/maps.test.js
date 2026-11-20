@@ -62,7 +62,7 @@ test('maps load packaged dependencies once, synchronize stable IDs and view with
   assert.equal(pending.length, 0);
   let css = await fetch(new URL(MAP_CSS_PATH, session.url));
   assert.equal(css.status, 200);
-  assert.match(await css.text(), /url\(\/client\/uilib\/widgets\/map\/images\//);
+  assert.match(await css.text(), /url\(images\//);
   let asset = await fetch(new URL(`${MAP_ASSET_PREFIX}marker-icon.png`, session.url));
   assert.equal(asset.headers.get('content-type'), 'image/png');
   assert.equal((await fetch(new URL(`${MAP_ASSET_PREFIX}unknown.png`, session.url))).status, 404);

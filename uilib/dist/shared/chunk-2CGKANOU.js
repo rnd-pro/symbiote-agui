@@ -1,0 +1,1 @@
+var e="widgets/markdown/runtime/index.js",t="widgets/markdown/sanitizer/index.js",r=Object.freeze({inputBytes:65536,outputBytes:262144,nodes:5e3,depth:32,fetchTimeoutMs:15e3}),o=Object.freeze({label:"label",src:"src",loading:"loading",error:"error"});export{e as a,t as b,r as c,o as d};

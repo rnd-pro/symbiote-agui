@@ -1,4 +1,5 @@
-import { appendFile, cp, mkdir, readdir, rm } from 'node:fs/promises';
+import { appendFile, cp, mkdir, readdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { resolve, relative, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFile } from 'node:child_process';
@@ -23,6 +24,27 @@ await mkdir(output, {
   recursive: true,
 });
 await import('./build-uilib-styles.js');
+/** @type {Record<string, string>} */
+let bridges = {};
+let symbioteRoot = dirname(dirname(fileURLToPath(import.meta.resolve('@symbiotejs/symbiote'))));
+for (let item of await readdir(new URL('../src/', import.meta.url), {
+  recursive: true,
+})) {
+  if (!item.endsWith('.js')) { continue; }
+  let file = fileURLToPath(new URL(`../src/${item}`, import.meta.url));
+  for (let match of (await readFile(file, 'utf8')).matchAll(/(?:from\s*|import\s*)['"]([^'"]+)['"]/g)) {
+    let specifier = match[1];
+    let path;
+    if (specifier.startsWith('@symbiotejs/symbiote')) {
+      path = fileURLToPath(import.meta.resolve(specifier));
+      bridges[`symbiote/${relative(symbioteRoot, path).replaceAll('\\', '/').replace(/\.js$/, '')}`] = path;
+    } else if (specifier.includes('uilib/') && specifier.startsWith('.')) {
+      path = resolve(dirname(file), specifier);
+      let key = relative(fileURLToPath(new URL('../uilib/', import.meta.url)), path).replaceAll('\\', '/').replace(/\.js$/, '');
+      if (key !== 'index') { bridges[key] = path; }
+    }
+  }
+}
 
 let result = await build({
   absWorkingDir: fileURLToPath(root),
@@ -30,6 +52,7 @@ let result = await build({
     index: 'uilib/browser.js',
     library: 'uilib/index.js',
     foundation: 'uilib/foundation.js',
+    ...bridges,
     ...Object.fromEntries([
       CHART_RUNTIME_PATH,
       MAP_RUNTIME_PATH,
@@ -88,4 +111,8 @@ let models = (await readdir(new URL('../uilib/types/', import.meta.url)))
   .sort();
 await appendFile(new URL('types/index.d.ts', output), models.map((name) =>
   `export type * from './types/${name.replace(/\.d\.ts$/, '.js')}';\n`).join(''));
+let assets = (await readdir(output, {
+  recursive: true,
+})).filter((path) => /\.(js|css|png)$/.test(path)).sort();
+await writeFile(new URL('assets.json', output), JSON.stringify(assets, null, 2) + '\n');
 process.stderr.write(`Built ${Object.keys(result.metafile.outputs).length} browser modules and library declarations.\n`);

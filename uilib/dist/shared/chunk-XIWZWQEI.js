@@ -1,0 +1,1 @@
+var e="widgets/diagram/runtime/index.js",t=Object.freeze({inputBytes:32768,outputBytes:262144,edges:300,nodes:5e3,depth:64}),r=Object.freeze(["label","description","loading","error"]);export{e as a,t as b,r as c};

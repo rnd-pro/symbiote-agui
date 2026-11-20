@@ -215,8 +215,7 @@ test('manager WebSocket requires its origin and credential; assets cannot serve 
   assert.equal((await fetch(`${endpoint.url}page/sections/unknown.html`)).status, 404);
   assert.equal((await fetch(`${endpoint.url}page/sections/registry.js`)).status, 404);
   let bundle = await (await fetch(`${endpoint.url}page/index.js`)).text();
-  assert.match(bundle, /agui-dashboard/);
-  assert.match(bundle, /agui-toggle/);
+  assert.match(bundle, /\/uilib\//);
   assert.doesNotMatch(bundle, /from ['"]@symbiotejs/);
   assert.doesNotMatch(bundle, /data:font\/woff2;base64/);
   let badOrigin = new WebSocket(socketUrl, { origin: 'http://127.0.0.1:1111' });

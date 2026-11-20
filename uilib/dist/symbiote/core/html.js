@@ -1,0 +1,1 @@
+import{a,b,c}from"../../shared/chunk-R5MGQJ77.js";import"../../shared/chunk-KDOW3GQI.js";import"../../shared/chunk-DB7X7MVE.js";import"../../shared/chunk-6BN42W2R.js";export{a as RESERVED_ATTRIBUTES,c as default,b as html};

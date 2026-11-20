@@ -46,6 +46,8 @@ node --test tests/node/manager.test.js
 
 Run all Node tests with `npm run test:node`.
 
+After changing shared uilib CSS, templates, or state-dependent utility classes, run `npm run uilib:styles` to regenerate the browser stylesheets in `uilib/dist/`. Packaging also runs this generator. Keep shared rules and tokens in their source files; do not edit generated CSS. Use `npm run gallery:styles` when changing utility classes in gallery sections.
+
 Run `npm test` for both suites without additional setup. Downloads require network access on the first run; subsequent runs reuse the cached browser.
 
 Before release, run `npm run test:package`. It installs the production tarball in a temporary npm cache outside the checkout and verifies CLI, MCP, manager assets, and project operations without development dependencies. It requires npm registry access.

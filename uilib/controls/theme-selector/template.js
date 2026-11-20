@@ -1,5 +1,10 @@
 import { html } from '@symbiotejs/symbiote/core/html.js';
 
+export let THEME_SELECTOR_STATUS_CLASSES = Object.freeze({
+  failure: 'mt-3 text-sm text-agui-danger',
+  idle: 'mt-3 text-sm text-agui-muted',
+});
+
 export let THEME_SELECTOR_TEMPLATE = html`
   <button ref="trigger" type="button" class="agui-button-icon"
     bind="@popovertarget: popupId; @aria-label: selectorLabel; @title: selectorLabel; disabled: unavailable">

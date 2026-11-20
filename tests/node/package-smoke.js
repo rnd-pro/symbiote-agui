@@ -69,6 +69,8 @@ test('the production tarball runs through npm exec outside the checkout', { time
     'src/page/shell.html',
     'uilib/index.js',
     'uilib/theme.css',
+    'uilib/dist/styles.css',
+    'uilib/dist/page.css',
     'uilib/types/uilib.d.ts',
     'src/page/client/index.js',
     'src/page/client/tool-bridge.js',

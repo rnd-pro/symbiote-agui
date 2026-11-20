@@ -1,0 +1,10 @@
+@import './native-controls.css';
+@import './native-overlays.css';
+@import './chips.css';
+@import './scrollbars.css';
+
+@layer components {
+  agui-header {
+    @apply agui-popover;
+  }
+}

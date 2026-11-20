@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { jsBuild } from 'jsda-kit/server/build-asset.js';
@@ -10,6 +11,7 @@ test('the library works without AGUI services and bubbles component actions to i
   timeout: 30_000,
 }, async (t) => {
   let script = await jsBuild(fileURLToPath(new URL('../../uilib/index.js', import.meta.url)));
+  let stylesheet = await readFile(new URL('../../uilib/dist/styles.css', import.meta.url), 'utf8');
   let requests = /** @type {string[]} */ ([]);
   let server = createServer((request, response) => {
     requests.push(request.url || '');
@@ -17,10 +19,15 @@ test('the library works without AGUI services and bubbles component actions to i
       response.writeHead(200, {
         'Content-Type': 'text/javascript',
       }).end(script);
+    } else if (request.url === '/styles.css') {
+      response.writeHead(200, {
+        'Content-Type': 'text/css',
+      }).end(stylesheet);
     } else if (request.url === '/') {
       response.writeHead(200, {
         'Content-Type': 'text/html',
       }).end(`<!doctype html>
+        <link rel="stylesheet" href="./styles.css">
         <script type="module">
           import { registerUiLibComponents } from './library.js';
           registerUiLibComponents();
@@ -87,6 +94,7 @@ test('the library works without AGUI services and bubbles component actions to i
   assert.deepEqual(requests.filter((path) => ![
     '/',
     '/library.js',
+    '/styles.css',
     '/favicon.ico',
   ].includes(path)), []);
   assert.deepEqual(errors, []);

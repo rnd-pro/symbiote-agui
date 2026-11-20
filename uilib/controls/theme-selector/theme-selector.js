@@ -1,7 +1,7 @@
 import { ToolDescriptor } from '@symbiotejs/symbiote/webmcp';
 import { UiComponent } from '../../shared/component.js';
 import { THEME_PALETTES } from './palettes.js';
-import { THEME_SELECTOR_TEMPLATE } from './template.js';
+import { THEME_SELECTOR_TEMPLATE, THEME_SELECTOR_STATUS_CLASSES } from './template.js';
 import styles from './styles.js';
 
 let nextSelectorId = 0;
@@ -110,13 +110,10 @@ export class ThemeSelector extends UiComponent {
       selectorLabel: String(this.getAttribute('aria-label') ?? this.$.label ?? this.getAttribute('label') ?? ''),
       statusMessage: this.text(saveState),
       statusClass: [
-        'mt-3 text-sm',
-        [
-          'rejected',
-          'unknown',
-          'invalidTarget',
-        ].includes(saveState) ? 'text-agui-danger' : 'text-agui-muted',
-      ].join(' '),
+        'rejected',
+        'unknown',
+        'invalidTarget',
+      ].includes(saveState) ? THEME_SELECTOR_STATUS_CLASSES.failure : THEME_SELECTOR_STATUS_CLASSES.idle,
       entries: THEME_PALETTES.map((palette) => ({
         value: palette,
         label: this.text(palette),

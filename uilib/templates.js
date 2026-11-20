@@ -5,6 +5,7 @@ import { BREADCRUMBS_TEMPLATE } from './controls/breadcrumbs/template.js';
 import { SELECT_TEMPLATE } from './controls/select/template.js';
 import { TOGGLE_TEMPLATE } from './controls/toggle/template.js';
 import { THEME_TOGGLE_TEMPLATE } from './controls/theme-toggle/template.js';
+import { THEME_SELECTOR_TEMPLATE, THEME_SELECTOR_STATUS_CLASSES } from './controls/theme-selector/template.js';
 import { STATE_TEMPLATE } from './feedback/state/template.js';
 import { PRELOADER_TEMPLATE } from './feedback/preloader/template.js';
 import { STEPS_TEMPLATE } from './feedback/steps/template.js';
@@ -36,6 +37,7 @@ export let UILIB_TEMPLATES = Object.freeze({
   select: SELECT_TEMPLATE,
   toggle: TOGGLE_TEMPLATE,
   themeToggle: THEME_TOGGLE_TEMPLATE,
+  themeSelector: THEME_SELECTOR_TEMPLATE,
   state: STATE_TEMPLATE,
   preloader: PRELOADER_TEMPLATE,
   steps: STEPS_TEMPLATE,
@@ -61,3 +63,6 @@ export let UILIB_TEMPLATES = Object.freeze({
   filterField: FILTER_FIELD_TEMPLATE,
   message: MESSAGE_TEMPLATE,
 });
+
+// Classes selected by component logic must be compiled even before that state renders.
+export let UILIB_STATE_CLASSES = Object.freeze(Object.values(THEME_SELECTOR_STATUS_CLASSES).flatMap((value) => value.split(' ')));

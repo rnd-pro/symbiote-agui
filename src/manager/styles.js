@@ -3,7 +3,7 @@ import { parseHTML } from 'linkedom';
 import { analyzeFragment } from '../markup/fragment.js';
 import { compileStyles } from '../markup/styles.js';
 import { cssMin } from 'jsda-kit/node/cssMin.js';
-import { UILIB_TEMPLATES } from '../../uilib/templates.js';
+import { UILIB_TEMPLATES, UILIB_STATE_CLASSES } from '../../uilib/templates.js';
 import { SESSION_CONTROLS_TEMPLATE } from './page/controls-template.js';
 import { CONNECTIONS_TEMPLATE } from './page/connections-template.js';
 import { CONNECTOR_SETTINGS_TEMPLATE } from './page/connectors-template.js';
@@ -30,5 +30,8 @@ export async function createManagerStyles() {
     ...sections,
   ].join('\n');
   fragment.append(document.body, templates.content);
-  return cssMin(compiler.build(analyzeFragment(fragment).classes));
+  return cssMin(compiler.build([
+    ...UILIB_STATE_CLASSES,
+    ...analyzeFragment(fragment).classes,
+  ]));
 }

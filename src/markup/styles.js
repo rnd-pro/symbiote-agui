@@ -4,7 +4,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
 import { analyzeFragment } from './fragment.js';
-import { UILIB_TEMPLATES } from '../../uilib/templates.js';
+import { UILIB_TEMPLATES, UILIB_STATE_CLASSES } from '../../uilib/templates.js';
 import { PAGE_TEMPLATES } from '../page/client/templates.js';
 
 let stylesheet = '';
@@ -35,6 +35,9 @@ export async function createStyles() {
     ...Object.values(UILIB_TEMPLATES),
     ...Object.values(PAGE_TEMPLATES),
   ].join('\n');
-  publishStyles(compiler.build(analyzeFragment(template.content).classes));
+  publishStyles(compiler.build([
+    ...UILIB_STATE_CLASSES,
+    ...analyzeFragment(template.content).classes,
+  ]));
   return compiler;
 }

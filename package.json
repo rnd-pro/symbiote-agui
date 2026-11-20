@@ -42,13 +42,15 @@
   "scripts": {
     "start": "node ./bin/symbiote-agui.js",
     "types": "tsc --project tsconfig.json && tsc --project tsconfig.browser.json",
+    "uilib:styles": "node scripts/build-uilib-styles.js",
     "gallery:styles": "node scripts/build-gallery-styles.js",
     "test:node": "node --test tests/node/*.test.js",
     "test:package": "node --test tests/node/package-smoke.js",
     "pretest:browser": "puppeteer browsers install chrome",
     "test:browser": "node --test --test-concurrency=1 tests/browser/*.test.js",
     "test": "npm run test:node && npm run test:browser",
-    "prepublishOnly": "npm run types && npm run test:node"
+    "prepublishOnly": "npm run types && npm run test:node",
+    "prepack": "npm run uilib:styles"
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.3.1",

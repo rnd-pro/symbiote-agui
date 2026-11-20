@@ -1,20 +1,4 @@
-@property --_agui-scrollbar-opacity {
-  syntax: '<percentage>';
-  inherits: false;
-  initial-value: 0%;
-}
-
 @layer base {
-  /* The document scrollbar uses the root's scheme, independently of body. */
-  :root {
-    color-scheme: light dark;
-  }
-  :root:has(body[data-theme='light']) {
-    color-scheme: light;
-  }
-  :root:has(body[data-theme='dark']) {
-    color-scheme: dark;
-  }
   * {
     --_agui-scrollbar-opacity: var(--agui-scrollbar-idle-opacity);
     --_agui-scrollbar-thumb: color-mix(in srgb, var(--agui-scrollbar-thumb) var(--_agui-scrollbar-opacity), transparent);
